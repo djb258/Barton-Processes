@@ -7,7 +7,7 @@
 #         this file is the implementation record.
 # ═══════════════════════════════════════════════════════════════
 
-registry_version: "0.1.0"
+registry_version: "0.2.0"
 last_updated: "2026-03-14"
 
 # ───────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ processes:
     source_paths:
       - "hubs/dol-filings/imo/middle/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "EIN resolution, Form 5500 + Schedule A filing data enrichment, dumb_worker, ein_matcher, importers"
     dashboard_ref: "PROC-DOL-ENRICH"
 
@@ -96,7 +96,7 @@ processes:
     source_paths:
       - "hubs/people-intelligence/imo/middle/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Contact slot filling, email generation, verification waterfall, LinkedIn monitor, movement engine"
     dashboard_ref: "PROC-PEOPLE-ENRICH"
 
@@ -107,7 +107,7 @@ processes:
     source_paths:
       - "hubs/blog-content/imo/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Signal sweep, entity extraction, company matching, content parsing"
     dashboard_ref: "PROC-BLOG-SIGNAL"
 
@@ -118,7 +118,7 @@ processes:
     source_paths:
       - "hubs/talent-flow/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Executive movement detection via people sub-hub slot state changes"
     dashboard_ref: "PROC-TALENT-FLOW"
 
@@ -129,8 +129,8 @@ processes:
     source_paths:
       - "hubs/outreach-execution/"
     runtime: "python"
-    status: "pending-extraction"
-    description: "Outreach execution workers — needs deeper scan"
+    status: "extracted"
+    description: "Outreach execution workers"
 
   - number: "011"
     id: "PROC-OUTREACH-SCRIPTS"
@@ -139,7 +139,7 @@ processes:
     source_paths:
       - "scripts/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Utility executables — audit, market CSV builders, domain discovery, data loading"
 
   # ── field-monitor / imo-creator snap-on (012) ──────────────
@@ -198,7 +198,7 @@ processes:
     source_paths:
       - "hubs/company-target/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Buyer Intent Tracker — signal aggregation across all sub-hubs into authorization bands (0-5)"
     dashboard_ref: "PROC-BIT-SCORING"
 

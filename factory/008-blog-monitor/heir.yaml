@@ -1,0 +1,51 @@
+# Process HEIR — 008-blog-monitor
+process_id: "PROC-BLOG-SIGNAL"
+process_number: "008"
+name: "Blog Signal Detection"
+short_name: "BSD"
+source_repo: "barton-outreach-core"
+source_paths:
+  - "hubs/blog-content/imo/"
+runtime: "python"
+status: "extracted"
+
+description: >
+  Monitors blog sub-hub for content changes — funding events,
+  acquisitions, leadership announcements, news. Emits high-value
+  BIT signals (FUNDING_EVENT +15, ACQUISITION +12).
+
+dependencies:
+  databases:
+    - schema: "vendor"
+      tables: ["blog"]
+      access: "READ/WRITE"
+    - schema: "outreach"
+      tables: ["blog", "blog_ingress_control", "company_target", "bit_scores"]
+      access: "READ/WRITE"
+  apis:
+    - "ScraperAPI"
+  secrets:
+    - "DOPPLER_TOKEN"
+    - "NEON_CONNECTION_STRING"
+    - "SCRAPERAPI_KEY"
+
+imo:
+  ingress:
+    trigger: "New or updated records in outreach.blog + vendor.blog URL staging"
+    schema: "outreach.blog (outreach_id, content fields) + vendor.blog (289k URLs)"
+  egress:
+    outputs:
+      - "BIT signal events (FUNDING_EVENT, ACQUISITION)"
+      - "outreach.bit_scores update"
+      - "lcs.signal_queue BLOG_TRIGGER"
+    consumers: ["BIT Scoring process", "LCS signal queue"]
+
+orbt:
+  mode: "BUILD"
+  health: "YELLOW"
+  notes: "Blog canonical has 95k records, vendor.blog has 289k URLs staged — signal classification not yet built"
+
+log_targets:
+  - "log/008-blog-monitor/"
+
+dashboard_ref: "PROC-BLOG-SIGNAL"

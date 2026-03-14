@@ -1,0 +1,49 @@
+# Process HEIR — 016-bit-scoring
+process_id: "PROC-BIT-SCORING"
+process_number: "016"
+name: "BIT Scoring"
+short_name: "BIT"
+source_repo: "barton-outreach-core"
+source_paths:
+  - "hubs/company-target/"
+runtime: "python"
+status: "extracted"
+
+description: >
+  Buyer Intent Tracker — aggregates signals from all sub-hubs into
+  authorization bands (0-5). Three domains: STRUCTURAL_PRESSURE (DOL),
+  DECISION_SURFACE (People), NARRATIVE_VOLATILITY (Blog). Band determines
+  permitted outreach intensity.
+
+dependencies:
+  databases:
+    - schema: "people"
+      tables: ["company_slot"]
+      access: "READ"
+    - schema: "outreach"
+      tables: ["dol", "blog", "company_target", "bit_scores"]
+      access: "READ/WRITE"
+  apis: []
+  secrets:
+    - "DOPPLER_TOKEN"
+    - "NEON_CONNECTION_STRING"
+
+imo:
+  ingress:
+    trigger: "Signal events from People, DOL, Blog, and Talent Flow processes"
+    schema: "SLOT_FILLED (+10), EMAIL_VERIFIED (+3), FORM_5500_FILED (+5), BROKER_CHANGE (+7), FUNDING_EVENT (+15), ACQUISITION (+12), EXECUTIVE_JOINED (+10), EXECUTIVE_LEFT (-5)"
+  egress:
+    outputs:
+      - "outreach.bit_scores (13,226 scored companies)"
+      - "Authorization band classification per company"
+    consumers: ["LCS frame matching", "Coverage workflow"]
+
+orbt:
+  mode: "OPERATE"
+  health: "GREEN"
+  notes: "13,226 companies scored, 6 authorization bands active, 5 pressure classes defined"
+
+log_targets:
+  - "log/016-bit-scoring/"
+
+dashboard_ref: "PROC-BIT-SCORING"

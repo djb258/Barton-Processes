@@ -1,0 +1,50 @@
+# Process HEIR — 009-talent-flow
+process_id: "PROC-TALENT-FLOW"
+process_number: "009"
+name: "Talent Flow"
+short_name: "TF"
+source_repo: "barton-outreach-core"
+source_paths:
+  - "hubs/talent-flow/"
+runtime: "python"
+status: "extracted"
+
+description: >
+  Detects executive movement — someone left a company, someone joined.
+  Reads people sub-hub slots, compares LinkedIn snapshots over time,
+  emits BIT signals (+10 JOINED, -5 LEFT).
+
+dependencies:
+  databases:
+    - schema: "people"
+      tables: ["company_slot", "people_master"]
+      access: "READ"
+    - schema: "outreach"
+      tables: ["company_target", "bit_scores"]
+      access: "READ/WRITE"
+  apis:
+    - "Hunter"
+    - "Clay"
+  secrets:
+    - "DOPPLER_TOKEN"
+    - "NEON_CONNECTION_STRING"
+
+imo:
+  ingress:
+    trigger: "Scheduled scan of people.company_slot for slot state changes"
+    schema: "people.company_slot (outreach_id, slot_type, is_filled, person_id)"
+  egress:
+    outputs:
+      - "BIT signal events (EXECUTIVE_JOINED, EXECUTIVE_LEFT)"
+      - "outreach.bit_scores update"
+    consumers: ["BIT Scoring process", "LCS signal queue"]
+
+orbt:
+  mode: "BUILD"
+  health: "YELLOW"
+  notes: "People sub-hub slots exist (285k slots, 62.4% filled) — movement detection logic not yet built"
+
+log_targets:
+  - "log/009-talent-flow/"
+
+dashboard_ref: "PROC-TALENT-FLOW"

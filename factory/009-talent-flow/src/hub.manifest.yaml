@@ -1,0 +1,92 @@
+# =============================================================================
+# CONSTITUTIONAL COMPLIANCE (IMO-Creator v1.0)
+# =============================================================================
+constitutional:
+  doctrine_version: "IMO-Creator v1.0"
+  prd_reference: "docs/prd/PRD_TALENT_FLOW_SPOKE.md"
+  domain_spec: "doctrine/REPO_DOMAIN_SPEC.md"
+  cc_layer: CC-02
+
+  # Pass Structure (Constitutional)
+  passes:
+    - name: CAPTURE
+      imo_layer: I
+      description: "Receive person records from People Intelligence, LinkedIn changes"
+    - name: COMPUTE
+      imo_layer: M
+      description: "Movement detection, company gate check, signal value calculation"
+    - name: GOVERN
+      imo_layer: O
+      description: "Emit EXECUTIVE_JOINED, EXECUTIVE_LEFT, TITLE_CHANGE signals to BIT Engine"
+
+  # PRD Section References
+  constants_ref: "docs/prd/PRD_TALENT_FLOW_SPOKE.md §3 Constants"
+  variables_ref: "docs/prd/PRD_TALENT_FLOW_SPOKE.md §3 Variables"
+
+hub:
+  id: talent-flow
+  name: Talent Flow
+  heir_id: 04.04.06
+  version: "3.0.0"
+  description: |
+    Movement detection hub. Tracks executive transitions, departures,
+    and job market signals that indicate buying intent.
+
+  # Hub classification for sovereign completion
+  classification:
+    type: required          # Gates completion
+    gates_completion: true  # PASS required for COMPLETE status
+    waterfall_order: 4      # After People Intelligence
+
+doctrine:
+  parent: company-lifecycle  # CL is external parent
+  relationship: CL-Child
+  golden_rule: |
+    IF company_unique_id IS NULL: STOP. DO NOT PROCEED.
+    Talent Flow NEVER mints identity - consumes from CL.
+
+dependencies:
+  upstream:
+    - hub_id: people-intelligence
+      type: required
+      description: People data needed to track movements
+  downstream:
+    - hub_id: company-target
+      type: signals
+      description: Movement signals feed BIT engine
+
+interfaces:
+  input:
+    - name: person_record
+      source: people-intelligence
+      schema:
+        company_unique_id: UUID
+        person_id: UUID
+        name: string
+        linkedin_url: string
+        current_company: string
+        current_title: string
+    
+  output:
+    - name: movement_event
+      destination: bit_engine
+      schema:
+        company_unique_id: UUID
+        person_id: UUID
+        event_type: enum[joined, left, title_change]
+        from_company: string
+        to_company: string
+        detected_at: timestamp
+        confidence: float
+        signal_value: integer
+
+metrics:
+  primary: MOVEMENT_DETECTION_RATE
+  sla_target: 0.70
+  sla_min: 0.40
+  signals_per_movement: 10
+
+status:
+  implementation: scaffold
+  version: 0.1.0
+  last_updated: 2026-01-19
