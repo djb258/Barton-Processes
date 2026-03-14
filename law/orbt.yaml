@@ -1,0 +1,14 @@
+# ═══════════════════════════════════════════════════════════════
+# ORBT — Operational Mode Declaration
+# ═══════════════════════════════════════════════════════════════
+# ORBT Modes: OPERATE | REPAIR | BUILD | TROUBLESHOOT
+# ═══════════════════════════════════════════════════════════════
+
+orbt_mode: "BUILD"
+health: "YELLOW"
+notes: "Phase 0 — repo structure created, awaiting process extraction from blueprint repos"
+
+history:
+  - date: "2026-03-14"
+    mode: "BUILD"
+    reason: "BAR-136 Phase 1 — initial repo setup"

@@ -1,0 +1,213 @@
+# ═══════════════════════════════════════════════════════════════
+# PROCESS REGISTRY — Master list of all numbered processes
+# ═══════════════════════════════════════════════════════════════
+# Authority: Claude Code maintains (human approves)
+# Rule: Must match actual factory/ directory contents exactly
+# Source: Dashboard processes.ts is the planning view;
+#         this file is the implementation record.
+# ═══════════════════════════════════════════════════════════════
+
+registry_version: "0.1.0"
+last_updated: "2026-03-14"
+
+# ───────────────────────────────────────────────────────────────
+# Process numbering:
+#   001-005  company-lifecycle-cl extractions
+#   006-011  barton-outreach-core extractions
+#   012      field-monitor (imo-creator snap-on)
+#   013-014  client extractions
+#   015      sales extractions
+#   016+     reserved for barton-storage / future
+# ───────────────────────────────────────────────────────────────
+
+processes:
+
+  # ── company-lifecycle-cl (001-005) ──────────────────────────
+
+  - number: "001"
+    id: "PROC-NEON-DB-AGENT"
+    name: "Neon DB Agent"
+    source_repo: "company-lifecycle-cl"
+    source_paths:
+      - "neon/"
+      - "neon/agent/"
+    runtime: "node"
+    status: "pending-extraction"
+    description: "Neon CLI agent + DB scripts — identity gate, domain verification, collision detection, migration runners, schema verification"
+
+  - number: "002"
+    id: "PROC-CL-PIPELINE"
+    name: "CL Pipeline"
+    source_repo: "company-lifecycle-cl"
+    source_paths:
+      - "pipeline/"
+    runtime: "node"
+    status: "pending-extraction"
+    description: "Pipeline orchestrator, ingest, intake_service, lifecycle_worker, backfill, adapters"
+
+  - number: "003"
+    id: "PROC-LCS-RUNTIME"
+    name: "LCS Runtime"
+    source_repo: "company-lifecycle-cl"
+    source_paths:
+      - "src/runtime/lcs/"
+    runtime: "typescript"
+    status: "pending-extraction"
+    description: "Cron runner, context assembler, matview refresh, signal bridge, webhook handler"
+
+  - number: "004"
+    id: "PROC-LCS-DELIVERY"
+    name: "LCS Delivery"
+    source_repo: "company-lifecycle-cl"
+    source_paths:
+      - "src/app/lcs/"
+    runtime: "typescript"
+    status: "pending-extraction"
+    description: "Delivery runner, delivery queue, adapters (mailgun, heyreach, sales-handoff), id-minter, pipeline orchestrator + 7 steps"
+    dashboard_ref: "PROC-LCS"
+
+  - number: "005"
+    id: "PROC-LCS-GATES"
+    name: "LCS Gates"
+    source_repo: "company-lifecycle-cl"
+    source_paths:
+      - "src/sys/lcs/gates/"
+    runtime: "typescript"
+    status: "pending-extraction"
+    description: "Capacity gate, freshness gate, suppression engine"
+
+  # ── barton-outreach-core (006-011) ──────────────────────────
+
+  - number: "006"
+    id: "PROC-DOL-ENRICH"
+    name: "DOL Enrichment"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/dol-filings/imo/middle/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "EIN resolution, Form 5500 + Schedule A filing data enrichment, dumb_worker, ein_matcher, importers"
+    dashboard_ref: "PROC-DOL-ENRICH"
+
+  - number: "007"
+    id: "PROC-PEOPLE-ENRICH"
+    name: "People Enrichment"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/people-intelligence/imo/middle/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Contact slot filling, email generation, verification waterfall, LinkedIn monitor, movement engine"
+    dashboard_ref: "PROC-PEOPLE-ENRICH"
+
+  - number: "008"
+    id: "PROC-BLOG-SIGNAL"
+    name: "Blog Signal Detection"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/blog-content/imo/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Signal sweep, entity extraction, company matching, content parsing"
+    dashboard_ref: "PROC-BLOG-SIGNAL"
+
+  - number: "009"
+    id: "PROC-TALENT-FLOW"
+    name: "Talent Flow"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/talent-flow/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Executive movement detection via people sub-hub slot state changes"
+    dashboard_ref: "PROC-TALENT-FLOW"
+
+  - number: "010"
+    id: "PROC-OUTREACH-EXEC"
+    name: "Outreach Execution"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/outreach-execution/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Outreach execution workers — needs deeper scan"
+
+  - number: "011"
+    id: "PROC-OUTREACH-SCRIPTS"
+    name: "Outreach Scripts"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "scripts/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Utility executables — audit, market CSV builders, domain discovery, data loading"
+
+  # ── field-monitor / imo-creator snap-on (012) ──────────────
+
+  - number: "012"
+    id: "PROC-FIELD-MONITOR"
+    name: "Field Monitor"
+    source_repo: "imo-creator"
+    source_paths:
+      - "fleet/snap-on/field-monitor/"
+    runtime: "cloudflare-workers"
+    status: "pending-extraction"
+    description: "4 CF Workers (fetcher, orchestrator, parser-registry, proxy-router) + shared types + scheduler"
+
+  # ── client (013-014) ────────────────────────────────────────
+
+  - number: "013"
+    id: "PROC-CLIENT-AI"
+    name: "Client AI Services"
+    source_repo: "client"
+    source_paths:
+      - "src/ai/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "MCP server, sidecar server, agent library, HEIR checks"
+
+  - number: "014"
+    id: "PROC-CLIENT-UI-API"
+    name: "Client UI API"
+    source_repo: "client"
+    source_paths:
+      - "src/ui/api/"
+    runtime: "node"
+    status: "pending-extraction"
+    description: "API endpoints — hello, llm, ssot/save, subagents, test"
+
+  # ── sales (015) ─────────────────────────────────────────────
+
+  - number: "015"
+    id: "PROC-SALES-MEETING"
+    name: "Sales Meeting Service"
+    source_repo: "sales"
+    source_paths:
+      - "src/app/meetings/"
+      - "src/sys/integrations/"
+    runtime: "typescript"
+    status: "pending-extraction"
+    description: "Meeting service + Supabase/Doppler integrations"
+
+  # ── BIT Scoring (016) — cross-hub aggregation ───────────────
+
+  - number: "016"
+    id: "PROC-BIT-SCORING"
+    name: "BIT Scoring"
+    source_repo: "barton-outreach-core"
+    source_paths:
+      - "hubs/company-target/"
+    runtime: "python"
+    status: "pending-extraction"
+    description: "Buyer Intent Tracker — signal aggregation across all sub-hubs into authorization bands (0-5)"
+    dashboard_ref: "PROC-BIT-SCORING"
+
+# ═══════════════════════════════════════════════════════════════
+# EXTRACTION STATUS LEGEND
+# ═══════════════════════════════════════════════════════════════
+# pending-extraction  — identified, not yet moved
+# extracted           — files moved to factory/NNN-name/
+# verified            — source repo confirmed ZERO executables remain
+# active              — process is running in production
+# retired             — archived, no longer executing
+# ═══════════════════════════════════════════════════════════════

@@ -1,0 +1,101 @@
+# ═══════════════════════════════════════════════════════════════
+# INGRESS MANIFEST — Cross-Silo Dependencies
+# ═══════════════════════════════════════════════════════════════
+# Lists every external dependency that processes in this repo
+# consume. Each entry names the source repo, the table/view/API
+# consumed, and which local process depends on it.
+# ═══════════════════════════════════════════════════════════════
+
+manifest_version: "0.1.0"
+last_updated: "2026-03-14"
+
+dependencies:
+
+  # ── Neon Database (shared vault) ────────────────────────────
+  - source: "neon-database"
+    type: "database"
+    schemas:
+      - "cl"
+      - "lcs"
+      - "outreach"
+      - "dol"
+      - "people"
+      - "vendor"
+      - "sales"
+      - "clnt"
+    consumed_by:
+      - "001-neon-db-agent"
+      - "002-cl-pipeline"
+      - "003-lcs-runtime"
+      - "004-lcs-delivery"
+      - "005-lcs-gates"
+      - "006-dol-refresh"
+      - "007-people-intel"
+      - "008-blog-monitor"
+      - "016-bit-scoring"
+
+  # ── Doppler (secrets) ──────────────────────────────────────
+  - source: "doppler"
+    type: "secrets-provider"
+    consumed_by: "all"
+
+  # ── Cloudflare (Workers platform) ──────────────────────────
+  - source: "cloudflare"
+    type: "platform"
+    resources:
+      - "Workers"
+      - "D1"
+      - "KV"
+    consumed_by:
+      - "012-field-monitor"
+
+  # ── External APIs ──────────────────────────────────────────
+  - source: "mailgun"
+    type: "api"
+    consumed_by:
+      - "004-lcs-delivery"
+
+  - source: "heyreach"
+    type: "api"
+    consumed_by:
+      - "004-lcs-delivery"
+
+  - source: "hunter"
+    type: "api"
+    consumed_by:
+      - "007-people-intel"
+
+  - source: "clay"
+    type: "api"
+    consumed_by:
+      - "007-people-intel"
+
+  - source: "scraperapi"
+    type: "api"
+    consumed_by:
+      - "008-blog-monitor"
+
+# ═══════════════════════════════════════════════════════════════
+# BLUEPRINT REPO EGRESS CONTRACTS
+# ═══════════════════════════════════════════════════════════════
+# Processes READ from blueprint repo schemas.
+# Blueprint repos define what is readable via egress contracts.
+# This section tracks which blueprint egress contracts are required.
+# ═══════════════════════════════════════════════════════════════
+
+required_egress_contracts:
+  - repo: "company-lifecycle-cl"
+    schemas: ["cl", "lcs"]
+    status: "pending"
+
+  - repo: "barton-outreach-core"
+    schemas: ["outreach", "dol", "people", "vendor"]
+    status: "pending"
+
+  - repo: "client"
+    schemas: ["clnt"]
+    status: "pending"
+
+  - repo: "sales"
+    schemas: ["sales"]
+    status: "pending"
