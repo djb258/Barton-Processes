@@ -1,0 +1,27 @@
+# Process HEIR — 013-client-ai-services
+process_id: "PROC-CLIENT-AI"
+process_number: "013"
+name: "Client AI Services"
+source_repo: "client"
+source_paths:
+  - "src/ai/"
+runtime: "python"
+status: "extracted"
+
+description: >
+  MCP server, sidecar server, agent library, HEIR checks.
+  AI tooling that executes work for the client hub.
+
+dependencies:
+  databases:
+    - schema: "clnt"
+      tables: ["client"]
+      access: "READ"
+  apis:
+    - "Anthropic (Claude)"
+  secrets:
+    - "ANTHROPIC_API_KEY"
+    - "DOPPLER_TOKEN"
+
+log_targets:
+  - "log/013-client-ai-services/"

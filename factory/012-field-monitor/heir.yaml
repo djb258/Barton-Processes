@@ -1,0 +1,34 @@
+# Process HEIR — 012-field-monitor
+process_id: "PROC-FIELD-MONITOR"
+process_number: "012"
+name: "Field Monitor"
+source_repo: "imo-creator"
+source_paths:
+  - "fleet/snap-on/field-monitor/"
+runtime: "cloudflare-workers"
+status: "extracted"
+
+description: >
+  4 Cloudflare Workers (fetcher, orchestrator, parser-registry,
+  proxy-router) + shared types + scheduler workflow.
+  Monitors field data sources for changes.
+
+workers:
+  - name: "fetcher"
+    wrangler: "packages/fetcher/wrangler.toml"
+  - name: "orchestrator"
+    wrangler: "packages/orchestrator/wrangler.toml"
+  - name: "parser-registry"
+    wrangler: "packages/parser-registry/wrangler.toml"
+  - name: "proxy-router"
+    wrangler: "packages/proxy-router/wrangler.toml"
+
+dependencies:
+  databases: []
+  apis: []
+  secrets:
+    - "CLOUDFLARE_API_TOKEN"
+    - "DOPPLER_TOKEN"
+
+log_targets:
+  - "log/012-field-monitor/"

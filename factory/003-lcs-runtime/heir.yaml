@@ -1,0 +1,42 @@
+# Process HEIR — 003-lcs-runtime
+process_id: "PROC-LCS-RUNTIME"
+process_number: "003"
+name: "LCS Runtime"
+source_repo: "company-lifecycle-cl"
+source_paths:
+  - "src/runtime/lcs/"
+runtime: "typescript"
+status: "extracted"
+
+description: >
+  Cron runner, context assembler, matview refresh, signal bridge,
+  webhook handler. The runtime engine that keeps LCS signals
+  flowing and materialized views fresh.
+
+dependencies:
+  databases:
+    - schema: "lcs"
+      tables: ["signal_queue", "event"]
+      access: "READ/WRITE"
+    - schema: "cl"
+      tables: ["company_identity"]
+      access: "READ"
+  apis: []
+  secrets:
+    - "NEON_CONNECTION_STRING"
+    - "DOPPLER_TOKEN"
+
+imo:
+  ingress:
+    trigger: "Cron schedule + signal queue events"
+    schema: "lcs.signal_queue, lcs.event"
+  egress:
+    outputs:
+      - "Refreshed materialized views"
+      - "Signal bridge events to LCS Delivery"
+    consumers: ["LCS Delivery", "LCS Gates"]
+
+log_targets:
+  - "log/003-lcs-runtime/"
+
+dashboard_ref: "PROC-LCS"

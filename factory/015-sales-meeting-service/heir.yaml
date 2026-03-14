@@ -1,0 +1,27 @@
+# Process HEIR — 015-sales-meeting-service
+process_id: "PROC-SALES-MEETING"
+process_number: "015"
+name: "Sales Meeting Service"
+source_repo: "sales"
+source_paths:
+  - "src/app/meetings/"
+  - "src/sys/integrations/"
+runtime: "typescript"
+status: "extracted"
+
+description: >
+  Meeting service + Supabase/Doppler integrations.
+  Handles sales meeting scheduling and tracking.
+
+dependencies:
+  databases:
+    - schema: "sales"
+      tables: ["sales_state"]
+      access: "READ/WRITE"
+  apis:
+    - "Calendly"
+  secrets:
+    - "DOPPLER_TOKEN"
+
+log_targets:
+  - "log/015-sales-meeting-service/"

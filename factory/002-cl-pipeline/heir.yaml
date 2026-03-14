@@ -1,0 +1,42 @@
+# Process HEIR — 002-cl-pipeline
+process_id: "PROC-CL-PIPELINE"
+process_number: "002"
+name: "CL Pipeline"
+source_repo: "company-lifecycle-cl"
+source_paths:
+  - "pipeline/"
+runtime: "node"
+status: "extracted"
+
+description: >
+  Pipeline orchestrator, ingest, intake_service, lifecycle_worker,
+  backfill, adapters. Handles company candidate intake through
+  identity minting and sub-hub activation.
+
+dependencies:
+  databases:
+    - schema: "cl"
+      tables: ["company_candidate", "company_identity", "company_identity_bridge"]
+      access: "READ/WRITE"
+    - schema: "outreach"
+      tables: ["outreach"]
+      access: "WRITE"
+  apis: []
+  secrets:
+    - "NEON_CONNECTION_STRING"
+    - "DOPPLER_TOKEN"
+
+imo:
+  ingress:
+    trigger: "Source adapter loads company candidates into cl.company_candidate"
+    schema: "cl.company_candidate (staging_id, source_company_id, source_system, company_name, company_domain, eligibility_status)"
+  egress:
+    outputs:
+      - "cl.company_identity (minted sovereign_company_id)"
+      - "cl.company_identity_bridge (cross-system mappings)"
+    consumers: ["LCS Runtime", "Outreach sub-hubs"]
+
+log_targets:
+  - "log/002-cl-pipeline/"
+
+dashboard_ref: "PROC-LCS"

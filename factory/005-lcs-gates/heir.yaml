@@ -1,0 +1,40 @@
+# Process HEIR — 005-lcs-gates
+process_id: "PROC-LCS-GATES"
+process_number: "005"
+name: "LCS Gates"
+source_repo: "company-lifecycle-cl"
+source_paths:
+  - "src/sys/lcs/gates/"
+runtime: "typescript"
+status: "extracted"
+
+description: >
+  Capacity gate, freshness gate, suppression engine.
+  Controls delivery velocity and prevents over-sending.
+
+dependencies:
+  databases:
+    - schema: "lcs"
+      tables: ["signal_queue", "event"]
+      access: "READ"
+    - schema: "outreach"
+      tables: ["bit_scores"]
+      access: "READ"
+  apis: []
+  secrets:
+    - "NEON_CONNECTION_STRING"
+    - "DOPPLER_TOKEN"
+
+imo:
+  ingress:
+    trigger: "Called by LCS Delivery before each send"
+    schema: "lcs.event history + outreach.bit_scores authorization band"
+  egress:
+    outputs:
+      - "Gate decision: ALLOW / SUPPRESS / THROTTLE"
+    consumers: ["LCS Delivery"]
+
+log_targets:
+  - "log/005-lcs-gates/"
+
+dashboard_ref: "PROC-LCS"

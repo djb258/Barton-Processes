@@ -7,7 +7,7 @@
 #         this file is the implementation record.
 # ═══════════════════════════════════════════════════════════════
 
-registry_version: "0.2.0"
+registry_version: "1.0.0"
 last_updated: "2026-03-14"
 
 # ───────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ processes:
       - "neon/"
       - "neon/agent/"
     runtime: "node"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Neon CLI agent + DB scripts — identity gate, domain verification, collision detection, migration runners, schema verification"
 
   - number: "002"
@@ -42,7 +42,7 @@ processes:
     source_paths:
       - "pipeline/"
     runtime: "node"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Pipeline orchestrator, ingest, intake_service, lifecycle_worker, backfill, adapters"
 
   - number: "003"
@@ -52,7 +52,7 @@ processes:
     source_paths:
       - "src/runtime/lcs/"
     runtime: "typescript"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Cron runner, context assembler, matview refresh, signal bridge, webhook handler"
 
   - number: "004"
@@ -62,7 +62,7 @@ processes:
     source_paths:
       - "src/app/lcs/"
     runtime: "typescript"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Delivery runner, delivery queue, adapters (mailgun, heyreach, sales-handoff), id-minter, pipeline orchestrator + 7 steps"
     dashboard_ref: "PROC-LCS"
 
@@ -73,7 +73,7 @@ processes:
     source_paths:
       - "src/sys/lcs/gates/"
     runtime: "typescript"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Capacity gate, freshness gate, suppression engine"
 
   # ── barton-outreach-core (006-011) ──────────────────────────
@@ -151,7 +151,7 @@ processes:
     source_paths:
       - "fleet/snap-on/field-monitor/"
     runtime: "cloudflare-workers"
-    status: "pending-extraction"
+    status: "extracted"
     description: "4 CF Workers (fetcher, orchestrator, parser-registry, proxy-router) + shared types + scheduler"
 
   # ── client (013-014) ────────────────────────────────────────
@@ -163,7 +163,7 @@ processes:
     source_paths:
       - "src/ai/"
     runtime: "python"
-    status: "pending-extraction"
+    status: "extracted"
     description: "MCP server, sidecar server, agent library, HEIR checks"
 
   - number: "014"
@@ -173,7 +173,7 @@ processes:
     source_paths:
       - "src/ui/api/"
     runtime: "node"
-    status: "pending-extraction"
+    status: "extracted"
     description: "API endpoints — hello, llm, ssot/save, subagents, test"
 
   # ── sales (015) ─────────────────────────────────────────────
@@ -186,7 +186,7 @@ processes:
       - "src/app/meetings/"
       - "src/sys/integrations/"
     runtime: "typescript"
-    status: "pending-extraction"
+    status: "extracted"
     description: "Meeting service + Supabase/Doppler integrations"
 
   # ── BIT Scoring (016) — cross-hub aggregation ───────────────
