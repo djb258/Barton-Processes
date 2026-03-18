@@ -1,0 +1,49 @@
+# HEIR — 700 Campaign Engine
+# Sequences MIDs based on movement detection.
+# No movement = 1 touch monthly. Movement = 3-5 touches over 2 weeks.
+process_id: "PROC-CAMPAIGN"
+process_number: "700"
+name: "Campaign Engine"
+blueprint_owner: "company-lifecycle-cl"
+runtime: "cloudflare-workers"
+status: "build"
+sovereign_ref: "imo-creator-v2"
+ctb_placement: "leaf"
+cc_layer: "CC-04"
+imo_topology: "middle"
+
+services:
+  - "CF Worker (after LCS pipeline determines MID targets)"
+  - "Neon via Hyperdrive"
+secrets_provider: "doppler"
+
+snap_on_tools:
+  - {id: "TOOL-007", name: "Composio", tier: "cheap", role: "Routes MIDs to Mailgun/HeyReach"}
+
+campaign_models:
+  no_movement:
+    touches: 1
+    cadence: "monthly"
+    frame: "generic_introduction"
+    goal: "stay visible"
+  movement_detected:
+    touches: "3-5"
+    cadence: "every 2-3 days over ~2 weeks"
+    frame: "movement_specific (based on signal type)"
+    goal: "get the meeting"
+
+mid_tagging:
+  - path_type: ["WARM", "COLD"]       # For A/B tracking
+  - channel: ["MG", "HR"]             # Mailgun or HeyReach
+  - movement_signal: "which signal triggered this campaign"
+  - sequence_position: "1 of 5, 2 of 5, etc."
+
+acceptance_criteria:
+  - "Tags every MID with path_type + channel + movement_signal"
+  - "Sequences movement campaigns over 2 weeks"
+  - "Monthly generic for non-movement companies"
+  - "CTA link in every MID (schedule a meeting)"
+  - "Errors write to master error table (D1)"
+
+depends_on: [100]  # Runs after LCS pipeline compiles CIDs
+feeds: []  # Terminal — delivers MIDs. Webhooks feed back to 100.

@@ -1,42 +1,47 @@
 # ═══════════════════════════════════════════════════════════════
-# HEIR — Barton-Processes Identity Record
+# HEIR — Barton-Processes v2
 # ═══════════════════════════════════════════════════════════════
-# Authority: imo-creator (Sovereign)
-# Role: Process engine — ALL executable code lives here
-# Taxonomy: Blueprint repos = brain (static). This repo = muscle (runtime).
+# Authority: imo-creator-v2 (Sovereign)
+# Governing Engine: Tier 0 Doctrine
+# Role: Assembly line — ALL executable processes
 # ═══════════════════════════════════════════════════════════════
 
-doctrine_version: "3.5.0"
-sovereign_ref: "imo-creator"
+sovereign_ref: "imo-creator-v2"
+governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
 hub_id: "barton-processes"
 hub_name: "Barton Processes"
 ctb_placement: "factory"
 imo_topology: "middle"
+cc_layer: "CC-02"
 repo_type: "process-engine"
 
 services:
-  - "neon-db-agent"
-  - "cl-pipeline"
-  - "lcs-runtime"
-  - "lcs-delivery"
-  - "lcs-gates"
-  - "dol-refresh"
-  - "people-intel"
-  - "blog-monitor"
-  - "talent-flow"
-  - "outreach-execution"
-  - "field-monitor"
-  - "client-ai-services"
-  - "client-ui-api"
-  - "sales-meeting-service"
-
+  - "CF Workers (all runtime execution)"
+  - "Neon via Hyperdrive (vault)"
+  - "Composio (MCP — tool routing)"
+  - "D1 (master error table)"
 secrets_provider: "doppler"
 
-acceptance_criteria:
-  - "Every process has a numbered directory under factory/"
-  - "Every process has heir.yaml with declared dependencies"
-  - "process-registry.yaml matches actual factory/ contents"
-  - "ZERO executables remain in any blueprint repo after extraction"
-  - "All cross-silo dependencies listed in ingress-manifest.yaml"
+processes:
+  - {number: 100, name: "LCS Pipeline", runtime: "cf-worker"}
+  - {number: 200, name: "People Worker", runtime: "cf-worker"}
+  - {number: 300, name: "Blog Worker", runtime: "cf-worker"}
+  - {number: 400, name: "DOL Views", runtime: "sql-views"}
+  - {number: 500, name: "Talent Flow", runtime: "cf-worker"}
+  - {number: 600, name: "BIT Scoring", runtime: "cf-worker"}
+  - {number: 700, name: "Campaign Engine", runtime: "cf-worker"}
 
-status: "phase-0"
+monthly_execution_order:
+  - 200  # People Worker (refresh slots)
+  - 300  # Blog Worker (scan sitemaps)
+  - 500  # Talent Flow (detect movement from People snapshot)
+  - 600  # BIT Scoring (aggregate all signals)
+  - 100  # LCS Pipeline (compile CIDs, construct SIDs)
+  - 700  # Campaign Engine (sequence MIDs — 1 touch or 3-5 campaign)
+
+acceptance_criteria:
+  - "All processes are CF Workers (except 400 DOL Views)"
+  - "Every process has heir.yaml with v2 HEIR fields"
+  - "Monthly execution order produces correct data flow"
+  - "All errors write to master error table (D1)"
+  - "Movement detection is binary (0/1) before classification"

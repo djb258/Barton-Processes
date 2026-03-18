@@ -1,0 +1,43 @@
+# HEIR — 300 Blog Worker
+# Monthly dumb worker. Scans sitemaps. Detects content movement (0/1). AI classifies.
+process_id: "PROC-BLOG"
+process_number: "300"
+name: "Blog Worker"
+blueprint_owner: "barton-outreach-core"
+runtime: "cloudflare-workers"
+status: "build"
+sovereign_ref: "imo-creator-v2"
+ctb_placement: "leaf"
+cc_layer: "CC-04"
+imo_topology: "spoke"  # Dumb worker — ingress spoke feeding CID
+
+services:
+  - "CF Worker (monthly cron)"
+  - "Neon via Hyperdrive"
+  - "CF fetch (free — sitemap scanning)"
+  - "Composio → Firecrawl (JS-heavy pages)"
+  - "Composio → ScraperAPI (anti-bot)"
+secrets_provider: "doppler"
+
+snap_on_tools:
+  - {id: "TOOL-004", name: "Firecrawl", tier: "cheap"}
+  - {id: "TOOL-005", name: "ScraperAPI", tier: "cheap"}
+
+ut_sub_hubs: ["16-fetcher", "17-parser-registry", "18-proxy-router", "20-cache-layer", "21-dedup-engine"]
+
+movement_detection:
+  type: "sitemap_diff + ai_tail"
+  ai_required: true
+  ai_role: "Classification ONLY — tail, not spine. AI reads content, tags signal type."
+  method: "Compare sitemap to last month. New/changed pages = 1."
+  output: "0 (no new content) or 1 (movement)"
+  signals: ["FUNDING_EVENT", "ACQUISITION", "LEADERSHIP_CHANGE", "EXPANSION", "RESTRUCTURING", "GENERAL_NEWS"]
+
+acceptance_criteria:
+  - "Monthly sitemap scan compared to previous snapshot"
+  - "Binary movement gate per company"
+  - "AI classification only on movement=1 (not on static companies)"
+  - "Errors write to master error table (D1)"
+
+depends_on: []  # Independent — reads from CT + vendor.blog
+feeds: [600, 100]  # BIT, LCS

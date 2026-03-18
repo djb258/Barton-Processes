@@ -1,0 +1,56 @@
+# HEIR — 600 BIT Scoring
+# Aggregates all sub-hub signals into authorization bands (0-5).
+# Pure computation. No external tools. Reads everything, decides nothing.
+process_id: "PROC-BIT"
+process_number: "600"
+name: "BIT Scoring"
+blueprint_owner: "barton-outreach-core"
+runtime: "cloudflare-workers"
+status: "build"
+sovereign_ref: "imo-creator-v2"
+ctb_placement: "leaf"
+cc_layer: "CC-04"
+imo_topology: "middle"  # Hub — aggregates from all spokes
+
+services:
+  - "CF Worker (monthly cron — runs AFTER all dumb workers)"
+  - "Neon via Hyperdrive"
+secrets_provider: "doppler"
+
+snap_on_tools: []  # No external tools. Pure computation.
+ut_sub_hubs: []
+
+signal_sources:
+  structural_pressure:  # DOL — slow velocity, highest trust
+    - {signal: "FORM_5500_FILED", weight: "+5", source: "400"}
+    - {signal: "BROKER_CHANGE", weight: "+7", source: "400"}
+    - {signal: "RENEWAL_APPROACHING", weight: "+5", source: "400"}
+    - {signal: "PREMIUM_INCREASE", weight: "+5", source: "400"}
+  decision_surface:  # People — medium velocity, high trust
+    - {signal: "SLOT_FILLED", weight: "+10", source: "200"}
+    - {signal: "EMAIL_VERIFIED", weight: "+3", source: "200"}
+    - {signal: "EXECUTIVE_JOINED", weight: "+10", source: "500"}
+    - {signal: "EXECUTIVE_LEFT", weight: "-5", source: "500"}
+  narrative_volatility:  # Blog — fast velocity, lowest trust (timing amplifier only)
+    - {signal: "FUNDING_EVENT", weight: "+15", source: "300"}
+    - {signal: "ACQUISITION", weight: "+12", source: "300"}
+    - {signal: "EXPANSION", weight: "+8", source: "300"}
+    - {signal: "LEADERSHIP_CHANGE", weight: "+10", source: "300"}
+
+bands:
+  - {band: 0, range: "0-9", name: "SILENT", action: "no outreach"}
+  - {band: 1, range: "10-24", name: "WATCH", action: "internal flag only"}
+  - {band: 2, range: "25-39", name: "EXPLORATORY", action: "1 educational/60 days"}
+  - {band: 3, range: "40-59", name: "TARGETED", action: "persona-specific, 3 max"}
+  - {band: 4, range: "60-79", name: "ENGAGED", action: "phone warm, 5 max"}
+  - {band: 5, range: "80+", name: "DIRECT", action: "direct contact, meeting request"}
+
+acceptance_criteria:
+  - "Runs AFTER all dumb workers complete"
+  - "Reads signals from 200, 300, 400, 500"
+  - "Produces composite score per company"
+  - "Classifies into band 0-5"
+  - "Gate 8 reads this score"
+
+depends_on: [200, 300, 400, 500]  # Runs after all sub-hubs
+feeds: [100]  # LCS pipeline reads BIT for gate 8
