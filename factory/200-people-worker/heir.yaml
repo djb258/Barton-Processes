@@ -1,4 +1,5 @@
 # HEIR — 200 People Worker
+# THE GATEWAY. Without slots filled, nothing downstream works.
 # Monthly dumb worker. Fills CEO/CFO/HR slots. Detects movement (0/1).
 process_id: "PROC-PEOPLE"
 process_number: "200"
@@ -7,6 +8,7 @@ blueprint_owner: "barton-outreach-core"
 runtime: "cloudflare-workers"
 status: "build"
 sovereign_ref: "imo-creator-v2"
+governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
 ctb_placement: "leaf"
 cc_layer: "CC-04"
 imo_topology: "spoke"  # Dumb worker — ingress spoke feeding CID
@@ -14,34 +16,78 @@ imo_topology: "spoke"  # Dumb worker — ingress spoke feeding CID
 services:
   - "CF Worker (monthly cron)"
   - "Neon via Hyperdrive"
-  - "Composio → Hunter"
-  - "Composio → Apollo"
-  - "Composio → MillionVerifier"
-  - "CF fetch → MX/SMTP/LinkedIn (free tools)"
+  - "D1 (master error table)"
 secrets_provider: "doppler"
 
-snap_on_tools:
-  - {id: "TOOL-001", name: "MXLookup", tier: "free"}
-  - {id: "TOOL-002", name: "SMTPCheck", tier: "free"}
-  - {id: "TOOL-003", name: "LinkedInCheck", tier: "free"}
-  - {id: "TOOL-008", name: "Hunter", tier: "surgical"}
-  - {id: "TOOL-009", name: "Apollo", tier: "surgical"}
-  - {id: "TOOL-010", name: "MillionVerifier", tier: "surgical"}
+# TOOL PRIORITY: Well drinks first, top shelf last.
+# Track which tool produced the data — Monte Carlo evaluates tool ROI.
+tool_priority:
+  well_drinks:  # FREE — CF Workers via UT sub-hubs
+    - {id: "TOOL-001", name: "MXLookup", tier: "free", method: "CF fetch"}
+    - {id: "TOOL-002", name: "SMTPCheck", tier: "free", method: "CF fetch"}
+    - {id: "TOOL-003", name: "LinkedInCheck", tier: "free", method: "CF fetch"}
+  house_pours:  # CHEAP — existing subscriptions
+    - {id: "TOOL-007", name: "Composio", tier: "cheap", role: "routes to tools below"}
+  top_shelf:  # SURGICAL — only when well drinks fail
+    - {id: "TOOL-008", name: "Hunter", tier: "surgical", gate: "well drinks exhausted"}
+    - {id: "TOOL-009", name: "Apollo", tier: "surgical", gate: "well drinks exhausted"}
+    - {id: "TOOL-010", name: "MillionVerifier", tier: "surgical", gate: "email found, needs verification"}
 
-ut_sub_hubs: ["21-dedup", "23-rate-limiter"]
+ut_sub_hubs: ["16-fetcher", "17-parser-registry", "20-cache-layer", "21-dedup-engine", "23-rate-limiter"]
+
+# DATA SOURCE TRUST LEVELS
+# Not all 96K are equal. DOL-verified companies are highest trust.
+source_trust:
+  dol_linked: "HIGHEST — federal filing proves viability, has benefits plan"
+  hunter_source: "MEDIUM — domain exists, unverified against federal records"
+  clay_source: "MEDIUM — scraped data, unverified"
+
+# ENRICHMENT PRIORITY
+# Don't spend top-shelf credits on unverified companies.
+enrichment_priority:
+  - "DOL-linked + movement + empty slots → FIRST (verified, hot, needs people)"
+  - "DOL-linked + no movement + empty slots → SECOND (verified, needs people)"
+  - "Non-DOL companies → THIRD (verify viability before spending)"
+
+# REACHABILITY GATE
+# Must pass BEFORE company can enter LCS pipeline.
+reachability_gate:
+  requirement: "At least ONE slot filled with verified email OR LinkedIn"
+  statuses:
+    UNREACHABLE: "No slots filled, or slots with no contact method"
+    EMAIL_ONLY: "Verified email, no LinkedIn → Mailgun path"
+    LINKEDIN_ONLY: "LinkedIn URL, no email → HeyReach path"
+    FULL: "Both channels available → best position"
+  rule: "UNREACHABLE companies cannot enter LCS. Period."
+
+# SLOT CONSTANTS
+slots:
+  types: ["CEO", "CFO", "HR"]  # Fixed — these three, always
+  priority: "CEO → CFO → HR"
+  minimum_for_lcs: 1  # At least one reachable slot
+
+# WIDE SCHEMA
+# Collect ALL data points per slot. Don't decide which matter yet.
+# Monte Carlo will tell us which correlate with meetings.
+# Every data point tagged with source_tool and timestamp.
+schema_approach: "wide — lots of columns, most nullable, everything timestamped"
 
 movement_detection:
   type: "deterministic"
   ai_required: false
-  method: "slot-by-slot snapshot diff"
+  method: "slot-by-slot snapshot diff, month over month"
   output: "0 (no change) or 1 (movement)"
   signals: ["JOINED", "LEFT", "REPLACED", "TITLE_CHANGED", "EMAIL_CHANGED"]
 
 acceptance_criteria:
+  - "At least one reachable slot before company enters LCS"
+  - "Well drinks exhausted before top shelf poured"
+  - "Every data point tagged with source_tool + timestamp"
   - "Monthly snapshot compared to previous month"
   - "Binary movement gate per slot per company"
-  - "Verified emails in slots → SID has a recipient"
+  - "DOL-linked companies prioritized for enrichment"
   - "Errors write to master error table (D1)"
+  - "Wide schema — collect everything, Monte Carlo decides what matters"
 
 depends_on: []  # Independent — reads from CT
 feeds: [500, 600, 100]  # Talent Flow, BIT, LCS
