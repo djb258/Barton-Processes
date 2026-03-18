@@ -202,6 +202,21 @@ processes:
     description: "Buyer Intent Tracker — signal aggregation across all sub-hubs into authorization bands (0-5)"
     dashboard_ref: "PROC-BIT-SCORING"
 
+  # ── LCS Pipeline v2 (017) — unified CID→SID→MID CF Worker ──
+
+  - number: "017"
+    id: "PROC-LCS-PIPELINE-V2"
+    name: "LCS Pipeline v2"
+    source_repo: "imo-creator-v2"
+    source_paths:
+      - "workers/lcs-pipeline/"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "Unified CID→SID→MID CF Worker — full circle with webhook feedback, ORBT 3-strike, gates, BAR-152 numbering. Replaces 003/004/005 as single deployable unit."
+    dashboard_ref: "PROC-LCS"
+    replaces: ["003", "004", "005"]
+    bars: ["BAR-131", "BAR-132", "BAR-48", "BAR-152"]
+
 # ═══════════════════════════════════════════════════════════════
 # EXTRACTION STATUS LEGEND
 # ═══════════════════════════════════════════════════════════════

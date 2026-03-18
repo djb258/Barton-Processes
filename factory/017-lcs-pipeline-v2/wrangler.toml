@@ -1,0 +1,19 @@
+name = "lcs-pipeline"
+main = "src/index.ts"
+compatibility_date = "2025-03-17"
+compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+
+# Hyperdrive binding to Neon (connection string from Doppler)
+[[hyperdrive]]
+binding = "HD_CL"
+id = "placeholder-get-from-doppler"
+
+# Cron trigger — runs CID→SID→MID pipeline on schedule
+[triggers]
+crons = ["*/15 * * * *"]  # Every 15 minutes
+
+[vars]
+PIPELINE_MODE = "LIVE"  # LIVE | DRY_RUN | SMOKE_TEST
