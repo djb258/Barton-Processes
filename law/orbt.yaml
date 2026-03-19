@@ -20,3 +20,6 @@ history:
   - date: "2026-03-19"
     mode: "BUILD"
     reason: "830 client portal — 5 pages (renewal, CEO, HR, underwriting, agent), shared D1 with 810, SSR HTML"
+  - date: "2026-03-19"
+    mode: "BUILD"
+    reason: "900 sales portal — 4 meeting pages (fact finder form, insurance ed + Monte Carlo, systems ed, financials)"

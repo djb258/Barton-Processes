@@ -259,6 +259,18 @@ processes:
     status: "build"
     description: "5 client-facing pages (renewal, CEO, HR, underwriting, service agent). Path-based routing, shared D1 with 810, SSR HTML, client branding. Agent page has ticket write capability."
 
+  # ── sales (900) ───────────────────────────────────────────
+
+  - number: "900"
+    id: "PROC-SALES-PORTAL"
+    name: "Sales Portal"
+    source_repo: "ctb-sales-navigator"
+    source_paths:
+      - "blueprint-only"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "4 sales meeting pages. Meeting 1 fact finder (read-write, pulls outreach 5 sub-hubs). Meetings 2-4 presentation/read-only. Monte Carlo results on Meeting 2."
+
 # ═══════════════════════════════════════════════════════════════
 # EXTRACTION STATUS LEGEND
 # ═══════════════════════════════════════════════════════════════

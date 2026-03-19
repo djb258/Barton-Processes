@@ -35,6 +35,8 @@ processes:
   - {number: 810, name: "Client Data Intake", runtime: "cf-worker"}
   - {number: 820, name: "Vendor Export", runtime: "cf-worker"}
   - {number: 830, name: "Client Portal", runtime: "cf-worker"}
+  # Sales portal (900-series)
+  - {number: 900, name: "Sales Portal", runtime: "cf-worker"}
 
 monthly_execution_order:
   - 200  # People Worker (refresh slots)
