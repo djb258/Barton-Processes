@@ -1,0 +1,24 @@
+{
+  "name": "people-worker-200",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create people-worker-200",
+    "d1:migrate": "wrangler d1 execute people-worker-200 --file=src/migrations/001_d1_working_tables.sql",
+    "neon:migrate": "psql $DATABASE_URL -f src/migrations/002_neon_vault_table.sql",
+    "bulk:export-list": "wrangler d1 execute people-worker-200 --remote --command \"SELECT person_id, linkedin_url FROM monitor_list\" --json > bulk-update/monitor-list.json",
+    "bulk:snapshot": "npx tsx bulk-update/snapshot.ts",
+    "bulk:upload": "npx tsx bulk-update/upload.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "playwright": "^1.58.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

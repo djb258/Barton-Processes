@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════════
+# Process 200 — People Worker
+# ═══════════════════════════════════════════════════════════════
+# D1 = workspace (edge). Neon = vault (canonical).
+# Monthly lifecycle: SEED (Neon→D1) → FETCH (batches) → PUSH (D1→Neon)
+# Uses UT Sub-Hub 16 (Distributed Fetcher) with domain rotation.
+# ═══════════════════════════════════════════════════════════════
+
+name = "people-worker-200"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Daily cron — runs batch each day through the month
+# Day 1: seeds monitor list + baseline
+# Days 1-28: processes batches
+# Day 28+: pushes results to Neon vault
+[triggers]
+crons = ["0 6 * * *"]
+
+# D1 — working database (edge)
+[[d1_databases]]
+binding = "D1"
+database_name = "people-worker-200"
+database_id = "4fa3b760-d8c9-4f94-8291-e0f85fc2a3a4"
+
+[vars]
+# NEON_URL set via `wrangler secret put NEON_URL`
+# PROXY_SECRET set via `wrangler secret put PROXY_SECRET`
+# LinkedIn proxy tunnel (residential IP)
+PROXY_URL = "https://linkedin-proxy.insuranceinformatic.agency"
+# Profiles to process per cron invocation
+BATCH_SIZE = "100"
+# Delay between fetches (ms) — randomized within range
+MIN_DELAY_MS = "30000"
+MAX_DELAY_MS = "120000"
