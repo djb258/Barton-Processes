@@ -1,0 +1,33 @@
+# HEIR — 800 Client Mint
+process_id: "PROC-CLIENT-MINT"
+process_number: "800"
+name: "Client Mint"
+blueprint_owner: "client"
+runtime: "cloudflare-workers"
+status: "build"
+sovereign_ref: "imo-creator-v2"
+governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
+ctb_placement: "leaf"
+cc_layer: "CC-04"
+imo_topology: "middle"
+
+services:
+  - "CF Worker (manual trigger)"
+  - "Neon via Hyperdrive"
+  - "D1 (working tables)"
+secrets_provider: "doppler"
+
+two_question_intake:
+  what_triggers: "Human provides CL sovereign ID"
+  how_do_we_get_it: "Read company identity from Neon vault (CL schema)"
+
+acceptance_criteria:
+  - "Receives CL sovereign ID, mints new client_id in D1"
+  - "Populates clnt.client from CL sovereign data"
+  - "Links client_id back to CL sovereign ID"
+  - "Promotes certified client to Neon vault"
+  - "Errors write to clnt.client_error in D1"
+  - "Duplicate sovereign ID detection halts with error"
+
+depends_on: []
+feeds: [810]

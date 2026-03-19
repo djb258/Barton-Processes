@@ -217,6 +217,48 @@ processes:
     replaces: ["003", "004", "005"]
     bars: ["BAR-131", "BAR-132", "BAR-48", "BAR-152"]
 
+  # ── client (800-820) ──────────────────────────────────────────
+
+  - number: "800"
+    id: "PROC-CLIENT-MINT"
+    name: "Client Mint"
+    source_repo: "client"
+    source_paths:
+      - "blueprint-only"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "Receives CL sovereign ID → mints client_id → populates clnt.client in D1 → vaults to Neon"
+
+  - number: "810"
+    id: "PROC-CLIENT-DATA-INTAKE"
+    name: "Client Data Intake"
+    source_repo: "client"
+    source_paths:
+      - "blueprint-only"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "CSV/API intake → Zod validate → D1 staging → promote to canonical → vault to Neon. Handles S2-S5 spokes."
+
+  - number: "820"
+    id: "PROC-VENDOR-EXPORT"
+    name: "Vendor Export"
+    source_repo: "client"
+    source_paths:
+      - "blueprint-only"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "Cron — reads D1 canonical → applies vendor blueprint mapping (KV) → generates export files. Daily TPA/PBM, weekly carriers."
+
+  - number: "830"
+    id: "PROC-CLIENT-PORTAL"
+    name: "Client Portal"
+    source_repo: "client"
+    source_paths:
+      - "blueprint-only"
+    runtime: "cloudflare-workers"
+    status: "build"
+    description: "5 client-facing pages (renewal, CEO, HR, underwriting, service agent). Path-based routing, shared D1 with 810, SSR HTML, client branding. Agent page has ticket write capability."
+
 # ═══════════════════════════════════════════════════════════════
 # EXTRACTION STATUS LEGEND
 # ═══════════════════════════════════════════════════════════════

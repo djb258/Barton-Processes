@@ -1,0 +1,39 @@
+# HEIR — 830 Client Portal
+process_id: "PROC-CLIENT-PORTAL"
+process_number: "830"
+name: "Client Portal"
+blueprint_owner: "client"
+runtime: "cloudflare-workers"
+status: "build"
+sovereign_ref: "imo-creator-v2"
+governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
+ctb_placement: "leaf"
+cc_layer: "CC-04"
+imo_topology: "egress"
+
+services:
+  - "CF Worker (HTTP)"
+  - "D1 (shared with 810 — read + ticket writes)"
+secrets_provider: "doppler"
+
+two_question_intake:
+  what_triggers: "User navigates to app.svgagency.com/:slug/:page"
+  how_do_we_get_it: "Resolve slug to client_id from D1, query page data, render HTML"
+
+pages:
+  - {route: "/:slug/renewal", audience: "Client", access: "read-only"}
+  - {route: "/:slug/ceo", audience: "Client CEO", access: "read-only"}
+  - {route: "/:slug/hr", audience: "Client HR", access: "read-only"}
+  - {route: "/:slug/underwriting", audience: "Stop-loss underwriter", access: "read-only"}
+  - {route: "/:slug/agent", audience: "Internal (Dave's team)", access: "read-write"}
+
+acceptance_criteria:
+  - "Slug resolves to client_id from shared D1"
+  - "Unknown slug returns 404"
+  - "Each page renders with client branding (logo, colors)"
+  - "All pages read-only except agent (ticket status updates)"
+  - "Agent validates status transitions before writing"
+  - "Server-side HTML — no SPA framework"
+
+depends_on: [810]
+feeds: []

@@ -1,0 +1,11 @@
+name = "client-mint-800"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "D1"
+database_name = "client-mint-800"
+database_id = ""  # TODO: wrangler d1 create client-mint-800
+
+[vars]
+# NEON_URL set via wrangler secret put

@@ -30,6 +30,11 @@ processes:
   - {number: 500, name: "Talent Flow", runtime: "cf-worker"}
   - {number: 600, name: "BIT Scoring", runtime: "cf-worker"}
   - {number: 700, name: "Campaign Engine", runtime: "cf-worker"}
+  # Client data movement (800-series)
+  - {number: 800, name: "Client Mint", runtime: "cf-worker"}
+  - {number: 810, name: "Client Data Intake", runtime: "cf-worker"}
+  - {number: 820, name: "Vendor Export", runtime: "cf-worker"}
+  - {number: 830, name: "Client Portal", runtime: "cf-worker"}
 
 monthly_execution_order:
   - 200  # People Worker (refresh slots)

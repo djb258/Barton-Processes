@@ -1,0 +1,21 @@
+{
+  "name": "client-intake-810",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create client-intake-810",
+    "d1:migrate": "wrangler d1 execute client-intake-810 --file=src/migrations/001_d1_intake_tables.sql",
+    "neon:migrate": "psql $DATABASE_URL -f src/migrations/002_neon_clnt_all.sql"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

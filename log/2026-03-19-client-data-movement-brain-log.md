@@ -1,0 +1,14 @@
+# imo-brain Log — Client Data Movement Session
+# Pending upload to imo-brain (auth key mismatch — Doppler SVG_BRAIN_API_KEY works for svg-brain, not imo-brain)
+# Once auth is fixed, POST this to https://imo-brain.svg-outreach.workers.dev/ingest
+
+## Ingest Payload
+
+```json
+{
+  "domain": "system",
+  "source_path": "barton-processes/factory/800-820",
+  "title": "Client Data Movement — 800-series Process Design",
+  "content": "SESSION 2026-03-19: Built 3 CF Workers for client data movement in Barton-Processes.\n\nARCHITECTURE DECISIONS:\n- CL sovereign ID is the spine. Client is a sub-hub off CL. Three sub-hubs hang off CL: Outreach, Sales, Client.\n- Data flow: CL sovereign ID → 800 Client Mint → D1 working tables → 810 intake populates sub-hubs → 820 exports to vendors.\n- CF (D1/KV) is the WORKING LAYER. Neon is the VAULT. All active operations happen in CF. Promote to Neon when certified.\n- Client intake is NOT from an external API. It comes from CL sovereign ID (read from Neon), then sub-hub data arrives via CSV/API upload.\n- Low volume, high governance. Annual plan setup, ongoing enrollment changes. Daily/weekly vendor exports.\n\nPROCESSES BUILT:\n- 800 Client Mint: Manual trigger. Receives CL sovereign ID → reads Neon CL → mints client_id in D1 → populates clnt.client → vaults to Neon.\n- 810 Client Data Intake: CSV/API → Zod validate → D1 staging (enrollment_intake + intake_record) → promote to D1 canonical (person, election, plan, plan_quote, vendor, external_identity_map, invoice, service_request) → vault to Neon. One worker handles all 5 spokes via payload routing.\n- 820 Vendor Export: Cron-triggered. Reads D1 canonical → applies vendor blueprint mappings from KV (guardian_life, mutual_of_omaha) → generates export files. Daily for TPA/PBM, weekly for carriers.\n\nTIER 0 VALIDATION: All 3 gates passed (IMO, CTB, Circle). CQRS compliant. Two-Question Intake answered per process.\n\nKEY CORRECTIONS FROM DAVE:\n1. Trigger is always CL sovereign ID, not external API. Client identity originates from CL sovereign.\n2. CF (D1) is the working layer. Neon is the vault. Workers work in D1, not Neon.\n\nBLUEPRINT SOURCE: djb258/client (client-subhive). 16 tables, 5 spokes. Column registry: src/data/db/registry/clnt_column_registry.yml.\n\nFILES CREATED:\n- docs/specs/2026-03-19-client-data-movement-design.md (design spec)\n- docs/plans/2026-03-19-client-data-movement.md (implementation plan)\n- factory/800-client-mint/ (CF Worker: mint client from CL sovereign)\n- factory/810-client-intake/ (CF Worker: CSV/API intake for all spokes)\n- factory/820-vendor-export/ (CF Worker: cron vendor export)\n- law/process-registry.yaml (updated with 800-820)\n- law/ingress-manifest.yaml (updated with clnt + cl dependencies)\n- law/heir.yaml (updated with 800-820)\n- law/orbt.yaml (updated with build note)"
+}
+```

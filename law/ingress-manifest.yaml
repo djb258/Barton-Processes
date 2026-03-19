@@ -94,7 +94,18 @@ required_egress_contracts:
 
   - repo: "client"
     schemas: ["clnt"]
-    status: "pending"
+    status: "active"
+    consumed_by:
+      - "800-client-mint"
+      - "810-client-intake"
+      - "820-vendor-export"
+
+  - repo: "company-lifecycle-cl"
+    schemas: ["cl"]
+    status: "active"
+    consumed_by:
+      - "800-client-mint"
+    notes: "800 reads CL sovereign ID to mint client identity"
 
   - repo: "sales"
     schemas: ["sales"]

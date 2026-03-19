@@ -1,0 +1,20 @@
+{
+  "name": "vendor-export-820",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create vendor-export-820",
+    "d1:migrate": "wrangler d1 execute vendor-export-820 --file=src/migrations/001_d1_export_tables.sql",
+    "kv:create": "wrangler kv namespace create vendor-export-820"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

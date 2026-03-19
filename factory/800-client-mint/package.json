@@ -1,0 +1,20 @@
+{
+  "name": "client-mint-800",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create client-mint-800",
+    "d1:migrate": "wrangler d1 execute client-mint-800 --file=src/migrations/001_d1_client_tables.sql",
+    "neon:migrate": "psql $DATABASE_URL -f src/migrations/002_neon_clnt_client.sql"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

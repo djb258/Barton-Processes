@@ -1,0 +1,20 @@
+name = "vendor-export-820"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[triggers]
+crons = ["0 5 * * *"]  # Daily at 5 AM UTC
+
+[[d1_databases]]
+binding = "D1"
+database_name = "vendor-export-820"
+database_id = ""  # TODO: wrangler d1 create vendor-export-820
+
+[[kv_namespaces]]
+binding = "KV"
+id = ""  # TODO: wrangler kv namespace create vendor-export-820
+
+[vars]
+DAILY_VENDORS = "TPA,PBM"
+WEEKLY_VENDORS = "guardian_life,mutual_of_omaha"
+WEEKLY_DAY = "1"  # Monday

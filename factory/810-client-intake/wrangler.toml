@@ -1,0 +1,11 @@
+name = "client-intake-810"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "D1"
+database_name = "client-intake-810"
+database_id = ""  # TODO: wrangler d1 create client-intake-810
+
+[vars]
+# NEON_URL set via wrangler secret put
