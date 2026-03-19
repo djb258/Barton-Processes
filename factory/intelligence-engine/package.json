@@ -1,0 +1,18 @@
+{
+  "name": "intelligence-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CF Queues-based intelligence engine — producer/consumer scraping infrastructure",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "migrate": "wrangler d1 execute people-worker-200 --local --file=src/migrations/001_intelligence_results.sql",
+    "migrate:remote": "wrangler d1 execute people-worker-200 --remote --file=src/migrations/001_intelligence_results.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.99.0"
+  }
+}
