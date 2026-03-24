@@ -225,6 +225,9 @@ Strikes tracked in `lcs_err0.orbt_strike_number`. Strike 3 logged as event type 
 Barton-Processes/factory/100-lcs-pipeline/
 ├── heir.yaml           # Identity (HEIR)
 ├── MANIFEST.md         # This file — the process manual
+├── OSAM.md             # Semantic access map — WHERE to query
+├── ERD.md              # Entity relationships — tables, columns, FK chain
+├── PRD.md              # Product requirements — acceptance criteria
 ├── package.json        # Dependencies
 ├── wrangler.toml       # CF Worker config (D1 bindings, queue, cron, secrets)
 └── src/
@@ -240,3 +243,19 @@ Barton-Processes/factory/100-lcs-pipeline/
     └── migrations/
         └── 001_lcs_tables.sql  # D1 schema (reference — tables live in spine)
 ```
+
+---
+
+## SESSION LOG
+
+| Date | Session | What Was Done | Brain Chunks |
+|------|---------|---------------|-------------|
+| 2026-03-23 | LCS Hub smoke test (local) | Built compiler v1, local smoke test PASSED, fetchCompanyData fixed to D1 | `session/2026-03-23-process-docs` — 4 chunks |
+| 2026-03-24 | Full v2 build + deploy | Compiler v2 (blueprint-native), rewired to spine+outreach D1, deployed to CF, process extracted to Barton-Processes, MANIFEST/OSAM/ERD/PRD written | `session/2026-03-24-notebooklm-integration` — 19 chunks, `decisions/2026-03-24-ui-architecture-v2` — 9 chunks, `session/2026-03-24-pencil-build-complete` — 9 chunks |
+
+**imo-brain documents related to this process:**
+- `processes/PROCESS-LCS v2 — Full Circle CID→SID→MID Pipeline`
+- `decisions/2026-03-23 Session: Process docs complete + Compiler architecture defined`
+- `operations/BUILD SEQUENCE — Process Verification, Wiring, Movement Detection`
+- `operations/GAMEPLAN — Full Business Model, 10-3-1, Revenue, Pipeline`
+- `session/2026-03-24-notebooklm-integration` (covers full session including LCS work)
