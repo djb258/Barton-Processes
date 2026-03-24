@@ -1,30 +1,68 @@
 # HEIR — 100 LCS Pipeline
 # The CID→SID→MID engine. Full circle with webhook feedback.
+# DEPLOYED: https://lcs-hub.svg-outreach.workers.dev
 process_id: "PROC-LCS"
 process_number: "100"
 name: "LCS Pipeline"
 blueprint_owner: "company-lifecycle-cl"
 runtime: "cloudflare-workers"
-status: "build"
+status: "deployed"
 sovereign_ref: "imo-creator-v2"
 ctb_placement: "leaf"
 cc_layer: "CC-04"
 imo_topology: "middle"
+deployed_at: "2026-03-24"
+deployed_url: "https://lcs-hub.svg-outreach.workers.dev"
 
 services:
-  - "CF Worker (cron + HTTP)"
-  - "Neon via Hyperdrive"
-  - "Composio → Mailgun"
-  - "Composio → HeyReach"
+  - "CF Worker (cron + HTTP + queue consumer)"
+  - "D1 workspace (lcs-hub) — all processing"
+  - "Neon vault — SEED only, never queried during ops"
+  - "Mailgun — direct API (email delivery)"
+  - "HeyReach — direct API (LinkedIn delivery)"
+  - "svg-brain — content library queries"
+  - "imo-brain — system knowledge queries"
 secrets_provider: "doppler"
+
+# Data flow: SEED (Neon → D1) → WORK (all on D1) → PUSH (D1 → Neon batch)
+data_pattern: "SEED_WORK_PUSH"
+workspace: "CF D1 (lcs-hub)"
+vault: "Neon PostgreSQL"
+
+d1_tables:
+  - company        # Working copy seeded from Neon
+  - signal_queue   # Ingress from dumb workers
+  - cid            # Compiled Intelligence Dossier
+  - sid            # Campaign / Signal Document
+  - mid            # Message Delivery Record
+  - suppression    # Learned shutoff valves
+  - event          # CET append-only audit trail
+  - err0           # Error drain with ORBT strikes
+
+endpoints:
+  - "GET  /health           — health check"
+  - "GET  /status           — pipeline stats by status"
+  - "POST /signal           — ingest single signal"
+  - "POST /signals          — ingest batch signals"
+  - "GET  /company/{id}     — company detail (all stages)"
+  - "GET  /trace/{id}       — bidirectional ID lookup"
+  - "POST /webhook/mailgun  — Mailgun delivery webhooks"
+  - "POST /webhook/heyreach — HeyReach delivery webhooks"
+  - "POST /seed             — seed company data (Neon → D1)"
+  - "POST /run              — manual pipeline trigger (smoke test)"
+
+cron: "0 7 * * *"  # Daily 7am UTC — scan for pending signals
+queue: "lcs-pipeline"
+dlq: "lcs-dlq"
 
 acceptance_criteria:
   - "Signal in → CID compiled → SID constructed → MID delivered → webhook received → CID enriched"
   - "Bidirectional trace: MID → SID → CID → signal → sovereign_company_id"
-  - "Errors write to master error table (D1)"
-  - "ORBT 3-strike protocol operational"
+  - "Errors write to err0 on D1"
+  - "ORBT 3-strike protocol operational (strike 3 → suppress)"
+  - "All data processing on D1 — Neon is vault only"
 
 depends_on: [200, 300, 400, 500, 600]  # All sub-hubs feed signals to this
 feeds: [700]  # Campaign engine sequences the MIDs
 
-bars: ["BAR-131", "BAR-132", "BAR-48", "BAR-152"]
+bars: ["BAR-131", "BAR-132", "BAR-48", "BAR-152", "BAR-37"]

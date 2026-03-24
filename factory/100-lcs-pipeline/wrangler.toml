@@ -1,0 +1,59 @@
+# ═══════════════════════════════════════════════════════════════
+# LCS Hub — The Plumbing
+# ═══════════════════════════════════════════════════════════════
+# Hub-spoke architecture. All logic in the hub.
+# Spokes IN: dumb workers emit signals in standard format.
+# Spokes OUT: delivery adapters accept standard message package.
+#
+# Producer (cron): scans Neon vault for new signals → creates jobs
+# Consumer (queue): processes jobs → CID compile → SID assemble → MID deliver
+# HTTP: webhook receivers + health/status API
+#
+# D1 = workspace (edge). Neon = vault (source of truth).
+# All integrations through Composio.
+# ═══════════════════════════════════════════════════════════════
+
+name = "lcs-hub"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Cron — producer scans for new signals daily at 7am UTC
+[triggers]
+crons = ["0 7 * * *"]
+
+# D1 — LCS working database (edge)
+[[d1_databases]]
+binding = "D1"
+database_name = "lcs-hub"
+database_id = "1802dec8-6550-4a7b-913a-aac0888d0a94"
+migrations_dir = "src/migrations"
+
+# Queue — pipeline jobs (signal → CID → SID → MID)
+[[queues.producers]]
+queue = "lcs-pipeline"
+binding = "LCS_QUEUE"
+
+[[queues.consumers]]
+queue = "lcs-pipeline"
+max_batch_size = 5
+max_retries = 3
+dead_letter_queue = "lcs-dlq"
+max_batch_timeout = 60
+
+[vars]
+# SVG Brain for content library queries
+SVG_BRAIN_URL = "https://svg-brain.svg-outreach.workers.dev"
+# IMO Brain for system knowledge
+IMO_BRAIN_URL = "https://imo-brain.svg-outreach.workers.dev"
+# Composio for all integrations
+COMPOSIO_BASE_URL = "https://backend.composio.dev"
+# Mailgun domain
+MAILGUN_DOMAIN = "mg.insuranceinformatics.com"
+
+# Secrets (set via `wrangler secret put <NAME>`):
+#   NEON_URL            — Neon vault connection (OUTREACH_DATABASE_URL from Doppler)
+#   SVG_BRAIN_API_KEY   — svg-brain auth
+#   IMO_BRAIN_API_KEY   — imo-brain auth
+#   COMPOSIO_API_KEY    — Composio auth (GLOBAL_COMPOSIO_API_KEY from Doppler)
+#   MAILGUN_API_KEY     — Mailgun auth (GLOBAL_MAILGUN_API_KEY from Doppler)
+#   HEYREACH_API_KEY    — HeyReach auth (GLOBAL_HEYREACH_API_KEY from Doppler)
