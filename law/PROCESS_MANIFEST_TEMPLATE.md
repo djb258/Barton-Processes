@@ -16,10 +16,26 @@
 
 ## The Rule
 
-**No manifest → process is not certified. Cannot move to OPR.**
+**No documentation chain → process is not certified. Cannot move to OPR.**
 
-The `heir.yaml` is the VIN — identity only, stamped at build.
-The `MANIFEST.md` is the logbook — everything needed to pick up where you left off.
+Every process in `factory/` MUST have the full documentation chain:
+
+```
+factory/{NNN}-{name}/
+├── heir.yaml      ← VIN — identity, stamped at build (Bedrock §8)
+├── MANIFEST.md    ← Logbook — state, issues, session log, brain chunks (Bedrock §8)
+├── OSAM.md        ← Semantic access map — WHERE to query, HOW to join (Bedrock §4)
+├── ERD.md         ← Entity relationships — tables, columns, FK chain (Bedrock §4)
+├── PRD.md         ← Product requirements — acceptance criteria, definition of done (Bedrock §3)
+└── src/           ← Executable code
+```
+
+**Read order (every session, before touching code):**
+1. MANIFEST.md — what is this, what state, what broke, what brain chunks exist
+2. OSAM.md — where to query, join keys, anti-patterns
+3. ERD.md — how tables relate
+4. PRD.md — what "done" looks like
+5. heir.yaml — identity
 
 **Read first. Write last. No exceptions.** (Bedrock §8 — Aviation Model)
 
@@ -263,13 +279,71 @@ Directory listing. The tree of this process folder.
 
 ---
 
+### BLOCK 11: SESSION LOG
+**Governed by: Circle**
+
+The institutional memory. Every session that touches this process gets logged here.
+Links to imo-brain chunks so the next session can query the brain for context.
+This is the Circle closing — the logbook references the brain, the brain references the logbook.
+
+| Field | Value |
+|-------|-------|
+| **CTB Position** | LEAF — each session is a single event, append-only |
+| **Input** | A session modified this process |
+| **Middle** | Record: date, what was done, what imo-brain chunks were created |
+| **Output** | Next session reads this, knows exactly where to pick up |
+| **Circle** | The brain has the detail. This log has the pointers. Together they're complete. |
+
+**Required format:**
+
+```
+| Date | Session | What Was Done | Brain Chunks |
+|------|---------|---------------|-------------|
+```
+
+**Also required — list of imo-brain documents related to this process:**
+
+```
+**imo-brain documents:**
+- `{domain}/{document_title}`
+- `{domain}/{document_title}`
+```
+
+**Rules:**
+- Append-only — never delete a session entry
+- Every session that modifies the process MUST add a row before closing
+- Brain chunks column lists the `source_path` of documents ingested to imo-brain
+- If no brain chunks were created, write "none" — do NOT omit the column
+
+---
+
+## Required Documentation Chain
+
+Every process MUST have ALL of the following files. No file may be omitted.
+
+| File | Purpose | Governed By |
+|------|---------|-------------|
+| `heir.yaml` | Identity — the VIN. Stamped at build. | C&V (Bedrock §2) |
+| `MANIFEST.md` | Logbook — 11 blocks following this template. | All elements (Bedrock §7) |
+| `OSAM.md` | Semantic access map — WHERE to query, HOW to join. | CTB (Bedrock §4) |
+| `ERD.md` | Entity relationships — tables, columns, FK chain. | CTB (Bedrock §4) |
+| `PRD.md` | Product requirements — acceptance criteria, definition of done. | IMO (Bedrock §3) |
+
+**OSAM format:** Must include query patterns (SQL examples), join keys, anti-patterns, and cross-database rules. Same pattern as blueprint repo OSAMs.
+
+**ERD format:** Must include ASCII entity relationship diagram showing all tables, FK chain with arrows, CQRS compliance table (CANONICAL + ERROR per sub-hub), and status value enumerations.
+
+**PRD format:** Must include two-question intake, numbered requirements with binary acceptance criteria, non-requirements (out of scope), and definition of done.
+
+---
+
 ## Enforcement
 
-- `heir.yaml` + `MANIFEST.md` = minimum viable process folder
-- No process moves from BLD to OPR without a complete manifest
-- The auditor (`factory/agents/agent-auditor/`) checks for manifest presence and completeness
-- Any session that modifies a process MUST update the manifest before closing
-- Manifest sections map 1:1 to Bedrock elements: C&V (identity, IDs), IMO (process flow), CTB (databases, dependencies, files), Circle (state, issues, smoke test)
+- Full documentation chain required: `heir.yaml` + `MANIFEST.md` + `OSAM.md` + `ERD.md` + `PRD.md`
+- No process moves from BLD to OPR without complete documentation
+- The auditor (`factory/agents/agent-auditor/`) checks for all 5 files and completeness
+- Any session that modifies a process MUST update the manifest SESSION LOG before closing
+- MANIFEST blocks map 1:1 to Bedrock elements: C&V (identity, IDs), IMO (process flow, smoke test), CTB (databases, dependencies, files), Circle (state, issues, session log)
 
 ---
 
