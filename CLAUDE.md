@@ -78,7 +78,7 @@ barton-processes/
 | 012 | imo-creator (field-monitor snap-on) | 1 |
 | 013-014 | client | 2 |
 | 015 | sales | 1 |
-| 016 | barton-outreach-core (BIT scoring) | 1 |
+| 016 | ~~barton-outreach-core (BIT scoring)~~ | RETIRED 2026-03-25 |
 | 017+ | reserved (barton-storage, future) | — |
 
 ---
@@ -125,6 +125,61 @@ barton-processes/
 4. **Update registry after every extraction** — process-registry.yaml must match factory/
 5. **Verify zero remaining** — source blueprint must have ZERO executables in extracted paths
 6. **Archive, don't delete** — retired code goes to archive/, never vanishes
+
+---
+
+## DATA INVENTORY — What Already Exists
+
+**READ THIS BEFORE BUILDING ANY DATA PIPELINE OR SEED JOB.**
+
+### D1: svg-d1-spine (641a9a1e)
+| Table | Rows | Source | Status |
+|-------|------|--------|--------|
+| `cl_company_identity` | 117,154 | Neon vault (original ingest) | LOADED |
+| `lcs_signal_queue` | 10 | Pipeline-generated | ACTIVE |
+| `lcs_cid` | 8 | Pipeline-generated | ACTIVE |
+| `lcs_sid` | 0 | Pipeline-generated | ACTIVE |
+| `lcs_mid` | 0 | Pipeline-generated | ACTIVE |
+| `lcs_event` | 12 | Pipeline-generated | ACTIVE |
+| `lcs_err0` | 4 | Pipeline-generated | ACTIVE |
+| `lcs_frame_registry` | 11 | Manual seed | CONFIG |
+| `lcs_adapter_registry` | 3 | Manual seed | CONFIG |
+| `lcs_signal_registry` | 9 | Manual seed | CONFIG |
+| `lcs_domain_rotation` | 14 | Manual seed | CONFIG |
+
+### D1: svg-d1-outreach-ops (73a285b8)
+| Table | Rows | Source | Status |
+|-------|------|--------|--------|
+| `outreach_company_target` | 32,704 | Neon `outreach.company_target` | LOADED |
+| `outreach_dol` | 36,247 | Neon `outreach.dol` | LOADED |
+| `outreach_people` | 109,443 | Neon `outreach.people` | LOADED |
+| `outreach_blog` | 49,062 | Neon `outreach.blog` | LOADED |
+| `people_company_slot` | 43,209 | Neon `people.company_slot` | LOADED |
+| `people_people_master` | 32,106 | Neon `people.people_master` | LOADED |
+| `outreach_outreach` | 32,704 | Neon `outreach.outreach` | LOADED |
+| `dol_form_5500` | SEED in progress | Neon `dol.form_5500` | SEEDING |
+| `dol_schedule_a` | SEED in progress | Neon `dol.schedule_a_part1` | SEEDING |
+| `dol_schedule_c` | SEED in progress | Neon `dol.schedule_c_part1_item2` | SEEDING |
+| `dol_schedule_other` | SEED in progress | Neon `dol.schedule_*` | SEEDING |
+| `coverage_service_agent` | 9 | Neon `coverage.service_agent` | LOADED |
+| `coverage_service_agent_coverage` | 21 | Neon coverage zones | LOADED |
+
+### Neon Vault (via Hyperdrive)
+- **Purpose:** System of record. SEED source ONLY.
+- **Rule:** Never queried during pipeline WORK phase. All reads from D1.
+- **Lifecycle:** SEED → WORK → PUSH
+
+### What does NOT need a SEED job:
+- People data (already in D1: 109K outreach_people, 43K slots, 32K master)
+- Blog data (already in D1: 49K rows)
+- DOL summary (already in D1: 36K rows in outreach_dol)
+- Company targeting (already in D1: 32K rows)
+
+### What DOES need a SEED job:
+- DOL filing detail (Form 5500, Schedules A/C/D/G/H/I) — currently SEEDING
+- Any NEW Neon table not listed above
+
+**Last audited: 2026-03-25**
 
 ---
 
