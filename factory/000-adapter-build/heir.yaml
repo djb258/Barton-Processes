@@ -1,0 +1,48 @@
+# HEIR — 000 Adapter Build
+# THE META-PROCESS. Produces all domain adapters.
+# Not a pipeline. Not a worker. A procedure that humans + LLMs execute
+# to define a new domain and plug it into the Tier 0 engine.
+process_id: "PROC-ADAPTER-BUILD"
+process_number: "000"
+name: "Domain Adapter Build Process"
+blueprint_owner: "imo-creator-v2 (bedrock/ADAPTER_BUILD_PROCESS.md)"
+runtime: "human + LLM (not a CF Worker — this is a procedure, not code)"
+status: "active"
+sovereign_ref: "imo-creator-v2"
+governing_engine: "bedrock/math-01-engine.md"
+ctb_placement: "trunk"  # This process produces ALL domain adapters
+cc_layer: "CC-02"
+imo_topology: "middle"  # The process IS the middle — takes a domain, produces an adapter
+
+services:
+  - "Claude Code / Claude AI (LLM execution)"
+  - "NotebookLM (research + content generation)"
+  - "layer0-engine CF Worker (Monte Carlo validation)"
+secrets_provider: "n/a — no API keys needed for the process itself"
+
+three_pass_cycle:
+  pass_1: "Math 2 — Define the domain (comparators, tolerances, transformation)"
+  pass_2: "Math 1 — Run the engine (P(x;θ), diagnostics, sigma)"
+  pass_3: "Math 2 — Tighten from diagnostics (fix broken, re-run)"
+  termination: "No new constants + back-propagation clean + domesticated + sigma tight"
+
+outputs:
+  - "domains/{domain-name}/adapter.md — formal Math 2 adapter document"
+  - "domains/{domain-name}/failure-registry.md — domain-specific failure tracking"
+  - "Tournament results — if adversarial validation was run"
+
+acceptance_criteria:
+  - "Adapter passes Math 2 20-point checklist"
+  - "P(x;θ) produces correct classifications on real candidates"
+  - "Sigma tightens across calibration cycles"
+  - "Feasible region is healthy (not knife-edge)"
+  - "Remaining variables are domesticated"
+  - "Back-propagation clean — no prior constants broken"
+
+depends_on: []  # Independent — this is the root process
+feeds: ["all domain-specific processes"]  # Every domain adapter feeds its pipeline
+
+existing_adapters:
+  - {domain: "svg-insurance", location: "domains/svg-insurance/adapter.md", status: "draft-fce", math2_status: "not started"}
+  - {domain: "us-equities", location: "domains/us-equities/adapter.md", status: "draft-fce-round3", math2_status: "not started"}
+  - {domain: "storage", location: "domains/storage/adapter.md", status: "draft-fce", math2_status: "not started"}
