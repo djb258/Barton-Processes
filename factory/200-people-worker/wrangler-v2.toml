@@ -1,0 +1,42 @@
+# ═══════════════════════════════════════════════════════════════
+# Process 200 — People Worker v2 (Rewired)
+# ═══════════════════════════════════════════════════════════════
+# Operates on existing outreach D1. No standalone D1.
+# Pass 1: Fill empty slots. Pass 2: Detect movement.
+# ═══════════════════════════════════════════════════════════════
+
+name = "people-worker-200"
+main = "src-v2/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Daily cron — processes a batch each day
+[triggers]
+crons = ["0 6 * * *"]
+
+# Outreach D1 — reads/updates people + slots (existing tables)
+[[d1_databases]]
+binding = "D1_OUTREACH"
+database_name = "svg-d1-outreach-ops"
+database_id = "73a285b8-770a-4370-abbe-ce9607be0b34"
+
+# Spine D1 — writes movement signals to lcs_signal_queue
+[[d1_databases]]
+binding = "D1_SPINE"
+database_name = "svg-d1-spine"
+database_id = "641a9a1e-0882-41a7-82af-ea700e7cfbb3"
+
+[vars]
+# Batch size — profiles per cron invocation
+BATCH_SIZE = "50"
+# Delay between fetches (ms) — randomized within range
+MIN_DELAY_MS = "30000"
+MAX_DELAY_MS = "120000"
+
+# DataImpulse proxy credentials — set via wrangler secret:
+#   wrangler secret put PROXY_HOST
+#   wrangler secret put PROXY_PORT
+#   wrangler secret put PROXY_USER
+#   wrangler secret put PROXY_PASS
+#
+# Or from Doppler: PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS
