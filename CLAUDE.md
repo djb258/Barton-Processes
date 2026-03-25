@@ -157,10 +157,10 @@ barton-processes/
 | `people_company_slot` | 43,209 | Neon `people.company_slot` | LOADED |
 | `people_people_master` | 32,106 | Neon `people.people_master` | LOADED |
 | `outreach_outreach` | 32,704 | Neon `outreach.outreach` | LOADED |
-| `dol_form_5500` | SEED in progress | Neon `dol.form_5500` | SEEDING |
-| `dol_schedule_a` | SEED in progress | Neon `dol.schedule_a_part1` | SEEDING |
-| `dol_schedule_c` | SEED in progress | Neon `dol.schedule_c_part1_item2` | SEEDING |
-| `dol_schedule_other` | SEED in progress | Neon `dol.schedule_*` | SEEDING |
+| `dol_form_5500` | 14,252 | Neon `dol.form_5500` | LOADED |
+| `dol_schedule_a` | 17,890 | Neon `dol.schedule_a_part1` | LOADED |
+| `dol_schedule_c` | 33,810 | Neon `dol.schedule_c_part1_item2` | LOADED |
+| `dol_schedule_other` | 105,088 | Neon `dol.schedule_*` | LOADED |
 | `coverage_service_agent` | 9 | Neon `coverage.service_agent` | LOADED |
 | `coverage_service_agent_coverage` | 21 | Neon coverage zones | LOADED |
 
@@ -176,10 +176,9 @@ barton-processes/
 - Company targeting (already in D1: 32K rows)
 
 ### What DOES need a SEED job:
-- DOL filing detail (Form 5500, Schedules A/C/D/G/H/I) — currently SEEDING
-- Any NEW Neon table not listed above
+- Any NEW Neon table not listed above (all current data is LOADED)
 
-**Last audited: 2026-03-25**
+**Last audited: 2026-03-25 | DOL SEED completed: 171,040 rows, 27,868 companies, 0 errors**
 
 ---
 
