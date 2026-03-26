@@ -40,8 +40,8 @@ BATCH_SIZE = "100"
 MIN_DELAY_MS = "30000"
 MAX_DELAY_MS = "120000"
 
-# DataImpulse proxy credentials — set via wrangler secret:
-#   wrangler secret put PROXY_GATEWAY_URL
-#   wrangler secret put PROXY_API_KEY
-#
-# Or from Doppler: imo-creator project
+# DataImpulse proxy credentials — SET (2026-03-26):
+#   PROXY_HOST = gw.dataimpulse.com
+#   PROXY_PORT = 823
+#   PROXY_USER = (from Doppler imo-creator/dev)
+#   PROXY_PASS = (from Doppler imo-creator/dev)

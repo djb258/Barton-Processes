@@ -10,8 +10,10 @@
 export interface Env {
   D1_OUTREACH: D1Database;
   D1_SPINE: D1Database;
-  PROXY_GATEWAY_URL: string;
-  PROXY_API_KEY: string;
+  PROXY_HOST: string;
+  PROXY_PORT: string;
+  PROXY_USER: string;
+  PROXY_PASS: string;
   BATCH_SIZE: string;
   MIN_DELAY_MS: string;
   MAX_DELAY_MS: string;

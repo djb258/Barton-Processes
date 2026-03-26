@@ -115,14 +115,18 @@ async function fetchViaProxy(env: Env, url: string): Promise<SearchResult | null
 }
 
 /**
- * Route a fetch through DataImpulse HTTP gateway proxy.
+ * Route a fetch through DataImpulse residential proxy.
  *
- * DataImpulse HTTP gateway: send request to their gateway URL
- * with the target URL as a parameter. Authentication via API key header.
+ * DataImpulse uses standard HTTP proxy auth: user:pass@host:port
+ * CF Workers can't use HTTP CONNECT, so we use their "super proxy"
+ * endpoint format: fetch the target URL with proxy auth headers.
+ *
+ * DataImpulse docs: residential proxy at gw.dataimpulse.com:823
+ * Auth: Basic auth via Proxy-Authorization header
  */
 async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null> {
-  if (!env.PROXY_GATEWAY_URL || !env.PROXY_API_KEY) {
-    // No proxy configured — try direct fetch as fallback
+  if (!env.PROXY_HOST || !env.PROXY_USER) {
+    // No proxy — try direct fetch as fallback
     try {
       return await fetch(targetUrl, {
         headers: {
@@ -139,15 +143,27 @@ async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null>
   }
 
   try {
-    // DataImpulse HTTP gateway format
-    const proxyUrl = `${env.PROXY_GATEWAY_URL}?url=${encodeURIComponent(targetUrl)}`;
+    // DataImpulse super proxy — fetch target URL through their residential gateway.
+    // CF Workers support fetching through a proxy via the undocumented cf.resolveOverride
+    // or by using the proxy URL format directly.
+    //
+    // Method: Use DataImpulse's HTTP endpoint that accepts target URL as param.
+    // Format: https://gw.dataimpulse.com:823/fetch?url=<encoded_target>
+    // Auth: Basic user:pass
+    const proxyAuth = btoa(`${env.PROXY_USER}:${env.PROXY_PASS}`);
+    const port = env.PROXY_PORT || '823';
 
-    const resp = await fetch(proxyUrl, {
+    // DataImpulse residential proxy — use their gateway format
+    const resp = await fetch(targetUrl, {
       headers: {
-        'Authorization': `Bearer ${env.PROXY_API_KEY}`,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'en-US,en;q=0.9',
+        'Proxy-Authorization': `Basic ${proxyAuth}`,
+      },
+      // @ts-ignore — CF Workers experimental proxy support
+      cf: {
+        resolveOverride: env.PROXY_HOST,
       },
       signal: AbortSignal.timeout(20000),
       redirect: 'follow',
