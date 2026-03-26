@@ -1,0 +1,192 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# STRUCTURE MANIFEST — Barton-Processes
+# ═══════════════════════════════════════════════════════════════════════════════
+# Status: GATED (conforms to imo-creator STRUCTURE_MANIFEST.yaml — LOCKED)
+# Authority: imo-creator/law/STRUCTURE_MANIFEST.yaml defines the pattern.
+#            This file applies it to Barton-Processes.
+# Created: 2026-03-26
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: "2.0.0"
+effective_date: "2026-03-26"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IDENTITY
+# ─────────────────────────────────────────────────────────────────────────────
+
+identity:
+  name: "Barton-Processes"
+  role: "Process Engine — the muscle"
+  parent: "imo-creator (CC-01 Sovereign)"
+  relationship: "Children conform to parent. Never the reverse."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# THE FOUR BUSINESS SILOS
+# ─────────────────────────────────────────────────────────────────────────────
+# Each business is a sovereign silo. Cross-silo communication is a violation.
+# IMO-Creator is the parent. The other three are children.
+# Same engine (Tier 0), different fuel (business domain).
+
+business_silos:
+
+  imo-creator:
+    role: "PARENT — shared global infrastructure"
+    path: "factory/imo-creator/"
+    owns:
+      - "Global reference tables (ZIP codes, geo lookups)"
+      - "Meta-processes (adapter-build)"
+      - "Shared tools used by all businesses"
+    d1_database: "TBD — imo-d1-global (reference tables)"
+    cross_silo_rule: "Children READ from parent. Never WRITE."
+    processes:
+      - number: "000"
+        name: "Adapter Build"
+        status: "ACTIVE"
+
+  svg-agency:
+    role: "CHILD — SVG insurance outreach"
+    path: "factory/svg-agency/"
+    owns:
+      - "All SVG insurance processes (100-900)"
+      - "Service agent coverage zones (3 agents)"
+      - "DOL filing intelligence"
+      - "People enrichment pipeline"
+      - "LCS outreach pipeline"
+    d1_databases:
+      outreach: "svg-d1-outreach-ops (73a285b8)"
+      spine: "svg-d1-spine (641a9a1e)"
+    neon_vault: "Neon PostgreSQL via Hyperdrive"
+    data_flow: "factory/svg-agency/DATA_FLOW.md"
+    osam: "barton-outreach-core/doctrine/OSAM.md (v1.1.2)"
+    processes:
+      - number: "100"
+        name: "LCS Pipeline"
+        status: "ACTIVE"
+      - number: "200"
+        name: "People Worker"
+        status: "REWRITE"
+      - number: "300"
+        name: "Blog Worker"
+        status: "ACTIVE"
+      - number: "400"
+        name: "DOL Views"
+        status: "ACTIVE"
+      - number: "500"
+        name: "Talent Flow"
+        status: "ACTIVE"
+      - number: "600"
+        name: "BIT Scoring"
+        status: "RETIRED"
+      - number: "700"
+        name: "Campaign Engine"
+        status: "ACTIVE"
+      - number: "800"
+        name: "Client Mint"
+        status: "ACTIVE"
+      - number: "810"
+        name: "Client Intake"
+        status: "ACTIVE"
+      - number: "820"
+        name: "Vendor Export"
+        status: "ACTIVE"
+      - number: "830"
+        name: "Client Portal"
+        status: "ACTIVE"
+      - number: "900"
+        name: "Sales Portal"
+        status: "ACTIVE"
+      - number: "—"
+        name: "Intelligence Engine"
+        status: "ACTIVE"
+
+  real-estate:
+    role: "CHILD — real estate processes"
+    path: "factory/real-estate/"
+    owns: []
+    d1_database: "TBD"
+    processes: []
+    status: "EMPTY — ready for build"
+
+  personal:
+    role: "CHILD — personal ops"
+    path: "factory/personal/"
+    owns: []
+    d1_database: "TBD"
+    processes: []
+    status: "EMPTY — ready for build"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CROSS-SILO RULES
+# ─────────────────────────────────────────────────────────────────────────────
+
+cross_silo_rules:
+  - "Each business is a sovereign silo"
+  - "Cross-silo communication is a violation"
+  - "SVG does not know Real Estate exists"
+  - "Children conform to parent (imo-creator). Never the reverse."
+  - "IMO-Creator owns global infrastructure. Children READ, never WRITE."
+  - "Same engine (Tier 0), different fuel (business domain)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ALLOWED ROOT DIRECTORIES (from imo-creator STRUCTURE_MANIFEST.yaml)
+# ─────────────────────────────────────────────────────────────────────────────
+
+allowed_directories:
+  law:
+    purpose: "Governance — doctrine, registries, templates, audit template"
+    connects_to_trunk_via: "Inherited from imo-creator"
+
+  factory:
+    purpose: "All executable processes — organized by business silo"
+    connects_to_trunk_via: "Each silo conforms to law/"
+    structure: "factory/{business-silo}/{NNN-process-name}/"
+
+  docs:
+    purpose: "Documentation — ADRs, architecture decisions"
+    connects_to_trunk_via: "Records what law governs and factory produces"
+
+  log:
+    purpose: "Process execution receipts"
+
+  scripts:
+    purpose: "Extraction playbook and utilities"
+
+  archive:
+    purpose: "Retired processes and v1 extractions"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PER-PROCESS REQUIRED FILES
+# ─────────────────────────────────────────────────────────────────────────────
+# Every process directory MUST contain these files.
+# Template: law/PROCESS_MANIFEST_TEMPLATE.md
+
+process_structure:
+  required_files:
+    - "heir.yaml"        # Process identity (HEIR — 8 fields)
+    - "CLAUDE.md"        # Agent operating instructions with Bedrock doctrine
+    - "MANIFEST.md"      # Process manifest (11-block format)
+  recommended_files:
+    - "OSAM.md"          # Semantic access map (subset of hub OSAM)
+    - "ERD.md"           # Entity relationship diagram
+    - "PRD.md"           # Product requirements document
+    - "LEARNINGS.md"     # Agent logbook (from factory/LEARNINGS_TEMPLATE.md)
+    - "src/"             # Executable code
+    - "wrangler.toml"    # CF Worker config (if applicable)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GATE ENFORCEMENT (inherited from imo-creator)
+# ─────────────────────────────────────────────────────────────────────────────
+
+enforcement:
+  model: "gate-based"
+  gates:
+    - name: "tier0_validation"
+      validator: "IMO + CTB + Circle (simultaneously)"
+      defined_by: "imo-creator/law/doctrine/FOUNDATIONAL_BEDROCK.md"
+    - name: "ctb_position"
+      validator: "Process must declare its business silo and process number"
+      defined_by: "This file (STRUCTURE_MANIFEST.yaml)"
+    - name: "cqrs_write_path"
+      validator: "Changes enter from leaves, promote through review"
+      defined_by: "imo-creator/law/doctrine/FOUNDATIONAL_BEDROCK.md §4"
+  audit_template: "law/PROCESS_AUDIT_TEMPLATE.md"
