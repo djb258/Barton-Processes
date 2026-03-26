@@ -1,105 +1,75 @@
 # OSAM — Process 200: People Worker
-## Semantic Access Map — WHERE to Query, HOW to Join
-
-| Field | Value |
-|-------|-------|
-| **CTB Position** | LEAF — process-scoped access map |
-| **Input** | A query need within the People Worker |
-| **Middle** | Look up the table, join key, and database in this file |
-| **Output** | Correct query against the correct database |
-| **Circle** | If your query returns unexpected results, the OSAM is wrong — update it |
-| **Blueprint OSAM** | barton-outreach-core → `docs/OSAM.md` |
-| **Last Updated** | 2026-03-24 |
+# Semantic Access Map — subset of hub OSAM
+# Authority: barton-outreach-core/doctrine/OSAM.md v1.1.2
+# Created: 2026-03-26
 
 ---
 
-## Rule
+## What This Process Accesses
 
-**BEFORE RUNNING ANY DATA QUERY, READ THIS FILE.**
-
----
-
-## Database
-
-| Binding | Database | ID | Purpose | Access |
-|---------|----------|----|---------|--------|
-| `D1` | people-worker-200 | `4fa3b760-d8c9-4f94-8291-e0f85fc2a3a4` | Working database — territory dossier | Read + Write |
-
-Neon is vault. D1 is workspace. SEED → WORK → PUSH lifecycle.
+Process 200 fills CEO/CFO/HR slots and detects movement.
+It reads from multiple sub-hubs but writes ONLY to the people tables.
 
 ---
 
-## Tables
+## READ Access
 
-| Table | Role | Row Count | Key Columns |
-|-------|------|-----------|-------------|
-| `companies` | Territory companies | 32,702 | company_unique_id, outreach_id, canonical_name, agent_name, state |
-| `slots` | CEO/CFO/HR slot state | 43,203 | outreach_id, slot_type, person_unique_id, is_filled |
-| `people` | Contact details | 20,487 | person_unique_id, email, linkedin_url, first_name, last_name |
-| `dol` | DOL snapshot | 27,464 | outreach_id, ein, filing_present, renewal_month |
-| `blog` | Blog signals | — | outreach_id, signal_type |
-| `bit_scores` | BIT composite | — | outreach_id, score, score_tier |
-| `monitor_list` | LinkedIn profiles to check | ~20,000 | outreach_id, linkedin_url, status |
-| `baseline` | Previous month snapshot | — | slot state for diff |
-| `snapshots` | Current month results | — | fetched profile data |
-| `batch_progress` | Batch tracking | — | batch_id, processed_count |
-| `outreach_status` | Company outreach state | — | outreach_id, status |
-| `errors` | Error drain | — | error details |
+### D1_OUTREACH (svg-d1-outreach-ops)
 
----
+| Table | What It Provides | Join Key |
+|-------|-----------------|----------|
+| `people_company_slot` | Empty/filled slots, slot_type, person_unique_id | `outreach_id` |
+| `people_people_master` | Contact details (name, email, LinkedIn) | `unique_id` ← slot.person_unique_id |
+| `outreach_company_target` | City, state, industry, employees, agent assignment | `outreach_id` |
+| `outreach_blog` | about_url for team page scraping | `outreach_id` |
+| `outreach_dol` | filing_present (DOL trust signal) | `outreach_id` |
+| `dol_form_5500` | sponsor_dfe_name (legal company name) | `outreach_id` |
+| `intake_people_staging` | Pre-discovered people to promote | `company_unique_id` |
+| `people_title_slot_mapping` | Title pattern → slot type (deterministic) | n/a (lookup) |
 
-## Join Keys
+### D1_SPINE (svg-d1-spine) — READ ONLY
 
-| Key | Where It Lives | What It Joins |
-|-----|---------------|---------------|
-| `company_unique_id` | companies | Company identity (= sovereign_company_id) |
-| `outreach_id` | companies, slots, dol, blog, bit_scores, monitor_list | ALL sub-hub data to company |
-| `person_unique_id` | slots → people | Slot to contact details |
+| Table | What It Provides | Join Key |
+|-------|-----------------|----------|
+| `cl_company_identity` | canonical_name, company_domain, linkedin_company_url | `outreach_id` |
 
 ---
 
-## Query Patterns
+## WRITE Access (these tables ONLY)
 
-### "What companies are in the territory?"
-```sql
-SELECT * FROM companies WHERE agent_name IS NOT NULL
-```
-
-### "What slots are filled for a company?"
-```sql
-SELECT * FROM slots WHERE outreach_id = ? AND is_filled = 1
-```
-
-### "Get contact details for a slot"
-```sql
-SELECT s.slot_type, p.first_name, p.last_name, p.email, p.linkedin_url
-FROM slots s
-JOIN people p ON s.person_unique_id = p.person_unique_id
-WHERE s.outreach_id = ? AND s.is_filled = 1
-```
-
-### "What's the monitor list status?"
-```sql
-SELECT status, COUNT(*) FROM monitor_list GROUP BY status
-```
-
-### "Batch progress"
-```sql
-SELECT * FROM batch_progress ORDER BY rowid DESC LIMIT 1
-```
-
-### "Errors for today"
-```sql
-SELECT * FROM errors WHERE created_at > date('now') ORDER BY created_at DESC
-```
+| Table | What It Writes | When |
+|-------|---------------|------|
+| `people_people_master` | INSERT new contacts, UPDATE existing | Pass 0, 1, 2 |
+| `people_company_slot` | UPDATE is_filled, person_unique_id, filled_at | Pass 0, 1, 2 |
+| `intake_people_staging` | UPDATE status = 'promoted' | Pass 0 only |
 
 ---
 
-## Anti-Patterns
+## Forbidden Paths
 
-| Wrong | Right | Why |
-|-------|-------|-----|
-| Query Neon during fetch cycle | Query D1 only | SEED→WORK→PUSH. Neon is vault. |
-| Join companies to slots via company_unique_id | Join via outreach_id | outreach_id is the universal join key |
-| Fetch LinkedIn without delay | 30-120 second random delay | Rate limiting / detection avoidance |
-| Use Hunter/Apollo before free tools | Well drinks first, top shelf last | Tool priority doctrine |
+| Action | Why |
+|--------|-----|
+| WRITE to cl_company_identity | CL is authority — read only |
+| WRITE to outreach_company_target | Targeting data — not this process |
+| WRITE to outreach_blog | Blog worker (300) owns this |
+| WRITE to outreach_dol | DOL views (400) owns this |
+| WRITE to D1_SPINE | Spine is read-only for all outreach processes |
+| Query Neon | Vault only — SEED phase, not WORK |
+| Cross sub-hub join without spine | Route through outreach_outreach.outreach_id |
+
+---
+
+## Query Routing
+
+| Question | Table | Column |
+|----------|-------|--------|
+| Which slots need filling? | `people_company_slot` | `WHERE is_filled = 0` |
+| What's the person's name? | `people_people_master` | `first_name`, `last_name` |
+| What's the company name? | `cl_company_identity` (spine) | `canonical_name` |
+| What's the company name? (DOL) | `dol_form_5500` | `sponsor_dfe_name` |
+| Where is the company? | `outreach_company_target` | `city`, `state` |
+| Does company have a team page? | `outreach_blog` | `about_url` |
+| Is this DOL-linked? | `outreach_dol` | `filing_present` |
+| Which agent owns this? | `outreach_company_target` | `service_agent_name` |
+| What slot for this title? | `people_title_slot_mapping` | `title_pattern → slot_type` |
+| Pre-discovered people? | `intake_people_staging` | `WHERE status = 'pending'` |

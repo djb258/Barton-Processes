@@ -1,235 +1,224 @@
 /**
- * UT Sub-Hub 16 (Fetcher) + 18 (Proxy Router)
+ * Snap-On Tool: Search-Engine-as-Proxy
  *
  * Searches Startpage (Google results anonymized) through DataImpulse
- * residential proxy. Proven 95% hit rate on LinkedIn metadata.
+ * HTTP gateway proxy. CF Workers can't use HTTP CONNECT tunnels,
+ * so we use DataImpulse's HTTP gateway endpoint instead.
+ *
+ * Pattern: Build search URL → proxy fetch → parse LinkedIn <title> tag
  *
  * Three-tier fallback:
- *   1. Startpage via DataImpulse (free + proxy) — primary
- *   2. Brave Search API ($3-5/1K) — backup (TODO: wire when needed)
- *   3. LinkedIn direct (15% rate) — last resort (TODO: wire when needed)
- *
- * Cost: ~$1-2/month for 20K profiles at DataImpulse $1/GB.
+ *   1. Startpage through DataImpulse (95% hit rate)
+ *   2. Direct LinkedIn fetch through proxy (15% hit rate)
+ *   3. Skip (mark for retry next cycle)
  */
 
 import type { Env, SearchResult } from './types';
 
-interface ProxyConfig {
-  host: string;
-  port: string;
-  user: string;
-  pass: string;
-}
-
-function getProxyConfig(env: Env): ProxyConfig {
-  if (!env.PROXY_HOST || !env.PROXY_USER) {
-    throw new Error('DataImpulse proxy credentials not configured. Check Doppler.');
-  }
-  return {
-    host: env.PROXY_HOST,
-    port: env.PROXY_PORT || '823',
-    user: env.PROXY_USER,
-    pass: env.PROXY_PASS,
-  };
-}
-
 /**
- * Search Startpage for a person at a company.
- * Returns parsed LinkedIn snippet or null if not found.
+ * Search Startpage for a LinkedIn profile matching the slot type + company.
+ *
+ * @param env - Worker environment with proxy credentials
+ * @param slotType - CEO, CFO, or HR
+ * @param companyName - From cl_company_identity.canonical_name
+ * @param city - From outreach_company_target.city
+ * @param state - From outreach_company_target.state
+ * @param directUrl - Optional: skip search, fetch this LinkedIn URL directly
  */
-export async function searchPerson(
+export async function searchStartpage(
   env: Env,
-  name: string | null,
   slotType: string,
   companyName: string,
   city: string,
   state: string,
-): Promise<{ result: SearchResult | null; error: string | null; durationMs: number }> {
-  const start = Date.now();
-  const proxy = getProxyConfig(env);
+  directUrl?: string,
+): Promise<SearchResult | null> {
 
-  // Build search query
-  // If we have a name, search for the specific person
-  // If not, search for the role at the company
-  const query = name
-    ? `site:linkedin.com/in/ "${name}" "${companyName}"`
-    : `site:linkedin.com/in/ "${slotType}" "${companyName}" "${city}" "${state}"`;
+  // Mode 1: Direct URL fetch (for movement detection)
+  if (directUrl) {
+    return fetchViaProxy(env, directUrl);
+  }
 
-  const searchUrl = `https://www.startpage.com/sp/search?query=${encodeURIComponent(query)}&cat=web`;
+  // Mode 2: Search Startpage for LinkedIn profiles
+  const titleMap: Record<string, string> = {
+    CEO: 'CEO OR "Chief Executive" OR "President" OR "Owner"',
+    CFO: 'CFO OR "Chief Financial" OR "VP Finance" OR "Controller"',
+    HR: '"HR Director" OR "VP Human Resources" OR "Head of HR" OR "HR Manager"',
+  };
+
+  const titleQuery = titleMap[slotType] || slotType;
+  const query = `site:linkedin.com/in/ ${titleQuery} "${companyName}" "${city}" "${state}"`;
+  const searchUrl = `https://www.startpage.com/do/dsearch?query=${encodeURIComponent(query)}&cat=web`;
 
   try {
-    // Route through DataImpulse residential proxy
-    const proxyUrl = `http://${proxy.user}:${proxy.pass}@${proxy.host}:${proxy.port}`;
+    const resp = await proxyFetch(env, searchUrl);
+    if (!resp) return null;
 
-    // CF Workers can't use HTTP CONNECT proxies directly.
-    // DataImpulse supports HTTPS proxy via their gateway endpoint.
-    const response = await fetch(searchUrl, {
+    const html = await resp.text();
+
+    // Parse Startpage results for LinkedIn URLs
+    const linkedinMatch = html.match(/href="(https:\/\/(?:www\.)?linkedin\.com\/in\/[^"]+)"/i);
+    if (!linkedinMatch) return null;
+
+    const linkedinUrl = linkedinMatch[1];
+
+    // Extract the snippet around the LinkedIn result
+    const snippetMatch = html.match(
+      new RegExp(`${escapeRegex(linkedinUrl)}[^<]*<[^>]*>([^<]+)`, 'i')
+    );
+
+    // Try to get the page title from the LinkedIn result
+    const titleMatch = html.match(
+      new RegExp(`<[^>]*class="[^"]*result[^"]*"[^>]*>[\\s\\S]*?${escapeRegex(linkedinUrl)}[\\s\\S]*?<[^>]*>([^<]+)<`, 'i')
+    );
+
+    const rawSnippet = titleMatch?.[1] || snippetMatch?.[1] || '';
+
+    return {
+      name: '',  // Will be parsed from rawSnippet by parseLinkedInTitle
+      title: '',
+      company: '',
+      linkedin_url: linkedinUrl,
+      source: 'startpage',
+      raw_snippet: rawSnippet,
+    };
+
+  } catch (e) {
+    console.error(`[searchStartpage] ${companyName}: ${e instanceof Error ? e.message : e}`);
+    return null;
+  }
+}
+
+/**
+ * Fetch a direct LinkedIn URL via proxy to get the <title> tag.
+ */
+async function fetchViaProxy(env: Env, url: string): Promise<SearchResult | null> {
+  try {
+    const resp = await proxyFetch(env, url);
+    if (!resp) return null;
+
+    const html = await resp.text();
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+    if (!titleMatch) return null;
+
+    return {
+      name: '',
+      title: '',
+      company: '',
+      linkedin_url: url,
+      source: 'linkedin_direct',
+      raw_snippet: titleMatch[1],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Route a fetch through DataImpulse HTTP gateway proxy.
+ *
+ * DataImpulse HTTP gateway: send request to their gateway URL
+ * with the target URL as a parameter. Authentication via API key header.
+ */
+async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null> {
+  if (!env.PROXY_GATEWAY_URL || !env.PROXY_API_KEY) {
+    // No proxy configured — try direct fetch as fallback
+    try {
+      return await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(15000),
+        redirect: 'follow',
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    // DataImpulse HTTP gateway format
+    const proxyUrl = `${env.PROXY_GATEWAY_URL}?url=${encodeURIComponent(targetUrl)}`;
+
+    const resp = await fetch(proxyUrl, {
       headers: {
+        'Authorization': `Bearer ${env.PROXY_API_KEY}`,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'en-US,en;q=0.9',
       },
-      // @ts-ignore — CF Workers support fetching through proxy via connect-override
-      cf: {
-        resolveOverride: proxy.host,
-      },
+      signal: AbortSignal.timeout(20000),
+      redirect: 'follow',
     });
 
-    if (!response.ok) {
-      return {
-        result: null,
-        error: `Startpage HTTP ${response.status}`,
-        durationMs: Date.now() - start,
-      };
+    if (!resp.ok) {
+      console.error(`[proxyFetch] ${targetUrl}: HTTP ${resp.status}`);
+      return null;
     }
 
-    const html = await response.text();
-    const parsed = parseStartpageResults(html, companyName);
-
-    return {
-      result: parsed,
-      error: null,
-      durationMs: Date.now() - start,
-    };
-  } catch (err) {
-    return {
-      result: null,
-      error: err instanceof Error ? err.message : String(err),
-      durationMs: Date.now() - start,
-    };
+    return resp;
+  } catch (e) {
+    console.error(`[proxyFetch] ${targetUrl}: ${e instanceof Error ? e.message : e}`);
+    return null;
   }
 }
 
 /**
- * Parse Startpage search results HTML for LinkedIn profile data.
- * Extracts name, title, company from result snippets.
+ * Parse LinkedIn <title> tag into name, title, and company.
+ *
+ * LinkedIn title format: "Name - Title at Company | LinkedIn"
+ * Variations:
+ *   "John Smith - CEO at Acme Corp | LinkedIn"
+ *   "Jane Doe - Chief Financial Officer - Acme Corp | LinkedIn"
+ *   "Bob Johnson | LinkedIn" (minimal)
  */
-function parseStartpageResults(html: string, targetCompany: string): SearchResult | null {
-  // Startpage wraps results in <a class="result-link"> with href containing linkedin.com/in/
-  // The title text contains "Name - Title at Company | LinkedIn"
-
-  // Find LinkedIn result URLs and their title text
-  const linkedinPattern = /href="(https?:\/\/(?:www\.)?linkedin\.com\/in\/[^"]+)"[^>]*>([^<]+)/gi;
-  let match;
-  const results: { url: string; text: string }[] = [];
-
-  while ((match = linkedinPattern.exec(html)) !== null) {
-    results.push({ url: match[1], text: match[2].trim() });
-  }
-
-  // Also try a broader pattern for Startpage's result format
-  if (results.length === 0) {
-    const broadPattern = /linkedin\.com\/in\/[a-zA-Z0-9\-]+/gi;
-    const titlePattern = /<h2[^>]*>([^<]*linkedin[^<]*)<\/h2>/gi;
-    let urlMatch;
-    while ((urlMatch = broadPattern.exec(html)) !== null) {
-      results.push({ url: `https://${urlMatch[0]}`, text: '' });
-    }
-  }
-
-  if (results.length === 0) return null;
-
-  // Parse the best matching result
-  for (const r of results) {
-    const parsed = parseLinkedInTitle(r.text || r.url);
-    if (parsed && isCompanyMatch(parsed.company, targetCompany)) {
-      return {
-        name: parsed.name,
-        title: parsed.title,
-        company: parsed.company,
-        linkedin_url: cleanLinkedInUrl(r.url),
-        source_tool: 'startpage',
-        raw_snippet: r.text,
-      };
-    }
-  }
-
-  // If no company match, return the first result anyway (may still be useful)
-  if (results.length > 0) {
-    const parsed = parseLinkedInTitle(results[0].text || results[0].url);
-    if (parsed) {
-      return {
-        name: parsed.name,
-        title: parsed.title,
-        company: parsed.company,
-        linkedin_url: cleanLinkedInUrl(results[0].url),
-        source_tool: 'startpage',
-        raw_snippet: results[0].text,
-      };
-    }
-  }
-
-  return null;
-}
-
-/**
- * Parse LinkedIn title tag format: "Name - Title at Company | LinkedIn"
- */
-function parseLinkedInTitle(text: string): { name: string; title: string; company: string } | null {
-  if (!text) return null;
+export function parseLinkedInTitle(
+  rawTitle: string,
+): { name: string; title: string; company: string } | null {
+  if (!rawTitle) return null;
 
   // Remove " | LinkedIn" suffix
-  const cleaned = text.replace(/\s*\|\s*LinkedIn\s*$/i, '').trim();
-  if (!cleaned) return null;
+  let cleaned = rawTitle.replace(/\s*\|\s*LinkedIn\s*$/i, '').trim();
 
-  // Try "Name - Title at Company" format
-  const dashSplit = cleaned.split(' - ');
-  if (dashSplit.length >= 2) {
-    const name = dashSplit[0].trim();
-    const rest = dashSplit.slice(1).join(' - ').trim();
+  // Try "Name - Title at Company"
+  const atMatch = cleaned.match(/^(.+?)\s*[-–]\s*(.+?)\s+at\s+(.+)$/i);
+  if (atMatch) {
+    return {
+      name: atMatch[1].trim(),
+      title: atMatch[2].trim(),
+      company: atMatch[3].trim(),
+    };
+  }
 
-    // Split on " at " for title/company
-    const atSplit = rest.split(' at ');
-    if (atSplit.length >= 2) {
-      return {
-        name,
-        title: atSplit[0].trim(),
-        company: atSplit.slice(1).join(' at ').trim(),
-      };
-    }
+  // Try "Name - Title - Company"
+  const dashParts = cleaned.split(/\s*[-–]\s*/);
+  if (dashParts.length >= 3) {
+    return {
+      name: dashParts[0].trim(),
+      title: dashParts[1].trim(),
+      company: dashParts.slice(2).join(' - ').trim(),
+    };
+  }
 
-    // No " at " — might just be a title
-    return { name, title: rest, company: '' };
+  // Try "Name - Title"
+  if (dashParts.length === 2) {
+    return {
+      name: dashParts[0].trim(),
+      title: dashParts[1].trim(),
+      company: '',
+    };
+  }
+
+  // Just a name
+  if (cleaned.length > 2 && cleaned.length < 60) {
+    return { name: cleaned, title: '', company: '' };
   }
 
   return null;
 }
 
-/**
- * Fuzzy company name match — handles abbreviations, suffixes, etc.
- */
-function isCompanyMatch(found: string, target: string): boolean {
-  if (!found || !target) return false;
-  const normalize = (s: string) =>
-    s.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\b(inc|llc|corp|ltd|co|company|group|partners)\b/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  const a = normalize(found);
-  const b = normalize(target);
-  return a.includes(b) || b.includes(a) || a === b;
-}
-
-/**
- * Clean LinkedIn URL to canonical form
- */
-function cleanLinkedInUrl(url: string): string {
-  try {
-    const u = new URL(url);
-    // Remove query params and trailing slash
-    return `https://www.linkedin.com${u.pathname.replace(/\/$/, '')}`;
-  } catch {
-    return url;
-  }
-}
-
-/**
- * Random delay between fetches (Box-Muller jitter for organic timing)
- */
-export async function jitterDelay(env: Env): Promise<void> {
-  const min = parseInt(env.MIN_DELAY_MS || '30000', 10);
-  const max = parseInt(env.MAX_DELAY_MS || '120000', 10);
-  const delay = min + Math.floor(Math.random() * (max - min));
-  await new Promise((r) => setTimeout(r, delay));
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

@@ -1,110 +1,170 @@
-# ERD — Process 200: People Worker
-## Entity Relationship Diagram — Tables, Columns, FK Chain
+# ERD — Process 200: People Worker v2
+## Entity Relationship Diagram — D1 Tables, Columns, FK Chain
 
 | Field | Value |
 |-------|-------|
-| **CTB Position** | LEAF — process-scoped entity relationships |
-| **Blueprint ERD** | barton-outreach-core → People Intelligence sub-hub |
-| **Last Updated** | 2026-03-24 |
+| **CTB Position** | LEAF — svg-agency/200-people-worker |
+| **OSAM Authority** | barton-outreach-core/doctrine/OSAM.md v1.1.2 |
+| **Data Flow** | factory/svg-agency/DATA_FLOW.md |
+| **Schema Source** | Live D1 introspection (2026-03-26) |
+| **Last Updated** | 2026-03-26 |
+
+---
+
+## D1 Bindings
+
+| Binding | Database | ID | Access |
+|---------|----------|-----|--------|
+| `D1_OUTREACH` | svg-d1-outreach-ops | 73a285b8 | READ/WRITE |
+| `D1_SPINE` | svg-d1-spine | 641a9a1e | READ ONLY (company name) |
 
 ---
 
 ## Entity Relationship Diagram
 
 ```
-D1 (people-worker-200)
-═══════════════════════
+D1_OUTREACH (svg-d1-outreach-ops)
+═══════════════════════════════════
 
-companies (territory — seeded from Neon)
-┌──────────────────────────┐
-│ company_unique_id PK     │
-│ outreach_id UK           │──────────────────────┐
-│ canonical_name           │                      │
-│ agent_name               │                      │
-│ agent_number             │                      │
-│ state                    │                      │
-│ postal_code              │                      │
-│ industry                 │                      │
-│ employees                │                      │
-│ company_domain           │                      │
-│ sovereign_company_id     │                      │
-│ seeded_at                │                      │
-└──────────────────────────┘                      │
-                                                   │
-slots (CEO/CFO/HR per company)                    │
-┌──────────────────────────┐                      │
-│ outreach_id FK───────────│──────────────────────┘
-│ slot_type                │  (CEO, CFO, HR)
-│ person_unique_id FK──────│──┐
-│ is_filled                │  │
-│ confidence_score         │  │
-└──────────────────────────┘  │
-                               │
-people (contact details)       │
-┌──────────────────────────┐  │
-│ person_unique_id PK──────│──┘
-│ email                    │
-│ linkedin_url             │
-│ first_name               │
-│ last_name                │
-│ title                    │
-└──────────────────────────┘
+outreach_outreach (32,704 — spine, universal join key)
+┌─────────────────────────────────┐
+│ outreach_id          TEXT PK    │──────────────────┐
+│ sovereign_id         TEXT       │                  │
+│ domain               TEXT       │                  │
+│ ein                  TEXT       │                  │
+│ created_at           TEXT       │                  │
+│ updated_at           TEXT       │                  │
+└─────────────────────────────────┘                  │
+                                                     │
+outreach_company_target (32,704 — targeting)          │
+┌─────────────────────────────────┐                  │
+│ target_id            TEXT PK    │                  │
+│ outreach_id          TEXT FK────│──────────────────┤
+│ company_unique_id    TEXT       │                  │
+│ city                 TEXT       │                  │
+│ state                TEXT       │                  │
+│ postal_code          TEXT       │                  │
+│ industry             TEXT       │                  │
+│ employees            INTEGER    │                  │
+│ email_method         TEXT       │                  │
+│ service_agent_id     TEXT       │ ← NEW (SEED fix) │
+│ service_agent_name   TEXT       │ ← NEW            │
+│ service_agent_number TEXT       │ ← NEW            │
+│ ...                             │                  │
+└─────────────────────────────────┘                  │
+                                                     │
+people_company_slot (98,112 — CEO/CFO/HR slots)      │
+┌─────────────────────────────────┐                  │
+│ slot_id              TEXT PK    │                  │
+│ outreach_id          TEXT FK────│──────────────────┤
+│ company_unique_id    TEXT       │                  │
+│ slot_type            TEXT       │  (CEO, CFO, HR)  │
+│ person_unique_id     TEXT FK────│──┐               │
+│ is_filled            INTEGER    │  │               │
+│ filled_at            TEXT       │  │               │
+│ confidence_score     REAL       │  │               │
+│ source_system        TEXT       │  │               │
+│ slot_phone           TEXT       │  │               │
+│ slot_phone_source    TEXT       │  │               │
+│ created_at           TEXT       │  │               │
+│ updated_at           TEXT       │  │               │
+└─────────────────────────────────┘  │               │
+                                      │               │
+people_people_master (51,582)         │               │
+┌─────────────────────────────────┐  │               │
+│ unique_id            TEXT PK────│──┘               │
+│ company_unique_id    TEXT       │                   │
+│ company_slot_unique_id TEXT     │                   │
+│ first_name           TEXT       │                   │
+│ last_name            TEXT       │                   │
+│ full_name            TEXT       │                   │
+│ title                TEXT       │                   │
+│ seniority            TEXT       │                   │
+│ department           TEXT       │                   │
+│ email                TEXT       │                   │
+│ work_phone_e164      TEXT       │                   │
+│ linkedin_url         TEXT       │                   │
+│ email_verified       INTEGER    │                   │
+│ outreach_ready       INTEGER    │                   │
+│ source_system        TEXT       │                   │
+│ last_enrichment_attempt TEXT    │                   │
+│ ...                             │                   │
+└─────────────────────────────────┘                   │
+                                                      │
+outreach_blog (49,062 — web content)                  │
+┌─────────────────────────────────┐                   │
+│ blog_id              TEXT       │                   │
+│ outreach_id          TEXT FK────│───────────────────┤
+│ source_url           TEXT       │                   │
+│ about_url            TEXT       │ ← team/about pages│
+│ news_url             TEXT       │                   │
+│ context_summary      TEXT       │                   │
+│ extraction_method    TEXT       │                   │
+│ last_extracted_at    TEXT       │                   │
+└─────────────────────────────────┘                   │
+                                                      │
+outreach_dol (36,247 — DOL summary)                   │
+┌─────────────────────────────────┐                   │
+│ dol_id               TEXT       │                   │
+│ outreach_id          TEXT FK────│───────────────────┤
+│ ein                  TEXT       │                   │
+│ filing_present       INTEGER    │                   │
+│ carrier              TEXT       │                   │
+│ broker_or_advisor    TEXT       │                   │
+│ renewal_month        INTEGER    │                   │
+└─────────────────────────────────┘                   │
+                                                      │
+dol_form_5500 (14,252 — federal filings)              │
+┌─────────────────────────────────┐                   │
+│ ack_id               TEXT PK    │                   │
+│ outreach_id          TEXT FK────│───────────────────┘
+│ sponsor_dfe_name     TEXT       │ ← legal company name
+│ spons_dfe_mail_us_city TEXT     │
+│ spons_dfe_mail_us_state TEXT    │
+│ sponsor_dfe_ein      TEXT       │
+│ tot_active_partcp_cnt INTEGER   │
+│ form_year            TEXT       │
+│ ...                             │
+└─────────────────────────────────┘
 
-monitor_list (LinkedIn profiles to check)
-┌──────────────────────────┐
-│ outreach_id FK           │
-│ linkedin_url             │
-│ status                   │  (pending, fetched, failed, skipped)
-│ last_checked_at          │
-└──────────────────────────┘
+intake_people_staging (24,727 — pending promotion)
+┌─────────────────────────────────┐
+│ id                   INTEGER PK │
+│ company_unique_id    TEXT       │
+│ raw_name             TEXT       │
+│ first_name           TEXT       │
+│ last_name            TEXT       │
+│ raw_title            TEXT       │
+│ normalized_title     TEXT       │
+│ mapped_slot_type     TEXT       │
+│ linkedin_url         TEXT       │
+│ email                TEXT       │
+│ confidence_score     REAL       │
+│ status               TEXT       │ (pending/promoted)
+└─────────────────────────────────┘
 
-baseline (previous month snapshot)
-┌──────────────────────────┐
-│ outreach_id FK           │
-│ slot_type                │
-│ person_unique_id         │
-│ snapshot_date            │
-└──────────────────────────┘
+people_title_slot_mapping (43 — deterministic)
+┌─────────────────────────────────┐
+│ id                   INTEGER PK │
+│ title_pattern        TEXT       │
+│ slot_type            TEXT       │
+│ priority             INTEGER    │
+└─────────────────────────────────┘
 
-snapshots (current month results)
-┌──────────────────────────┐
-│ outreach_id FK           │
-│ slot_type                │
-│ person_unique_id         │
-│ fetched_at               │
-│ raw_data                 │
-└──────────────────────────┘
 
-dol (DOL filing snapshot — read only)
-┌──────────────────────────┐
-│ outreach_id FK           │
-│ ein                      │
-│ filing_present           │
-│ renewal_month            │
-└──────────────────────────┘
+D1_SPINE (svg-d1-spine) — READ ONLY
+═══════════════════════════════════
 
-bit_scores (composite — read only)
-┌──────────────────────────┐
-│ outreach_id FK           │
-│ score                    │
-│ score_tier               │
-└──────────────────────────┘
-
-batch_progress (tracking)
-┌──────────────────────────┐
-│ batch_id                 │
-│ processed_count          │
-│ total_count              │
-│ started_at               │
-└──────────────────────────┘
-
-errors (drain)
-┌──────────────────────────┐
-│ outreach_id              │
-│ error_type               │
-│ error_message            │
-│ created_at               │
-└──────────────────────────┘
+cl_company_identity (117,154 — sovereign records)
+┌─────────────────────────────────┐
+│ company_unique_id    TEXT PK    │
+│ canonical_name       TEXT       │ ← company name for search
+│ company_domain       TEXT       │
+│ linkedin_company_url TEXT       │
+│ state_code           TEXT       │
+│ outreach_id          TEXT       │ ← join to outreach D1
+│ ...                             │
+└─────────────────────────────────┘
 ```
 
 ---
@@ -112,30 +172,47 @@ errors (drain)
 ## FK Chain
 
 ```
-companies.outreach_id → slots.outreach_id → people.person_unique_id
-companies.outreach_id → monitor_list.outreach_id
-companies.outreach_id → dol.outreach_id
-companies.outreach_id → bit_scores.outreach_id
-companies.outreach_id → baseline.outreach_id
-companies.outreach_id → snapshots.outreach_id
+cl_company_identity.outreach_id → outreach_outreach.outreach_id (spine → outreach)
+outreach_outreach.outreach_id   → outreach_company_target.outreach_id (1:1)
+outreach_outreach.outreach_id   → people_company_slot.outreach_id (1:N, 3 per company)
+people_company_slot.person_unique_id → people_people_master.unique_id (N:1)
+outreach_outreach.outreach_id   → outreach_blog.outreach_id (1:1)
+outreach_outreach.outreach_id   → outreach_dol.outreach_id (1:1)
+outreach_outreach.outreach_id   → dol_form_5500.outreach_id (1:N)
+intake_people_staging.company_unique_id → outreach_company_target.company_unique_id
 ```
 
 ---
 
-## Movement Detection (Snapshot Diff)
+## Process 200 Access Pattern
 
-```
-baseline (month N-1)     snapshots (month N)
-┌──────────────┐         ┌──────────────┐
-│ slot: CEO    │         │ slot: CEO    │
-│ person: A    │ ──diff──│ person: B    │ → REPLACED (signal)
-│              │         │              │
-│ slot: CFO    │         │ slot: CFO    │
-│ person: C    │ ──diff──│ person: C    │ → NO CHANGE (0)
-│              │         │              │
-│ slot: HR     │         │ slot: HR     │
-│ person: null │ ──diff──│ person: D    │ → JOINED (signal)
-└──────────────┘         └──────────────┘
-```
+| Operation | Table | Access | Purpose |
+|-----------|-------|--------|---------|
+| READ | `people_company_slot` | D1_OUTREACH | Find empty/filled slots |
+| READ | `people_people_master` | D1_OUTREACH | Current contact details for movement check |
+| READ | `outreach_company_target` | D1_OUTREACH | City, state, agent assignment |
+| READ | `outreach_blog` | D1_OUTREACH | About/team page URLs |
+| READ | `outreach_dol` | D1_OUTREACH | Filing present (trust signal) |
+| READ | `dol_form_5500` | D1_OUTREACH | Legal company name |
+| READ | `intake_people_staging` | D1_OUTREACH | Pre-discovered people to promote |
+| READ | `people_title_slot_mapping` | D1_OUTREACH | Title → slot type |
+| READ | `cl_company_identity` | D1_SPINE | Company name for search queries |
+| WRITE | `people_people_master` | D1_OUTREACH | Create/update contact records |
+| WRITE | `people_company_slot` | D1_OUTREACH | Fill slots, update confidence |
+| WRITE | `intake_people_staging` | D1_OUTREACH | Mark as promoted |
 
-Output: Binary per slot (0 = no change, 1 = movement). Signal type: JOINED, LEFT, REPLACED, TITLE_CHANGED, EMAIL_CHANGED.
+---
+
+## Data Counts (post-SEED fix, 2026-03-26)
+
+| Table | Rows | Notes |
+|-------|------|-------|
+| outreach_company_target | 32,704 | 100% agent-assigned |
+| people_company_slot | 98,112 | 3 per company, 100% coverage |
+| people_people_master | 51,582 | 99.7% slot→person match |
+| outreach_blog | 49,062 | About URLs available |
+| outreach_dol | 36,247 | DOL trust signal |
+| dol_form_5500 | 14,252 | Legal company names |
+| intake_people_staging | 24,727 | Pending promotion |
+| people_title_slot_mapping | 43 | Deterministic patterns |
+| cl_company_identity | 117,154 | Company names (spine) |

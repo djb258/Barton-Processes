@@ -1,12 +1,13 @@
-# CLAUDE.md — Process 200: People Worker
+# CLAUDE.md — Process 200: People Worker v2
 
 ## Governing Doctrine
 
 **Before any work on this process, read and follow:**
 
 1. `law/doctrine/FOUNDATIONAL_BEDROCK.md` — The engine (Three Primitives, C&V, IMO, CTB, Circle, Troubleshooting Loop, Tier 0, Aviation Model)
-2. `bedrock/math-01-engine.md` — P(x;θ) decision equation (FROZEN)
-3. `bedrock/math-02-adapter-template.md` — Domain adapter interface
+2. `factory/svg-agency/DATA_FLOW.md` — The plumbing (Neon → D1 SEED pipeline, all join paths)
+3. `factory/svg-agency/200-people-worker/ERD.md` — The tables (actual D1 schema, pressure tested)
+4. `factory/svg-agency/200-people-worker/D1_SCHEMA.md` — Full column reference
 
 **Pre-flight (every session):**
 - Two-Question Intake: "What triggers this?" and "How do we get it?"
@@ -20,73 +21,104 @@
 
 ## What This Process Does
 
-Fills CEO/CFO/HR slots for 27,868 agent-assigned companies. Detects movement (person changed title, left, arrived). Feeds signals to Talent Flow (500) and LCS Pipeline (100). Without filled slots, nothing downstream works.
+Fills CEO/CFO/HR slots for 32,704 agent-assigned companies. Detects movement (person changed title, left company). Operates directly on svg-d1-outreach-ops. No standalone D1.
 
-## How It Works
+## Architecture
 
-Monthly cycle: SEED → FETCH → DETECT → PUSH
+**D1 Bindings:**
+- `D1_OUTREACH` (svg-d1-outreach-ops) — all reads and writes
+- `D1_SPINE` (svg-d1-spine) — read-only for `cl_company_identity.canonical_name`
 
-1. **SEED** (Day 1): Pull territory from Neon vault → D1 workspace. ~255K rows.
-2. **FETCH** (Days 1-28): Daily batch of 100 LinkedIn profiles via proxy. Parse `<title>` tag for name + title + company. 30-120 second random delay between fetches.
-3. **DETECT** (per batch): Compare snapshot to baseline. Binary movement per slot: 0 or 1. Signals: JOINED, LEFT, REPLACED, TITLE_CHANGED, EMAIL_CHANGED.
-4. **PUSH** (Day 28+): Promote verified results from D1 → Neon vault.
+**No Neon queries during WORK phase.** Neon is vault only. SEED → WORK → PUSH.
+
+**Gate 0 already applied:** Every company in D1 is agent-assigned. No coverage filtering needed.
+
+---
+
+## How It Works — Four Passes (Well Drinks First)
+
+### Pass 0: Promote Staging (FREE — data already in D1)
+- Read `intake_people_staging` (24,727 records with names, titles, slot mappings)
+- Match to `people_title_slot_mapping` for deterministic slot assignment
+- Create `people_people_master` record
+- Update `people_company_slot` to `is_filled = 1`
+- Mark staging record as `status = 'promoted'`
+- **Cost: $0. Use ALL of this before any external calls.**
+
+### Pass 1: Scrape About/Team Pages (CHEAP — CF fetch, no proxy)
+- Read `outreach_blog.about_url` for companies with empty slots
+- Fetch team/about pages via CF Worker fetch (no proxy needed — public pages)
+- Parse executive names and titles
+- Match titles to slot types via `people_title_slot_mapping`
+- Create/update records in D1
+- **Cost: Free (CF Worker fetch). Rate limit: 100 pages/cron invocation.**
+
+### Pass 2: Search-Engine-as-Proxy — UT Snap-On Tool (TOP SHELF)
+- For remaining empty slots after Pass 0 + 1
+- Get company name from `cl_company_identity.canonical_name` (D1_SPINE)
+- Get city + state from `outreach_company_target` (D1_OUTREACH)
+- Build Startpage query: `site:linkedin.com/in/ "CEO" "Acme Corp" "Hagerstown" "MD"`
+- Route through DataImpulse residential proxy
+- Parse LinkedIn `<title>` tag: `"Name - Title at Company | LinkedIn"`
+- Create `people_people_master` record, fill slot
+- **Cost: $1-2/month for 20K profiles.**
+- **Three-tier fallback:**
+  1. Startpage through DataImpulse (95% hit rate)
+  2. Brave Search API ($3-5/1K queries) — backup
+  3. LinkedIn direct (15% rate) — last resort
+
+### Pass 3: Movement Detection (MONTHLY)
+- For filled slots with `linkedin_url`
+- Fetch LinkedIn profile via same proxy stack
+- Compare title + company to stored values
+- Binary movement: 0 (no change) or 1 (movement)
+- Signal types: TITLE_CHANGED, COMPANY_CHANGED, BOTH_CHANGED
+- Update records in D1 outreach
+- **Trigger: Monthly, after Pass 0-2 complete.**
+
+---
 
 ## The Snap-On Tool: Search-Engine-as-Proxy
 
-LinkedIn blocks direct fetches (HTTP 999). The solution is to query search engines that already indexed the data.
+LinkedIn blocks direct fetches (HTTP 999). Query search engines that already indexed the data.
 
 **Stack:**
 - **Startpage** — Google results, anonymized, no CAPTCHA
 - **DataImpulse** — residential proxy, $1/GB, 90M+ rotating IPs
-- **curl_cffi** — Chrome TLS fingerprint (looks like a real browser)
-- **Box-Muller jitter** — organic timing between requests
+- **CF Worker fetch** — no curl_cffi needed (Workers have clean TLS)
+- **Box-Muller jitter** — organic timing between requests (30-120s)
 
-**Three-tier fallback:**
-1. Startpage through DataImpulse (free + proxy) — **95% hit rate**
-2. Brave Search API ($3-5/1K queries) — backup
-3. LinkedIn direct (15% rate) — last resort
+**Credentials:** Doppler imo-creator project:
+- `PROXY_GATEWAY_URL` — DataImpulse HTTP gateway
+- `PROXY_API_KEY` — DataImpulse auth
 
-**Cost:** $1-2/month for 20K profiles.
-
-**Credentials:** Doppler imo-creator project (PROXY_USER, PROXY_PASS, PROXY_HOST, PROXY_PORT)
-
-**This same proxy infrastructure is reusable for ANY indexed platform:**
+**Reusable for ANY indexed platform:**
 - LinkedIn profiles → title + company movement
 - LinkedIn company pages → employee count, industry
 - Glassdoor → benefits sentiment
-- Indeed → hiring signals
 - Company career pages → open positions
-- SEC/OpenCorporates → M&A activity
 
-## Tool Priority (Well Drinks First)
-
-| Tier | Tools | Cost | When |
-|------|-------|------|------|
-| Well Drinks | MXLookup, SMTPCheck, LinkedInCheck (CF fetch) | Free | Always first |
-| House Pours | Composio (routes to integrations) | Cheap | After well drinks |
-| Top Shelf | Hunter, Apollo, MillionVerifier | Per-call | Only when well drinks exhausted |
-
-**Rule:** Never pour top shelf before well drinks are empty.
-
-## Data Sources & Trust Levels
-
-| Source | Trust | Why |
-|--------|-------|-----|
-| DOL-linked companies | HIGHEST | Federal filing proves viability, has benefits plan |
-| Hunter-sourced | MEDIUM | Domain exists, unverified against federal records |
-| Clay-sourced | MEDIUM | Scraped data, unverified |
+---
 
 ## Enrichment Priority
 
-1. DOL-linked + movement + empty slots → FIRST (verified, hot, needs people)
-2. DOL-linked + no movement + empty slots → SECOND (verified, needs people)
-3. Non-DOL companies → THIRD (verify viability before spending)
+| Priority | Criteria | Why |
+|----------|----------|-----|
+| 1st | DOL-linked + empty slots | Federal filing proves viability |
+| 2nd | Has about_url + empty slots | Free team page scraping |
+| 3rd | Non-DOL + empty slots | Lower confidence, verify first |
+| 4th | Filled slots (movement check) | Monthly refresh |
+
+---
 
 ## Slot Constants
 
 - **Types:** CEO, CFO, HR (fixed — these three, always)
 - **Priority:** CEO → CFO → HR
 - **Minimum for LCS:** 1 reachable slot
+- **Total slots:** 98,112 (32,704 companies × 3)
+
+---
 
 ## Reachability Gate
 
@@ -99,49 +131,59 @@ Must pass BEFORE company enters LCS pipeline:
 | LINKEDIN_ONLY | LinkedIn URL, no email | HeyReach path |
 | FULL | Both channels available | Best position |
 
-## Databases
+---
 
-**D1 workspace:** `people-worker-200` (4fa3b760)
-- `companies` — 35K territory companies
-- `slots` — 47K slot positions (CEO/CFO/HR per company)
-- `people` — contact details (name, email, LinkedIn, phone)
-- `monitor_list` — ~20K LinkedIn profiles to check
-- `baseline` — previous month snapshot for diff
-- `snapshots` — current month fetch results
-- `batch_progress` — tracking current batch position
-- `errors` — error drain per fetch attempt
+## Data Sources & Trust
 
-**Neon vault:** Source for SEED, destination for PUSH. Never queried during FETCH.
+| Source | Trust | Why |
+|--------|-------|-----|
+| intake_people_staging | HIGH | Already web-scraped and title-mapped |
+| DOL filings (sponsor_dfe_name) | HIGHEST | Federal filing, legal company name |
+| outreach_blog.about_url | MEDIUM | Public page, may be outdated |
+| Startpage/LinkedIn search | MEDIUM | Indexed data, point-in-time |
+| Hunter-sourced | MEDIUM | Domain exists, unverified |
 
-## Movement Detection
-
-- **Type:** Deterministic (no AI)
-- **Method:** Slot-by-slot snapshot diff, month over month
-- **Output:** 0 (no change) or 1 (movement)
-- **Signals:** JOINED, LEFT, REPLACED, TITLE_CHANGED, EMAIL_CHANGED
-
-## Key Joins
-
-- Territory filter: `outreach.company_target.zip` → `coverage.v_service_agent_coverage_zips.zip`
-- People slots: `people.company_slot.outreach_id` → `people.people_master.unique_id`
-- LinkedIn parse: `<title>` tag → regex split → `"Name - Title at Company | LinkedIn"`
+---
 
 ## Dependencies
 
-| Direction | Process | What |
-|-----------|---------|------|
-| Upstream | Neon vault | Company data + previous people records |
-| Upstream | Coverage zones | 3 agents × radius → territory filter |
-| Downstream | 500 Talent Flow | Movement signals (0/1 per slot) |
-| Downstream | 100 LCS Pipeline | Recipient slots for SID construction |
+### Upstream
+| Dependency | What | Status |
+|-----------|------|--------|
+| D1 outreach (SEED) | Company data, slots, people, blog, DOL | DONE (SEED fixes applied 2026-03-26) |
+| D1 spine (CL) | Company name for search queries | DONE |
+| DataImpulse proxy | Residential proxy for Startpage | CONFIGURED |
+
+### Downstream
+| Consumer | What |
+|----------|------|
+| Process 500 (Talent Flow) | Movement signals (0/1 per slot) |
+| Process 100 (LCS Pipeline) | Recipient slots for SID construction |
+| Outreach D1 | people_company_slot + people_people_master updates |
+
+---
 
 ## Worker Config
 
-- **URL:** people-worker-200.svg-outreach.workers.dev
+- **URL:** people-worker-200.svg-outreach.workers.dev (TBD — needs deploy)
 - **Cron:** `0 6 * * *` (daily 6am UTC)
-- **Batch size:** 100 profiles per cron
-- **Delay:** 30-120 seconds between fetches (randomized)
-- **Proxy:** DataImpulse residential via `PROXY_URL`
+- **Batch size:** 100 profiles per cron (configurable)
+- **Delay:** 30-120 seconds between proxy fetches (Box-Muller jitter)
+
+---
+
+## Key Joins (verified 2026-03-26)
+
+| From | To | Join Key | Match Rate |
+|------|----|----------|------------|
+| outreach_outreach | outreach_company_target | outreach_id | 100% |
+| outreach_outreach | people_company_slot | outreach_id | 100% |
+| people_company_slot | people_people_master | person_unique_id → unique_id | 99.7% |
+| outreach_outreach | outreach_blog | outreach_id | 100% |
+| outreach_outreach | outreach_dol | outreach_id | 100% |
+| cl_company_identity | outreach_outreach | outreach_id | read-only |
+
+---
 
 ## Known Issues
 
@@ -149,4 +191,8 @@ Must pass BEFORE company enters LCS pipeline:
 |-------|------------|
 | Google blocks with CAPTCHAs through proxy | Use Startpage via DataImpulse — 95% hit rate |
 | Bing APIs retired Aug 2025 | Removed Bing, Startpage exclusively |
-| BIT scoring retired 2026-03-25 | Remove `bit_scores` table references |
+| BIT scoring retired 2026-03-25 | Removed all BIT references |
+| Old standalone D1 (people-worker-200) | SCRAPPED — rewired to svg-d1-outreach-ops |
+| 94.8% slot→person orphan rate | FIXED (re-SEED 2026-03-26) — now 99.7% |
+| 18,301 companies had no slots | FIXED (SEED 2026-03-26) — now 100% coverage |
+| No agent assignment on companies | FIXED (SEED 2026-03-26) — 32,702 assigned |

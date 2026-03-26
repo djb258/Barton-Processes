@@ -1,79 +1,83 @@
 /**
- * Process 200 — People Worker v2 (Rewired)
+ * Process 200 — People Worker v2
  *
- * Operates directly on svg-d1-outreach-ops. No standalone D1.
- * Two phases: Pass 1 (fill slots), Pass 2 (detect movement).
- * Fetches via UT: Startpage through DataImpulse residential proxy.
+ * Operates on svg-d1-outreach-ops (D1_OUTREACH) + svg-d1-spine (D1_SPINE read-only).
+ * No standalone D1. No Neon during WORK phase.
  *
- * Table schemas match what's actually in D1 (verified against compiler-v2.ts
- * and seed.ts in lcs-hub — the source of truth for column names).
+ * Four passes: promote staging → scrape about pages → search proxy → movement detection
  */
 
 export interface Env {
-  // Outreach D1 — reads/updates people_people_master, people_company_slot
   D1_OUTREACH: D1Database;
-  // Spine D1 — reads cl_company_identity, writes movement signals to lcs_signal_queue
   D1_SPINE: D1Database;
-  // DataImpulse residential proxy (from Doppler)
-  PROXY_GATEWAY_URL: string;  // DataImpulse HTTP gateway (not CONNECT)
-  PROXY_API_KEY: string;      // DataImpulse auth key
-  // Batch config
-  BATCH_SIZE: string;       // profiles per cron invocation (default: 50)
-  MIN_DELAY_MS: string;     // min delay between fetches (default: 30000)
-  MAX_DELAY_MS: string;     // max delay between fetches (default: 120000)
+  PROXY_GATEWAY_URL: string;
+  PROXY_API_KEY: string;
+  BATCH_SIZE: string;
+  MIN_DELAY_MS: string;
+  MAX_DELAY_MS: string;
 }
 
-/**
- * An empty slot that needs discovery.
- *
- * Join: people_company_slot cs
- *       JOIN outreach_company_target ct ON cs.outreach_id = ct.outreach_id
- *       LEFT JOIN cl_company_identity ci ON cs.outreach_id = ci.outreach_id (spine D1)
- *
- * people_company_slot columns: outreach_id, slot_type, person_unique_id, is_filled
- * Company name comes from cl_company_identity.canonical_name (spine D1).
- */
 export interface EmptySlot {
+  slot_id: string;
   outreach_id: string;
-  slot_type: string;             // CEO, CFO, HR
-  company_unique_id: string;     // from outreach_company_target
-  canonical_name: string;        // from cl_company_identity (spine)
-  company_domain: string;        // from cl_company_identity (spine)
-  city: string;                  // from outreach_company_target
-  state: string;                 // from outreach_company_target
+  company_unique_id: string;
+  slot_type: 'CEO' | 'CFO' | 'HR';
+  city: string;
+  state: string;
+  filing_present: number | null;
+  about_url: string | null;
 }
 
-/**
- * A filled slot that needs movement check.
- *
- * Join: people_company_slot cs
- *       JOIN people_people_master pm ON cs.person_unique_id = pm.unique_id
- */
 export interface FilledSlot {
+  slot_id: string;
   outreach_id: string;
   slot_type: string;
-  person_unique_id: string;      // people_company_slot.person_unique_id
-  unique_id: string;             // people_people_master.unique_id (same value)
-  linkedin_url: string;
-  full_name: string;
+  person_unique_id: string;
+  unique_id: string;
   first_name: string;
   last_name: string;
+  full_name: string;
   title: string;
   email: string;
-  company_unique_id: string;
+  linkedin_url: string;
+  last_enrichment_attempt: string | null;
 }
 
-/** Result from Startpage search */
+export interface StagingPerson {
+  id: number;
+  company_unique_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  raw_name: string | null;
+  raw_title: string | null;
+  normalized_title: string | null;
+  mapped_slot_type: string | null;
+  linkedin_url: string | null;
+  email: string | null;
+  confidence_score: number | null;
+}
+
+export interface TitleSlotMap {
+  title_pattern: string;
+  slot_type: string;
+  priority: number;
+}
+
+export interface CompanyIdentity {
+  canonical_name: string;
+  company_domain: string | null;
+  linkedin_company_url: string | null;
+}
+
 export interface SearchResult {
   name: string;
   title: string;
   company: string;
   linkedin_url: string;
-  source_tool: string;
+  source: string;
   raw_snippet: string;
 }
 
-/** Movement detection result */
 export interface MovementResult {
   movement: 0 | 1;
   movement_type: 'NONE' | 'TITLE_CHANGED' | 'COMPANY_CHANGED' | 'BOTH_CHANGED';
@@ -81,4 +85,13 @@ export interface MovementResult {
   new_title: string;
   old_company: string;
   new_company: string;
+}
+
+export interface PassResult {
+  pass: string;
+  processed: number;
+  filled: number;
+  skipped: number;
+  errors: number;
+  error_details: string[];
 }
