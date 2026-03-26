@@ -53,11 +53,16 @@ barton-processes/
 │   ├── ingress-manifest.yaml         # Cross-silo dependencies
 │   └── doctrine/                     # Inherited doctrine from Garage
 │
-├── factory/                          # ALL EXECUTABLE PROCESSES
-│   ├── 001-neon-db-agent/            # Each process gets NNN-name/
-│   ├── 002-cl-pipeline/              #   └── heir.yaml (process identity)
-│   ├── ...                           #   └── src/ (executable code)
-│   └── 016-bit-scoring/              #   └── contracts/ (if applicable)
+├── factory/                          # ALL EXECUTABLE PROCESSES (4 sovereign silos)
+│   ├── imo-creator/                  #   PARENT — shared global infrastructure
+│   │   └── 000-adapter-build/        #   Meta-process: how to build any domain adapter
+│   ├── svg-agency/                   #   CHILD — SVG insurance outreach (processes 100-900)
+│   │   ├── 100-lcs-pipeline/         #   Each process gets NNN-name/
+│   │   ├── 200-people-worker/        #     └── heir.yaml (process identity)
+│   │   ├── 300-blog-worker/          #     └── src/ (executable code)
+│   │   └── ...                       #     └── CLAUDE.md (agent instructions)
+│   ├── real-estate/                  #   CHILD — real estate processes
+│   └── personal/                     #   CHILD — personal ops processes
 │
 ├── docs/                             # DOCUMENTATION
 │   └── adr/                          # Architecture Decision Records
@@ -69,17 +74,47 @@ barton-processes/
 
 ---
 
+## BUSINESS SILOS (4 sovereign silos under factory/)
+
+| Silo | Role | Path | Status |
+|------|------|------|--------|
+| **imo-creator** | PARENT — shared global infrastructure | `factory/imo-creator/` | ACTIVE |
+| **svg-agency** | CHILD — SVG insurance outreach | `factory/svg-agency/` | ACTIVE |
+| **real-estate** | CHILD — real estate processes | `factory/real-estate/` | EMPTY |
+| **personal** | CHILD — personal ops | `factory/personal/` | EMPTY |
+
+Children conform to parent. Never the reverse. Cross-silo communication is a violation.
+IMO-Creator owns global tables (ZIP codes, geo lookups) that children READ but never WRITE.
+
 ## PROCESS NUMBERING
 
-| Range | Source Repo | Count |
-|-------|------------|-------|
-| 001-005 | company-lifecycle-cl | 5 |
-| 006-011 | barton-outreach-core | 6 |
-| 012 | imo-creator (field-monitor snap-on) | 1 |
-| 013-014 | client | 2 |
-| 015 | sales | 1 |
-| 016 | ~~barton-outreach-core (BIT scoring)~~ | RETIRED 2026-03-25 |
-| 017+ | reserved (barton-storage, future) | — |
+### imo-creator (parent — global)
+| Number | Name | Status |
+|--------|------|--------|
+| 000 | Adapter Build (meta-process) | ACTIVE |
+
+### svg-agency (child — insurance)
+| Number | Name | Status |
+|--------|------|--------|
+| 100 | LCS Pipeline | ACTIVE |
+| 200 | People Worker | REWRITE (v2 in progress) |
+| 300 | Blog Worker | ACTIVE |
+| 400 | DOL Views | ACTIVE |
+| 500 | Talent Flow | ACTIVE |
+| 600 | BIT Scoring | RETIRED 2026-03-25 |
+| 700 | Campaign Engine | ACTIVE |
+| 800 | Client Mint | ACTIVE |
+| 810 | Client Intake | ACTIVE |
+| 820 | Vendor Export | ACTIVE |
+| 830 | Client Portal | ACTIVE |
+| 900 | Sales Portal | ACTIVE |
+| — | Intelligence Engine | ACTIVE |
+
+### real-estate (child)
+_No processes yet._
+
+### personal (child)
+_No processes yet._
 
 ---
 
