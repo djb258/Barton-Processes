@@ -1,5 +1,5 @@
-# PROCESS: Blog Reconnaissance
-## Maps company web presence — about pages, team pages, sitemaps — so downstream processes have free data before calling paid tools
+# PROCESS: Blog Monitor
+## Detects content movement on company websites — maps the URL structure (constant), tracks 0/1 change (variable), classifies signals only on the 1s
 ### Status: BUILD
 ### Business: svg-agency
 
@@ -10,24 +10,24 @@
 | Field | Value |
 |-------|-------|
 | Process ID | PROC-300 |
-| Name | Blog Reconnaissance |
+| Name | Blog Monitor |
 | Business Silo | svg-agency |
 | CTB Position | factory/svg-agency/300-blog-worker |
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | — |
 | BAR Reference | — |
-| Deployed URL | not deployed (currently Python script, future CF Worker) |
-| Cron | Monthly (future: CF Worker cron) |
-| Runtime | Python 3 script → future CF Worker |
+| Deployed URL | local Python script (blog-monitor-v2.py) |
+| Cron | Monthly (manual, future: CF Worker cron) |
+| Runtime | Python 3 + curl_cffi + DataImpulse proxy |
 
 ---
 
 ## 2. WHY THIS EXISTS
 
-Process 200 (People) needs to fill CEO/CFO/HR slots. The cheapest way to find people is from the company's own website — team pages, about pages, leadership pages. If 300 doesn't run first, 200 has to go straight to paid tools for every single slot.
+Two jobs. First: detect which companies have active web presence so Process 200 (People) has free data to work with before spending on paid tools. Second: detect content movement (funding, acquisition, leadership change) that feeds LCS signals (Process 100).
 
-300 is also the content movement detector. If a company publishes new content (funding, acquisition, leadership change), that signal feeds LCS (Process 100). But the primary value right now is giving 200 free data to work with before it spends money.
+The URL mapping is the constant — where to look on each site. The 0/1 is the variable — did it change since last check. First pass is expensive (mapping). Every pass after that is cheap (just checking dates against the map).
 
 **300 runs before 200. Always.**
 
@@ -37,29 +37,32 @@ Process 200 (People) needs to fill CEO/CFO/HR slots. The cheapest way to find pe
 
 ### Two-Question Intake (Bedrock §7)
 1. **"What triggers this?"** — Monthly. Run before Process 200. Re-run when new companies are SEEDed.
-2. **"How do we get it?"** — CF Worker fetch for public pages. Startpage via DataImpulse proxy for search index freshness.
+2. **"How do we get it?"** — Startpage via DataImpulse residential proxy. Reads company list from D1 (NOT Neon).
 
 ### Input
-- ~32K companies in D1 with domains from `outreach_blog` (49,062 blog records, 13,186 with about_url)
-- Company domains from `outreach_outreach.domain`
+- ~32,598 companies in D1 with domains from `outreach_outreach.domain`
+- 49,062 blog records in `outreach_blog` (13,186 already have about_url)
 
 ### Middle
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| 1 | Companies with `about_url` in `outreach_blog` | Fetch about/team pages via CF Worker fetch (free, public pages) | Page content — names, titles, team structure mapped | CF Worker fetch |
-| 2 | Companies with domain but no `about_url` | Query Startpage via DataImpulse: `site:{domain} about team leadership` to find team page URLs | Discovered about_url / team_url stored to `outreach_blog` | Startpage + DataImpulse proxy |
-| 3 | All companies with domain | Query Startpage: `site:{domain}` — check search index for freshness indicators (dates, "today", "this week") | Binary: 0 (stale) or 1 (fresh content) | Startpage + DataImpulse proxy |
-| 4 | Companies where Step 3 = 1 (movement detected) | Targeted queries with signal keywords (funding, acquisition, leadership change, expansion, restructuring) | Signal classification: FUNDING_EVENT, ACQUISITION, LEADERSHIP_CHANGE, EXPANSION, RESTRUCTURING, GENERAL_NEWS | Startpage + DataImpulse proxy + LLM as tail for classification |
+| **Phase 1 — Movement detection (0/1)** | | | | |
+| 1 | All companies with domain | Query Startpage: `site:{domain}` — check search result snippets for freshness indicators (dates, "ago", "today", "this week") | Binary: 0 (no change) or 1 (fresh content detected) | Startpage + DataImpulse proxy |
+| 2 | Phase 1 results | Write 0/1 + last_checked + reason back to `outreach_blog.context_summary` in D1 | URL mapping updated with movement status and timestamp | D1 via wrangler |
+| **Phase 2 — Signal classification (only on 1s)** | | | | |
+| 3 | Companies where Phase 1 = 1 | Run 6 targeted Startpage queries with signal-specific keywords per mover | Signal type: FUNDING_EVENT, ACQUISITION, LEADERSHIP_CHANGE, EXPANSION, RESTRUCTURING, GENERAL_NEWS | Startpage + DataImpulse proxy |
+| 4 | Phase 2 results | Write detected signals back to `outreach_blog.context_summary` in D1 | Classified movement signals stored | D1 via wrangler |
+
+**Detection is deterministic.** No AI. Keyword matching against search index snippets. The search engine already did the crawling — we're reading its index, not downloading pages.
 
 ### Output
-- `outreach_blog` updated with about_url, team_url, sitemap structure for every company where found
-- Names and titles extracted from team pages (stored for Process 200 to consume)
-- Content movement signals (0/1) with classification for movers
-- Movement signals fed to LCS Pipeline (Process 100) signal queue
+- `outreach_blog.context_summary` updated with: movement (0/1), last_checked, reason, signals (if any)
+- JSONL backup files in `src/output/` (blog-indicators-YYYY-MM.jsonl, blog-signals-YYYY-MM.jsonl)
+- Movement signals feed Process 100 (LCS Pipeline) and inform Process 200 (People) which companies are active
 
 ### Circle (Bedrock §5)
-First pass maps everything — builds the structure (which companies have team pages, what's the URL pattern). After that, monthly runs only check for changes. The structure is the constant, the content is the variable. If a team page URL goes dead, flag it, don't assume.
+The URL mapping is the constant — `site:{domain}` is the query pattern. The 0/1 is the variable. Each run compares freshness against what was stored. First pass is expensive (every company). After that, only re-check companies that were 1 last time, or on a monthly full sweep. If a domain goes dead (NOT_INDEXED), flag it, don't drop it.
 
 ---
 
@@ -75,22 +78,19 @@ First pass maps everything — builds the structure (which companies have team p
 
 | Item | Type | Cost Tier | Credentials | What It Does |
 |------|------|-----------|-------------|-------------|
-| CF Worker fetch | Native | Free | None | Fetch public about/team pages |
-| Startpage | Search engine | Free | None (routed through proxy) | Google results anonymized, no CAPTCHA |
-| DataImpulse | Residential proxy | Cheap (~$1/month) | PROXY_GATEWAY_URL, PROXY_API_KEY (Doppler) | Routes Startpage queries through residential IPs |
-| LLM (Workers AI) | AI classification | Free (CF Workers AI) | Auto binding | Signal classification on movement=1 companies ONLY. Tail, not spine. |
+| Startpage | Search engine | Free | None (routed through proxy) | Google results anonymized, no CAPTCHA — the search tool |
+| DataImpulse | Residential proxy | Cheap (~$1/month) | PROXY_USER, PROXY_PASS (env vars) | 90M+ rotating residential IPs, routes Startpage queries |
+| curl_cffi | Python library | Free | None | Chrome TLS fingerprint — looks like a real browser |
+| wrangler CLI | CF tool | Free | OAuth (logged in) | Reads company list from D1, writes results back to D1 |
 
-### Secrets (from Doppler)
+### Secrets (env vars, from Doppler)
 
 | Secret | Doppler Project | Config | Used By |
 |--------|----------------|--------|---------|
-| PROXY_GATEWAY_URL | imo-creator | dev | DataImpulse gateway for Startpage queries |
-| PROXY_API_KEY | imo-creator | dev | DataImpulse auth |
+| PROXY_USER | imo-creator | dev | DataImpulse username |
+| PROXY_PASS | imo-creator | dev | DataImpulse password |
 
-**Tool Priority (Well Drinks First):**
-1. CF Worker fetch for public pages — always first, free
-2. Startpage via DataImpulse — for discovery and freshness detection, cheap
-3. LLM classification — only on companies with detected movement, free via Workers AI
+**Tool Priority:** Startpage via DataImpulse is the only external tool. No AI. No page downloads. We're reading the search index, not crawling sites.
 
 ---
 
@@ -100,43 +100,41 @@ First pass maps everything — builds the structure (which companies have team p
 
 | Table | What It Provides | Join Key |
 |-------|-----------------|----------|
-| `outreach_blog` | about_url, source_url, news_url, context_summary | `outreach_id` |
-| `outreach_outreach` | company domain | `outreach_id` |
-| `outreach_company_target` | city, state (for context) | `outreach_id` |
+| `outreach_outreach` | company domain (the input for `site:domain` query) | `outreach_id` |
+| `outreach_blog` | existing about_url, source_url, prior movement status | `outreach_id` |
 
 ### WRITE Access
 
 | Table | What It Writes | When |
 |-------|---------------|------|
-| `outreach_blog` | Updated about_url, team_url, sitemap data, last_checked, movement flag | Steps 1-3 |
-| Signal queue (future) | Content movement signals with classification | Step 4 |
+| `outreach_blog.context_summary` | movement (0/1), last_checked, reason, signals (JSON) | Phase 1 + Phase 2 |
 
 ### Join Chain
 
 ```
 outreach_outreach.outreach_id (SPINE)
-  → outreach_blog.outreach_id (1:1 — web presence data)
-  → outreach_outreach.domain (company website)
-  → outreach_company_target.outreach_id (city/state for context)
+  → outreach_outreach.domain (company website — the query input)
+  → outreach_blog.outreach_id (1:1 — stores movement results)
 ```
 
 ### Forbidden Paths
 
 | Action | Why |
 |--------|-----|
-| Query Neon | D1 only during WORK phase. SEED already pulled the data. |
-| Fetch every page on a company site | Map the structure, don't download the content. Constants, not variables. |
-| Run LLM on companies with movement=0 | AI is tail. Only fires on detected changes. Deterministic detection first. |
-| Skip CF Worker fetch and go straight to proxy | Free before cheap. Always. |
+| Query Neon | D1 only. SEED already pulled the data. |
+| Download full pages | We read the search index, not the sites. Map the constant, track the variable. |
+| Classify companies with movement=0 | Phase 2 only fires on 1s. Don't waste proxy bandwidth. |
+| Run without proxy | Startpage will block direct requests at scale. Always use DataImpulse. |
 
 ### Query Routing
 
 | Question | Table | Column |
 |----------|-------|--------|
-| Does this company have a team page? | `outreach_blog` | `about_url` |
 | What's the company domain? | `outreach_outreach` | `domain` |
-| Has content changed since last check? | `outreach_blog` | movement flag (0/1) |
-| What type of change? | Signal queue | signal_type |
+| Has content changed? | `outreach_blog` | `context_summary → $.movement` (0/1) |
+| When was it last checked? | `outreach_blog` | `context_summary → $.last_checked` |
+| What type of change? | `outreach_blog` | `context_summary → $.signals` |
+| Does this company have a team page? | `outreach_blog` | `about_url` |
 
 ---
 
@@ -144,17 +142,19 @@ outreach_outreach.outreach_id (SPINE)
 
 ### Constants (structure — never changes)
 - Detection is binary: 0 (no change) or 1 (change detected)
+- Query pattern: `site:{domain}` — the domain is the constant, the search results are the variable
 - 6 signal types: FUNDING_EVENT, ACQUISITION, LEADERSHIP_CHANGE, EXPANSION, RESTRUCTURING, GENERAL_NEWS
-- AI is tail only — classification on 1s, detection is deterministic
-- Free before cheap. CF Worker fetch before proxy.
-- First pass maps everything. After that, quick update for changes only.
-- URL structure is the constant. Page content is the variable.
+- Signal detection is deterministic (keyword matching). No AI.
+- Phase 2 only fires on 1s. Never classify a 0.
+- URL mapping is the constant. The 0/1 movement flag is the variable.
+- First pass maps everything (expensive). After that, just check dates (cheap).
+- Box-Muller jitter between requests (mean 5s, std 2s, min 2.5s)
 
 ### Variables (fill — changes every run)
-- Which companies have discoverable team pages
-- Which companies show content movement
-- What signal type gets classified
-- How many about_urls get discovered (13,186 today, grows with each run)
+- Which companies show content movement (0/1)
+- What signal type gets classified on movers
+- Last-checked timestamp per company
+- Number of companies indexed vs NOT_INDEXED
 
 ---
 
@@ -192,23 +192,23 @@ outreach_outreach.outreach_id (SPINE)
 ## 9. SMOKE TEST
 
 ```
-1. Count companies with domains: SELECT COUNT(*) FROM outreach_outreach WHERE domain IS NOT NULL → expected: ~32K
-2. Count existing about_urls: SELECT COUNT(*) FROM outreach_blog WHERE about_url IS NOT NULL → expected: ~13,186
-3. Fetch one about_url via CF Worker fetch → expected: 200 OK, HTML content
-4. Query Startpage via proxy for one company domain → expected: search results returned
-5. After first run: SELECT COUNT(*) FROM outreach_blog WHERE about_url IS NOT NULL → expected: > 13,186 (new discoveries)
+1. python3 src/blog-monitor-v2.py --phase 1 --limit 10 → expected: loads 10 companies from D1, produces 0/1 per company
+2. cat src/output/blog-indicators-YYYY-MM.jsonl | head -3 → expected: JSON lines with movement, reason, fetched_at
+3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT context_summary FROM outreach_blog WHERE context_summary LIKE '%movement%' LIMIT 3" → expected: JSON with movement 0/1
+4. python3 src/blog-monitor-v2.py --phase 2 → expected: classifies only companies with movement=1
+5. cat src/output/blog-signals-YYYY-MM.jsonl → expected: signal types with evidence
 ```
 
 **Three Primitives Check (Bedrock §1):**
-1. **Thing:** Do the company domains exist in D1? Do the about_urls resolve?
-2. **Flow:** Does CF Worker fetch reach the pages? Does the proxy route to Startpage?
-3. **Change:** Are names/titles extracted correctly? Are movement signals classified accurately?
+1. **Thing:** Do the company domains exist in D1? Does the proxy connect?
+2. **Flow:** Does the Startpage query return results? Does the 0/1 get written back to D1?
+3. **Change:** Is freshness detection correct (are the 1s real movement)? Are signals classified accurately?
 
 ---
 
 ## 10. LOGBOOK
 
-_No runs yet. Process in BUILD state._
+_No runs yet on v2. Process in BUILD state._
 
 ---
 
@@ -216,9 +216,10 @@ _No runs yet. Process in BUILD state._
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
-| 1 | 2026-03-29 | Not yet a CF Worker | Currently Python script with psql calls | Convert to CF Worker with D1 bindings | 0 |
-| 2 | 2026-03-29 | Output is local JSONL, not D1 | Signals not flowing to LCS signal_queue | Wire output to D1 tables | 0 |
-| 3 | 2026-03-29 | Startpage HTML parsing is brittle | Regex-based extraction | Build resilient parser with fallback patterns | 0 |
+| 1 | 2026-03-29 | v1 read from Neon via psql | Should read from D1 (SEED already pulled data) | v2 rewired to D1 via wrangler CLI | 1 |
+| 2 | 2026-03-29 | v1 output to local JSONL only | Results not persisted to D1 | v2 writes 0/1 + signals back to outreach_blog.context_summary | 1 |
+| 3 | 2026-03-29 | Startpage HTML parsing is regex-based | If Startpage changes markup, extraction breaks | Monitor and update regex patterns | 0 |
+| 4 | 2026-03-29 | Not yet a CF Worker | Python script with curl_cffi | Future: convert to CF Worker (curl_cffi proxy stack works well, keep for now) | 0 |
 
 ---
 
@@ -227,6 +228,7 @@ _No runs yet. Process in BUILD state._
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
 | 2026-03-29 | Process doc written from Dave's walkthrough | none |
+| 2026-03-29 | v2 script: rewired to D1, added D1 writeback, kept proxy stack | none |
 
 ---
 
@@ -240,6 +242,36 @@ _No runs yet. Process in BUILD state._
 | EXPANSION | expansion, new office, new location, hiring spree, headcount | 8 |
 | RESTRUCTURING | restructuring, layoff, reorganization, downsizing | 7 |
 | GENERAL_NEWS | announcement, press release, news, update, launch | 5 |
+
+---
+
+## HOW TO RUN
+
+```bash
+# Set proxy credentials
+export PROXY_USER="your-dataimpulse-user"
+export PROXY_PASS="your-dataimpulse-pass"
+
+# Phase 1: Movement detection (0/1) — test with 10 companies
+python3 src/blog-monitor-v2.py --phase 1 --limit 10
+
+# Phase 1: Full run (all ~32K companies, ~5s between requests = ~44 hours)
+python3 src/blog-monitor-v2.py --phase 1
+
+# Phase 1: Resume interrupted run
+python3 src/blog-monitor-v2.py --phase 1 --resume
+
+# Phase 2: Classify movers (only runs on 1s from Phase 1)
+python3 src/blog-monitor-v2.py --phase 2
+
+# Both phases
+python3 src/blog-monitor-v2.py
+
+# Adjust delay (default mean 5s)
+python3 src/blog-monitor-v2.py --phase 1 --delay 3.0
+```
+
+**Runtime estimate:** ~720 companies/hour at 5s mean delay. 32K companies = ~44 hours for Phase 1. Run in background with `--resume` for interruption safety.
 
 ---
 
