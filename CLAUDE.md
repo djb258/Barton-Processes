@@ -47,6 +47,9 @@ barton-processes/
 ├── .gitignore
 │
 ├── law/                              # GOVERNANCE
+│   ├── PROCESS_TEMPLATE.md           # LOCKED — single template for ALL processes
+│   ├── PROCESS_AUDIT_TEMPLATE.md     # 8-gate pre-flight inspection
+│   ├── STRUCTURE_MANIFEST.yaml       # 4 business silos structure
 │   ├── heir.yaml                     # Process engine identity (HEIR)
 │   ├── orbt.yaml                     # Operational mode (ORBT)
 │   ├── process-registry.yaml         # Master list of all processes
@@ -57,10 +60,11 @@ barton-processes/
 │   ├── imo-creator/                  #   PARENT — shared global infrastructure
 │   │   └── 000-adapter-build/        #   Meta-process: how to build any domain adapter
 │   ├── svg-agency/                   #   CHILD — SVG insurance outreach (processes 100-900)
-│   │   ├── 100-lcs-pipeline/         #   Each process gets NNN-name/
-│   │   ├── 200-people-worker/        #     └── heir.yaml (process identity)
+│   │   ├── DATA_FLOW.md              #   Plumbing diagram (Neon → D1, all joins)
+│   │   ├── 100-lcs-pipeline/         #   Each process is its own self-contained unit:
+│   │   ├── 200-people-worker/        #     └── PROCESS.md (from PROCESS_TEMPLATE — the rebuild manual)
 │   │   ├── 300-blog-worker/          #     └── src/ (executable code)
-│   │   └── ...                       #     └── CLAUDE.md (agent instructions)
+│   │   └── ...                       #     └── wrangler.toml (CF Worker config)
 │   ├── real-estate/                  #   CHILD — real estate processes
 │   └── personal/                     #   CHILD — personal ops processes
 │
