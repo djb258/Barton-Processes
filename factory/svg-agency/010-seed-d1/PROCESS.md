@@ -1,5 +1,5 @@
 # PROCESS: SVG D1 SEED
-## Pulls agent-assigned companies and their full sub-hub footprint from Neon vault into D1 workspace
+## Copies the company footprint from Neon vault into D1 workspace for every company inside an agent's coverage zone
 ### Status: OPERATE
 ### Business: svg-agency
 
@@ -25,50 +25,44 @@
 
 ## 2. WHY THIS EXISTS
 
-Without this process, D1 is empty. Every SVG process (200 People Worker, 300 Blog Worker, 100 LCS Pipeline — all of them) reads from D1 outreach. If the SEED didn't run, nothing downstream works. This is Gate 0.
+Without this process, D1 is empty. Every SVG process (100 LCS Pipeline, 200 People Worker, 300 Blog Worker — all of them) reads from D1. If the SEED didn't run, nothing downstream works.
 
-The SEED also applies the coverage filter — only companies assigned to one of the 3 service agents get pulled. The remaining ~85K companies stay in Neon vault. D1 is the workspace for the ~32K that matter.
+The agent + ZIP + radius is the gate that controls the entire flow. No agent assignment, no SEED, no downstream processes. Nothing gets a footprint, nothing gets pulled to D1, nothing gets worked on unless it falls inside an agent's coverage zone.
 
-**THIS IS THE ONLY PROCESS THAT READS FROM NEON.** Every other SVG process reads exclusively from D1. The lifecycle is SEED (Neon → D1) → WORK (D1 only) → PUSH (D1 → Neon). Only Process 010 does the SEED. Only a future PUSH process writes back to Neon. During WORK, Neon does not exist as far as any process is concerned.
+**THIS IS THE ONLY PROCESS THAT READS FROM NEON.** Every other SVG process reads exclusively from D1. The lifecycle is SEED (Neon → D1) → WORK (D1 only) → PUSH (D1 → Neon). Only Process 010 does the SEED.
 
 ---
 
 ## 3. IMO — What Comes In, What Happens, What Comes Out
 
-### Two-Question Intake
-1. **"What triggers this?"** — Manual, run before any SVG process operates. Re-run when Neon data changes (new companies, new agents, new coverage zones).
-2. **"How do we get it?"** — Hyperdrive connection to Neon PostgreSQL vault. Reads from Neon schemas: cl, outreach, people, dol, coverage, reference.
+### Two-Question Intake (Bedrock §7)
+1. **"What triggers this?"** — Manual. Run before any SVG process operates. Re-run when Neon data changes (new companies, new agents, new coverage zones).
+2. **"How do we get it?"** — Hyperdrive connection to Neon PostgreSQL vault.
 
 ### Input
-- Neon vault with 117K companies across all schemas
-- 3 service agents with anchor ZIP + 100mi radius
-- `reference.us_zip_codes` (41,553 ZIPs) for haversine coverage calculation
+- Agent name + anchor ZIP code + 100-mile radius
+- Currently 3 agents: Dave Allan (26739 WV), Jeff Mussolino (21742 MD), David Vang (28461 NC)
 
 ### Middle
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| 1 | 3 agents + anchor ZIPs + radii | Coverage view expands each agent's anchor ZIP + radius into all ZIPs within range via haversine | ~28K qualifying ZIP codes | `coverage.v_service_agent_coverage_zips` (Neon view) |
-| 2 | Qualifying ZIPs + `outreach.company_target.postal_code` | Join companies to coverage ZIPs — companies whose postal_code falls in an agent's range pass Gate 0 | ~32K agent-assigned companies | Neon SQL JOIN |
-| 3 | 32K agent-assigned outreach_ids | Copy `outreach.outreach` spine table — outreach_id, sovereign_id, domain, ein | 32,704 rows in `outreach_outreach` | Hyperdrive → D1 INSERT OR REPLACE |
-| 4 | Same outreach_ids | Copy `outreach.company_target` — city, state, postal_code, industry, employees, email_method + agent assignment | 32,704 rows in `outreach_company_target` (with service_agent_id/name/number) | Hyperdrive → D1 INSERT OR REPLACE |
-| 5 | Same outreach_ids | Copy `outreach.dol` — filing_present, ein, carrier, renewal_month | 36,247 rows in `outreach_dol` | Hyperdrive → D1 INSERT OR REPLACE |
-| 6 | Same outreach_ids | Copy `outreach.blog` — context_summary, source_url, about_url, news_url | 49,062 rows in `outreach_blog` | Hyperdrive → D1 INSERT OR REPLACE |
-| 7 | Same outreach_ids | Copy `outreach.people` — delivery contacts with email, verification status | 109,443 rows in `outreach_people` | Hyperdrive → D1 INSERT OR REPLACE |
-| 8 | Same outreach_ids | Copy `people.company_slot` — CEO/CFO/HR slots with is_filled, person_unique_id | ~98K+ rows in `people_company_slot` | Hyperdrive → D1 INSERT OR REPLACE |
-| 9 | person_unique_ids from filled slots | Copy `people.people_master` — names, titles, emails, LinkedIn URLs | ~100K+ rows in `people_people_master` | Hyperdrive → D1 INSERT OR REPLACE |
-| 10 | EINs from companies with DOL filings | Copy `dol.form_5500` + schedule_a + schedule_c + schedule_other — full DOL filing detail | 171,040 rows across 4 tables | Hyperdrive → D1 INSERT OR REPLACE |
-| 11 | Coverage tables | Copy `coverage.service_agent` + `coverage.service_agent_coverage` for reference | 9 + 21 rows | Hyperdrive → D1 INSERT OR REPLACE |
+| 1 | Agent anchor ZIP + 100mi radius | Haversine expansion against `reference.us_zip_codes` (41,553 ZIPs with lat/lon) | All ZIP codes within 100mi of each agent's anchor | `coverage.v_service_agent_coverage_zips` (Neon view) |
+| 2 | Qualifying ZIPs | Match against `outreach.company_target.postal_code` to get outreach_ids | ~32K outreach_ids that passed Gate 0 | Neon SQL JOIN |
+| 3 | Qualifying outreach_ids | Tie back to sovereign_id via `cl.company_identity` | outreach_id ↔ sovereign_id link confirmed | Neon SQL JOIN |
+| 4 | Qualifying outreach_ids | Copy CT sub-hub — city, state, postal_code, industry, employees, email_method + agent assignment | `outreach_company_target` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 5 | Qualifying outreach_ids | Copy DOL sub-hub — filing_present, ein, carrier, renewal_month + full filing detail (form_5500, schedule_a, schedule_c, schedule_other) | `outreach_dol` + `dol_form_5500` + `dol_schedule_*` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 6 | Qualifying outreach_ids | Copy Blog sub-hub — about_url, source_url, sitemap structure. First pass maps everything. After that, quick update for changes only. | `outreach_blog` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 7 | Qualifying outreach_ids | Copy People sub-hub — 3 slots per company (CEO, CFO, HR), always 3, filled or empty. Each filled slot ties to a person record with verified email + LinkedIn URL. | `people_company_slot` + `people_people_master` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 8 | Coverage reference | Copy coverage tables for local reference | `coverage_service_agent` + `coverage_service_agent_coverage` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
 
 ### Output
-- `svg-d1-outreach-ops` fully populated with ~32K companies and all sub-hub data
-- Every company has agent assignment (service_agent_id/name/number on outreach_company_target)
-- Every company has 3 slots (CEO/CFO/HR) with correct fill status from Neon
-- All people records referenced by filled slots are present
-- DOL filing detail for all companies with EINs
-- Blog data with about_url/source_url for team page scraping
+- D1 fully populated with the complete footprint for every company inside an agent's coverage zone
+- Footprint per company = CT + DOL + Blog + People (3 slots with person records)
+- All hanging off one outreach_id (the spine)
+- If a new sub-hub appears (e.g., workers comp), it goes into Neon first, then the SEED pulls it to D1. The pattern is the constant. The sub-hubs are the variable.
 
-### Circle
+### Circle (Bedrock §5)
 After SEED completes, run the post-SEED audit (section 9) to verify all joins. If join integrity drops below 99%, re-run the failing step. Log results to imo-brain.
 
 ---
@@ -88,7 +82,7 @@ After SEED completes, run the post-SEED audit (section 9) to verify all joins. I
 | Item | Type | Cost Tier | Credentials | What It Does |
 |------|------|-----------|-------------|-------------|
 | Hyperdrive | CF Binding | Free | Auto (wrangler.toml) | Connection pooling to Neon — fast reads from vault |
-| wrangler CLI | Tool | Free | OAuth (logged in) | D1 queries for verification (`wrangler d1 execute`) |
+| wrangler CLI | Tool | Free | OAuth (logged in) | D1 queries for verification |
 | lcs-hub worker | CF Worker | Free | Deployed | Hosts all /seed/* endpoints |
 
 ### Secrets (from Doppler)
@@ -107,17 +101,17 @@ After SEED completes, run the post-SEED audit (section 9) to verify all joins. I
 
 | Schema.Table | What It Provides | Join Key |
 |-------------|-----------------|----------|
+| `reference.us_zip_codes` | 41,553 US ZIP codes with lat/lon | `zip` (used by haversine view) |
 | `coverage.service_agent` | 3 agents — name, number, status | `service_agent_id` |
 | `coverage.service_agent_coverage` | Intent — anchor_zip + radius_miles | `service_agent_id` |
 | `coverage.v_service_agent_coverage_zips` | VIEW — all ZIPs within each agent's radius | `zip` |
-| `reference.us_zip_codes` | 41,553 US ZIP codes with lat/lon | `zip` (used by haversine view) |
-| `outreach.outreach` | Spine — outreach_id, sovereign_id, domain, ein | `outreach_id` |
+| `cl.company_identity` | Sovereign identity — company_unique_id, outreach_id | `company_unique_id` / `outreach_id` |
 | `outreach.company_target` | Targeting — city, state, postal_code, email_method | `outreach_id` |
 | `outreach.dol` | DOL summary — filing_present, carrier, renewal | `outreach_id` |
 | `outreach.blog` | Web content — about_url, source_url | `outreach_id` |
 | `outreach.people` | Delivery contacts — email, verified, lifecycle | `outreach_id` |
 | `people.company_slot` | Slots — CEO/CFO/HR, is_filled, person_unique_id | `outreach_id` |
-| `people.people_master` | Contacts — name, title, email, LinkedIn | `unique_id` ← slot.person_unique_id |
+| `people.people_master` | Contacts — name, title, verified email, LinkedIn URL | `unique_id` ← slot.person_unique_id |
 | `dol.form_5500` | Federal filings — all years, all fields | `sponsor_dfe_ein`, `ack_id` |
 | `dol.schedule_a_part1` | Broker/insurance detail | `ack_id` |
 | `dol.schedule_c_part1_item2` | Service provider detail | `ack_id` |
@@ -125,39 +119,37 @@ After SEED completes, run the post-SEED audit (section 9) to verify all joins. I
 
 ### WRITE Access (D1 outreach — target)
 
-| D1 Table | Neon Source | When |
-|----------|-----------|------|
-| `outreach_outreach` | `outreach.outreach` | Step 3 |
-| `outreach_company_target` | `outreach.company_target` + agent assignment | Step 4 |
-| `outreach_dol` | `outreach.dol` | Step 5 |
-| `outreach_blog` | `outreach.blog` | Step 6 |
-| `outreach_people` | `outreach.people` | Step 7 |
-| `people_company_slot` | `people.company_slot` | Step 8 |
-| `people_people_master` | `people.people_master` | Step 9 |
-| `dol_form_5500` | `dol.form_5500` | Step 10 |
-| `dol_schedule_a` | `dol.schedule_a_part1` | Step 10 |
-| `dol_schedule_c` | `dol.schedule_c_part1_item2` | Step 10 |
-| `dol_schedule_other` | `dol.schedule_*` | Step 10 |
-| `coverage_service_agent` | `coverage.service_agent` | Step 11 |
-| `coverage_service_agent_coverage` | `coverage.service_agent_coverage` | Step 11 |
+| D1 Table | Neon Source | Sub-Hub | When |
+|----------|-----------|---------|------|
+| `outreach_company_target` | `outreach.company_target` + agent assignment | CT | Step 4 |
+| `outreach_dol` | `outreach.dol` | DOL | Step 5 |
+| `dol_form_5500` | `dol.form_5500` | DOL | Step 5 |
+| `dol_schedule_a` | `dol.schedule_a_part1` | DOL | Step 5 |
+| `dol_schedule_c` | `dol.schedule_c_part1_item2` | DOL | Step 5 |
+| `dol_schedule_other` | `dol.schedule_*` | DOL | Step 5 |
+| `outreach_blog` | `outreach.blog` | Blog | Step 6 |
+| `people_company_slot` | `people.company_slot` | People | Step 7 |
+| `people_people_master` | `people.people_master` | People | Step 7 |
+| `coverage_service_agent` | `coverage.service_agent` | Coverage | Step 8 |
+| `coverage_service_agent_coverage` | `coverage.service_agent_coverage` | Coverage | Step 8 |
 
 ### Join Chain
 
 ```
 coverage.service_agent.service_agent_id
-  → coverage.service_agent_coverage.service_agent_id (1:N — agent has coverage zones)
-    → coverage.v_service_agent_coverage_zips.zip (VIEW — haversine expansion)
-      → outreach.company_target.postal_code (FILTER — Gate 0)
-        → outreach.outreach.outreach_id (SPINE — universal join key)
-          → outreach.dol.outreach_id (1:1)
-          → outreach.blog.outreach_id (1:1)
-          → outreach.people.outreach_id (1:N)
-          → people.company_slot.outreach_id (1:N — 3+ per company)
-            → people.people_master.unique_id (N:1 via person_unique_id)
-          → dol.form_5500.outreach_id (1:N via EIN)
-            → dol.schedule_a_part1.ack_id (1:N)
-            → dol.schedule_c_part1_item2.ack_id (1:N)
-            → dol.schedule_*.ack_id (1:N)
+  → coverage.v_service_agent_coverage_zips.zip  (haversine expansion)
+    → outreach.company_target.postal_code  (GATE 0 — is this company in range?)
+      → outreach.outreach.outreach_id  (SPINE — universal join key)
+        → cl.company_identity.outreach_id  (tie back to sovereign_id)
+        → outreach.company_target  (CT sub-hub)
+        → outreach.dol  (DOL sub-hub)
+          → dol.form_5500.sponsor_dfe_ein  (filing detail)
+            → dol.schedule_a.ack_id
+            → dol.schedule_c.ack_id
+            → dol.schedule_other.ack_id
+        → outreach.blog  (Blog sub-hub)
+        → people.company_slot.outreach_id  (3 per company: CEO, CFO, HR)
+          → people.people_master.unique_id  (via person_unique_id — verified email + LinkedIn)
 ```
 
 ### Forbidden Paths
@@ -166,8 +158,8 @@ coverage.service_agent.service_agent_id
 |--------|-----|
 | Query Neon during WORK phase | SEED only. After SEED, all reads from D1. |
 | Write to Neon | Neon is vault. SEED is Neon→D1, never D1→Neon (that's PUSH). |
-| Skip the coverage filter | Every company in D1 must be agent-assigned. No unfiltered data. |
-| Direct cross-sub-hub joins in D1 | Route through outreach_outreach.outreach_id (the spine) |
+| Skip the coverage filter | Every company in D1 must be inside an agent's coverage zone. No unfiltered data. |
+| Direct cross-sub-hub joins in D1 | Route through outreach_id (the spine) |
 | INSERT without OR REPLACE | SEED is idempotent. Re-running must not create duplicates. |
 
 ### Query Routing
@@ -176,28 +168,32 @@ coverage.service_agent.service_agent_id
 |----------|--------|-------|
 | Which agents exist? | D1 outreach | `coverage_service_agent` |
 | Which ZIPs does an agent cover? | Neon only (view) | `coverage.v_service_agent_coverage_zips` |
-| Is this company agent-assigned? | D1 outreach | `outreach_company_target.service_agent_name IS NOT NULL` |
+| Is this company in an agent's zone? | D1 outreach | `outreach_company_target.service_agent_name IS NOT NULL` |
 | How many companies per agent? | D1 outreach | `outreach_company_target GROUP BY service_agent_name` |
 | What's the slot fill rate? | D1 outreach | `people_company_slot WHERE is_filled = 1` |
+| What DOL filings does a company have? | D1 outreach | `dol_form_5500 WHERE outreach_id = ?` |
 
 ---
 
-## 6. CONSTANTS & VARIABLES
+## 6. CONSTANTS & VARIABLES (Bedrock §2)
 
-### Constants
-- 3 service agents (Dave Allan WV, Jeff Mussolino MD, David Vang NC)
-- Coverage radius: 100 miles per agent
-- Slot types: CEO, CFO, HR (3 per company)
+### Constants (structure — never changes)
+- Agent + anchor ZIP + radius = the gate. Everything flows from this.
+- 3 slot types per company: CEO, CFO, HR
 - outreach_id is the universal join key across all sub-hubs
+- Footprint per company = CT + DOL + Blog + People (sub-hubs are extensible)
 - D1 table names: Neon schema.table → D1 schema_table (underscore flattening)
 - INSERT OR REPLACE for idempotent SEED
 - D1.batch() for bulk writes (max ~100 statements per batch)
+- DOL data uploaded once a year from EBSA — read-only reference until next upload
+- Blog first pass maps everything, after that quick update for changes only
 
-### Variables
+### Variables (fill — changes every run)
 - Number of companies passing Gate 0 (~32K currently, changes if agents/coverage change)
 - Slot fill rates (depends on Neon people data quality)
-- Number of DOL filings (grows as new years are filed)
+- Number of DOL filings (grows with each yearly upload)
 - Total rows per table (changes with each SEED run)
+- Which sub-hubs exist (CT, DOL, Blog, People today — workers comp or others tomorrow)
 
 ---
 
@@ -210,6 +206,7 @@ coverage.service_agent.service_agent_id
 | Post-SEED join audit shows <95% match | HALT — re-run failing step, investigate data gap |
 | Agent coverage returns 0 ZIPs | HALT — check coverage.service_agent_coverage table |
 | Company count drops >20% from prior SEED | HALT — something changed in Neon, investigate before overwriting |
+| Strike 3 on same failure | Troubleshoot/Train → produce Airworthiness Directive |
 
 ---
 
@@ -223,17 +220,18 @@ coverage.service_agent.service_agent_id
 | Hyperdrive binding on lcs-hub | HD_NEON configured in wrangler.toml | DONE |
 | coverage.v_service_agent_coverage_zips | Neon view (haversine) — must exist for Gate 0 filter | DONE |
 | reference.us_zip_codes | 41,553 ZIP codes with lat/lon for haversine | DONE |
-| 3 active service agents | Must exist in coverage.service_agent with status='active' | DONE |
+| Active service agents | Must exist in coverage.service_agent with status='active' | DONE |
+| DOL data | Yearly bulk load from EBSA website into Neon | DONE |
 
 ### Downstream (consumes this process's output)
 
 | Consumer | What It Needs |
 |----------|--------------|
+| Process 100 (LCS Pipeline) | ALL of the above — compiles CID from full footprint |
 | Process 200 (People Worker) | Filled slots, people records, company target, blog about_urls |
 | Process 300 (Blog Worker) | Blog records, company target |
 | Process 400 (DOL Views) | DOL filing detail (form_5500, schedules) |
 | Process 500 (Talent Flow) | People records with LinkedIn URLs |
-| Process 100 (LCS Pipeline) | ALL of the above — compiles CID from full footprint |
 | ALL SVG processes | If SEED didn't run, nothing works |
 
 ---
@@ -243,17 +241,17 @@ coverage.service_agent.service_agent_id
 ```
 1. GET lcs-hub.svg-outreach.workers.dev/health → expected: status ok
 2. POST /seed/full-people?limit=1000&offset=0 → expected: slots > 0, people > 0, errors = 0
-3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_outreach" → expected: ~32,704
+3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_company_target" → expected: ~32,704
 4. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_company_target WHERE service_agent_name IS NOT NULL" → expected: ~32,702
 5. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM people_company_slot" → expected: >90,000
 6. Join integrity: SELECT COUNT(*) FROM people_company_slot cs JOIN people_people_master pm ON cs.person_unique_id = pm.unique_id WHERE cs.is_filled = 1 → expected: >99% of filled slots match
-7. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT slot_type, ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct FROM people_company_slot GROUP BY slot_type" → expected: CEO ~60%, CFO ~55%, HR ~35%+
+7. Slot fill rates: SELECT slot_type, ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct FROM people_company_slot GROUP BY slot_type → expected: CEO ~60%, CFO ~55%, HR ~35%+
 ```
 
-**Three Primitives Check:**
-1. **Thing:** Do all 13 D1 tables exist with data? (`outreach_outreach` through `coverage_service_agent_coverage`)
+**Three Primitives Check (Bedrock §1):**
+1. **Thing:** Do all D1 tables exist with data? (CT, DOL, Blog, People, Coverage)
 2. **Flow:** Does outreach_id join correctly from spine through every sub-hub table?
-3. **Change:** Did the SEED transform Neon schema.table names to D1 schema_table format correctly?
+3. **Change:** Did the SEED copy Neon data to D1 correctly (schema.table → schema_table)?
 
 ---
 
@@ -311,6 +309,7 @@ coverage.service_agent.service_agent_id
 | 2026-03-26 | Full SEED fixes (people, slots, agents) | ops/2026-03-26-seed-fix-complete |
 | 2026-03-26 | Data flow diagram documented | decisions/2026-03-26-data-flow-neon-to-d1 |
 | 2026-03-26 | Full Neon slot+people SEED complete | ops/2026-03-26-full-neon-seed-complete |
+| 2026-03-29 | Process doc rewritten from Dave's walkthrough | none |
 
 ---
 
@@ -369,7 +368,7 @@ wrangler d1 execute svg-d1-outreach-ops --remote --command "
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
-| Version | 1.0.0 |
+| Version | 2.0.0 |
 | Template Version | 2.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 |
