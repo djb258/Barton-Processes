@@ -16,7 +16,7 @@
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Last Deployed | 2026-03-26 |
-| BAR Reference | — |
+| BAR Reference | BAR-52 |
 | Deployed URL | https://lcs-hub.svg-outreach.workers.dev (SEED endpoints) |
 | Cron | Manual (run before any SVG process operates) |
 | Runtime | CF Worker (lcs-hub) via Hyperdrive to Neon |

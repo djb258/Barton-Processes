@@ -31,3 +31,4 @@ Thumbs.db
 *.log
 log/*.json
 .superpowers/
+factory/svg-agency/300-blog-worker/src/output/

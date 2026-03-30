@@ -16,7 +16,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | 2026-03-26 (v1 — needs rebuild for v2 pass structure) |
-| BAR Reference | — |
+| BAR Reference | BAR-52 |
 | Deployed URL | people-worker-200.svg-outreach.workers.dev |
 | Cron | Daily `0 6 * * *` (6am UTC) |
 | Runtime | CF Worker (daily cron, batched) |

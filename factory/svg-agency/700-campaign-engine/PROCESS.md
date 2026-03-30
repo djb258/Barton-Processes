@@ -16,7 +16,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | — |
+| BAR Reference | BAR-175, BAR-177 |
 | Deployed URL | not deployed |
 | Cron | none (triggered by LCS pipeline CID output) |
 | Runtime | CF Worker (future) |

@@ -16,7 +16,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | — |
+| BAR Reference | BAR-38, BAR-82, BAR-178 |
 | Deployed URL | https://client-portal-830.svg-outreach.workers.dev (production: app.svgagency.com) |
 | Cron | none — HTTP-triggered |
 | Runtime | CF Worker |

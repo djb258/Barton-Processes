@@ -18,7 +18,7 @@ _What is this thing? The constants that never change regardless of when you read
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | none |
+| BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Deployed URL | https://client-mint-800.svg-outreach.workers.dev |
 | Cron | manual |
 | Runtime | CF Worker |

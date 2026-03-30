@@ -16,7 +16,7 @@
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Last Deployed | 2026-03-24 (v2 — compiler-v2.ts) |
-| BAR Reference | BAR-37 (smoke test), BAR-132 (AI synthesis) |
+| BAR Reference | BAR-37, BAR-48, BAR-51, BAR-152 |
 | Deployed URL | https://lcs-hub.svg-outreach.workers.dev |
 | Cron | `0 7 * * *` (daily 7am UTC — scan pending signals + reset domain counters) |
 | Runtime | CF Worker (cron + HTTP + queue consumer) |

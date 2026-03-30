@@ -16,7 +16,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | — |
+| BAR Reference | BAR-38, BAR-178 |
 | Deployed URL | https://client-intake-810.svg-outreach.workers.dev |
 | Cron | none (HTTP-triggered) |
 | Runtime | CF Worker |

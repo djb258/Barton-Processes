@@ -16,7 +16,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | — |
-| BAR Reference | — |
+| BAR Reference | BAR-52 |
 | Deployed URL | local Python script (blog-monitor-v2.py) |
 | Cron | Monthly (manual, future: CF Worker cron) |
 | Runtime | Python 3 + curl_cffi + DataImpulse proxy |

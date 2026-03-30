@@ -16,7 +16,7 @@
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Last Deployed | 2026-03-25 (D1 seed of 171,040 rows) |
-| BAR Reference | none |
+| BAR Reference | BAR-49 |
 | Deployed URL | not deployed (SQL views — no worker) |
 | Cron | none |
 | Runtime | SQL views (not a worker) |

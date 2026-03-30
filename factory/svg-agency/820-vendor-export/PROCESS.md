@@ -18,7 +18,7 @@ _What is this thing? The constants that never change regardless of when you read
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | none |
+| BAR Reference | BAR-38, BAR-178 |
 | Deployed URL | vendor-export-820.svg-outreach.workers.dev |
 | Cron | `0 5 * * *` (daily at 5 AM UTC) |
 | Runtime | CF Worker |

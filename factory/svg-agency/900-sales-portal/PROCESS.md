@@ -18,7 +18,7 @@ _What is this thing? The constants that never change regardless of when you read
 | ORBT | BUILD |
 | Strikes | 0 |
 | Last Deployed | not deployed |
-| BAR Reference | none |
+| BAR Reference | BAR-39, BAR-133, BAR-179 |
 | Deployed URL | sales-portal-900.svg-outreach.workers.dev (production: app.svgagency.com/sales/) |
 | Cron | none |
 | Runtime | CF Worker |
