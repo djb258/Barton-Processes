@@ -232,7 +232,51 @@ lcs_mid_sequence_state.adapter_type → lcs_adapter_registry.adapter_type
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| Signals processed | count | BASELINE | — | Total signals dequeued from lcs_signal_queue |
+| CIDs compiled | count | BASELINE | — | Successful CID records created |
+| SIDs constructed | count | BASELINE | — | Successful SID records created |
+| MIDs delivered | count | BASELINE | — | Messages successfully sent |
+| Delivery rate | % | BASELINE | — | MIDs delivered / MIDs attempted |
+| Bounce rate | % | BASELINE | — | BOUNCED / total MIDs |
+| Compilation success rate | % | BASELINE | — | CIDs compiled / signals processed |
+| Intelligence tier distribution | % per tier | BASELINE | — | Breakdown: tier 2 / 3 / 4 / 5 |
+| Domain rotation utilization | sent/cap | BASELINE | — | Messages sent per domain vs daily cap |
+| Webhook response rate | % | BASELINE | — | Webhooks received / MIDs sent |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| D1 spine | Available | BASELINE | — |
+| D1 outreach | Available | BASELINE | — |
+| Mailgun API | 200 OK | BASELINE | — |
+| HeyReach API | 200 OK | BASELINE | — |
+| CF Queue | Processing | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 ### 2026-03-24 — v2 deployed
 
@@ -253,7 +297,7 @@ lcs_mid_sequence_state.adapter_type → lcs_adapter_registry.adapter_type
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -265,7 +309,7 @@ lcs_mid_sequence_state.adapter_type → lcs_adapter_registry.adapter_type
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -283,7 +327,7 @@ lcs_mid_sequence_state.adapter_type → lcs_adapter_registry.adapter_type
 | Created | 2026-03-30 |
 | Last Modified | 2026-03-29 |
 | Version | 2.0.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | company-lifecycle-cl/doctrine/OSAM.md — SUBHUB-CL-LCS |
 | Data Flow | factory/cl/DATA_FLOW.md |

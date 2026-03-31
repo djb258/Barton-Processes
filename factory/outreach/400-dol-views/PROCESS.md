@@ -236,7 +236,45 @@ If any fails — that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| Companies with filings | count | BASELINE | — | Distinct EINs in dol_form_5500 |
+| Renewal approaching count | count | BASELINE | — | Companies with renewal_approaching = true |
+| Premium pressure detected count | count | BASELINE | — | Companies with significant_increase = true |
+| Carrier changes detected count | count | BASELINE | — | Companies with carrier_changed = true |
+| Broker changes detected count | count | BASELINE | — | Companies with broker_changed = true |
+| View query time | ms | BASELINE | — | Average response time per view query |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| Neon (dol schema) | Available | BASELINE | — |
+| D1 outreach | Available | BASELINE | — |
+| psql CLI | Available | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 ### 2026-03-25 — D1 seed complete
 
@@ -261,7 +299,7 @@ If any fails — that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -273,7 +311,7 @@ If any fails — that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -290,7 +328,7 @@ If any fails — that's the break. Don't guess. Run the Troubleshooting Loop (Be
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 1.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md |
 | Data Flow | factory/svg-agency/DATA_FLOW.md |

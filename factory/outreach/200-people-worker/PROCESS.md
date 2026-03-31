@@ -258,7 +258,51 @@ outreach_outreach.outreach_id (SPINE)
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
+
+### Process Metrics
+
+| Metric | Unit | Baseline (2026-03-30) | Target | Tolerance |
+|--------|------|----------------------|--------|-----------|
+| Total slots | count | 358,308 | ~3x companies | stable |
+| CEO fill rate | % | 54.7% | IMPROVE | must not drop below baseline |
+| CFO fill rate | % | 50.2% | IMPROVE | must not drop below baseline |
+| HR fill rate | % | 43.2% | IMPROVE | must not drop below baseline |
+| Staging records available | count | 24,727 | decreases as promoted | track promotion rate |
+| Pass 1 (free) hit rate | % | BASELINE | set after first run | — |
+| Pass 2 (Startpage) hit rate | % | BASELINE | set after first run | — |
+| Pass 3 (Brave) hit rate | % | BASELINE | set after first run | — |
+| Cost per filled slot (Pass 2) | $/slot | BASELINE | set after first run | budget cap |
+| Cost per filled slot (Pass 3) | $/slot | BASELINE | set after first run | budget cap |
+| Reachable companies (≥1 slot with email or LinkedIn) | count | BASELINE | IMPROVE | track growth |
+| Slot→person join integrity | % | 99.7% | ≥99% | <95% = HALT |
+
+### Tool Scorecard
+
+| Tool # | Vendor | Hit Rate | Cost/Unit | Error Rate | Latency | Period |
+|--------|--------|----------|-----------|------------|---------|--------|
+| 11-structured-data | CF D1 | 100% | $0 | 0% | ~1ms | baseline |
+| 16-fetcher | CF Workers fetch | BASELINE | $0 | BASELINE | BASELINE | pending |
+| 18-proxy-router | DataImpulse | 0% (Startpage CAPTCHA) | $1/GB | 100% | N/A | 2026-03-30 |
+| 05-fallback-scraping | Brave Search API | BASELINE | $0.004/query | BASELINE | BASELINE | pending |
+
+Note: DataImpulse/Startpage is currently blocked (CAPTCHA). Vendor scorecard reflects this — justification for evaluating Brave as replacement.
+
+### Sigma Tracking — set after 3+ runs
+
+### ORBT Gate Rule
+
+| Current ORBT | Sigma Trend | Action |
+|-------------|-------------|--------|
+| BUILD | N/A | Establish baselines |
+| OPERATE | Tightening | No action — system healthy |
+| OPERATE | Flat | Investigate — phantom constant? |
+| OPERATE | Expanding | HALT — broken constant upstream |
+| REPAIR | Any | Fix at source, re-baseline |
+
+---
+
+## 11. LOGBOOK
 
 ### 2026-03-26 — SEED fixes (slot infrastructure)
 
@@ -284,7 +328,7 @@ outreach_outreach.outreach_id (SPINE)
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -295,7 +339,7 @@ outreach_outreach.outreach_id (SPINE)
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -325,7 +369,7 @@ outreach_outreach.outreach_id (SPINE)
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 2.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 |
 | Data Flow | factory/outreach/DATA_FLOW.md |

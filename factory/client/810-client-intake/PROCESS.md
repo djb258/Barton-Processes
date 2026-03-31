@@ -256,13 +256,56 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| Intake batches processed | count | BASELINE | — | Total enrollment_intake batch headers created |
+| Records validated | count | BASELINE | — | Total records passing Zod validation |
+| Validation rejection rate | % | BASELINE | — | Failed records / total records submitted |
+| Records promoted | count | BASELINE | — | Records successfully written to canonical tables |
+| Records vaulted | count | BASELINE | — | Records promoted to Neon clnt.* via POST /vault |
+| Per-spoke counts (plan) | count | BASELINE | — | Records promoted to plan table |
+| Per-spoke counts (person) | count | BASELINE | — | Records promoted to person table |
+| Per-spoke counts (election) | count | BASELINE | — | Records promoted to election table |
+| Per-spoke counts (vendor) | count | BASELINE | — | Records promoted to vendor table |
+| Per-spoke counts (service) | count | BASELINE | — | Records promoted to service_request table |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| D1 (client-intake-810) | Available | BASELINE | — |
+| Neon (clnt.* vault) | Available | BASELINE | — |
+| Zod validation | Passing | BASELINE | — |
+| Hono endpoints | Responding | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 _No entries yet. Process is in BUILD state._
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -271,7 +314,7 @@ _No entries yet. Process is in BUILD state._
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -337,7 +380,7 @@ _No entries yet. Process is in BUILD state._
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 1.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | — |
 | Data Flow | — |

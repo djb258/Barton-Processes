@@ -578,7 +578,53 @@ coverage_service_agent.service_agent_id
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
+
+### Process Metrics
+
+| Metric | Unit | Baseline (2026-03-30) | Target | Tolerance |
+|--------|------|----------------------|--------|-----------|
+| Companies seeded | count | 32,704 | 32,704 | ±5% (drop >20% = HALT) |
+| CT rows | count | 32,704 | = companies | 100% match |
+| DOL summary rows | count | 36,247 | ≥ companies with filing | ≥95% |
+| Blog rows | count | 49,062 | ≥ companies | ≥95% |
+| People contact rows | count | 109,443 | stable | ±10% |
+| Slot rows | count | 358,308 | ~3x companies | ±5% |
+| People master rows | count | 160,423 | stable | ±10% |
+| CEO fill rate | % | 54.7% | ≥54.7% | must not drop |
+| CFO fill rate | % | 50.2% | ≥50.2% | must not drop |
+| HR fill rate | % | 43.2% | ≥43.2% | must not drop |
+| Slot→person join integrity | % | 99.7% | ≥99% | <95% = HALT |
+| Agent assignment coverage | % | 99.99% (32,702/32,704) | ≥99% | <95% = HALT |
+| SEED errors | count | 0 | 0 | >10% of batch = HALT |
+| DOL filing detail rows | count | 14,252 | stable | ±10% |
+
+### Tool Scorecard
+
+| Tool # | Vendor | Hit Rate | Cost/Unit | Error Rate | Latency | Period |
+|--------|--------|----------|-----------|------------|---------|--------|
+| 16-fetcher | Hyperdrive to Neon | 100% | $0 (free) | 0% | ~2s/batch | 2026-03-26 |
+| 11-structured-data | CF D1 batch writes | 100% | $0 (free) | 0% | ~100ms/batch | 2026-03-26 |
+
+### Sigma Tracking
+
+| Metric | Run 1 (2026-03-25) | Run 2 (2026-03-26) | Trend | Action |
+|--------|-------------------|-------------------|-------|--------|
+| Slot→person join | 5.2% (broken) | 99.7% (fixed) | TIGHTENING | Locked as baseline |
+| Companies seeded | 32,704 | 32,704 | FLAT (stable) | Expected — same source |
+
+### ORBT Gate Rule
+
+| From | To | Gate |
+|------|-----|------|
+| BUILD | OPERATE | All metrics within tolerance for 3 consecutive runs |
+| OPERATE | REPAIR | Any metric outside tolerance |
+| REPAIR | OPERATE | Fix applied + metric back within tolerance |
+| Any (Strike 3) | TROUBLESHOOT/TRAIN | Same metric fails 3 times → AD |
+
+---
+
+## 11. LOGBOOK
 
 ### 2026-03-26 — Full SEED + fixes
 
@@ -611,7 +657,7 @@ coverage_service_agent.service_agent_id
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -623,7 +669,7 @@ coverage_service_agent.service_agent_id
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -693,7 +739,7 @@ wrangler d1 execute svg-d1-outreach-ops --remote --command "
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-31 |
 | Version | 3.0.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | Blueprint Repo | barton-outreach-core |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 |

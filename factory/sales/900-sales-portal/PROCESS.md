@@ -273,7 +273,44 @@ If any fails -> that's the break. Don't guess. Run the Troubleshooting Loop (Bed
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| Meeting pages rendered | count | BASELINE | — | Total HTML pages served across all 4 meetings |
+| Factfinder saves | count | BASELINE | — | Successful POST /sales/:slug/meeting1/save completions |
+| Phase progressions | count | BASELINE | — | sales_state.current_phase transitions |
+| Snapshot seeds | count | BASELINE | — | outreach_snapshot records created from Neon |
+| Slug resolution time | ms | BASELINE | — | Average D1 query time for slug -> sales_id |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| D1 (sales-portal-900) | Available | BASELINE | — |
+| Neon (outreach vault) | Available | BASELINE | — |
+| Hono SSR | Rendering | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 _Append-only. Read first, write last. No exceptions. (Bedrock S8)_
 
@@ -290,7 +327,7 @@ _Append-only. Read first, write last. No exceptions. (Bedrock S8)_
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 _The error history. Append-only -- never delete a resolved issue._
 
@@ -307,7 +344,7 @@ AD goes to ALL processes, not just this one. Update the template, not just this 
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 _Every session that touches this process. Links to imo-brain for detail._
 
@@ -324,7 +361,7 @@ _Every session that touches this process. Links to imo-brain for detail._
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 1.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | factory/svg-agency/DATA_FLOW.md |
 | Data Flow | factory/svg-agency/DATA_FLOW.md |

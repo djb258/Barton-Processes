@@ -258,7 +258,47 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| MIDs tagged | count | BASELINE | — | Total MIDs stamped with path_type + channel + movement_signal + sequence_position |
+| Movement campaigns triggered | count | BASELINE | — | Companies with MOVEMENT_DETECTED model (3-5 touch sequence) |
+| No-movement touches sent | count | BASELINE | — | Generic monthly introductions (NO_MOVEMENT model) |
+| Delivery success rate | % | BASELINE | — | DELIVERED / total MIDs sent |
+| CTA click rate | % | BASELINE | — | CLICKED / DELIVERED |
+| Meeting conversion rate | % | BASELINE | — | Meetings booked / campaigns completed |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| D1 spine | Available | BASELINE | — |
+| D1 outreach | Available | BASELINE | — |
+| Composio | Routing OK | BASELINE | — |
+| Mailgun API | 200 OK | BASELINE | — |
+| HeyReach API | 200 OK | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 ### 2026-03-29 — Process documentation created
 
@@ -273,7 +313,7 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -284,7 +324,7 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -299,7 +339,7 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 1.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md |
 | Data Flow | factory/svg-agency/DATA_FLOW.md |

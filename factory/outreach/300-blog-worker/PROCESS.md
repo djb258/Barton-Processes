@@ -223,13 +223,55 @@ outreach_outreach.outreach_id (SPINE)
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
+
+### Process Metrics
+
+Fill with ACTUAL BASELINE DATA from Phase 2 run (2026-03-30):
+
+| Metric | Unit | Baseline (2026-03-30) | Target | Tolerance |
+|--------|------|----------------------|--------|-----------|
+| Companies with domain | count | 32,598 | stable | ±5% |
+| Existing about_urls | count | 13,199 | IMPROVE (discover more) | must not drop |
+| Phase 2: pages fetched | count | 5,200 (of 13,199) | 13,199 (all) | run to completion |
+| Phase 2: pages OK (200 status) | count | ~4,800 (est) | ≥90% of fetched | <80% = investigate |
+| Phase 2: people extracted | count | 811 | IMPROVE (tune parser) | track per run |
+| Phase 2: hit rate (people/pages) | % | 15.6% | IMPROVE | track trend |
+| Phase 3: about_urls discovered | count | BASELINE | set after first run | — |
+| Phase 3: path hit rate | % | BASELINE | set after first run | — |
+| Phase 3: homepage fallback rate | % | BASELINE | set after first run | — |
+| Parser accuracy (valid names vs false positives) | % | ~70% (est from manual review) | IMPROVE | tune regex patterns |
+| context_summary truncation | chars | 4,000 (truncated in SEED) | needs re-fetch | known issue |
+
+### Tool Scorecard
+
+| Tool # | Vendor | Hit Rate | Cost/Unit | Error Rate | Latency | Period |
+|--------|--------|----------|-----------|------------|---------|--------|
+| 16-fetcher | CF Workers fetch (direct) | ~92% (4,800/5,200) | $0 | ~8% (timeouts, 403s) | ~0.5s/page | 2026-03-30 |
+| 17-parser-registry | Python regex (blog-recon.py) | 15.6% (811/5,200) | $0 | 0% (no crashes) | <1ms/parse | 2026-03-30 |
+| 18-proxy-router | DataImpulse + Startpage | 0% (CAPTCHA blocked) | $1/GB | 100% | N/A | 2026-03-30 |
+
+Note: 18-proxy-router/Startpage is dead for this process. Direct fetch via 16-fetcher replaced it. Scorecard documents the failure for vendor swap justification.
+
+### Sigma Tracking — Phase 2 was first run. Need 2 more runs for trend.
+
+### ORBT Gate Rule
+
+| Metric Trend | ORBT Action |
+|-------------|-------------|
+| Sigma tightening (metrics improving run-over-run) | OPERATE — process is healthy |
+| Sigma flat (no improvement after 3 runs) | REPAIR — tune parser, expand paths, check headers |
+| Sigma expanding (metrics degrading) | TROUBLESHOOT — trace the circle, find first break |
+
+---
+
+## 11. LOGBOOK
 
 _No runs yet on v3. Process in BUILD state._
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -242,7 +284,7 @@ _No runs yet on v3. Process in BUILD state._
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -298,7 +340,7 @@ python3 src/blog-recon.py --resume
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 3.0.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 — blog content sub-hub (04.04.05) |
 | Data Flow | factory/outreach/DATA_FLOW.md |

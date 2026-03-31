@@ -236,13 +236,51 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS
+
+_What gets measured. All values BASELINE until first production run._
+
+### Metrics
+
+| Metric | Type | Baseline | First Run | Notes |
+|--------|------|----------|-----------|-------|
+| Snapshots compared | count | BASELINE | — | Total snapshots joined for diff in target month |
+| Movements detected | count | BASELINE | — | Records with movement_detected = true in executive slots |
+| TF-01 signals emitted | count | BASELINE | — | EXECUTIVE_JOINED signals written to signal_output |
+| TF-02 signals emitted | count | BASELINE | — | EXECUTIVE_LEFT signals written to signal_output |
+| Detection rate | % | BASELINE | — | Movements detected / snapshots compared |
+| False positive rate (est) | % | BASELINE | — | Estimated — manual review sample after first run |
+
+### Tool Scorecard
+
+| Tool | Expected | Actual | Status |
+|------|----------|--------|--------|
+| Neon (Marketing DB) | Available | BASELINE | — |
+| psql CLI | Available | BASELINE | — |
+| Python 3 | Available | BASELINE | — |
+
+### Sigma Tracking
+
+| Run Date | Metric | Value | Sigma Direction | Notes |
+|----------|--------|-------|----------------|-------|
+| — | — | — | — | _No runs yet_ |
+
+### ORBT Gate Rule
+
+- **Sigma tightening** = real constant. Lock it.
+- **Sigma flat** = phantom constant. Investigate.
+- **Sigma expanding** = broken prior constant. Back-propagate and fix.
+- **Strike 3 on same metric** = Troubleshoot/Train, not another repair.
+
+---
+
+## 11. LOGBOOK
 
 _No runs logged yet. Process is in BUILD state._
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 12. KNOWN ISSUES & STRIKE TRACKING
 
 | # | Date | Issue | Root Cause | Fix | Strikes |
 |---|------|-------|-----------|-----|---------|
@@ -257,7 +295,7 @@ _No runs logged yet. Process is in BUILD state._
 
 ---
 
-## 12. SESSION LOG
+## 13. SESSION LOG
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
@@ -272,7 +310,7 @@ _No runs logged yet. Process is in BUILD state._
 | Created | 2026-03-29 |
 | Last Modified | 2026-03-29 |
 | Version | 1.1.0 |
-| Template Version | 2.0.0 |
+| Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md |
 | Data Flow | factory/svg-agency/DATA_FLOW.md |
