@@ -13,7 +13,7 @@
 | Process ID | PROC-050 |
 | Name | LBB — Library Barton Brain |
 | Sub-Hub | imo-creator (serves all sub-hubs) |
-| Business Silo | all — system, outreach, sales, client, research |
+| Business Silo | all — system, outreach, sales, client, research, processes |
 | CTB Position | factory/imo-creator/050-lbb |
 | Blueprint Repo | imo-creator |
 | Blueprint Section | fleet/brain-template/ v1.0.0 — airframe spec |
@@ -235,7 +235,7 @@ lbb_subjects.subject_id (Dewey Decimal tree — self-referencing via parent_id)
 
 ### Constants
 - 4 tables: subjects, records, records_error, logbook. No more, no less.
-- 5 trunk subjects: system, outreach, sales, client, research
+- 6 trunk subjects: system, outreach, sales, client, research, processes
 - HEIR identity: 8 fields stamped at birth. Never changes.
 - ORBT lifecycle: BUILD → OPERATE → REPAIR → TROUBLESHOOT/TRAIN
 - Content dedup via SHA-256 hash

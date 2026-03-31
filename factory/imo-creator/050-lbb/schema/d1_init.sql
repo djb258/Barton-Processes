@@ -159,4 +159,5 @@ VALUES
   ('trunk-outreach', NULL, 'outreach', 'Outreach intelligence — company data patterns, enrichment learnings, tool performance, process analytics.', 'trunk', 2),
   ('trunk-sales', NULL, 'sales', 'Sales IP — Barton voice, DISC framework, meeting sequences, objection handling, Monte Carlo. The 25-year moat.', 'trunk', 3),
   ('trunk-client', NULL, 'client', 'Client service knowledge — intake patterns, vendor mappings, portal usage, benefits administration.', 'trunk', 4),
-  ('trunk-research', NULL, 'research', 'Competitive intelligence — marketplace findings, vendor evaluations, tool benchmarks, industry trends.', 'trunk', 5);
+  ('trunk-research', NULL, 'research', 'Competitive intelligence — marketplace findings, vendor evaluations, tool benchmarks, industry trends.', 'trunk', 5),
+  ('trunk-processes', NULL, 'processes', 'Process execution knowledge — analytics, learnings, tool scorecards, dependency chains, execution order. Crosses all repos.', 'trunk', 6);
