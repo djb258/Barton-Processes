@@ -153,11 +153,30 @@ CREATE INDEX IF NOT EXISTS idx_lbb_logbook_signed_at ON lbb_logbook(signed_at);
 -- SEED: 5 TRUNK SUBJECTS
 -- ═══════════════════════════════════════════════════════════════════════════════
 
-INSERT OR IGNORE INTO lbb_subjects (subject_id, parent_id, name, description, ctb_level, sort_order)
-VALUES
-  ('trunk-system', NULL, 'system', 'System knowledge — doctrine, architecture, infrastructure, decisions. What imo-brain holds today.', 'trunk', 1),
-  ('trunk-outreach', NULL, 'outreach', 'Outreach intelligence — company data patterns, enrichment learnings, tool performance, process analytics.', 'trunk', 2),
-  ('trunk-sales', NULL, 'sales', 'Sales IP — Barton voice, DISC framework, meeting sequences, objection handling, Monte Carlo. The 25-year moat.', 'trunk', 3),
-  ('trunk-client', NULL, 'client', 'Client service knowledge — intake patterns, vendor mappings, portal usage, benefits administration.', 'trunk', 4),
-  ('trunk-research', NULL, 'research', 'Competitive intelligence — marketplace findings, vendor evaluations, tool benchmarks, industry trends.', 'trunk', 5),
-  ('trunk-processes', NULL, 'processes', 'Process execution knowledge — analytics, learnings, tool scorecards, dependency chains, execution order. Crosses all repos.', 'trunk', 6);
+-- TRUNK
+INSERT OR IGNORE INTO lbb_subjects VALUES ('root', NULL, 'imo-creator', 'The hangar. All doctrine, all governance, all knowledge originates here.', 'trunk', 1, datetime('now'), datetime('now'));
+
+-- BRANCHES under imo-creator (shared infrastructure)
+INSERT OR IGNORE INTO lbb_subjects VALUES ('system', 'root', 'system', 'System knowledge — doctrine, architecture, infrastructure, decisions.', 'branch', 1, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('processes', 'root', 'processes', 'Cross-cutting process knowledge — execution order, template learnings, analytics patterns.', 'branch', 2, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('research', 'root', 'research', 'Competitive intelligence — marketplace findings, vendor evaluations, tool benchmarks.', 'branch', 3, datetime('now'), datetime('now'));
+
+-- BRANCH: businesses
+INSERT OR IGNORE INTO lbb_subjects VALUES ('businesses', 'root', 'businesses', 'The three business silos. Each sovereign.', 'branch', 4, datetime('now'), datetime('now'));
+
+-- BRANCHES under businesses
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-agency', 'businesses', 'svg-agency', 'SVG Agency — insurance outreach, 50-200 life employers.', 'branch', 1, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('real-estate', 'businesses', 'real-estate', 'Real estate — storage, properties, deals.', 'branch', 2, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('personal', 'businesses', 'personal', 'Personal — finance, accounts, budget, goals.', 'branch', 3, datetime('now'), datetime('now'));
+
+-- BRANCHES under svg-agency (the 4 repos)
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-cl', 'svg-agency', 'cl', 'Company Lifecycle — sovereign identity, LCS pipeline.', 'branch', 1, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-outreach', 'svg-agency', 'outreach', 'Outreach intelligence — company data, enrichment, tool performance.', 'branch', 2, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-sales', 'svg-agency', 'sales', 'Sales IP — Barton voice, DISC, meetings, objections. The 25-year moat.', 'branch', 3, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-client', 'svg-agency', 'client', 'Client service — intake, vendors, portal, benefits admin.', 'branch', 4, datetime('now'), datetime('now'));
+
+-- LEAVES: process groups under each SVG repo
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-cl-proc', 'svg-cl', 'cl-processes', 'Process 100 (LCS Pipeline), Process 800 (Client Mint).', 'leaf', 10, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-outreach-proc', 'svg-outreach', 'outreach-processes', 'Process 010 (SEED), 200 (People), 300 (Blog), 400 (DOL), 500 (Talent Flow), 700 (Campaign).', 'leaf', 10, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-client-proc', 'svg-client', 'client-processes', 'Process 810 (Intake), 820 (Vendor Export), 830 (Portal).', 'leaf', 10, datetime('now'), datetime('now'));
+INSERT OR IGNORE INTO lbb_subjects VALUES ('svg-sales-proc', 'svg-sales', 'sales-processes', 'Process 900 (Sales Portal).', 'leaf', 10, datetime('now'), datetime('now'));
