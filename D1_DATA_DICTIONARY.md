@@ -11,27 +11,23 @@
 |---|-------------|---------|-------------|--------|---------|
 | 1 | svg-d1-spine | D1_SPINE / D1 | 641a9a1e | 38 | CL identity, LCS pipeline, errors, escalation, doctrine, coverage, sales state |
 | 2 | svg-d1-outreach-ops | D1_OUTREACH | 73a285b8 | 33 | Outreach footprint — CT, DOL, Blog, People, Slots, Staging |
-| 3 | svg-d1-sovereign | D1_SOVEREIGN | — | 81 | Legacy sovereign hub (pre-v2 architecture) |
-| 4 | imo-d1-global | D1_GLOBAL | — | 1 | Reference data — US ZIP codes |
-| 5 | svg-d1-storage | D1_STORAGE | — | 92 | Storage/real estate investment analysis |
-| 6 | svg-d1-research | D1_RESEARCH | — | 4 | Doctrine library (duplicate of spine subset) |
-| 7 | imo-brain | D1_IMO_BRAIN | 77adcbfe | 15 | System knowledge (documents, chunks, glossary, decisions, relationships) |
-| 8 | svg-brain | D1_SVG_BRAIN | a2e09d86 | 15 | Insurance domain knowledge (same schema as imo-brain) |
-| 9 | layer0 | D1_LAYER0 | — | 6 | Constant extraction engine (empty — not yet used) |
-| 10 | lcs | D1_LCS | — | 9 | Legacy LCS tables (empty — migrated to spine) |
-| 11 | phone | D1_PHONE | — | 3 | Phone system (call log, phone map) |
-| 12 | people-worker-200 | D1_PEOPLE | — | 12 | Legacy people worker (v1 — deprecated, use outreach) |
+| 3 | imo-d1-global | D1_GLOBAL | 5b902b59 | 1 | Reference data — US ZIP codes |
+| 4 | svg-d1-storage | D1_STORAGE | 47417f00 | 92 | Storage/real estate investment analysis |
+| 5 | lbb | D1_LBB | 1f8f12ab | 4 | Library Barton Brain — all knowledge, Dewey Decimal classification |
+| 6 | mission-control | D1_MC | 9f01c45a | — | Mission Control data |
 
-### Active Databases for SVG Processes
+**Deleted (2026-03-31):** imo-brain, svg-brain, research-library, people-worker-200, lcs-hub, layer0-engine, svg-d1-research, svg-d1-sovereign, svg-email-triage, svg-activity-log, svg-reference-bible, phone-system. All migrated or retired. Down from 18 to 6.
 
-Only 4 databases matter for SVG Agency processes:
+### Active Databases
 
 | Database | Used By | Role |
 |----------|---------|------|
 | **svg-d1-spine** | Process 100 (LCS), Process 800 (Client Mint) | Pipeline state, CL identity, errors, escalation |
 | **svg-d1-outreach-ops** | Process 010, 200, 300, 400, 500, 700 | Company footprint — the workspace |
 | **imo-d1-global** | Process 010 (SEED) | Reference ZIP codes for coverage filter |
-| **imo-brain** | All processes (logging) | System knowledge store |
+| **lbb** | All processes (knowledge) | Library Barton Brain — Dewey Decimal, 6 trunks |
+| **svg-d1-storage** | Real estate processes (future) | Storage/real estate investment data |
+| **mission-control** | Mission Control UI | Application data |
 
 ---
 
