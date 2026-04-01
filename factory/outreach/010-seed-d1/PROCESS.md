@@ -67,7 +67,34 @@ The agent + ZIP + radius is the gate that controls the entire flow. No agent ass
 - If a new sub-hub appears (e.g., workers comp), it goes into Neon first, then the SEED pulls it to D1. The pattern is the constant. The sub-hubs are the variable.
 
 ### Circle (Bedrock §5)
-After SEED completes, run the post-SEED audit (section 9) to verify all joins. If join integrity drops below 99%, re-run the failing step. Log results to imo-brain.
+After SEED completes, run the post-SEED audit (section 9) to verify all joins. If join integrity drops below 99%, re-run the failing step. Log results to LBB.
+
+### Source of Truth — Neon SEED Views
+
+**SEED reads from `seed_views` schema in Neon (Marketing DB).** These views are read-only lenses scoped to the 32,702 agent-assigned companies. The SEED is a dumb copy — no filtering logic in the SEED code. The views ARE the gate.
+
+| Neon View | D1 Target | Rows | Logic |
+|-----------|-----------|------|-------|
+| `seed_views.v_agent_companies` | `outreach_company_target` | 32,702 | The gate — ZIP coverage |
+| `seed_views.v_agent_cl_identity` | `cl_company_identity` (spine) | 32,702 | 1:1 sovereign IDs |
+| `seed_views.v_agent_outreach` | `outreach_outreach` | 32,702 | 1:1 outreach status |
+| `seed_views.v_agent_blog` | `outreach_blog` | 32,702 | `vendor.blog` + `outreach.blog` merged, materialized |
+| `seed_views.v_agent_dol` | `outreach_dol` | 32,702 | LEFT JOIN — empty row if no filing |
+| `seed_views.v_agent_slots` | `people_company_slot` | 98,106 | 32,702 × 3 (CEO, CFO, HR) |
+| `seed_views.v_agent_people` | `people_people_master` | 58,857 | Only people referenced by filled slots |
+| `seed_views.v_agent_fill_rates` | _(reference only)_ | 32,702 | Completeness scorecard |
+
+**The chain:** Agent anchor ZIP + radius → `coverage.v_service_agent_coverage_zips` → qualifying ZIPs → `outreach.company_target.postal_code` → 32,702 companies. The agent defines the geography. The geography defines the universe. Agent assignment to a specific company is a downstream variable.
+
+**Locked constant: 32,702.** Every D1 table must have exactly 32,702 rows (or 98,106 for slots). If D1 counts don't match, the SEED is dirty. See `SEED_AUDIT.md` for full trace.
+
+**Materialized views** (`v_agent_blog`, `v_agent_fill_rates`) need refreshing after data changes:
+```sql
+REFRESH MATERIALIZED VIEW seed_views.v_agent_blog;
+REFRESH MATERIALIZED VIEW seed_views.v_agent_fill_rates;
+```
+
+**Neon Database:** Marketing DB (`OUTREACH_DATABASE_URL` in Doppler)
 
 ---
 
@@ -78,7 +105,7 @@ After SEED completes, run the post-SEED audit (section 9) to verify all joins. I
 | Database | Binding | ID | Access | What It Provides |
 |----------|---------|-----|--------|-----------------|
 | svg-d1-outreach-ops | D1_OUTREACH | 73a285b8 | WRITE | All outreach sub-hub tables (target for SEED) |
-| svg-d1-spine | D1 | 641a9a1e | WRITE | cl_company_identity (117K sovereign records) |
+| svg-d1-spine | D1 | 641a9a1e | WRITE | cl_company_identity (32,702 sovereign records — scoped by seed_views) |
 | Neon PostgreSQL | HD_NEON (Hyperdrive) | — | READ | Source vault — all schemas (cl, outreach, people, dol, coverage, reference) |
 
 ### Snap-On Toolbox Sub-Hubs (law/SNAP_ON_TOOLBOX.yaml)
