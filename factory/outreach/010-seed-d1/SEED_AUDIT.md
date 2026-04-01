@@ -53,9 +53,9 @@ All views are read-only lenses on existing Neon data. No data was modified.
 | Blog about_url found | 11,356 | 32,702 | 21,346 | **34.7%** |
 | Blog content extracted | 3,876 | 32,702 | 28,826 | **11.9%** |
 | DOL filing present | 25,656 | 32,702 | 7,046 | **78.5%** |
-| People slots filled | 59,019 | 98,106 | **39,087** | **60.2%** |
-| People with email | 58,237 | 98,106 | 39,869 | **59.4%** |
-| People with LinkedIn | 47,911 | 98,106 | 50,195 | **48.8%** |
+| People slots filled | 58,966 | 98,106 | **39,140** | **60.1%** |
+| People with email | 58,184 | 98,106 | 39,922 | **59.3%** |
+| People with LinkedIn | 47,858 | 98,106 | 50,248 | **48.8%** |
 
 ### Blog Domain Status (29,715 with records)
 
@@ -77,6 +77,7 @@ All views are read-only lenses on existing Neon data. No data was modified.
 | People with both | 47,454 (80.6%) |
 | People with neither | 163 (0.3%) |
 | People used in multiple slots | 104 (minor) |
+| Orphan slots (person_id not in people_master) | 0 — **FIXED 2026-04-01** (53 slots had CTB-path IDs from intake_promotion/wv_hr_pipeline Jan 2026 that never migrated to UUID format. Reset to is_filled=false in Neon.) |
 
 ### People Bloat
 

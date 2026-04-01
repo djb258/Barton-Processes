@@ -19,7 +19,7 @@
 | Blueprint Section | doctrine/OSAM.md — outreach schema, join paths, CQRS write rules |
 | ORBT | OPERATE |
 | Strikes | 0 |
-| Last Deployed | 2026-03-26 |
+| Last Deployed | 2026-04-01 |
 | BAR Reference | BAR-52 |
 | Deployed URL | https://lcs-hub.svg-outreach.workers.dev (SEED endpoints) |
 | Cron | Manual (run before any SVG process operates) |
@@ -46,13 +46,14 @@ The agent + ZIP + radius is the gate that controls the entire flow. No agent ass
 ### Input
 - Agent name + anchor ZIP code + 100-mile radius
 - Currently 3 agents: Dave Allan (26739 WV), Jeff Mussolino (21742 MD), David Vang (28461 NC)
+- The agent defines the geography, not company ownership. Companies in overlapping zones get multiple agents in `service_agents` column (e.g., SA-001,SA-002). Distribution: 29,775 single-agent + 2,927 dual-agent = 32,702.
 
 ### Middle
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
 | 1 | Agent anchor ZIP + 100mi radius | Haversine expansion against `reference.us_zip_codes` (41,553 ZIPs with lat/lon) | All ZIP codes within 100mi of each agent's anchor | `coverage.v_service_agent_coverage_zips` (Neon view) |
-| 2 | Qualifying ZIPs | Match against `outreach.company_target.postal_code` to get outreach_ids | ~32K outreach_ids that passed Gate 0 | Neon SQL JOIN |
+| 2 | Qualifying ZIPs | Match against `outreach.company_target.postal_code` to get outreach_ids | 32,702 outreach_ids that passed Gate 0 | Neon SQL JOIN |
 | 3 | Qualifying outreach_ids | Tie back to sovereign_id via `cl.company_identity` | outreach_id ↔ sovereign_id link confirmed | Neon SQL JOIN |
 | 4 | Qualifying outreach_ids | Copy CT sub-hub — city, state, postal_code, industry, employees, email_method + agent assignment | `outreach_company_target` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
 | 5 | Qualifying outreach_ids | Copy DOL sub-hub — filing_present, ein, carrier, renewal_month + full filing detail (form_5500, schedule_a, schedule_c, schedule_other) | `outreach_dol` + `dol_form_5500` + `dol_schedule_*` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
@@ -105,7 +106,7 @@ REFRESH MATERIALIZED VIEW seed_views.v_agent_fill_rates;
 | Database | Binding | ID | Access | What It Provides |
 |----------|---------|-----|--------|-----------------|
 | svg-d1-outreach-ops | D1_OUTREACH | 73a285b8 | WRITE | All outreach sub-hub tables (target for SEED) |
-| svg-d1-spine | D1 | 641a9a1e | WRITE | cl_company_identity (32,702 sovereign records — scoped by seed_views) |
+| svg-d1-spine | D1 | 641a9a1e | WRITE | cl_company_identity (32,702 sovereign records — 1:1 scoped by seed_views) |
 | Neon PostgreSQL | HD_NEON (Hyperdrive) | — | READ | Source vault — all schemas (cl, outreach, people, dol, coverage, reference) |
 
 ### Snap-On Toolbox Sub-Hubs (law/SNAP_ON_TOOLBOX.yaml)
@@ -136,11 +137,11 @@ REFRESH MATERIALIZED VIEW seed_views.v_agent_fill_rates;
 ## 5. OSAM + ERD — Where the Data Lives (AI-Ready Column Reference)
 
 ### D1 Target: svg-d1-outreach-ops (73a285b8)
-### Row counts as of 2026-03-30
+### Row counts as of 2026-04-01
 
 ---
 
-### outreach_outreach — Spine table (32,704 rows)
+### outreach_outreach — Spine table (32,702 rows)
 The universal join key for all sub-hubs. Every company in D1 has one row here.
 
 | Column | Type | Constraint | Description |
@@ -155,8 +156,8 @@ The universal join key for all sub-hubs. Every company in D1 has one row here.
 
 ---
 
-### outreach_company_target — CT sub-hub (32,704 rows)
-Company targeting data — geo, industry, employees, agent assignment. One row per company.
+### outreach_company_target — CT sub-hub (32,702 rows)
+Company targeting data — geo, industry, employees, agent assignment. One row per company. Agent assignment via `service_agents` (comma-separated, e.g., SA-001,SA-002) and `agent_count`.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -185,16 +186,15 @@ Company targeting data — geo, industry, employees, agent assignment. One row p
 | sequence_count | INTEGER | NOT NULL | Number of outreach sequences sent |
 | active_sequence_id | TEXT | | Currently active sequence |
 | source | TEXT | | Data source for this record |
-| service_agent_id | TEXT | | Assigned service agent UUID |
-| service_agent_name | TEXT | | Assigned service agent name (Dave Allan, Jeff Mussolino, David Vang) |
-| service_agent_number | TEXT | | Agent number (SA-001, SA-002, SA-003) |
+| service_agents | TEXT | | Comma-separated agent numbers (e.g., SA-001,SA-002) — agents define geography, companies in overlapping zones get multiple |
+| agent_count | INTEGER | | Number of agents covering this company (1 or 2) |
 | created_at | TEXT | NOT NULL | Record creation timestamp |
 | updated_at | TEXT | NOT NULL | Last modification timestamp |
 
 ---
 
-### outreach_dol — DOL sub-hub (36,247 rows)
-DOL filing summary per company. One row per outreach_id.
+### outreach_dol — DOL sub-hub (27,464 rows)
+DOL filing summary per company. One row per outreach_id. Only companies with filings (not all 32,702).
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -213,8 +213,8 @@ DOL filing summary per company. One row per outreach_id.
 
 ---
 
-### outreach_blog — Blog sub-hub (49,062 rows)
-Web presence data per company. URL mapping is the constant, content state is the variable.
+### outreach_blog — Blog sub-hub (32,702 rows)
+Web presence data per company. 1:1 with company target (clean). Now uses `vendor.blog` (290K crawl data) merged with `outreach.blog`. URL mapping is the constant, content state is the variable.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -234,8 +234,8 @@ Web presence data per company. URL mapping is the constant, content state is the
 
 ---
 
-### outreach_people — People contacts (109,443 rows)
-Delivery contacts with email and engagement tracking. Multiple per company.
+### outreach_people — DEPRECATED (no longer used)
+Legacy table from pre-slot model. Replaced by people_company_slot + people_people_master.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -262,8 +262,8 @@ Delivery contacts with email and engagement tracking. Multiple per company.
 
 ---
 
-### people_company_slot — CEO/CFO/HR slots (358,308 rows)
-Three slots per company: CEO, CFO, HR. Slot is the constant, person filling it is the variable.
+### people_company_slot — CEO/CFO/HR slots (98,106 rows)
+Three slots per company: CEO, CFO, HR (32,702 x 3). Slot is the constant, person filling it is the variable.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -284,8 +284,8 @@ Three slots per company: CEO, CFO, HR. Slot is the constant, person filling it i
 
 ---
 
-### people_people_master — Person records (160,423 rows)
-Individual contact records. Each person fills a slot. Contains verified email + LinkedIn for outreach.
+### people_people_master — Person records (58,857 rows)
+Individual contact records. Only people referenced by filled slots. Contains verified email + LinkedIn for outreach.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -424,8 +424,8 @@ All other DOL schedules stored as JSON.
 
 ---
 
-### coverage_service_agent — Service agents (9 rows)
-The 3 active agents + historical. Gate 0 anchors.
+### coverage_service_agent — Service agents (3 rows)
+The 3 active agents. Gate 0 anchors.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -439,8 +439,8 @@ The 3 active agents + historical. Gate 0 anchors.
 
 ---
 
-### coverage_service_agent_coverage — Coverage zones (21 rows)
-Each agent's coverage definition — anchor ZIP + radius.
+### coverage_service_agent_coverage — Coverage zones (3 rows)
+Each agent's coverage definition — anchor ZIP + radius. Active only.
 
 | Column | Type | Constraint | Description |
 |--------|------|-----------|-------------|
@@ -517,8 +517,8 @@ coverage_service_agent.service_agent_id
 |----------|--------|-------|--------|
 | Which agents exist? | D1 outreach | coverage_service_agent | agent_name, status |
 | Which ZIPs does an agent cover? | Neon only (view) | coverage.v_service_agent_coverage_zips | zip |
-| Is this company in an agent's zone? | D1 outreach | outreach_company_target | service_agent_name IS NOT NULL |
-| How many companies per agent? | D1 outreach | outreach_company_target | GROUP BY service_agent_name |
+| Is this company in an agent's zone? | D1 outreach | outreach_company_target | service_agents IS NOT NULL |
+| How many companies per agent? | D1 outreach | outreach_company_target | GROUP BY service_agents |
 | What's the slot fill rate? | D1 outreach | people_company_slot | WHERE is_filled = 1 |
 | What DOL filings does a company have? | D1 outreach | dol_form_5500 | WHERE outreach_id = ? |
 | Does this company have a team page? | D1 outreach | outreach_blog | about_url IS NOT NULL |
@@ -590,12 +590,12 @@ coverage_service_agent.service_agent_id
 
 ```
 1. GET lcs-hub.svg-outreach.workers.dev/health → expected: status ok
-2. POST /seed/full-people?limit=1000&offset=0 → expected: slots > 0, people > 0, errors = 0
-3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_outreach" → expected: ~32,704
-4. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_company_target WHERE service_agent_name IS NOT NULL" → expected: ~32,702
-5. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM people_company_slot" → expected: >90,000
-6. Join integrity: SELECT COUNT(*) FROM people_company_slot cs JOIN people_people_master pm ON cs.person_unique_id = pm.unique_id WHERE cs.is_filled = 1 → expected: >99% of filled slots match
-7. Slot fill rates: SELECT slot_type, ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct FROM people_company_slot GROUP BY slot_type → expected: CEO ~55%, CFO ~50%, HR ~43%
+2. POST /seed/clean?table=company_target&limit=5000&offset=0 → expected: seeded > 0, errors = 0
+3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_outreach" → expected: 32,702
+4. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_company_target WHERE service_agents IS NOT NULL" → expected: 32,702
+5. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM people_company_slot" → expected: 98,106
+6. Join integrity: SELECT COUNT(*) FROM people_company_slot cs JOIN people_people_master pm ON cs.person_unique_id = pm.unique_id WHERE cs.is_filled = 1 → expected: 100% (0 orphans)
+7. Slot fill rates: SELECT slot_type, ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct FROM people_company_slot GROUP BY slot_type → expected: CEO ~63.4%, CFO ~58.5%, HR ~58.4%
 ```
 
 **Three Primitives Check (Bedrock §1):**
@@ -609,20 +609,19 @@ coverage_service_agent.service_agent_id
 
 ### Process Metrics
 
-| Metric | Unit | Baseline (2026-03-30) | Target | Tolerance |
+| Metric | Unit | Baseline (2026-04-01) | Target | Tolerance |
 |--------|------|----------------------|--------|-----------|
-| Companies seeded | count | 32,704 | 32,704 | ±5% (drop >20% = HALT) |
-| CT rows | count | 32,704 | = companies | 100% match |
-| DOL summary rows | count | 36,247 | ≥ companies with filing | ≥95% |
-| Blog rows | count | 49,062 | ≥ companies | ≥95% |
-| People contact rows | count | 109,443 | stable | ±10% |
-| Slot rows | count | 358,308 | ~3x companies | ±5% |
-| People master rows | count | 160,423 | stable | ±10% |
-| CEO fill rate | % | 54.7% | ≥54.7% | must not drop |
-| CFO fill rate | % | 50.2% | ≥50.2% | must not drop |
-| HR fill rate | % | 43.2% | ≥43.2% | must not drop |
-| Slot→person join integrity | % | 99.7% | ≥99% | <95% = HALT |
-| Agent assignment coverage | % | 99.99% (32,702/32,704) | ≥99% | <95% = HALT |
+| Companies seeded | count | 32,702 | 32,702 | ±5% (drop >20% = HALT) |
+| CT rows | count | 32,702 | = companies | 100% match |
+| DOL summary rows | count | 27,464 | ≥ companies with filing | correct (not all have filings) |
+| Blog rows | count | 32,702 | = companies (1:1 clean) | 100% match |
+| Slot rows | count | 98,106 | 32,702 × 3 | 100% match |
+| People master rows | count | 58,857 | filled slots only | ±10% |
+| CEO fill rate | % | 63.4% | ≥63.4% | must not drop |
+| CFO fill rate | % | 58.5% | ≥58.5% | must not drop |
+| HR fill rate | % | 58.4% | ≥58.4% | must not drop |
+| Slot→person join integrity | % | 100% (0 orphans) | 100% | <99% = HALT |
+| Agent assignment coverage | % | 100% (32,702/32,702) | 100% | <99% = HALT |
 | SEED errors | count | 0 | 0 | >10% of batch = HALT |
 | DOL filing detail rows | count | 14,252 | stable | ±10% |
 
@@ -635,10 +634,13 @@ coverage_service_agent.service_agent_id
 
 ### Sigma Tracking
 
-| Metric | Run 1 (2026-03-25) | Run 2 (2026-03-26) | Trend | Action |
-|--------|-------------------|-------------------|-------|--------|
-| Slot→person join | 5.2% (broken) | 99.7% (fixed) | TIGHTENING | Locked as baseline |
-| Companies seeded | 32,704 | 32,704 | FLAT (stable) | Expected — same source |
+| Metric | Run 1 (2026-03-25) | Run 2 (2026-03-26) | Run 3 (2026-04-01) | Trend | Action |
+|--------|-------------------|-------------------|-------------------|-------|--------|
+| Slot→person join | 5.2% (broken) | 99.7% (fixed) | 100% (0 orphans) | TIGHTENING | Locked |
+| Companies seeded | 32,704 | 32,704 | 32,702 | TIGHTENING | Correct — seed_views scoped |
+| CEO fill | — | 54.7% | 63.4% | TIGHTENING | vendor.blog data merged |
+| CFO fill | — | 50.2% | 58.5% | TIGHTENING | vendor.blog data merged |
+| HR fill | — | 43.2% | 58.4% | TIGHTENING | vendor.blog data merged |
 
 ### ORBT Gate Rule
 
@@ -652,6 +654,26 @@ coverage_service_agent.service_agent_id
 ---
 
 ## 11. LOGBOOK
+
+### 2026-04-01 — Clean SEED audit
+
+**ORBT:** OPERATE
+**Trigger:** Manual — full audit of D1 vs Neon after seed_views created
+**Records processed:** 32,702 companies, 98,106 slots, 58,857 people, 27,464 DOL, 32,702 blog
+**Errors:** 0 after fixes
+**Tools used:** Hyperdrive (HD_NEON), D1.batch(), seed_views (Neon), `/seed/clean` endpoint
+**Result:**
+- Fix #1: 53 orphan slots (CTB-path IDs from intake_promotion/wv_hr_pipeline) — deleted in Neon, clean in D1
+- Fix #2: D1 had full Neon universe (117K CL identity, 358K slots) — fixed with seed_views scoping to 32,702
+- Fix #3: Blog was using `outreach.blog` only, now uses `vendor.blog` (290K crawl data) merged via materialized view
+- Fill rates jumped: CEO 54.7% → 63.4%, CFO 50.2% → 58.5%, HR 43.2% → 58.4%
+- Slot→person join integrity: 100% (0 orphans after fix)
+- Agent model updated: agents define geography, companies can have multiple agents (29,775 single + 2,927 dual)
+**Learnings:**
+- seed_views are the gate — SEED code is a dumb copy, no filtering logic
+- Materialized views need REFRESH after data changes (v_agent_blog, v_agent_fill_rates)
+- Old outreach_people table deprecated — slot+people_master model is the standard
+**ORBT after:** OPERATE
 
 ### 2026-03-26 — Full SEED + fixes
 
@@ -693,6 +715,9 @@ coverage_service_agent.service_agent_id
 | 3 | 2026-03-25 | No agent assignment on companies | Coverage filter applied during SEED but result not stored | Added service_agent_id/name/number columns to outreach_company_target | 1 |
 | 4 | 2026-03-26 | CF Worker subrequest limit on bulk writes | Individual INSERT statements instead of D1.batch() | Use D1.batch() with max ~100 statements per batch | 1 |
 | 5 | 2026-03-26 | Coverage zone join too slow for full people SEED | Query joined against haversine view for 182K people rows | Skip coverage join — use outreach_ids already in D1 to filter | 1 |
+| 6 | 2026-04-01 | 53 orphan slots in Neon (CTB-path IDs from intake_promotion/wv_hr_pipeline) | Old pipeline created slots with non-standard IDs | Deleted orphan rows in Neon; clean SEED to D1 | 1 |
+| 7 | 2026-04-01 | D1 had full Neon universe (117K CL identity, 358K slots) instead of agent-scoped | No seed_views — SEED pulled everything | Created seed_views in Neon, re-SEED with scoped views | 1 |
+| 8 | 2026-04-01 | Blog was using outreach.blog only (49K), missing vendor.blog crawl data (290K) | SEED only joined outreach.blog, not vendor.blog | Created materialized view v_agent_blog merging both sources | 1 |
 
 ---
 
@@ -700,6 +725,7 @@ coverage_service_agent.service_agent_id
 
 | Date | What Was Done | imo-brain Document |
 |------|---------------|-------------------|
+| 2026-04-01 | Clean SEED audit — seed_views, orphan fix, blog merge, row count correction | none (LBB) |
 | 2026-03-25 | D1 schema introspection, SEED gap analysis | schema/d1-outreach-ops-full-schema-2026-03-25 |
 | 2026-03-25 | Architectural corrections documented | session/2026-03-25-process-200-corrections |
 | 2026-03-26 | Full SEED fixes (people, slots, agents) | ops/2026-03-26-seed-fix-complete |
@@ -714,7 +740,8 @@ coverage_service_agent.service_agent_id
 
 | Endpoint | Method | What It Does |
 |----------|--------|-------------|
-| `/seed/full-people?limit=5000&offset=0` | POST | Pull slots + people from Neon, paginated |
+| `/seed/clean?table={name}&limit=5000&offset=0` | POST | Clean SEED from Neon seed_views — table by table (company_target, outreach, cl_identity, blog, dol, slots, people) |
+| `/seed/full-people?limit=5000&offset=0` | POST | Pull slots + people from Neon, paginated (legacy) |
 | `/seed/fix-slots?limit=3000` | POST | Create missing CEO/CFO/HR slots (D1 only) |
 | `/seed/fix-agents` | POST | Assign agents to companies via coverage view |
 | `/seed/fix-people` | POST | Pull missing people_master records from Neon |
@@ -728,16 +755,28 @@ coverage_service_agent.service_agent_id
 ## HOW TO RE-RUN THE FULL SEED
 
 ```bash
-# 1. Pull all slots + people from Neon (paginated, run until has_more=false)
-for OFFSET in $(seq 0 5000 350000); do
-  curl -s -X POST "https://lcs-hub.svg-outreach.workers.dev/seed/full-people?limit=5000&offset=$OFFSET"
-  # Stop when slots_updated=0
+# Clean SEED from Neon seed_views — table by table
+# Each table reads from its corresponding seed_views view (the gate)
+for TABLE in company_target outreach cl_identity blog dol slots people; do
+  for OFFSET in $(seq 0 5000 100000); do
+    RESULT=$(curl -s -X POST "https://lcs-hub.svg-outreach.workers.dev/seed/clean?table=$TABLE&limit=5000&offset=$OFFSET")
+    echo "$TABLE offset=$OFFSET: $RESULT"
+    # Stop when seeded=0
+  done
 done
 
-# 2. Assign agents (if not already done or if coverage changed)
-curl -s -X POST "https://lcs-hub.svg-outreach.workers.dev/seed/fix-agents"
+# Post-SEED audit — verify counts match seed_views
+wrangler d1 execute svg-d1-outreach-ops --remote --command "
+  SELECT 'outreach_outreach' as tbl, COUNT(*) as rows FROM outreach_outreach
+  UNION ALL SELECT 'outreach_company_target', COUNT(*) FROM outreach_company_target
+  UNION ALL SELECT 'people_company_slot', COUNT(*) FROM people_company_slot
+  UNION ALL SELECT 'people_people_master', COUNT(*) FROM people_people_master
+  UNION ALL SELECT 'outreach_blog', COUNT(*) FROM outreach_blog
+  UNION ALL SELECT 'outreach_dol', COUNT(*) FROM outreach_dol"
 
-# 3. Run post-SEED audit
+# Expected: outreach_outreach=32702, company_target=32702, slots=98106, people=58857, blog=32702, dol=27464
+
+# Slot fill rates
 wrangler d1 execute svg-d1-outreach-ops --remote --command "
   SELECT slot_type,
     COUNT(*) as total,
@@ -745,17 +784,20 @@ wrangler d1 execute svg-d1-outreach-ops --remote --command "
     ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct
   FROM people_company_slot
   GROUP BY slot_type ORDER BY slot_type"
+# Expected: CEO 63.4%, CFO 58.5%, HR 58.4%
 ```
 
 ---
 
 ## SERVICE AGENTS (Gate 0)
 
-| Agent | Number | Anchor ZIP | Radius | Region | Companies |
-|-------|--------|-----------|--------|--------|-----------|
-| Dave Allan | SA-001 | 26739 | 100mi | WV | 6,872 |
-| Jeff Mussolino | SA-002 | 21742 | 100mi | MD | 22,493 |
-| David Vang | SA-003 | 28461 | 100mi | NC | 3,337 |
+Agents define geography, not company ownership. Companies in overlapping coverage zones get multiple agents in the `service_agents` column. Agent count distribution: **29,775 single-agent + 2,927 dual-agent = 32,702 total**.
+
+| Agent | Number | Anchor ZIP | Radius | Region |
+|-------|--------|-----------|--------|--------|
+| Dave Allan | SA-001 | 26739 | 100mi | WV |
+| Jeff Mussolino | SA-002 | 21742 | 100mi | MD |
+| David Vang | SA-003 | 28461 | 100mi | NC |
 
 ---
 
@@ -764,8 +806,8 @@ wrangler d1 execute svg-d1-outreach-ops --remote --command "
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-03-31 |
-| Version | 3.0.0 |
+| Last Modified | 2026-04-01 |
+| Version | 4.0.0 |
 | Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | Blueprint Repo | barton-outreach-core |
