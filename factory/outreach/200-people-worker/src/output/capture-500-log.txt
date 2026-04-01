@@ -1,0 +1,25 @@
+Process 200 — Capture Search Results (Raw)
+Limit: 500 | Slot type: CEO | Resume: False
+
+Loading empty slots from D1...
+500 empty slots
+Loading all company names from spine (one query)...
+Loaded 32702 companies
+Loading domains...
+Loaded 32702 domains
+
+500 remaining
+
+  [25/500] OK:25 CAPTCHA:0 Err:0 | 833/hr
+  [50/500] OK:50 CAPTCHA:0 Err:0 | 814/hr
+  [Rotating to port 10002 — fresh IP]
+  [75/500] OK:75 CAPTCHA:0 Err:0 | 795/hr
+  [100/500] OK:100 CAPTCHA:0 Err:0 | 757/hr
+  [Rotating to port 10003 — fresh IP]
+  [125/500] OK:125 CAPTCHA:0 Err:0 | 764/hr
+  [150/500] OK:150 CAPTCHA:0 Err:0 | 771/hr
+  [Rotating to port 10004 — fresh IP]
+  [175/500] OK:175 CAPTCHA:0 Err:0 | 777/hr
+  [200/500] OK:200 CAPTCHA:0 Err:0 | 780/hr
+  [Rotating to port 10005 — fresh IP]
+  [225/500] OK:225 CAPTCHA:0 Err:0 | 784/hr
