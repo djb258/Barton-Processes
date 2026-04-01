@@ -164,6 +164,32 @@ def search_startpage(session, query, proxy_url):
 
     captcha = "captcha" in resp.text.lower()
 
+    # Bad names — things that get parsed as names but aren't people
+    BAD_NAMES = {
+        "linkedin", "read more", "learn more", "click here", "see more",
+        "view all", "sign in", "log in", "join now", "contact us",
+        "about us", "our team", "our story", "home page", "main menu",
+        "seven days", "privacy policy", "terms of", "cookie policy",
+    }
+
+    def is_valid_name(name):
+        if not name or len(name) < 4 or len(name) > 50:
+            return False
+        if name.lower() in BAD_NAMES:
+            return False
+        if any(bad in name.lower() for bad in BAD_NAMES):
+            return False
+        # Must have at least 2 words
+        if len(name.split()) < 2:
+            return False
+        # Must start with capital letter
+        if not name[0].isupper():
+            return False
+        # No URLs or special chars
+        if any(c in name for c in ['@', 'http', '.com', '/', '\\', '<', '>']):
+            return False
+        return True
+
     # Extract LinkedIn URLs
     linkedin_urls = list(set(re.findall(
         r'href="(https://(?:www\.)?linkedin\.com/in/[^"?]+)',
@@ -260,23 +286,21 @@ def main():
 
     print(f"{len(slots)} empty slots to search")
 
-    # Get company names from spine
+    # Bulk load ALL company names in ONE query — no per-company D1 calls
+    print("Loading company names from spine D1 (one query)...")
+    all_companies = d1_query(
+        "SELECT outreach_id, canonical_name, company_name, company_domain FROM cl_company_identity",
+        db=D1_SPINE,
+    )
     company_cache = {}
-    for slot in slots:
-        oid = slot["outreach_id"]
-        if oid not in company_cache:
-            rows = d1_query(
-                f"SELECT canonical_name, company_name, company_domain FROM cl_company_identity "
-                f"WHERE outreach_id = {escape_sql(oid)} LIMIT 1",
-                db=D1_SPINE,
-            )
-            if rows:
-                company_cache[oid] = {
-                    "name": rows[0].get("canonical_name") or rows[0].get("company_name") or "",
-                    "domain": rows[0].get("company_domain") or "",
-                }
-            else:
-                company_cache[oid] = {"name": "", "domain": ""}
+    for row in all_companies:
+        oid = row.get("outreach_id")
+        if oid:
+            company_cache[oid] = {
+                "name": row.get("canonical_name") or row.get("company_name") or "",
+                "domain": row.get("company_domain") or "",
+            }
+    print(f"Loaded {len(company_cache)} companies")
 
     # Resume support
     run_date = datetime.now().strftime("%Y-%m-%d")
