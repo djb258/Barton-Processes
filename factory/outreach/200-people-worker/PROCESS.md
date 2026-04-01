@@ -286,7 +286,15 @@ outreach_outreach.outreach_id (SPINE)
 | 18-proxy-router | DataImpulse | 0% (Startpage CAPTCHA) | $1/GB | 100% | N/A | 2026-03-30 |
 | 05-fallback-scraping | Brave Search API | BASELINE | $0.004/query | BASELINE | BASELINE | pending |
 
-Note: DataImpulse/Startpage is currently blocked (CAPTCHA). Vendor scorecard reflects this — justification for evaluating Brave as replacement.
+Note: DataImpulse/Startpage was blocked (CAPTCHA) as of 2026-03-30. **Fixed 2026-03-31:** sticky session (port 10000+) + US country (`__cr.us`) + POST form. All 5 test queries passed. Pass 2 is unblocked. Brave remains as backup (Pass 3) but may not be needed if Startpage hit rate holds at 87-95%.
+
+**Startpage configuration (DataImpulse — proven 2026-03-31):**
+- Host: `gw.dataimpulse.com`
+- Port: `10000` (sticky session — NOT rotating port 823)
+- Username: `{user}__cr.us` (US country targeting)
+- Method: POST form (`q=site:linkedin.com/in/ "{title}" "{company}" "{city}" "{state}"`)
+- Delay: 3s between queries (minimum)
+- All 5 test queries passed. CAPTCHA issue resolved.
 
 ### Sigma Tracking — set after 3+ runs
 
@@ -367,8 +375,8 @@ Note: DataImpulse/Startpage is currently blocked (CAPTCHA). Vendor scorecard ref
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-03-29 |
-| Version | 2.1.0 |
+| Last Modified | 2026-03-31 |
+| Version | 2.2.0 |
 | Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 |

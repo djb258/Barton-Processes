@@ -149,6 +149,42 @@ lcs_mid_sequence_state.adapter_type → lcs_adapter_registry.adapter_type
 | Skip the 9-gate qualification | Every company must pass gates before SID construction. |
 | Send without checking daily domain cap | Domain rotation enforces warmup limits. |
 
+### Domain Warmup / Ramp Strategy
+
+**The warmup IS the campaign.** No separate warmup process needed. Mailgun shared IPs are already warm. Domain reputation builds by sending real outreach at controlled volume.
+
+| Week | Daily Cap/Domain | Total/Day (14 domains) | Cumulative |
+|------|-----------------|----------------------|------------|
+| 1 | 20 | 280 | 1,960 |
+| 2 | 40 | 560 | 5,880 |
+| 3 | 80 | 1,120 | 13,720 |
+| 4 | 150 | 2,100 | 28,420 |
+| 5+ | 250 | 3,500 | Full volume |
+
+**Ramp rules (enforced by `lcs_domain_rotation` table):**
+- `warmup_week` increments weekly via cron (every Monday 07:00 UTC)
+- `daily_cap` doubles each week until target
+- `sent_today` resets daily at 07:00 UTC
+- If `bounce_count_24h` > 5% of `sent_today` → pause domain, flag for review
+- If any domain paused → redistribute load to remaining domains
+- Strike 3 on same domain → remove from rotation, investigate
+
+**Why shared IPs, not dedicated:**
+- Shared IPs are already warm (Mailgun's sender pool)
+- Dedicated IPs cost extra and need weeks of IP warming on top of domain warming
+- For our volume (280-3,500/day), shared IPs are correct
+- Revisit when volume exceeds 10K/day
+
+**LBB Integration (SID Content):**
+The SID construction step queries LBB for context-enriched content before building the personalized message. The flow:
+1. CID compiled (intelligence tier determined from company footprint)
+2. **SID queries LBB** — subject: svg-sales (Barton voice, DISC, messaging frameworks) + svg-outreach (company-specific intel)
+3. LBB returns relevant knowledge records matching the signal type + company profile
+4. SID constructs message using: frame template (registry) + LBB content + CID intelligence
+5. Result: a message that sounds like Dave, informed by what we actually know
+
+This replaces the old "SVG Brain" reference. LBB IS the brain. One library, Dewey Decimal.
+
 ---
 
 ## 6. CONSTANTS & VARIABLES (Bedrock §2)

@@ -5,18 +5,20 @@ Three phases, in order:
   Phase 1: PARSE  — Parse 4,608 existing context_summary records for names/titles (no fetch)
   Phase 2: FETCH  — Fetch 13,199 known about_urls, extract names/titles (direct, no proxy)
   Phase 3: DISCOVER — Try common paths on ~19K domains without about_url (direct, no proxy)
+  Phase 3b: SEARCH — Startpage search via DataImpulse proxy for domains where 3A missed
 
-No search engine. No proxy. Direct fetch only.
+Phases 1-3 are direct fetch (no proxy). Phase 3b uses DataImpulse sticky proxy.
 Reads from D1 (via wrangler). Writes results back to D1 outreach_blog.
 
 Usage:
   python3 src/blog-recon.py --phase 1 --limit 100          # parse existing content
   python3 src/blog-recon.py --phase 2 --limit 100          # fetch known about_urls
-  python3 src/blog-recon.py --phase 3 --limit 100          # discover new about_urls
-  python3 src/blog-recon.py --phase all --limit 50          # all three phases
+  python3 src/blog-recon.py --phase 3 --limit 100          # discover new about_urls (common paths)
+  python3 src/blog-recon.py --phase 3b --limit 100         # discover via Startpage search (proxy)
+  python3 src/blog-recon.py --phase all --limit 50          # all phases (1, 2, 3, 3b)
   python3 src/blog-recon.py --phase 2 --resume              # resume interrupted
 
-Env vars: D1_DB (default: svg-d1-outreach-ops)
+Env vars: D1_DB (default: svg-d1-outreach-ops), PROXY_USER, PROXY_PASS
 """
 
 import json
@@ -28,6 +30,8 @@ import random
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+
+from urllib.parse import urlparse, quote_plus
 
 from curl_cffi import requests as creq
 
@@ -41,6 +45,13 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 D1_DB = os.environ.get("D1_DB", "svg-d1-outreach-ops")
 WRANGLER_CWD = os.environ.get("WRANGLER_CWD",
     os.path.expanduser("~/Documents/imo-creator-v2-20260317/workers/lcs-hub"))
+
+# DataImpulse proxy config (Phase 3b)
+PROXY_USER = os.environ.get("PROXY_USER", "")
+PROXY_PASS = os.environ.get("PROXY_PASS", "")
+PROXY_HOST = "gw.dataimpulse.com"
+PROXY_PORT = 10000  # sticky session — NOT rotating port 823
+SEARCH_DELAY = 3  # seconds between Startpage queries
 
 # Common about/team page paths
 PATHS = [
@@ -520,13 +531,239 @@ def phase_discover():
     print(f"\n[PHASE 3] Done in {elapsed:.1f}m | Path:{path_found} Home:{homepage_found} Miss:{not_found} D1:{d1_updates}")
 
 
+# ── Phase 3b: SEARCH — Startpage via DataImpulse proxy ──────
+
+# Patterns that indicate an about/team/leadership page URL
+ABOUT_URL_RE = re.compile(
+    r'/(about|team|our-team|leadership|people|staff|management|who-we-are|company|about-us)',
+    re.IGNORECASE,
+)
+
+
+def _get_proxy_url() -> str:
+    """Build DataImpulse sticky proxy URL with US country targeting."""
+    if not PROXY_USER or not PROXY_PASS:
+        raise RuntimeError("PROXY_USER and PROXY_PASS env vars required for Phase 3b")
+    user_with_country = f"{PROXY_USER}__cr.us"
+    return f"http://{user_with_country}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}"
+
+
+def _startpage_search(session: creq.Session, query: str, proxy_url: str) -> list:
+    """Execute a Startpage search via proxy. Returns list of result URLs."""
+    try:
+        resp = session.post(
+            "https://www.startpage.com/do/dsearch",
+            data={"q": query},
+            proxies={"http": proxy_url, "https": proxy_url},
+            timeout=20,
+            allow_redirects=True,
+            impersonate="chrome131",
+        )
+    except Exception as e:
+        print(f"    [SEARCH ERROR] {str(e)[:80]}")
+        return []
+
+    if resp.status_code != 200:
+        print(f"    [SEARCH] HTTP {resp.status_code}")
+        return []
+
+    # Extract URLs from Startpage results
+    # Startpage result links are in <a class="w-gl__result-url" href="..."> or
+    # <a class="result-link" href="..."> — but simplest: grab all href URLs
+    urls = re.findall(r'href="(https?://[^"]+)"', resp.text)
+    return urls
+
+
+def _pick_about_url(urls: list, domain: str) -> str | None:
+    """From a list of URLs, pick the best about/team page on the target domain."""
+    domain_lower = domain.lower().rstrip("/")
+    candidates = []
+
+    for url in urls:
+        try:
+            parsed = urlparse(url)
+        except Exception:
+            continue
+        # Must be on the company's domain
+        host = parsed.hostname or ""
+        if not host.lower().endswith(domain_lower) and domain_lower not in host.lower():
+            continue
+        path = parsed.path.lower().rstrip("/")
+        # Score: explicit about/team paths get priority
+        if ABOUT_URL_RE.search(path):
+            candidates.append((2, url))
+        elif path in ("", "/"):
+            # Homepage — low priority but still on domain
+            candidates.append((0, url))
+        else:
+            candidates.append((1, url))
+
+    if not candidates:
+        return None
+
+    # Return highest-scored URL
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    return candidates[0][1]
+
+
+def phase_discover_search():
+    """Phase 3b: Use Startpage search via DataImpulse proxy to discover about_urls
+    for companies where Phase 3A (common paths) failed."""
+    print("[PHASE 3B: SEARCH] Discovering about_urls via Startpage + DataImpulse proxy...")
+
+    if not PROXY_USER or not PROXY_PASS:
+        print("[PHASE 3B] ERROR: PROXY_USER and PROXY_PASS env vars required. Skipping.")
+        return
+
+    # Get companies that still have no about_url after Phase 3A
+    sql = (
+        "SELECT DISTINCT oo.outreach_id, oo.domain "
+        "FROM outreach_outreach oo "
+        "LEFT JOIN outreach_blog ob ON oo.outreach_id = ob.outreach_id "
+        "WHERE oo.domain IS NOT NULL "
+        "AND (ob.about_url IS NULL OR ob.about_url = '')"
+    )
+    if LIMIT:
+        sql += f" LIMIT {LIMIT}"
+
+    companies = d1_query(sql)
+    if not companies:
+        print("[PHASE 3B] No companies without about_url. Nothing to search.")
+        return
+
+    print(f"[PHASE 3B] {len(companies)} companies to search")
+
+    run_date = datetime.now().strftime("%Y-%m-%d")
+    output_file = OUTPUT_DIR / f"search-{run_date}.jsonl"
+
+    # Resume support: skip already-processed outreach_ids
+    already_done = set()
+    if resume and output_file.exists():
+        with open(output_file) as f:
+            for line in f:
+                try:
+                    rec = json.loads(line)
+                    already_done.add(rec.get("outreach_id", ""))
+                except:
+                    pass
+        print(f"[PHASE 3B] Resuming: {len(already_done)} already done")
+
+    remaining = [c for c in companies if c["outreach_id"] not in already_done]
+    print(f"[PHASE 3B] {len(remaining)} remaining")
+
+    if not remaining:
+        print("[PHASE 3B] Nothing remaining.")
+        return
+
+    proxy_url = _get_proxy_url()
+    session = creq.Session(impersonate="chrome131")
+    out = open(output_file, "a")
+
+    search_found = 0
+    search_miss = 0
+    search_error = 0
+    people_total = 0
+    d1_updates = 0
+    d1_people = 0
+    start = time.time()
+
+    for idx, c in enumerate(remaining):
+        domain = c["domain"]
+        outreach_id = c["outreach_id"]
+
+        # Build Startpage query
+        query = f'site:{domain} about OR team OR leadership OR "our team"'
+
+        # Search via proxy
+        urls = _startpage_search(session, query, proxy_url)
+        about_url = _pick_about_url(urls, domain) if urls else None
+
+        record = {
+            "outreach_id": outreach_id,
+            "domain": domain,
+            "about_url": about_url,
+            "source": "startpage_search" if about_url else None,
+            "search_results_count": len(urls),
+            "discovered_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        if about_url:
+            search_found += 1
+
+            # Update D1 with discovered about_url
+            sql = (
+                f"UPDATE outreach_blog SET about_url = {escape_sql(about_url)} "
+                f"WHERE outreach_id = {escape_sql(outreach_id)}"
+            )
+            if d1_execute(sql):
+                d1_updates += 1
+
+            # Fetch and extract people from discovered page
+            try:
+                resp = session.get(about_url, timeout=10, allow_redirects=True)
+                if resp.status_code == 200 and len(resp.text) > 500:
+                    people = extract_people(resp.text)
+                    people_total += len(people)
+                    record["people_count"] = len(people)
+                    record["people"] = people
+                    record["fetch_status"] = resp.status_code
+
+                    if people:
+                        if write_people_to_d1(outreach_id, people):
+                            d1_people += 1
+                else:
+                    record["fetch_status"] = resp.status_code
+                    record["people_count"] = 0
+                    record["people"] = []
+            except Exception as e:
+                record["fetch_status"] = 0
+                record["fetch_error"] = str(e)[:80]
+                record["people_count"] = 0
+                record["people"] = []
+        else:
+            if not urls:
+                search_error += 1
+            else:
+                search_miss += 1
+            record["people_count"] = 0
+            record["people"] = []
+
+        out.write(json.dumps(record) + "\n")
+        out.flush()
+
+        if (idx + 1) % 10 == 0:
+            elapsed = time.time() - start
+            rate = (idx + 1) / elapsed * 3600 if elapsed > 0 else 0
+            print(
+                f"  [{idx+1}/{len(remaining)}] "
+                f"Found:{search_found} Miss:{search_miss} Err:{search_error} "
+                f"People:{people_total} D1url:{d1_updates} D1ppl:{d1_people} | {rate:.0f}/hr"
+            )
+
+        # Rate limit: 3s between search queries (critical for proxy stability)
+        if idx < len(remaining) - 1:
+            time.sleep(SEARCH_DELAY)
+
+    out.close()
+    elapsed = (time.time() - start) / 60
+    print(
+        f"\n[PHASE 3B] Done in {elapsed:.1f}m | "
+        f"Found:{search_found} Miss:{search_miss} Err:{search_error} "
+        f"People:{people_total} D1url:{d1_updates} D1ppl:{d1_people}"
+    )
+
+
 # ── Main ─────────────────────────────────────────────────────
 
 def main():
     print(f"Process 300 — Blog Reconnaissance v3")
     print(f"Phase: {PHASE} | Limit: {LIMIT or 'ALL'} | Resume: {resume}")
     print(f"D1: {D1_DB}")
-    print(f"No proxy. No search engine. Direct fetch.")
+    if PHASE in ("3b", "all"):
+        proxy_status = "configured" if PROXY_USER and PROXY_PASS else "NOT SET"
+        print(f"Proxy: DataImpulse sticky ({proxy_status})")
+    else:
+        print(f"No proxy. Direct fetch.")
     print()
 
     if PHASE == "1":
@@ -535,14 +772,18 @@ def main():
         phase_fetch()
     elif PHASE == "3":
         phase_discover()
+    elif PHASE == "3b":
+        phase_discover_search()
     elif PHASE == "all":
         phase_parse()
         print()
         phase_fetch()
         print()
         phase_discover()
+        print()
+        phase_discover_search()
     else:
-        print(f"Unknown phase: {PHASE}. Available: 1, 2, 3, all")
+        print(f"Unknown phase: {PHASE}. Available: 1, 2, 3, 3b, all")
         sys.exit(1)
 
 

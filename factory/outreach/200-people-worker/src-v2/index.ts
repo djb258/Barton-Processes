@@ -199,51 +199,75 @@ async function runPass0(env: Env, limit: number): Promise<PassResult> {
   return { pass: '0-staging', processed: people.length, filled, skipped, errors: errors.length, error_details: errors.slice(0, 20) };
 }
 
-// ─── Pass 1: Scrape About/Team Pages ──────────────────────────
-// CHEAP — CF Worker fetch, no proxy. Parse executive names from
-// company about/team pages listed in outreach_blog.about_url.
+// ─── Pass 1: Consume Blog Data + Fetch About Pages ─────────────
+// FREE — First check if Process 300 already extracted people (stored
+// in outreach_blog.context_summary as JSON). If yes, use that data
+// directly — no fetch needed. If no extracted data, fetch the about_url.
 
 async function runPass1(env: Env, limit: number): Promise<PassResult> {
   let filled = 0;
   let skipped = 0;
+  let fromBlogData = 0;
+  let fromFetch = 0;
   const errors: string[] = [];
 
   const titleMaps = (await env.D1_OUTREACH.prepare(
     'SELECT title_pattern, slot_type, priority FROM people_title_slot_mapping ORDER BY priority'
   ).all<TitleSlotMap>()).results || [];
 
-  // Find companies with empty slots AND about_url
+  // Find companies with empty slots AND either extracted people data or about_url
   const candidates = await env.D1_OUTREACH.prepare(`
     SELECT cs.slot_id, cs.outreach_id, cs.company_unique_id, cs.slot_type,
-           b.about_url
+           b.about_url, b.context_summary
     FROM people_company_slot cs
     JOIN outreach_blog b ON cs.outreach_id = b.outreach_id
     WHERE cs.is_filled = 0
-      AND b.about_url IS NOT NULL AND b.about_url != ''
-    ORDER BY cs.slot_type  -- CEO first
+      AND (b.about_url IS NOT NULL AND b.about_url != '')
+    ORDER BY
+      CASE WHEN b.context_summary LIKE '%"people"%' THEN 0 ELSE 1 END,  -- blog-extracted data first
+      cs.slot_type  -- CEO first
     LIMIT ?
-  `).bind(limit).all<EmptySlot & { about_url: string }>();
+  `).bind(limit).all<EmptySlot & { about_url: string; context_summary: string | null }>();
 
   const slots = candidates.results || [];
 
   for (const slot of slots) {
     try {
-      // Fetch the about page
-      const resp = await fetch(slot.about_url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SVGBot/1.0)' },
-        signal: AbortSignal.timeout(10000),
-      });
+      let match: { name: string; title: string; slot_type: string | null } | null = null;
 
-      if (!resp.ok) {
-        skipped++;
-        continue;
+      // Strategy 1: Check if Process 300 already extracted people
+      if (slot.context_summary && slot.context_summary.includes('"people"')) {
+        try {
+          const blogData = JSON.parse(slot.context_summary);
+          if (blogData.people && Array.isArray(blogData.people)) {
+            for (const p of blogData.people) {
+              const slotType = matchTitleToSlot(p.title || '', titleMaps);
+              if (slotType === slot.slot_type && p.name) {
+                match = { name: p.name, title: p.title, slot_type: slotType };
+                fromBlogData++;
+                break;
+              }
+            }
+          }
+        } catch { /* invalid JSON, fall through to fetch */ }
       }
 
-      const html = await resp.text();
+      // Strategy 2: Fetch the about page directly (free, no proxy)
+      if (!match && slot.about_url) {
+        try {
+          const resp = await fetch(slot.about_url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SVGBot/1.0)' },
+            signal: AbortSignal.timeout(10000),
+          });
 
-      // Simple extraction: look for patterns like "Name, Title" or "Name - Title"
-      const people = extractPeopleFromHtml(html, titleMaps);
-      const match = people.find(p => p.slot_type === slot.slot_type);
+          if (resp.ok) {
+            const html = await resp.text();
+            const people = extractPeopleFromHtml(html, titleMaps);
+            match = people.find(p => p.slot_type === slot.slot_type) ?? null;
+            if (match) fromFetch++;
+          }
+        } catch { /* fetch failed, skip */ }
+      }
 
       if (!match || !match.name) {
         skipped++;
@@ -262,14 +286,14 @@ async function runPass1(env: Env, limit: number): Promise<PassResult> {
             source_system, promoted_from_intake_at,
             last_verified_at, created_at, updated_at,
             email_verified, outreach_ready
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'about_page_scrape', datetime('now'),
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'blog_recon', datetime('now'),
             datetime('now'), datetime('now'), datetime('now'), 0, 0)
         `).bind(uniqueId, slot.company_unique_id, slot.slot_id,
           firstName, lastName, match.name, match.title),
         env.D1_OUTREACH.prepare(`
           UPDATE people_company_slot
           SET person_unique_id = ?, is_filled = 1, filled_at = datetime('now'),
-              source_system = 'about_page', confidence_score = 0.6, updated_at = datetime('now')
+              source_system = 'blog_recon', confidence_score = 0.6, updated_at = datetime('now')
           WHERE slot_id = ?
         `).bind(uniqueId, slot.slot_id),
       ];
@@ -281,7 +305,16 @@ async function runPass1(env: Env, limit: number): Promise<PassResult> {
     }
   }
 
-  return { pass: '1-about-pages', processed: slots.length, filled, skipped, errors: errors.length, error_details: errors.slice(0, 20) };
+  return {
+    pass: '1-blog-data',
+    processed: slots.length,
+    filled,
+    skipped,
+    from_blog_data: fromBlogData,
+    from_fetch: fromFetch,
+    errors: errors.length,
+    error_details: errors.slice(0, 20),
+  };
 }
 
 // ─── Pass 2: Search-Engine-as-Proxy (UT Snap-On) ─────────────

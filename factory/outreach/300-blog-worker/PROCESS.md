@@ -63,7 +63,22 @@ The URL mapping is the constant — where to look on each site. The 0/1 is the v
 | 6 | Discovered about_urls from step 5 | Fetch and parse same as Phase 2 (steps 2-4) | Names/titles extracted + about_url stored | 16-fetcher + 17-parser-registry |
 | 7 | All Phase 2 + Phase 3 results | Write about_url + extracted names/titles + movement flags back to D1 | `outreach_blog` fully updated | D1 write (11-structured-data) |
 
-**Detection is deterministic.** No AI. HTML parsing for names/titles. The fetch is direct — no proxy, no search engine, no intermediary. 16-fetcher is the PRIMARY tool.
+**Detection is deterministic.** No AI. HTML parsing for names/titles.
+
+**Phase 2 uses direct fetch** — no proxy, no search engine. 16-fetcher is the PRIMARY tool for known about_urls.
+
+**Phase 3 has two paths:**
+- **Path A (direct):** Try common paths (`/about`, `/about-us`, `/team`, etc.) via direct fetch. Free. No proxy.
+- **Path B (Startpage discovery):** For companies where Path A fails, use Startpage search via DataImpulse proxy to discover the about_url. Query: `site:{domain} about OR team OR leadership`. Proven working (2026-03-31).
+
+**Startpage configuration (DataImpulse — proven 2026-03-31):**
+- Host: `gw.dataimpulse.com`
+- Port: `10000` (sticky session — NOT rotating port 823)
+- Username: `{user}__cr.us` (US country targeting)
+- Method: POST form (`q={query}`)
+- Delay: 3s between queries
+- Session: sticky (same IP for entire batch)
+- All 5 test queries passed. CAPTCHA issue resolved.
 
 ### Output
 - `outreach_blog.context_summary` updated with: extracted names, titles, movement (0/1), last_checked
@@ -97,7 +112,8 @@ The URL mapping is the constant — the about_url per company. The 0/1 is the va
 
 | Secret | Doppler Project | Config | Used By |
 |--------|----------------|--------|---------|
-| _(none required)_ | — | — | Direct fetch to public pages, no auth needed |
+| PROXY_USER | imo-creator | dev | DataImpulse proxy username (Phase 3 Path B — Startpage discovery) |
+| PROXY_PASS | imo-creator | dev | DataImpulse proxy password |
 
 ### Blueprint References
 
@@ -142,8 +158,9 @@ outreach_outreach.outreach_id (SPINE)
 | Action | Why |
 |--------|-----|
 | Query Neon | D1 only. SEED already pulled the data. |
-| Use search engines (Startpage, Google, Bing) | Direct fetch via 16-fetcher. No intermediary. No proxy. |
-| Use proxy for about page fetches | These are public pages. Direct fetch is sufficient and free. |
+| Use search engines for Phase 2 (known about_urls) | Direct fetch via 16-fetcher. No intermediary. No proxy needed for known URLs. |
+| Use proxy for Phase 2 about page fetches | These are public pages with known URLs. Direct fetch is sufficient and free. |
+| Use Startpage without DataImpulse sticky session | CAPTCHA blocked on rotating proxy. MUST use port 10000+ (sticky) + `__cr.us` (US country) + POST form. See Startpage fix (2026-03-31). |
 | Run 200 before 300 | 300 feeds free data to 200. Always run 300 first. |
 
 ### Query Routing
@@ -249,9 +266,9 @@ Fill with ACTUAL BASELINE DATA from Phase 2 run (2026-03-30):
 |--------|--------|----------|-----------|------------|---------|--------|
 | 16-fetcher | CF Workers fetch (direct) | ~92% (4,800/5,200) | $0 | ~8% (timeouts, 403s) | ~0.5s/page | 2026-03-30 |
 | 17-parser-registry | Python regex (blog-recon.py) | 15.6% (811/5,200) | $0 | 0% (no crashes) | <1ms/parse | 2026-03-30 |
-| 18-proxy-router | DataImpulse + Startpage | 0% (CAPTCHA blocked) | $1/GB | 100% | N/A | 2026-03-30 |
+| 18-proxy-router | DataImpulse + Startpage (sticky session) | 100% (5/5 test) | $1/GB | 0% | ~3s/query | 2026-03-31 |
 
-Note: 18-proxy-router/Startpage is dead for this process. Direct fetch via 16-fetcher replaced it. Scorecard documents the failure for vendor swap justification.
+Note: 18-proxy-router/Startpage was dead (0% on 2026-03-30 with rotating proxy). **Fixed 2026-03-31:** sticky session (port 10000+) + US country (`__cr.us`) + POST form. All 5 test queries passed. Now available for Phase 3 Path B (about_url discovery via search).
 
 ### Sigma Tracking — Phase 2 was first run. Need 2 more runs for trend.
 
@@ -338,8 +355,8 @@ python3 src/blog-recon.py --resume
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-03-29 |
-| Version | 3.0.0 |
+| Last Modified | 2026-03-31 |
+| Version | 3.1.0 |
 | Template Version | 3.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
 | OSAM Authority | barton-outreach-core/doctrine/OSAM.md v1.1.2 — blog content sub-hub (04.04.05) |

@@ -37,11 +37,14 @@ database_id = "641a9a1e-0882-41a7-82af-ea700e7cfbb3"
 # Profiles per cron invocation
 BATCH_SIZE = "100"
 # Delay between proxy fetches (ms) — Box-Muller jitter within range
-MIN_DELAY_MS = "30000"
-MAX_DELAY_MS = "120000"
+# Updated 2026-03-31: sticky session is stable, reduced from 30s/120s
+MIN_DELAY_MS = "3000"
+MAX_DELAY_MS = "8000"
 
-# DataImpulse proxy credentials — SET (2026-03-26):
+# DataImpulse proxy credentials — UPDATED (2026-03-31):
 #   PROXY_HOST = gw.dataimpulse.com
-#   PROXY_PORT = 823
-#   PROXY_USER = (from Doppler imo-creator/dev)
+#   PROXY_PORT = 10000 (sticky session — NOT 823 rotating)
+#   PROXY_USER = {user}__cr.us (US country targeting appended at runtime)
 #   PROXY_PASS = (from Doppler imo-creator/dev)
+#   Method: POST form to Startpage (not GET — prevents CAPTCHA)
+#   Fix proven 2026-03-31: all 5 test queries passed

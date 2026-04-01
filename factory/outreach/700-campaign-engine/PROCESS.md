@@ -16,11 +16,13 @@
 | CTB Position | factory/outreach/700-campaign-engine |
 | ORBT | BUILD |
 | Strikes | 0 |
-| Last Deployed | not deployed |
+| Last Deployed | not deployed (sequencing logic — lives inside LCS Hub worker) |
 | BAR Reference | BAR-175, BAR-177 |
-| Deployed URL | not deployed |
-| Cron | none (triggered by LCS pipeline CID output) |
-| Runtime | CF Worker (future) |
+| Deployed URL | https://lcs-hub.svg-outreach.workers.dev (same worker as Process 100) |
+| Cron | Uses Process 100's cron (`0 7 * * *`) — campaign sequencing runs after pipeline compilation |
+| Runtime | CF Worker (lcs-hub) — NOT a separate worker. Campaign Engine is the sequencing layer on top of the LCS compiler. |
+
+> **Architecture Note (2026-03-31):** Process 700 is NOT a separate worker. The LCS Hub (compiler-v2) already handles CID → SID → MID with domain rotation, webhooks, and ORBT strikes. Process 700 adds **sequencing logic** — deciding when to send and how often based on movement signals. This lives in the same LCS Hub worker as a cron-triggered campaign scanner.
 
 ---
 

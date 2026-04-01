@@ -4,6 +4,24 @@
 
 ---
 
+## The Outcome — Fully Enriched Company Record (The Setpoint)
+
+Every company in the pipeline should have ALL dimensions filled. 100% is the setpoint — the constant we measure against. The actual fill rate is the variable. The delta is the build list.
+
+| Dimension | Target (Setpoint) | Current (2026-03-31) | Gap |
+|-----------|-------------------|---------------------|-----|
+| SEED (companies in D1) | ~32K | 32,704 | Done (OPERATE) |
+| Blog (about_url mapped) | 32K (100%) | 13,199 (40%) | 19,505 companies without about_url |
+| People (3 slots filled w/ email + LinkedIn) | 98,112 slots (100%) | ~54% CEO, ~50% CFO, ~43% HR | ~50K empty slots |
+| DOL (linked to filing) | 32K (100%) | 36,247 records | Coverage % against 32K TBD |
+| Talent Flow (movement signals) | Running monthly | Not running | 0% — needs Process 200 first |
+
+**Realistically, 100% is not achievable.** Not every company has a public about page. Not every CEO has a LinkedIn. But 100% is the domesticated variable — the setpoint that sigma tracks against. The gap tells you where to improve.
+
+**The Circle:** Once messages go out (Process 100 → MID delivery), response data feeds back through the pipeline. 10-3-1 becomes the measurable outcome: 10 contacted → 3 respond → 1 becomes client. Monte Carlo simulation models the full system with real distributions and shows which dimension has the most leverage — not A/B testing, statistical convergence.
+
+---
+
 ## The Rule
 
 **A process cannot run until every process it depends on has completed and passed its analytics baseline.** This is not a suggestion. If the upstream data isn't there, the downstream process produces garbage.
@@ -43,7 +61,7 @@
 
 | Order | Process | Name | Depends On | What It Produces |
 |-------|---------|------|-----------|-----------------|
-| 6 | 100 | LCS Pipeline | **ALL of Phase 2 complete** (200, 300, 400, 500) | CID → SID (via SVG Brain) → MID. Compiled intelligence + personalized message + delivery. |
+| 6 | 100 | LCS Pipeline | **ALL of Phase 2 complete** (200, 300, 400, 500) | CID → SID (via LBB for content) → MID. Compiled intelligence + personalized message + delivery. Domain warmup IS the campaign — ramp from 20/domain/day on shared Mailgun IPs. |
 | 7 | 700 | Campaign Engine | **100 LCS complete** (needs CID targets) | Sequenced outreach: no movement = 1/month, movement = 3-5 over 2 weeks |
 
 **100 is the last outreach process.** It compiles everything upstream into the message. If any upstream data is missing, the CID is thin, the SID is generic, the MID is weak.
@@ -105,18 +123,28 @@
 
 For the initial baseline run, execute in this exact order. Do not skip ahead.
 
-| Step | Process | Action | Baseline Metrics |
-|------|---------|--------|-----------------|
-| 1 | 010 SEED | Verify (already OPERATE) | Row counts, join integrity, fill rates |
-| 2 | 300 Blog | Run Phase 2 (fetch about_urls) + Phase 3 (discover) | Pages fetched, hit rate, about_urls discovered |
-| 3 | 200 People | Run Pass 0 (staging) + Pass 1 (blog data) | Slots filled, hit rate per pass, cost |
-| 4 | 400 DOL | Query views against D1 | Signal counts per type |
-| 5 | 200 People | Run Pass 2 (search — if needed) | Hit rate, cost per slot |
-| 6 | 500 Talent Flow | Run first month comparison | Movements detected, signal counts |
-| 7 | 100 LCS | Run compiler on test batch | Compilation rate, tier distribution, gate pass rate |
-| 8 | 100 LCS | Deliver test MID | Delivery rate, bounce rate |
+| Step | Process | Action | Baseline Metrics | Status (2026-03-31) |
+|------|---------|--------|-----------------|---------------------|
+| 1 | 010 SEED | Verify (already OPERATE) | Row counts, join integrity, fill rates | DONE — 32,704 companies, 3 agents, all sub-hubs verified |
+| 2 | 300 Blog | Run Phase 2 (re-fetch about_urls) + Phase 3 (discover 19K without about_url using Startpage) | Pages fetched, hit rate, about_urls discovered | PARTIAL — Phase 2 ran (5,200 pages, 811 people, 15.6% hit). Phase 3 not run. Startpage fix proven (sticky session + US country + POST form). |
+| 3 | 200 People | Run Pass 1 (staging + blog data from 300) | Slots filled from free data, hit rate | NOT STARTED — needs 300 output |
+| 4 | 400 DOL | Query views against D1 | Signal counts per type | DONE — 171K rows seeded, 6 views queryable |
+| 5 | 200 People | Run Pass 2 (Startpage search via DataImpulse sticky session) | Hit rate, cost per slot | NOT STARTED — Startpage fix proven but not wired into 200 |
+| 6 | 500 Talent Flow | Run first month comparison | Movements detected, signal counts | NOT STARTED — needs 200 LinkedIn snapshots |
+| 7 | 100 LCS | Run compiler on test batch, query LBB for SID content | Compilation rate, tier distribution, gate pass rate | READY — compiler-v2 deployed, needs upstream data |
+| 8 | 100 LCS | Deliver test MID via Mailgun (shared IPs, 20/domain/day warmup ramp) | Delivery rate, bounce rate, domain reputation | READY — 14 domains verified, 0 emails sent, warmup starts with real outreach |
 
-**After step 8, all outreach baselines are set. Go shopping with vendor-scout (27).**
+**After step 8, all outreach baselines are set. Go shopping with vendor-scout (27) for any dimension below target.**
+
+### Domain Warmup Note
+
+No separate warmup process (PROC-750 eliminated). Mailgun shared IPs are already warm. Domain reputation builds by sending real outreach at controlled volume. The warmup IS the campaign. Ramp: 20→40→80→150→250/domain/day over 5 weeks. See PROC-100 for full ramp table.
+
+### Key Technical Discoveries (2026-03-31)
+
+- **Startpage fix:** DataImpulse sticky session (port 10000+) + US country targeting (`__cr.us` in username) + POST form submission + 3s delay. All 5 test queries passed. This unblocks Process 300 Phase 3 and Process 200 Pass 2.
+- **LBB replaces SVG Brain:** SID construction queries LBB (Library Barton Brain) for Barton voice, messaging frameworks, and company-specific intel. One library, Dewey Decimal classification.
+- **10-3-1 + Monte Carlo:** Once messages flow, response data feeds back through the pipeline. Statistical convergence, not A/B testing.
 
 ---
 
@@ -126,6 +154,6 @@ For the initial baseline run, execute in this exact order. Do not skip ahead.
 |-------|-------|
 | Created | 2026-03-31 |
 | Last Modified | 2026-03-31 |
-| Version | 1.0.0 |
+| Version | 2.0.0 |
 | Authority | FOUNDATIONAL_BEDROCK.md §4 (CTB) + §8 (Aviation — logbook first) |
 | Location | Barton-Processes/EXECUTION_ORDER.md |

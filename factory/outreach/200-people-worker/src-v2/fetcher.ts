@@ -48,10 +48,13 @@ export async function searchStartpage(
 
   const titleQuery = titleMap[slotType] || slotType;
   const query = `site:linkedin.com/in/ ${titleQuery} "${companyName}" "${city}" "${state}"`;
-  const searchUrl = `https://www.startpage.com/do/dsearch?query=${encodeURIComponent(query)}&cat=web`;
 
   try {
-    const resp = await proxyFetch(env, searchUrl);
+    const resp = await proxyPostForm(
+      env,
+      'https://www.startpage.com/do/dsearch',
+      `q=${encodeURIComponent(query)}&cat=web`,
+    );
     if (!resp) return null;
 
     const html = await resp.text();
@@ -121,9 +124,13 @@ async function fetchViaProxy(env: Env, url: string): Promise<SearchResult | null
  * CF Workers can't use HTTP CONNECT, so we use their "super proxy"
  * endpoint format: fetch the target URL with proxy auth headers.
  *
- * DataImpulse docs: residential proxy at gw.dataimpulse.com:823
+ * DataImpulse docs: residential proxy at gw.dataimpulse.com:10000 (sticky session)
  * Auth: Basic auth via Proxy-Authorization header
+ * Username gets __cr.us suffix for US country targeting.
+ * Minimum 3s delay between calls to avoid CAPTCHA.
  */
+let lastProxyFetchTime = 0;
+
 async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null> {
   if (!env.PROXY_HOST || !env.PROXY_USER) {
     // No proxy — try direct fetch as fallback
@@ -143,15 +150,19 @@ async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null>
   }
 
   try {
-    // DataImpulse super proxy — fetch target URL through their residential gateway.
-    // CF Workers support fetching through a proxy via the undocumented cf.resolveOverride
-    // or by using the proxy URL format directly.
-    //
-    // Method: Use DataImpulse's HTTP endpoint that accepts target URL as param.
-    // Format: https://gw.dataimpulse.com:823/fetch?url=<encoded_target>
-    // Auth: Basic user:pass
-    const proxyAuth = btoa(`${env.PROXY_USER}:${env.PROXY_PASS}`);
-    const port = env.PROXY_PORT || '823';
+    // Enforce minimum 3s delay between proxy requests to avoid CAPTCHA
+    const now = Date.now();
+    const elapsed = now - lastProxyFetchTime;
+    const minDelay = 3000;
+    if (lastProxyFetchTime > 0 && elapsed < minDelay) {
+      await new Promise((r) => setTimeout(r, minDelay - elapsed));
+    }
+    lastProxyFetchTime = Date.now();
+
+    // DataImpulse sticky session proxy — port 10000, US country targeting via __cr.us suffix
+    const proxyUser = `${env.PROXY_USER}__cr.us`;
+    const proxyAuth = btoa(`${proxyUser}:${env.PROXY_PASS}`);
+    const port = env.PROXY_PORT || '10000';
 
     // DataImpulse residential proxy — use their gateway format
     const resp = await fetch(targetUrl, {
@@ -177,6 +188,77 @@ async function proxyFetch(env: Env, targetUrl: string): Promise<Response | null>
     return resp;
   } catch (e) {
     console.error(`[proxyFetch] ${targetUrl}: ${e instanceof Error ? e.message : e}`);
+    return null;
+  }
+}
+
+/**
+ * POST form-encoded data through DataImpulse proxy.
+ * Startpage requires POST to avoid CAPTCHA on search queries.
+ */
+async function proxyPostForm(
+  env: Env,
+  targetUrl: string,
+  formBody: string,
+): Promise<Response | null> {
+  if (!env.PROXY_HOST || !env.PROXY_USER) {
+    try {
+      return await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formBody,
+        signal: AbortSignal.timeout(15000),
+        redirect: 'follow',
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    // Enforce minimum 3s delay between proxy requests
+    const now = Date.now();
+    const elapsed = now - lastProxyFetchTime;
+    const minDelay = 3000;
+    if (lastProxyFetchTime > 0 && elapsed < minDelay) {
+      await new Promise((r) => setTimeout(r, minDelay - elapsed));
+    }
+    lastProxyFetchTime = Date.now();
+
+    const proxyUser = `${env.PROXY_USER}__cr.us`;
+    const proxyAuth = btoa(`${proxyUser}:${env.PROXY_PASS}`);
+
+    const resp = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Proxy-Authorization': `Basic ${proxyAuth}`,
+      },
+      body: formBody,
+      // @ts-ignore — CF Workers experimental proxy support
+      cf: {
+        resolveOverride: env.PROXY_HOST,
+      },
+      signal: AbortSignal.timeout(20000),
+      redirect: 'follow',
+    });
+
+    if (!resp.ok) {
+      console.error(`[proxyPostForm] ${targetUrl}: HTTP ${resp.status}`);
+      return null;
+    }
+
+    return resp;
+  } catch (e) {
+    console.error(`[proxyPostForm] ${targetUrl}: ${e instanceof Error ? e.message : e}`);
     return null;
   }
 }
