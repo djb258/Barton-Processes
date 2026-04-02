@@ -1,0 +1,9 @@
+heir:
+  hub_id: "imo-creator"
+  sub_hub: "production-line"
+  component: "060-production-line"
+  process_id: "PROC-060"
+  business_silo: "imo-creator"
+  ctb_position: "factory/imo-creator/060-production-line"
+  parent: "factory/imo-creator"
+  created_at: "2026-04-02"
