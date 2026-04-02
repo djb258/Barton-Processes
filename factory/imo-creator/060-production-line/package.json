@@ -1,0 +1,21 @@
+{
+  "name": "production-line",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:migrate:local": "wrangler d1 migrations apply production-line --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply production-line --remote"
+  },
+  "dependencies": {
+    "agents": "^0.9.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^4.0.0"
+  }
+}

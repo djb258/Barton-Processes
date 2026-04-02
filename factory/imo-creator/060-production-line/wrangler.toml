@@ -1,0 +1,36 @@
+# ═══════════════════════════════════════════════════════════════
+# Production Line Engine — CF Worker + Durable Object Agents
+# ═══════════════════════════════════════════════════════════════
+# BAR-195, BAR-196 | Hub-Spoke: Hono rim + DO agents
+# D1 for working data. Agents call stations via adapters.
+# No LLM in the spine. Deterministic state machine.
+# ═══════════════════════════════════════════════════════════════
+
+name = "production-line"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+
+# D1 — production line working data
+[[d1_databases]]
+binding = "D1_PRODUCTION"
+database_name = "production-line"
+database_id = "PLACEHOLDER"
+migrations_dir = "migrations"
+
+# Durable Objects — line agents
+[durable_objects]
+bindings = [
+  { name = "ORCHESTRATOR", class_name = "OrchestratorAgent" },
+  { name = "LINE_AGENT", class_name = "LineAgent" }
+]
+
+[[migrations]]
+new_sqlite_classes = ["OrchestratorAgent", "LineAgent"]
+tag = "v1"
+
+# Secrets (set via wrangler secret put)
+# PRODUCTION_API_KEY
