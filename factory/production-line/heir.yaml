@@ -1,0 +1,20 @@
+# HEIR -- Production Line Identity
+sovereign_ref: "imo-creator"
+hub_id: "PRODUCTION-LINE"
+ctb_placement: "branch"
+imo_topology: "middle"
+cc_layer: "CC-02"
+services:
+  - "CF Agents SDK (Durable Objects)"
+  - "Cloudflare D1"
+  - "Cloudflare Workers"
+  - "WebSocket (real-time UI)"
+secrets_provider: "doppler"
+acceptance_criteria:
+  - "Orchestrator agent can trigger a CF Worker process"
+  - "Line agent chains multiple processes in sequence"
+  - "Agent state persists across executions"
+  - "Visual UI shows production line status in real-time"
+  - "Hub-spoke geometry enforced -- no sideways calls"
+governing_engine: "law/doctrine/FOUNDATIONAL_BEDROCK.md"
+bar_reference: "BAR-196"
