@@ -83,7 +83,7 @@ barton-processes/
 | Silo | Role | Path | Status |
 |------|------|------|--------|
 | **imo-creator** | PARENT — shared global infrastructure | `factory/imo-creator/` | ACTIVE |
-| **svg-agency** | CHILD — SVG insurance outreach | `factory/svg-agency/` | ACTIVE |
+| **svg-agency** | CHILD — SVG insurance outreach | `factory/outreach/` | ACTIVE |
 | **real-estate** | CHILD — real estate processes | `factory/real-estate/` | EMPTY |
 | **personal** | CHILD — personal ops | `factory/personal/` | EMPTY |
 

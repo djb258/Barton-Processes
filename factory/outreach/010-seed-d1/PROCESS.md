@@ -60,10 +60,14 @@ The agent + ZIP + radius is the gate that controls the entire flow. No agent ass
 | 6 | Qualifying outreach_ids | Copy Blog sub-hub — about_url, source_url, sitemap structure. First pass maps everything. After that, quick update for changes only. | `outreach_blog` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
 | 7 | Qualifying outreach_ids | Copy People sub-hub — 3 slots per company (CEO, CFO, HR), always 3, filled or empty. Each filled slot ties to a person record with verified email + LinkedIn URL. | `people_company_slot` + `people_people_master` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
 | 8 | Coverage reference | Copy coverage tables for local reference | `coverage_service_agent` + `coverage_service_agent_coverage` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 9 | Qualifying outreach_ids | Copy Hunter contacts — verified emails, LinkedIn URLs, phone numbers, confidence scores. 175K rows of gold from Hunter.io enrichment. | `enrichment_hunter_contact` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 10 | Qualifying outreach_ids | Copy Hunter email patterns — one pattern per domain (e.g., {first}.{last}@domain). Only domains with known patterns (15,537). | `enrichment_hunter_company` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 11 | Qualifying outreach_ids | Copy Vendor people — enriched contacts from vendor pipeline with mapped_slot_type. Overlaps Hunter but includes slot mapping + backfill metadata. | `vendor_people` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
+| 12 | Qualifying outreach_ids | Copy Vendor CT — enriched company data with email patterns, company phone, description, LinkedIn. | `vendor_ct` in D1 | Hyperdrive → D1 INSERT OR REPLACE |
 
 ### Output
 - D1 fully populated with the complete footprint for every company inside an agent's coverage zone
-- Footprint per company = CT + DOL + Blog + People (3 slots with person records)
+- Footprint per company = CT + DOL + Blog + People (3 slots with person records) + Hunter contacts + Hunter email patterns + Vendor people + Vendor CT
 - All hanging off one outreach_id (the spine)
 - If a new sub-hub appears (e.g., workers comp), it goes into Neon first, then the SEED pulls it to D1. The pattern is the constant. The sub-hubs are the variable.
 
@@ -83,6 +87,10 @@ After SEED completes, run the post-SEED audit (section 9) to verify all joins. I
 | `seed_views.v_agent_dol` | `outreach_dol` | 32,702 | LEFT JOIN — empty row if no filing |
 | `seed_views.v_agent_slots` | `people_company_slot` | 98,106 | 32,702 × 3 (CEO, CFO, HR) |
 | `seed_views.v_agent_people` | `people_people_master` | 58,857 | Only people referenced by filled slots |
+| `seed_views.v_agent_hunter_contacts` | `enrichment_hunter_contact` | 175,632 | Hunter.io verified emails + people |
+| `seed_views.v_agent_hunter_patterns` | `enrichment_hunter_company` | 15,537 | Email patterns per domain (e.g., {first}.{last}) |
+| `seed_views.v_agent_vendor_people` | `vendor_people` | 175,632 | Vendor-enriched contacts with slot mapping |
+| `seed_views.v_agent_vendor_ct` | `vendor_ct` | 18,683 | Vendor-enriched company data + email patterns |
 | `seed_views.v_agent_fill_rates` | _(reference only)_ | 32,702 | Completeness scorecard |
 
 **The chain:** Agent anchor ZIP + radius → `coverage.v_service_agent_coverage_zips` → qualifying ZIPs → `outreach.company_target.postal_code` → 32,702 companies. The agent defines the geography. The geography defines the universe. Agent assignment to a specific company is a downstream variable.
@@ -480,6 +488,151 @@ Contacts already scraped and title-mapped, waiting to be promoted to people_peop
 
 ---
 
+### enrichment_hunter_contact — Hunter.io verified contacts (175,632 rows)
+Verified emails and people data from Hunter.io enrichment. The gold mine — 179K+ verified emails already in the database before any Startpage search.
+
+| Column | Type | Constraint | Description |
+|--------|------|-----------|-------------|
+| id | INTEGER | PK | Hunter record ID |
+| outreach_id | TEXT | NOT NULL | FK → outreach_outreach.outreach_id |
+| company_unique_id | TEXT | | FK → cl.company_identity.company_unique_id |
+| domain | TEXT | NOT NULL | Company domain |
+| first_name | TEXT | | Contact first name |
+| last_name | TEXT | | Contact last name |
+| full_name | TEXT | | Computed full name |
+| email | TEXT | | Verified email address |
+| email_type | TEXT | | Personal vs generic |
+| email_verified | INTEGER | | Hunter verification status (0/1) |
+| confidence_score | INTEGER | | Hunter email confidence (0-100) |
+| job_title | TEXT | | Job title from Hunter |
+| title_normalized | TEXT | | Cleaned/standardized title |
+| seniority_level | TEXT | | C-suite, VP, Director, Manager |
+| department | TEXT | | Raw department |
+| department_normalized | TEXT | | Normalized department |
+| linkedin_url | TEXT | | LinkedIn profile URL |
+| phone_number | TEXT | | Phone number if available |
+| num_sources | INTEGER | | Number of sources confirming this email |
+| is_decision_maker | INTEGER | | Whether contact is a decision maker (0/1) |
+| outreach_priority | INTEGER | | Computed outreach priority |
+| data_quality_score | REAL | | Composite data completeness score |
+| source | TEXT | | Data source system |
+| source_file | TEXT | | Original source file |
+| created_at | TEXT | | Record creation timestamp |
+
+---
+
+### enrichment_hunter_company — Hunter.io email patterns (15,537 rows)
+One row per company domain with a known email pattern. Use pattern + person name to generate email addresses for Process 201.
+
+| Column | Type | Constraint | Description |
+|--------|------|-----------|-------------|
+| id | INTEGER | PK | Hunter company record ID |
+| outreach_id | TEXT | | FK → outreach_outreach.outreach_id |
+| company_unique_id | TEXT | | FK → cl.company_identity.company_unique_id |
+| domain | TEXT | NOT NULL | Company domain — primary identifier |
+| organization | TEXT | | Company name from Hunter |
+| email_pattern | TEXT | | Email pattern (e.g., {first}.{last}, {f}{last}) |
+| industry | TEXT | | Industry from Hunter |
+| industry_normalized | TEXT | | Cleaned industry category |
+| company_type | TEXT | | Company ownership type |
+| headcount | TEXT | | Employee count range string |
+| headcount_min | INTEGER | | Min employee count |
+| headcount_max | INTEGER | | Max employee count |
+| country | TEXT | | Country code |
+| state | TEXT | | State/province |
+| city | TEXT | | City |
+| postal_code | TEXT | | ZIP code |
+| street | TEXT | | Street address |
+| location_full | TEXT | | Full address string |
+| data_quality_score | REAL | | Composite data completeness score |
+| source | TEXT | | Data source system |
+| enriched_at | TEXT | | When Hunter data was fetched |
+| created_at | TEXT | | Record creation timestamp |
+| updated_at | TEXT | | Last update timestamp |
+
+---
+
+### vendor_people — Vendor-enriched contacts (175,632 rows)
+Enriched contacts from the vendor pipeline. Overlaps Hunter data but includes `mapped_slot_type` for direct slot matching and `backfill_source` for provenance.
+
+| Column | Type | Constraint | Description |
+|--------|------|-----------|-------------|
+| vendor_row_id | INTEGER | PK | Vendor pipeline row ID |
+| outreach_id | TEXT | | FK → outreach_outreach.outreach_id |
+| company_unique_id | TEXT | | FK → cl.company_identity.company_unique_id |
+| domain | TEXT | | Company domain |
+| first_name | TEXT | | Contact first name |
+| last_name | TEXT | | Contact last name |
+| full_name | TEXT | | Computed full name |
+| email | TEXT | | Email address |
+| email_type | TEXT | | Personal vs generic |
+| email_verified | INTEGER | | Verification status (0/1) |
+| confidence_score | REAL | | Confidence in email accuracy |
+| job_title | TEXT | | Job title from source |
+| title_normalized | TEXT | | Cleaned/standardized title |
+| seniority_level | TEXT | | C-suite, VP, Director, Manager |
+| department | TEXT | | Raw department |
+| department_normalized | TEXT | | Normalized department |
+| mapped_slot_type | TEXT | | Which slot this maps to (CEO, CFO, HR) |
+| linkedin_url | TEXT | | LinkedIn profile URL |
+| phone_number | TEXT | | Phone number |
+| work_phone | TEXT | | Work phone |
+| personal_phone | TEXT | | Personal phone |
+| num_sources | INTEGER | | Number of confirming sources |
+| is_decision_maker | INTEGER | | Decision maker flag (0/1) |
+| company_name | TEXT | | Company name |
+| city | TEXT | | Contact city |
+| state | TEXT | | Contact state |
+| country | TEXT | | Contact country |
+| source_system | TEXT | | Which system provided this data |
+| backfill_source | TEXT | | Backfill provenance |
+| enriched_by | TEXT | | Which enrichment service |
+| data_quality_score | REAL | | Composite completeness score |
+| source_table | TEXT | | Original Neon table |
+| created_at | TEXT | | Record creation timestamp |
+| updated_at | TEXT | | Last update timestamp |
+
+---
+
+### vendor_ct — Vendor-enriched company data (18,683 rows)
+Company-level enrichment from vendors. Key value: email patterns with confidence scores, company phone, LinkedIn URL, descriptions.
+
+| Column | Type | Constraint | Description |
+|--------|------|-----------|-------------|
+| vendor_row_id | INTEGER | PK | Vendor pipeline row ID |
+| outreach_id | TEXT | | FK → outreach_outreach.outreach_id |
+| company_unique_id | TEXT | | FK → cl.company_identity.company_unique_id |
+| domain | TEXT | | Company domain |
+| company_name | TEXT | | Company name |
+| email_pattern | TEXT | | Email pattern (e.g., {first}.{last}) |
+| email_pattern_confidence | INTEGER | | Pattern confidence (0-100) |
+| email_pattern_source | TEXT | | Where pattern came from |
+| email_pattern_verified_at | TEXT | | When pattern was verified |
+| company_phone | TEXT | | Main company phone |
+| company_type | TEXT | | Company type |
+| employee_count | INTEGER | | Employee headcount |
+| industry | TEXT | | Industry classification |
+| industry_normalized | TEXT | | Normalized industry |
+| description | TEXT | | Company description |
+| city | TEXT | | Company city |
+| state | TEXT | | Company state |
+| country | TEXT | | Country |
+| postal_code | TEXT | | ZIP code |
+| linkedin_url | TEXT | | Company LinkedIn URL |
+| facebook_url | TEXT | | Company Facebook URL |
+| twitter_url | TEXT | | Company Twitter/X URL |
+| ein | TEXT | | Employer Identification Number |
+| duns | TEXT | | DUNS number |
+| source_system | TEXT | | Data source system |
+| enriched_by | TEXT | | Which enrichment service |
+| data_quality_score | REAL | | Composite completeness score |
+| enriched_at | TEXT | | When enrichment occurred |
+| source_table | TEXT | | Original Neon table |
+| created_at | TEXT | | Record creation timestamp |
+| updated_at | TEXT | | Last update timestamp |
+
+---
+
 ### Join Chain
 
 ```
@@ -496,7 +649,11 @@ coverage_service_agent.service_agent_id
               → dol_schedule_c.ack_id
               → dol_schedule_other.ack_id
           → outreach_blog.outreach_id (Blog sub-hub)
-          → outreach_people.outreach_id (People contacts)
+          → outreach_people.outreach_id (People contacts — DEPRECATED)
+          → enrichment_hunter_contact.outreach_id (Hunter verified emails)
+          → enrichment_hunter_company.outreach_id (Hunter email patterns)
+          → vendor_people.outreach_id (Vendor-enriched contacts)
+          → vendor_ct.outreach_id (Vendor-enriched company data)
           → people_company_slot.outreach_id (3 per company: CEO, CFO, HR)
             → people_people_master.unique_id (via person_unique_id)
 ```
@@ -522,6 +679,10 @@ coverage_service_agent.service_agent_id
 | What's the slot fill rate? | D1 outreach | people_company_slot | WHERE is_filled = 1 |
 | What DOL filings does a company have? | D1 outreach | dol_form_5500 | WHERE outreach_id = ? |
 | Does this company have a team page? | D1 outreach | outreach_blog | about_url IS NOT NULL |
+| What verified emails exist for a company? | D1 outreach | enrichment_hunter_contact | WHERE outreach_id = ? AND email_verified = 1 |
+| What's the email pattern for a domain? | D1 outreach | enrichment_hunter_company | WHERE domain = ? |
+| What vendor-enriched contacts exist? | D1 outreach | vendor_people | WHERE outreach_id = ? |
+| What vendor email pattern + confidence? | D1 outreach | vendor_ct | WHERE outreach_id = ? |
 
 ---
 
@@ -578,7 +739,8 @@ coverage_service_agent.service_agent_id
 | Consumer | What It Needs |
 |----------|--------------|
 | Process 100 (LCS Pipeline) | ALL of the above — compiles CID from full footprint |
-| Process 200 (People Worker) | Filled slots, people records, company target, blog about_urls |
+| Process 200 (People Worker) | Filled slots, people records, company target, blog about_urls, hunter contacts (pre-fill), vendor people (mapped_slot_type) |
+| Process 201 (Email Discovery) | Hunter email patterns, vendor CT email patterns — try pattern first before searching |
 | Process 300 (Blog Worker) | Blog records, company target, domains |
 | Process 400 (DOL Views) | DOL filing detail (form_5500, schedules) |
 | Process 500 (Talent Flow) | People records with LinkedIn URLs |
@@ -590,12 +752,17 @@ coverage_service_agent.service_agent_id
 
 ```
 1. GET lcs-hub.svg-outreach.workers.dev/health → expected: status ok
-2. POST /seed/clean?table=company_target&limit=5000&offset=0 → expected: seeded > 0, errors = 0
+2. POST /seed/clean?table=company_target&limit=5000&offset=0 → expected: seeded > 0, errors = 0 (tables: all, company_target, outreach, cl_identity, blog, dol, slots, people, hunter_contacts, hunter_patterns, vendor_people, vendor_ct)
 3. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_outreach" → expected: 32,702
 4. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_company_target WHERE service_agents IS NOT NULL" → expected: 32,702
 5. wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM people_company_slot" → expected: 98,106
 6. Join integrity: SELECT COUNT(*) FROM people_company_slot cs JOIN people_people_master pm ON cs.person_unique_id = pm.unique_id WHERE cs.is_filled = 1 → expected: 100% (0 orphans)
 7. Slot fill rates: SELECT slot_type, ROUND(SUM(CASE WHEN is_filled=1 THEN 1.0 ELSE 0 END)/COUNT(*)*100,1) as pct FROM people_company_slot GROUP BY slot_type → expected: CEO ~63.4%, CFO ~58.5%, HR ~58.4%
+8. Hunter contacts: SELECT COUNT(*) FROM enrichment_hunter_contact → expected: 175,632
+9. Hunter patterns: SELECT COUNT(*) FROM enrichment_hunter_company → expected: 15,537
+10. Vendor people: SELECT COUNT(*) FROM vendor_people → expected: 175,632
+11. Vendor CT: SELECT COUNT(*) FROM vendor_ct → expected: 18,683
+12. Hunter join: SELECT COUNT(DISTINCT hc.outreach_id) FROM enrichment_hunter_contact hc JOIN outreach_outreach oo ON hc.outreach_id = oo.outreach_id → expected: matches outreach coverage
 ```
 
 **Three Primitives Check (Bedrock §1):**
@@ -622,6 +789,10 @@ coverage_service_agent.service_agent_id
 | HR fill rate | % | 58.4% | ≥58.4% | must not drop |
 | Slot→person join integrity | % | 100% (0 orphans) | 100% | <99% = HALT |
 | Agent assignment coverage | % | 100% (32,702/32,702) | 100% | <99% = HALT |
+| Hunter contact rows | count | 175,632 | all with email for coverage companies | must match Neon |
+| Hunter pattern rows | count | 15,537 | all domains with known pattern | must match Neon |
+| Vendor people rows | count | 175,632 | all vendor-enriched contacts | must match Neon |
+| Vendor CT rows | count | 18,683 | all vendor-enriched companies | must match Neon |
 | SEED errors | count | 0 | 0 | >10% of batch = HALT |
 | DOL filing detail rows | count | 14,252 | stable | ±10% |
 
@@ -654,6 +825,25 @@ coverage_service_agent.service_agent_id
 ---
 
 ## 11. LOGBOOK
+
+### 2026-04-01 — Hunter + Vendor SEED expansion
+
+**ORBT:** OPERATE
+**Trigger:** Audit revealed 4 Neon sub-hubs NOT in D1 — Hunter contacts (175K verified emails), Hunter patterns (15K email patterns), Vendor people (175K contacts), Vendor CT (18K company records)
+**Records processed:** 175,632 + 15,537 + 175,632 + 18,683 = 385,484 new rows
+**Errors:** 0
+**Tools used:** Hyperdrive (HD_NEON), D1.batch(), seed_views (Neon), `/seed/clean` endpoint, psql for Neon view creation
+**Result:**
+- Fix #1: Created `seed_views.v_agent_hunter_patterns` in Neon — previous attempt failed on non-existent `num_sources` column in enrichment.hunter_company (correct column: `email_pattern`)
+- Created D1 migration 003_hunter_vendor_tables.sql — 4 new tables with indexes
+- Added 4 new table handlers to `seedClean()` in seed.ts: hunter_contacts, hunter_patterns, vendor_people, vendor_ct
+- All 4 tables seeded and verified: counts match Neon exactly
+- D1 now has 15 data tables (up from 11) covering ALL known sub-hubs in Neon
+**Learnings:**
+- Observe before you build — we had 179K verified emails sitting in Neon that were never brought to D1
+- Email patterns from Hunter (15,537 domains) + vendor (18,683 domains) = Gate 0 for Process 201 (email discovery). Try pattern first, only search if no pattern exists.
+- vendor_people has `mapped_slot_type` — can directly fill slots without title parsing
+**ORBT after:** OPERATE
 
 ### 2026-04-01 — Clean SEED audit
 

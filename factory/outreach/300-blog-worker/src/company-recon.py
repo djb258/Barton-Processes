@@ -1,27 +1,23 @@
 """
 Process 300 — Company Reconnaissance (Startpage)
 
-One query per company. Captures EVERYTHING about the company:
-- Leadership/team page URLs
-- Company LinkedIn page
-- Names + titles found in results
-- Email addresses
-- About/contact pages
-- Dates for recency
-- All result URLs and snippets
+Reads from slot_workbench in D1. One query per company.
+Captures EVERYTHING — leadership pages, LinkedIn, emails,
+names, titles, dates, snippets. Parse later.
 
-Query built from ALL constants in D1 view:
+Writes back to D1: last_recon_at timestamp + raw results to JSONL.
+After run, PUSH results to Neon and REFRESH materialized view.
+
+Query built from ALL constants in the workbench:
   "{company_name} {city} {state} leadership team contact"
-
-This is company recon, not people search. Asking about a company
-is natural language that never triggers CAPTCHA.
 
 Usage:
   python3 src/company-recon.py --limit 20
   python3 src/company-recon.py --limit 100 --resume
-  python3 src/company-recon.py  # all companies
+  python3 src/company-recon.py --stale 90    # only companies not searched in 90 days
+  python3 src/company-recon.py               # all companies
 
-Env vars: D1_DB, D1_SPINE, PROXY_USER, PROXY_PASS
+Env vars: D1_DB, PROXY_USER, PROXY_PASS
 """
 
 import json
@@ -39,18 +35,19 @@ from curl_cffi import requests as creq
 # ── Config ───────────────────────────────────────────────────
 
 LIMIT = 0
+OFFSET = 0
+STALE_DAYS = 0  # 0 = all companies, >0 = only companies not searched in N days
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 D1_DB = os.environ.get("D1_DB", "svg-d1-outreach-ops")
-D1_SPINE = os.environ.get("D1_SPINE", "svg-d1-spine")
 WRANGLER_CWD = os.environ.get("WRANGLER_CWD",
     os.path.expanduser("~/Documents/imo-creator-v2-20260317/workers/lcs-hub"))
 
 PROXY_USER = os.environ.get("PROXY_USER", "")
 PROXY_PASS = os.environ.get("PROXY_PASS", "")
 PROXY_HOST = "gw.dataimpulse.com"
-PROXY_PORT_BASE = 10030
+PROXY_PORT_BASE = 10040  # Fresh range — don't reuse burned ports
 QUERIES_PER_IP = 50
 SEARCH_DELAY = 3
 
@@ -62,6 +59,15 @@ i = 0
 while i < len(args):
     if args[i] == "--limit" and i + 1 < len(args):
         LIMIT = int(args[i + 1])
+        i += 2
+    elif args[i] == "--offset" and i + 1 < len(args):
+        OFFSET = int(args[i + 1])
+        i += 2
+    elif args[i] == "--stale" and i + 1 < len(args):
+        STALE_DAYS = int(args[i + 1])
+        i += 2
+    elif args[i] == "--port-base" and i + 1 < len(args):
+        PROXY_PORT_BASE = int(args[i + 1])
         i += 2
     elif args[i] == "--resume":
         resume = True
@@ -97,6 +103,15 @@ def d1_query(sql, db=None):
     return []
 
 
+def d1_execute(sql, db=None):
+    """Execute a write statement against D1."""
+    db = db or D1_DB
+    subprocess.run(
+        ["npx", "wrangler", "d1", "execute", db, "--remote", "--command", sql, "--json"],
+        capture_output=True, text=True, cwd=WRANGLER_CWD
+    )
+
+
 def get_proxy_url(query_num=0):
     port = PROXY_PORT_BASE + (query_num // QUERIES_PER_IP)
     return f"http://{PROXY_USER}__cr.us:{PROXY_PASS}@{PROXY_HOST}:{port}"
@@ -104,8 +119,10 @@ def get_proxy_url(query_num=0):
 
 # ── Extract everything from search results ───────────────────
 
-def extract_all(html):
+def extract_all(html, company_name=""):
     """Extract every useful piece of data from search result HTML."""
+    # Build company name words for filtering (so "Seven Days In-Home Care" doesn't parse as a person)
+    co_words = set(w.lower() for w in re.split(r'[\s\-&,\.]+', company_name) if len(w) > 2)
 
     # LinkedIn URLs — both company and personal
     linkedin_company = list(set(re.findall(
@@ -139,13 +156,18 @@ def extract_all(html):
         r'>([A-Z][a-z]+(?:\s[A-Z]\.?\s*)?(?:\s[A-Z][a-z]+){1,3})\s*[-–]\s*([^<]{3,80})',
         html
     )
-    # Filter noise
+    # Filter noise: page headings, nav items, company names parsed as people
+    bad_words = ['about', 'contact', 'our', 'the', 'read', 'home', 'privacy',
+             'terms', 'cookie', 'skip', 'sign', 'view', 'search',
+             'global', 'offices', 'information', 'services', 'solutions',
+             'group', 'company', 'inc', 'llc', 'corp', 'agency', 'center']
     name_title_patterns = [(n, t) for n, t in name_title_patterns
-        if not any(bad in n.lower() for bad in
-            ['about', 'contact', 'our', 'the', 'read', 'home', 'privacy',
-             'terms', 'cookie', 'skip', 'sign', 'view', 'search'])]
+        if not any(bad in n.lower() for bad in bad_words)
+        # Reject if >50% of name words match company name words
+        and (not co_words or
+             sum(1 for w in n.lower().split() if w in co_words) / max(len(n.split()), 1) < 0.5)]
 
-    # All result snippets (meaningful text only)
+    # All result snippets
     snippets = []
     for m in re.findall(r'>([^<]{15,300})<', html):
         text = m.strip()
@@ -183,8 +205,9 @@ def extract_all(html):
 # ── Main ─────────────────────────────────────────────────────
 
 def main():
-    print("Process 300 — Company Reconnaissance (Startpage)")
-    print(f"Limit: {LIMIT or 'ALL'} | Resume: {resume}")
+    worker_id = f"w{OFFSET // max(LIMIT, 1)}" if LIMIT else "all"
+    print(f"Process 300 — Company Reconnaissance (Startpage) [{worker_id}]")
+    print(f"Limit: {LIMIT or 'ALL'} | Offset: {OFFSET} | Port: {PROXY_PORT_BASE} | Resume: {resume}")
 
     if not PROXY_USER or not PROXY_PASS:
         print("ERROR: PROXY_USER and PROXY_PASS required")
@@ -192,44 +215,40 @@ def main():
 
     print()
 
-    # Get distinct companies (one per outreach_id, not per slot)
-    print("Loading companies from D1 view...")
-    companies = d1_query("""
-        SELECT DISTINCT ct.outreach_id, ct.city, ct.state, ct.industry,
-               ct.employees, oo.domain, oo.ein,
-               od.filing_present, od.broker_or_advisor, od.carrier, od.funding_type
-        FROM outreach_company_target ct
-        JOIN outreach_outreach oo ON ct.outreach_id = oo.outreach_id
-        LEFT JOIN outreach_dol od ON ct.outreach_id = od.outreach_id
-        WHERE ct.city IS NOT NULL AND oo.domain IS NOT NULL
-        ORDER BY ct.outreach_id
-    """)
-    if LIMIT:
-        companies = companies[:LIMIT]
+    # ── Read from slot_workbench — one row per company ─────────
+    # Deduplicate: workbench has 3 rows per company (one per slot).
+    # We only need one search per company.
+    stale_filter = ""
+    if STALE_DAYS > 0:
+        stale_filter = f"AND (last_recon_at IS NULL OR last_recon_at < datetime('now', '-{STALE_DAYS} days'))"
 
+    limit_clause = f"LIMIT {LIMIT}" if LIMIT else ""
+    offset_clause = f"OFFSET {OFFSET}" if OFFSET else ""
+
+    print("Loading companies from slot_workbench...")
+    companies = d1_query(f"""
+        SELECT DISTINCT outreach_id,
+            company_name, canonical_name, domain, company_domain,
+            city, state, postal_code, industry, employees,
+            ein, filing_present, carrier, broker_or_advisor, funding_type,
+            renewal_month, about_url, hunter_email_pattern,
+            service_agents
+        FROM slot_workbench
+        WHERE domain IS NOT NULL AND city IS NOT NULL
+        {stale_filter}
+        ORDER BY outreach_id
+        {limit_clause} {offset_clause}
+    """)
     if not companies:
-        print("No companies.")
+        print("No companies to search.")
         return
 
-    print(f"{len(companies)} companies")
-
-    # Bulk load company names
-    print("Loading company names from spine...")
-    all_names = d1_query(
-        "SELECT outreach_id, canonical_name, company_name FROM cl_company_identity",
-        db=D1_SPINE,
-    )
-    name_map = {}
-    for r in all_names:
-        oid = r.get("outreach_id")
-        if oid:
-            name_map[oid] = r.get("canonical_name") or r.get("company_name") or ""
-    print(f"Loaded {len(name_map)} names")
+    print(f"{len(companies)} companies to search")
     print()
 
     # Resume support
     run_date = datetime.now().strftime("%Y-%m-%d")
-    output_file = OUTPUT_DIR / f"company-recon-{run_date}.jsonl"
+    output_file = OUTPUT_DIR / f"company-recon-{run_date}-{worker_id}.jsonl"
 
     already_done = set()
     if resume and output_file.exists():
@@ -254,6 +273,10 @@ def main():
     captcha_count = 0
     errors = 0
     start = time.time()
+    now_ts = datetime.now(timezone.utc).isoformat()
+
+    # Batch up outreach_ids for timestamp update (every 50)
+    recon_batch = []
 
     for idx, co in enumerate(remaining):
         # Rotate proxy
@@ -268,14 +291,16 @@ def main():
                 print(f"  [Rotating to port {new_port}]")
 
         oid = co["outreach_id"]
-        company_name = name_map.get(oid, co.get("domain", ""))
+        company_name = co.get("canonical_name") or co.get("company_name") or co.get("domain", "")
         city = co.get("city", "") or ""
         state = co.get("state", "") or ""
         industry = co.get("industry", "") or ""
         domain = co.get("domain", "") or ""
+        ein = co.get("ein", "") or ""
 
         # Build natural language query from ALL constants
-        query = f"{company_name} {city} {state} leadership team contact"
+        # The more context, the better the results, the less CAPTCHA
+        query = f"{company_name} {city} {state} leadership team contact linkedin"
 
         try:
             resp = session.post(
@@ -300,7 +325,7 @@ def main():
                     "captured_at": datetime.now(timezone.utc).isoformat(),
                 }
             else:
-                extracted = extract_all(resp.text)
+                extracted = extract_all(resp.text, company_name=company_name)
                 record = {
                     "outreach_id": oid,
                     "company_name": company_name,
@@ -308,16 +333,20 @@ def main():
                     "city": city,
                     "state": state,
                     "industry": industry,
-                    "ein": co.get("ein"),
+                    "ein": ein,
                     "carrier": co.get("carrier"),
                     "broker": co.get("broker_or_advisor"),
                     "funding_type": co.get("funding_type"),
+                    "renewal_month": co.get("renewal_month"),
+                    "existing_about_url": co.get("about_url"),
+                    "hunter_email_pattern": co.get("hunter_email_pattern"),
                     "query": query,
                     "status": "captured",
                     "captured_at": datetime.now(timezone.utc).isoformat(),
                     **extracted,
                 }
                 success += 1
+                recon_batch.append(oid)
 
         except Exception as e:
             record = {
@@ -333,6 +362,15 @@ def main():
         out.write(json.dumps(record) + "\n")
         out.flush()
 
+        # Write last_recon_at back to D1 every 50 companies
+        if len(recon_batch) >= 50:
+            oid_list = "','".join(recon_batch)
+            d1_execute(
+                f"UPDATE slot_workbench SET last_recon_at = '{now_ts}' "
+                f"WHERE outreach_id IN ('{oid_list}')"
+            )
+            recon_batch = []
+
         if (idx + 1) % 10 == 0:
             elapsed = time.time() - start
             rate = (idx + 1) / elapsed * 3600 if elapsed > 0 else 0
@@ -344,12 +382,21 @@ def main():
         if idx < len(remaining) - 1:
             time.sleep(SEARCH_DELAY + random.uniform(0, 1.5))
 
+    # Flush remaining timestamp updates
+    if recon_batch:
+        oid_list = "','".join(recon_batch)
+        d1_execute(
+            f"UPDATE slot_workbench SET last_recon_at = '{now_ts}' "
+            f"WHERE outreach_id IN ('{oid_list}')"
+        )
+
     out.close()
     elapsed = (time.time() - start) / 60
     print(
         f"\nDone in {elapsed:.1f}m | "
         f"OK:{success} CAPTCHA:{captcha_count} Err:{errors}"
     )
+    print(f"Output: {output_file}")
 
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ business_silos:
 
   svg-agency:
     role: "CHILD — SVG insurance outreach"
-    path: "factory/svg-agency/"
+    path: "factory/outreach/"
     owns:
       - "All SVG insurance processes (100-900)"
       - "Service agent coverage zones (3 agents)"
@@ -56,7 +56,7 @@ business_silos:
       outreach: "svg-d1-outreach-ops (73a285b8)"
       spine: "svg-d1-spine (641a9a1e)"
     neon_vault: "Neon PostgreSQL via Hyperdrive"
-    data_flow: "factory/svg-agency/DATA_FLOW.md"
+    data_flow: "factory/outreach/DATA_FLOW.md"
     osam: "barton-outreach-core/doctrine/OSAM.md (v1.1.2)"
     processes:
       - number: "100"
@@ -158,13 +158,13 @@ allowed_directories:
 # PER-PROCESS REQUIRED FILES
 # ─────────────────────────────────────────────────────────────────────────────
 # Every process directory MUST contain these files.
-# Template: law/PROCESS_MANIFEST_TEMPLATE.md
+# Template: law/PROCESS_TEMPLATE.md v4.0.0
 
 process_structure:
   required_files:
     - "heir.yaml"        # Process identity (HEIR — 8 fields)
     - "CLAUDE.md"        # Agent operating instructions with Bedrock doctrine
-    - "MANIFEST.md"      # Process manifest (11-block format)
+    - "PROCESS.md"       # Process documentation (14-section format, PROCESS_TEMPLATE.md v4.0.0)
   recommended_files:
     - "OSAM.md"          # Semantic access map (subset of hub OSAM)
     - "ERD.md"           # Entity relationship diagram

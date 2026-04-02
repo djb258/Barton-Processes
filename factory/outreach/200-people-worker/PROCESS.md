@@ -1,5 +1,5 @@
-# PROCESS: People Slot Filler
-## Finds the person who holds each slot (CEO, CFO, HR) at a company — name and title only
+# PROCESS: Find Person
+## Fills empty slots in slot_workbench with a person's name and title via three-gate chain
 ### Status: BUILD
 ### Business: svg-agency
 
@@ -7,214 +7,515 @@
 
 ## 1. IDENTITY
 
+_What is this thing? The constants that never change regardless of when you read this._
+
 | Field | Value |
 |-------|-------|
 | Process ID | PROC-200 |
-| Name | People Slot Filler |
+| Name | Find Person |
 | Business Silo | svg-agency |
-| CTB Position | factory/outreach/200-people-worker |
+| CTB Position | factory/outreach/200-people-worker (LEAF) |
 | ORBT | BUILD |
 | Strikes | 0 |
-| Last Deployed | 2026-03-26 (v1 — needs rebuild for v2 scope) |
+| Last Deployed | not deployed (v3 — local Python script) |
 | BAR Reference | BAR-52 |
-| Deployed URL | people-worker-200.svg-outreach.workers.dev |
-| Cron | Daily `0 6 * * *` (6am UTC) |
-| Runtime | CF Worker (daily cron, batched) |
+| Deployed URL | not deployed |
+| Cron | Manual (batched, after Process 300 completes) |
+| Runtime | Python script (local or container) |
 
 ---
 
 ## 2. WHY THIS EXISTS
 
-A slot without a person is an empty chair. You can't email an empty chair. You can't send a LinkedIn message to an empty chair. This process finds WHO sits in the CEO, CFO, and HR chairs at each company.
+_What breaks without it. What business outcome it serves. If you can't answer this, the process shouldn't exist._
 
-That's ALL it does — find the person's name and title. Email discovery is Process 201. LinkedIn discovery is Process 202. This process identifies the human. The other processes find how to reach them.
+Without names, we can't send personalized outreach. Every downstream process — email discovery (201), LinkedIn discovery (202), campaign engine (700) — requires a human name in the slot. This process fills the `person_first_name` and `person_last_name` variables on empty slots using the cheapest source available first: free recon data, then free Hunter data, then cheap Startpage search.
 
-After 200 fills a slot, the orchestrator conditionally calls:
-- 201 (email) — if the person has no verified email
-- 202 (LinkedIn) — if the person has no LinkedIn URL
-
-Some sources return name + email + LinkedIn together. When that happens, write all of it — don't call 201/202 for data you already have.
+A slot without a name is dead inventory. This process converts dead inventory into actionable contacts.
 
 ---
 
 ## 3. IMO — What Comes In, What Happens, What Comes Out
 
 ### Two-Question Intake (Bedrock §7)
-1. **"What triggers this?"** — Daily cron. Runs after Process 300 (Blog) has mapped web presence.
-2. **"How do we get it?"** — Three passes, escalating cost. Free data first.
+1. **"What triggers this?"** — A slot in `slot_workbench` where `has_name = 0` and `readiness_tier IN ('EMPTY', 'PATTERN_READY', 'HUNTER_READY')`
+2. **"How do we get it?"** — Three gates checked in order: (A) `recon_name_titles` from Process 300, (B) Hunter candidate data already in the slot, (C) Startpage natural language search via DataImpulse proxy
 
 ### Input
-- Empty slots from `people_company_slot` where `is_filled = 0`
-- Blog data from Process 300 (`outreach_blog.context_summary` — extracted names/titles)
-- Staging data in D1 (`intake_people_staging` — pre-scraped records)
-- Company names from `cl_company_identity.canonical_name`
+
+| Source | What It Provides | Cost |
+|--------|-----------------|------|
+| `slot_workbench` (D1) | Empty slots with all company constants + recon data + hunter data | FREE |
+
+Trigger SQL:
+```sql
+SELECT * FROM slot_workbench
+WHERE has_name = 0 AND readiness_tier IN ('EMPTY','PATTERN_READY','HUNTER_READY')
+ORDER BY outreach_id
+```
 
 ### Middle
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| **Pass 0 — Staging (FREE)** | | | | |
-| 1 | `intake_people_staging` records | Match staged names/titles to empty slots via `people_title_slot_mapping`. Create person record. Fill slot. | Slots filled from existing staged data | D1 queries (free) |
-| **Pass 1 — Blog Data (FREE)** | | | | |
-| 2 | Process 300 output (`context_summary` JSON) | Parse extracted names/titles. Match to empty slots by title → slot type. Create person record. Fill slot. | Slots filled from blog extraction | D1 queries (free) |
-| 3 | Companies with `about_url` but no extraction | Fetch about page directly, extract names/titles with HTML parser. Match to slots. | Slots filled from direct fetch | CF Workers fetch (free) |
-| **Pass 2 — Search (CHEAP)** | | | | |
-| 4 | Remaining empty slots | Build Startpage query for the slot type + company. Parse results for name + title. Fill slot. | Slots filled from search | Startpage + DataImpulse proxy |
+| 1 — Gate A: Recon | `recon_name_titles` JSON | Parse JSON array from Process 300. Match title keywords to `slot_type` using locked title patterns. | Person name + title filled. Source = `recon_300`. | wrangler d1 (FREE) |
+| 2 — Gate B: Hunter | `hunter_first_name`, `hunter_last_name`, `hunter_title` | Check if Hunter has a candidate for this slot type. Validate title matches slot via same pattern table. | Person name promoted from Hunter. Source = `hunter`. | wrangler d1 (FREE) |
+| 3 — Gate C: Startpage | `company_name`, `city`, `state`, `slot_type`, `employees` | Build natural language query. POST to Startpage via DataImpulse proxy. Parse results for names near LinkedIn URLs and title keywords. | Person name + optional LinkedIn URL. Source = `startpage_v3`. | curl_cffi + DataImpulse proxy (CHEAP) |
+
+Gate chain stops at first success. Free before cheap. Always.
+
+**Boundary note:** Process 200 fills NAME + TITLE only. Email discovery (including pattern-based generation) is Process 201's responsibility. Even if an email pattern exists, 200 does not write `person_email`.
 
 ### Output
-- Person record in `people_people_master` with name + title
-- Slot updated: `is_filled = 1`, `person_unique_id` set, `source_system` recorded
-- If the source also provides email or LinkedIn, write those too (skip 201/202 for that person)
+
+| Field Written | Value | When |
+|--------------|-------|------|
+| `person_first_name` | Extracted first name | Any gate success |
+| `person_last_name` | Extracted last name | Any gate success |
+| `person_full_name` | Full name | Any gate success |
+| `has_name` | 1 | Any gate success |
+| `person_found_at` | ISO timestamp | Any gate success |
+| `person_source` | `recon_300` / `hunter` / `startpage_v3` | Any gate success |
+| `readiness_tier` | `NAME_ONLY` | Any gate success |
+| `person_linkedin` | LinkedIn URL | If found in search results |
+| `has_linkedin` | 1 | If LinkedIn found |
+| `linkedin_found_at` | ISO timestamp | If LinkedIn found |
+
+**Process 200 outputs name + title only -- email discovery is Process 201's responsibility.**
 
 ### Circle (Bedrock §5)
-After each run, check fill rates by slot type. If fill rate doesn't improve after 3 runs, investigate — parser may need tuning, blog data may be stale, or search queries may need refinement.
+Person found -> slot updated -> workbench refreshed -> Process 201/202 sees the name and uses it for email/LinkedIn discovery -> Campaign engine (700) sends outreach -> Response feeds back to slot status. If person leaves company, slot cleared, process re-runs on the empty slot.
+
+Fill rate tracked per gate (A/B/C) after each run. If fill rate plateaus for 3 consecutive runs, investigate: recon data stale, Hunter data exhausted, or search queries need refinement.
 
 ---
 
 ## 4. WHAT IT GRABS OFF THE WALL
 
+_Every tool, database, integration, API, secret, and agent this process touches. A mechanic reads this and knows exactly what to set up before the process can run._
+
 ### Databases
 
 | Database | Binding | ID | Access | What It Provides |
 |----------|---------|-----|--------|-----------------|
-| svg-d1-outreach-ops | D1_OUTREACH | 73a285b8 | READ/WRITE | Slots, people master, staging, blog, company target |
-| svg-d1-spine | D1 | 641a9a1e | READ | cl_company_identity (canonical_name for search) |
+| svg-d1-outreach-ops | D1_OUTREACH | 73a285b8 | READ/WRITE | `slot_workbench` — empty slots, recon data, hunter data, all company constants |
+
+### Tools & Integrations
+
+| Item | Type | Cost Tier | Credentials | What It Does |
+|------|------|-----------|-------------|-------------|
+| Startpage | Tool | Cheap (proxy cost only) | None (public) | Natural language search for person names |
+| DataImpulse | API | Cheap | PROXY_USER, PROXY_PASS | Residential proxy for Startpage queries |
+| curl_cffi | Tool | Free | None | Browser impersonation (chrome131) to avoid CAPTCHA |
+| wrangler d1 | Tool | Free | Cloudflare auth | D1 read/write via subprocess |
 
 ### Secrets (from Doppler)
 
 | Secret | Doppler Project | Config | Used By |
 |--------|----------------|--------|---------|
-| PROXY_USER | imo-creator | dev | Pass 2 — DataImpulse proxy |
-| PROXY_PASS | imo-creator | dev | Pass 2 — DataImpulse proxy |
+| PROXY_USER | imo-creator | dev | Gate C — DataImpulse proxy |
+| PROXY_PASS | imo-creator | dev | Gate C — DataImpulse proxy |
 
 **Tool Priority (Well Drinks First):**
-1. Staging data (free, already in D1) — Pass 0
-2. Blog data from Process 300 (free) — Pass 1
-3. Direct fetch of about pages (free) — Pass 1
-4. Startpage search via proxy (cheap) — Pass 2
+1. Gate A: Recon data from Process 300 (FREE — already in D1)
+2. Gate B: Hunter candidate data (FREE — already in D1)
+3. Gate C: Startpage search via proxy (CHEAP — only when free gates exhausted)
 
 ---
 
 ## 5. OSAM — Where the Data Lives
 
+_The plumbing. Which tables this process reads, writes, joins. What's forbidden. From the hub OSAM (barton-outreach-core/doctrine/OSAM.md)._
+
 ### READ Access
 
 | Table | What It Provides | Join Key |
 |-------|-----------------|----------|
-| `people_company_slot` | Empty slots (is_filled = 0) | `outreach_id` |
-| `intake_people_staging` | Pre-scraped names/titles | `company_unique_id` |
-| `outreach_blog` | Extracted names/titles from about pages | `outreach_id` |
-| `outreach_company_target` | City, state for search context | `outreach_id` |
-| `cl_company_identity` (spine) | Canonical name for search queries | `outreach_id` |
-| `people_title_slot_mapping` | Title → slot type mapping rules | `title_pattern` |
+| `slot_workbench` | All company constants, recon data, hunter data, readiness state | `outreach_id` |
+
+**Column Detail:**
+
+| Column | Type | C&V | What It Provides |
+|--------|------|-----|-----------------|
+| `slot_id` | TEXT PK | CONSTANT | Unique slot identifier |
+| `outreach_id` | TEXT | CONSTANT | Company join key |
+| `company_unique_id` | TEXT | CONSTANT | Company UUID |
+| `slot_type` | TEXT | CONSTANT | CEO / CFO / HR |
+| `company_name` | TEXT | CONSTANT | Company name for search query |
+| `city` | TEXT | CONSTANT | City for search context |
+| `state` | TEXT | CONSTANT | State for search context |
+| `domain` | TEXT | CONSTANT | Company domain |
+| `company_domain` | TEXT | CONSTANT | Alternate domain field |
+| `employees` | INTEGER | CONSTANT | Employee count (determines query variation) |
+| `recon_name_titles` | TEXT (JSON) | VARIABLE | Name-title pairs from Process 300 |
+| `recon_linkedin_people` | TEXT (JSON) | VARIABLE | LinkedIn URLs from Process 300 |
+| `hunter_first_name` | TEXT | VARIABLE | Hunter.io candidate first name |
+| `hunter_last_name` | TEXT | VARIABLE | Hunter.io candidate last name |
+| `hunter_title` | TEXT | VARIABLE | Hunter.io candidate title |
+| `hunter_email` | TEXT | VARIABLE | Hunter.io candidate email |
+| `hunter_linkedin` | TEXT | VARIABLE | Hunter.io candidate LinkedIn |
+| `hunter_email_pattern` | TEXT | CONSTANT | Email pattern from Hunter (structure) — READ only, not used to generate email (that's 201) |
+| `vendor_email_pattern` | TEXT | CONSTANT | Email pattern from vendor data (structure) — READ only, not used to generate email (that's 201) |
+| `readiness_tier` | TEXT | VARIABLE | Current slot readiness state |
+| `has_name` | INTEGER | VARIABLE | 0 = empty, 1 = filled |
 
 ### WRITE Access
 
 | Table | What It Writes | When |
 |-------|---------------|------|
-| `people_people_master` | New person record (name, title, and any email/LinkedIn if source provides it) | All passes |
-| `people_company_slot` | is_filled=1, person_unique_id, source_system | All passes |
-| `intake_people_staging` | status='promoted' on consumed records | Pass 0 |
+| `slot_workbench` | `person_first_name`, `person_last_name`, `person_full_name`, `has_name`, `person_found_at`, `person_source`, `readiness_tier` | Any gate success |
+| `slot_workbench` | `person_linkedin`, `has_linkedin`, `linkedin_found_at` | If LinkedIn found |
+
+### Join Chain
+
+```
+slot_workbench.outreach_id
+  → (self-contained — all reads and writes target this single table)
+```
 
 ### Forbidden Paths
 
 | Action | Why |
 |--------|-----|
-| Skip Pass 0 and 1 to go to paid search | Free before cheap. Always. |
-| Fill a slot without a name | A name is the minimum. No name = not filled. |
-| Run before Process 300 | 300 feeds free data to 200. Always run 300 first. |
-| Call 201/202 from inside this process | Orchestrator handles that. 200 just fills the slot. |
+| Skip Gate A/B to go straight to Startpage | Free before cheap. Always. Gate chain order is a CONSTANT. |
+| Fill a slot without both first AND last name | A name requires two parts minimum. No first+last = not filled. |
+| Run before Process 300 | 300 feeds `recon_name_titles` to Gate A. Run 300 first. |
+| Write to Neon from this process | Neon is vault. D1 is workspace. SEED->WORK->PUSH lifecycle. |
+| Call Process 201/202 from inside this script | Orchestrator handles downstream. 200 fills names only. |
+| Write `person_email`, `has_email`, or `email_found_at` | **That is Process 201's job.** Process 200 fills name only. Email pattern is READ context, not a trigger to generate email. |
+
+### Query Routing
+
+| Question | Table | Column |
+|----------|-------|--------|
+| How many slots still need names? | `slot_workbench` | `has_name = 0` |
+| Which slots are ready for email discovery? | `slot_workbench` | `has_name = 1 AND has_email = 0` |
+| What was the source of a person fill? | `slot_workbench` | `person_source` |
+| How many slots reached NAME_ONLY? | `slot_workbench` | `readiness_tier = 'NAME_ONLY'` |
+| Which companies have small-company override? | `slot_workbench` | `employees < 25` |
 
 ---
 
 ## 6. CONSTANTS & VARIABLES (Bedrock §2)
 
-### Constants
-- 3 slot types per company: CEO, CFO, HR
-- Pass order: staging (free) → blog data (free) → search (cheap). Never skip.
-- A slot is "filled" when it has a person_unique_id pointing to a record with at least a name.
-- 300 runs before 200. Always.
-- Title-to-slot mapping via `people_title_slot_mapping` table
-- The slot is the constant. Who fills it is the variable.
+### Constants (structure — never changes)
 
-### Variables
-- Which slots are empty (changes as passes fill them)
-- How many staging records remain to promote
-- How many about pages have extractable names
-- Hit rate per pass (tracked in logbook)
-- Which source provided the best data
+_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
+
+| Element | Why It's Constant | Validated |
+|---------|-------------------|-----------|
+| 3 slot types: CEO, CFO, HR | Named, formatted, fixed per company. The structure of outreach roles. | IMO: fixed regardless of data flow. CTB: holds at trunk (strategy) and leaf (execution). Circle: still 3 after feedback. |
+| Gate chain order: A -> B -> C | Named sequence. Free before cheap. Never skip. | IMO: order doesn't change with data. CTB: same at every altitude. Circle: revalidated — order holds after runs. |
+| Title matching patterns | Named, formatted (regex patterns). Map title text to slot type. | IMO: patterns are fixed regardless of input text. CTB: same patterns at trunk/leaf. Circle: patterns refined but structure locked. |
+| Query templates | Named, formatted. Natural language patterns that avoid CAPTCHA. | IMO: template structure fixed. CTB: consistent. Circle: validated across runs — no CAPTCHA. |
+| `slot_workbench` as source of truth | Named table. Single read/write target. | IMO: table doesn't change per execution. CTB: holds at all levels. Circle: still the source after runs. |
+| `company_name`, `city`, `state`, `slot_type` | Named, formatted fields. Structure of the slot. | IMO: company identity doesn't change per search. CTB: consistent. Circle: same after feedback. |
+| `domain`, `employees` | Named, formatted. Company structural data. | IMO: fixed per company. CTB: consistent. Circle: holds. |
+| `hunter_email_pattern`, `vendor_email_pattern` | Named, formatted. The pattern IS the structure. READ only by 200 — used as query context, NOT used to generate email (that's 201's job). | IMO: pattern structure is fixed. CTB: same at all levels. Circle: pattern doesn't change after use. |
+| Employee threshold: <25 = "owner" query | Named rule. Small companies don't have "CEO" — they have "owner". | IMO: threshold fixed. CTB: consistent. Circle: validated across company sizes. |
+
+### Variables (fill — changes every run)
+
+_The values that fill the constants. Different every execution._
+
+| Element | Why It's Variable | Guard Rails |
+|---------|-------------------|-------------|
+| `recon_name_titles` | The captured text from Process 300. Different per company. | Must be valid JSON array. Capped at 10 entries. |
+| `recon_linkedin_people` | LinkedIn URLs from recon. Different per company. | Must be valid URL format. |
+| `hunter_first_name`, `hunter_last_name`, `hunter_title` | Hunter's candidate data. May or may not exist. May not match slot type. | Title must match via pattern table before promotion. |
+| `person_first_name`, `person_last_name` | THE fill. What we're trying to set. Empty until gate succeeds. | Must have both first and last. Min 2 characters each. |
+| `readiness_tier` | Current state of the slot. Changes as processes fill it. | Process 200 only sets NAME_ONLY. REACHABLE is set by Process 201 when email is found. |
+| Which slots are empty | Changes as gates fill them. | Tracked per run in output JSONL. |
+| Search results from Startpage | Different every query. May have CAPTCHA. | Parse defensively. Validate names. |
+| CAPTCHA rate | Changes per session. | STOP if > 10%. |
+| Fill rate per gate | Changes per run. | Track in logbook. Investigate if plateau for 3 runs. |
 
 ---
 
 ## 7. STOP CONDITIONS
 
+_When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviation Model (Bedrock §8)._
+
 | Condition | Action |
 |-----------|--------|
-| Pass 0 staging exhausted | Normal — move to Pass 1 |
-| Pass 1 blog data exhausted | Normal — move to Pass 2 |
-| Pass 2 proxy errors > 20% of batch | HALT — check DataImpulse credentials |
-| Fill rate doesn't improve after 3 runs | INVESTIGATE — parser, data quality, or query issue |
-| Strike 3 on same failure | Troubleshoot/Train → Airworthiness Directive |
+| CAPTCHA > 10% of Gate C searches | HALT — rotate proxy port, check DataImpulse credentials, wait and retry |
+| Errors > 5% of total processed | HALT — check D1 connectivity, wrangler auth |
+| No proxy credentials for Gate C | Skip Gate C, fill only from A/B |
+| Fill rate plateaus for 3 consecutive runs | INVESTIGATE — recon data stale, Hunter exhausted, query patterns need refinement |
+| All slots have has_name = 1 | DONE — nothing to process |
+| Strike 3 on same failure | Troubleshoot/Train -> Airworthiness Directive |
 
 ---
 
 ## 8. DEPENDENCIES
 
-### Upstream
+### Upstream (must exist before this runs)
 
 | Dependency | What | Status |
 |-----------|------|--------|
-| Process 010 (SEED) | Companies, slots, staging data in D1 | DONE |
-| Process 300 (Blog) | Extracted names/titles from about pages | BUILD — running |
-| intake_people_staging | Pre-scraped records | In D1 |
+| Process 010 (SEED) | Companies, slots, hunter data in D1 `slot_workbench` | DONE |
+| Process 300 (Blog/Recon) | `recon_name_titles` and `recon_linkedin_people` populated in `slot_workbench` | DONE (store-names-v2 ran) |
+| DataImpulse proxy | Residential proxy for Startpage queries | ACTIVE (Doppler creds) |
 
-### Downstream
+### Downstream (consumes this process's output)
 
 | Consumer | What It Needs |
 |----------|--------------|
-| Process 201 (Email Discovery) | Person with name but no verified email |
-| Process 202 (LinkedIn Discovery) | Person with name but no LinkedIn URL |
-| Process 100 (LCS Pipeline) | Filled slots with reachable contacts |
+| Process 201 (Email Discovery) | Slot with `has_name = 1` but `has_email = 0` |
+| Process 202 (LinkedIn Discovery) | Slot with `has_name = 1` but `has_linkedin = 0` |
+| Process 700 (Campaign Engine) | Slot with `readiness_tier = REACHABLE` |
 | Process 500 (Talent Flow) | Filled slots for movement detection |
 
 ---
 
 ## 9. SMOKE TEST
 
+_Executable verification. Numbered steps with expected output. Not prose — run these._
+
 ```
-1. GET people-worker-200.svg-outreach.workers.dev/health → status ok, empty_slots > 0
-2. POST /pass/0?limit=100 → expected: slots_filled > 0 from staging data
-3. POST /pass/1?limit=50 → expected: slots_filled from blog data
-4. Check fill rates: SELECT slot_type, SUM(CASE WHEN is_filled=1 THEN 1 ELSE 0 END) as filled, COUNT(*) as total FROM people_company_slot GROUP BY slot_type
-5. Check person quality: SELECT COUNT(*) FROM people_people_master WHERE full_name IS NOT NULL AND length(full_name) > 3
+1. python3 find-person-v3.py --limit 10 --dry-run
+   -> Expected: 10 slots loaded, gate chain runs, DRY-RUN printed for each UPDATE, no D1 writes
+
+2. python3 find-person-v3.py --limit 10
+   -> Expected: slots filled, output JSONL created, D1 writes > 0
+
+3. Verify Gate A fills:
+   SELECT COUNT(*) FROM slot_workbench WHERE person_source = 'recon_300' AND has_name = 1
+   -> Expected: > 0 if recon_name_titles data exists
+
+4. Verify readiness tier changed:
+   SELECT readiness_tier, COUNT(*) FROM slot_workbench WHERE has_name = 1 GROUP BY readiness_tier
+   -> Expected: NAME_ONLY rows exist (Process 200 only sets NAME_ONLY — REACHABLE is 201's job)
+
+5. Verify no orphan data:
+   SELECT COUNT(*) FROM slot_workbench WHERE has_name = 1 AND person_first_name IS NULL
+   -> Expected: 0
+
+6. Check CAPTCHA rate in output JSONL:
+   grep -c '"captcha"' output/find-person-v3-*.jsonl
+   -> Expected: < 10% of total lines
 ```
 
-**Three Primitives Check:**
-1. **Thing:** Do empty slots exist? Does staging/blog data exist?
-2. **Flow:** Does staging data reach the slot? Does blog data reach the slot?
-3. **Change:** Is the slot updated to is_filled=1 with a valid person_unique_id?
+**Three Primitives Check (Bedrock §1):**
+1. **Thing:** Do empty slots exist in slot_workbench? Does recon_name_titles data exist?
+2. **Flow:** Does the gate chain reach the slot? Does the UPDATE execute?
+3. **Change:** Is has_name set to 1? Is readiness_tier updated? Is person_source recorded?
+
+If any fails -> that's the break. Don't guess. Run the Troubleshooting Loop (Bedrock §6).
 
 ---
 
-## 10. LOGBOOK
+## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
 
-_No runs on v2 scope. Prior runs logged in v1 logbook below._
+_The BUILD->OPERATE gate. No analytics passing tolerance = stays on the dyno. You don't flip to OPERATE by saying "it seems to work." The numbers say it works, or they don't._
 
-### 2026-03-26 — v1 SEED fixes (slot infrastructure)
+_This section MUST be defined BEFORE build starts. No analytics spec -> no build authorization (BAR-187)._
 
-**ORBT:** BUILD
-**Trigger:** Manual
-**Result:** 98,112 slots created, people seeded from Neon. Fill rates: CEO ~60%, CFO ~55%, HR ~35%.
-**ORBT after:** BUILD
+_This is also the vendor scorecard. When you want to swap a vendor in the Snap-On Toolbox, pull the scorecard for the current one and say: beat these numbers._
+
+### Process Metrics
+
+_Define BEFORE build starts. These are the instruments on the dyno. Each metric is a constant (named, formatted). The value each run is the variable._
+
+| Metric | Unit | First Run = Baseline | Target (after baseline) | Tolerance |
+|--------|------|---------------------|------------------------|-----------|
+| Gate A fill rate | % | BASELINE | [set after first run] | [set after baseline] |
+| Gate B fill rate | % | BASELINE | [set after first run] | [set after baseline] |
+| Gate C fill rate | % | BASELINE | [set after first run] | [set after baseline] |
+| Overall hit rate | % | BASELINE | [set after first run] | [set after baseline] |
+| CAPTCHA rate | % | BASELINE | < 10% | > 10% = HALT |
+| LinkedIn capture rate | % | BASELINE | [set after first run] | [set after baseline] |
+| Cost per fill (Gate C) | $/slot | BASELINE | [set after first run] | [set after baseline] |
+
+### Tool Scorecard (per Snap-On sub-hub vendor)
+
+_Track per vendor so you can benchmark swaps. Tool is constant, vendor is variable, scorecard measures the variable._
+
+| Tool # | Vendor | Hit Rate | Cost/Unit | Error Rate | Latency | Period |
+|--------|--------|----------|-----------|------------|---------|--------|
+| — | DataImpulse (proxy) | — | — | — | — | No runs yet |
+| — | Startpage (search) | — | — | — | — | No runs yet |
+
+### Sigma Tracking (Bedrock §2)
+
+_After 3+ runs, track whether each metric is tightening, flat, or expanding._
+
+| Metric | Run 1 | Run 2 | Run 3 | Trend | Action |
+|--------|-------|-------|-------|-------|--------|
+| Gate A fill rate | — | — | — | — | — |
+| Gate B fill rate | — | — | — | — | — |
+| Gate C fill rate | — | — | — | — | — |
+| Overall hit rate | — | — | — | — | — |
+| CAPTCHA rate | — | — | — | — | — |
+
+_Tightening = real constant, process is stabilizing. Flat = phantom, something isn't learning. Expanding = broken, something upstream changed._
+
+### ORBT Gate Rule
+
+| From | To | Gate |
+|------|-----|------|
+| BUILD | OPERATE | All metrics within tolerance for 3 consecutive runs + **auditor sign-off** |
+| OPERATE | REPAIR | Any metric outside tolerance |
+| REPAIR | OPERATE | Fix applied + metric back within tolerance + **auditor verification** |
+| Any (Strike 3) | TROUBLESHOOT/TRAIN | Same failure pattern 3 times at fleet level -> AD |
+
+_The builder cannot certify its own work. The auditor MUST be a different engine than the builder. (Bedrock §8)_
 
 ---
 
-## 11. KNOWN ISSUES & STRIKE TRACKING
+## 11. EXECUTION TRACE (During BUILD)
 
-| # | Date | Issue | Root Cause | Fix | Strikes |
-|---|------|-------|-----------|-----|---------|
-| 1 | 2026-04-01 | 53 orphan slots (CTB-path IDs) | intake_promotion/wv_hr_pipeline used non-UUID IDs | Fixed in Neon — reset to is_filled=false | 1 |
-| 2 | 2026-04-01 | D1 had 358K slots (full universe) | SEED pulled from all Neon, not agent-scoped | Clean re-SEED from seed_views — 98,106 slots | 1 |
+_Append-only record of what happened during build/execution. This is NOT the logbook — the logbook is created only after auditor certification. This is the build journal that the auditor reviews._
+
+_Every run, every step, every result gets traced here. The auditor reads this to decide: certify or reject._
+
+### Entry Format (per step, per run)
+
+| Field | Description | Format | Required |
+|-------|-------------|--------|----------|
+| trace_id | Unique entry identifier | UUID | Yes |
+| run_id | Which execution run this belongs to | UUID (one per goal/batch) | Yes |
+| step | What was attempted | Station ID or action name | Yes |
+| target | Expected outcome (defined in §10 metrics) | Text — measurable | Yes |
+| actual | What happened | Text — measurable | Yes |
+| delta | Target vs actual | Number or text — the gap | Yes |
+| status | Step outcome | done / failed / skipped | Yes |
+| error_code | If failed — machine-readable error type | Text or null | If failed |
+| error_message | If failed — human-readable description | Text or null | If failed |
+| tools_used | Which Snap-On sub-hub tools were called | JSON array of tool numbers | Yes |
+| duration_ms | How long this step took | Integer (milliseconds) | Yes |
+| cost_cents | Cost of this step | Integer (cents) | Yes |
+| timestamp | When this happened | ISO-8601 | Yes |
+| signed_by | Who/what produced this entry | Agent name or "manual" | Yes |
+
+### Run Summary (per execution run)
+
+| Field | Description |
+|-------|-------------|
+| run_id | UUID for this execution run |
+| trigger | What started this run (cron / manual / inbox / upstream) |
+| orbt_at_start | ORBT state when run began |
+| steps_total | How many steps planned |
+| steps_completed | How many passed |
+| steps_failed | How many failed |
+| total_duration_ms | Wall clock time for full run |
+| total_cost_cents | Sum of all step costs |
+| errors | Count + summary of failures |
+| learnings | What was new — feeds to LBB |
+
+### Rules
+
+- **Append-only.** No edits. No deletions. Immutable.
+- **Every step gets a trace entry.** No step executes without logging.
+- **Trace exists during BUILD.** This is NOT the certified logbook.
+- **Auditor reviews the trace** to decide certification.
+- **Trace persists after certification** — it becomes evidence inside the logbook's birth certificate.
+
+---
+
+## 12. LOGBOOK (After Certification Only)
+
+_The aircraft's legal identity. Created ONLY when the auditor certifies the process (BUILD -> OPERATE). (Bedrock §8, logbook_schema.yaml)_
+
+**No logbook during BUILD.** The execution trace (§11) is the build journal. The logbook is born when the auditor signs off.
+
+### Rules (from logbook_schema.yaml)
+
+1. No logbook until aircraft is certified (auditor sign-off on BUILD)
+2. First entry is always the **birth certificate** (certification record)
+3. Append-only. No edits. No deletions. Immutable.
+4. Every entry must have all required fields. Incomplete entries rejected.
+5. Mechanic must log what they READ before starting (context_loaded)
+6. Auditor reviews logbook entries, not source code.
+7. The builder CANNOT be the auditor. Different engine required.
+
+### Birth Certificate (first entry — created by auditor at certification)
+
+| Field | Value |
+|-------|-------|
+| heir_ref | Full HEIR record for this process |
+| orbt_entered | BUILD |
+| orbt_exited | OPERATE |
+| action | "Process certified — airworthiness confirmed" |
+| authority | "Auditor certification per Tier 0 gate stack" |
+| gates_passed | { imo: true, ctb: true, circle: true } |
+| checklist_type | build_checklist |
+| checklist_items | Full build checklist with all items PASS |
+| execution_trace_ref | Link to §11 trace (evidence the auditor reviewed) |
+| signed_by | Auditor agent (MUST be different engine than builder) |
+| signed_at | Certification timestamp |
+
+### Subsequent Entries (during OPERATE, REPAIR, TROUBLESHOOT/TRAIN)
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| heir_ref | HEIR reference — hub_id, sub_hub, component | Yes |
+| orbt_entered | ORBT mode when work started | Yes |
+| orbt_exited | ORBT mode when work completed | Yes |
+| context_loaded | What was read before work began (heir, orbt, logbook, tier0) | Yes |
+| error_ref | Error table reference (null for maintenance) | If repair |
+| visit_path | MAINTENANCE or ERROR | Yes |
+| strike_count | Recurrence count for this error pattern | Yes |
+| action | What the mechanic did | Yes |
+| authority | Which Bedrock section authorized this | Yes |
+| gates_passed | { imo: bool, ctb: bool, circle: bool } | Yes |
+| checklist_type | operate / repair / troubleshoot_train | Yes |
+| signed_by | Who did the work | Yes |
+| signed_at | Immutable timestamp | Yes |
+
+---
+
+## 13. FLEET FAILURE REGISTRY & STRIKE TRACKING
+
+_Strike tracking at FLEET level, not per-goal. The same failure pattern appearing across multiple goals/runs triggers escalation. (Bedrock §6, §8)_
+
+### Failure Pattern Registry
+
+| Pattern ID | Station | Error Code | First Seen | Occurrences | Goals Affected | Strike Count | Status |
+|-----------|---------|-----------|-----------|-------------|---------------|-------------|--------|
+| FP-001 | find-person-v3 | SCHEMA_MISMATCH | 2026-04-01 | 1 | v1 rewrite | 0 | RESOLVED |
+
+_v1 used old schema (people_company_slot, people_people_master). Schema migrated to slot_workbench. Rewrote as v3 against slot_workbench._
+
+### Strike Rules
+
+- **Strike 1:** Repair. Fix at source. Log it.
+- **Strike 2:** Repair with scrutiny. Was root cause actually found?
+- **Strike 3:** **STOP.** Troubleshoot/Train. The problem isn't a broken part — it's a broken understanding.
+
+### Airworthiness Directive (Strike 3 output)
+
+_When strike 3 fires, the fix goes to ALL processes, not just the one that failed. This updates the template, not just one file._
+
+| Field | Value |
+|-------|-------|
+| AD Number | AD-[YYYY]-[NNN] |
+| Failure Pattern | FP-[NNN] — [description] |
+| Root Cause | [from Troubleshooting Loop §6] |
+| Fix Applied | [what changed] |
+| Scope | ALL processes / [specific silo] / [specific station] |
+| Template Updated | Yes / No — if Yes, what section |
+| Issued By | [mechanic + auditor sign-off] |
+| Issued At | [timestamp] |
+
+**AD issuance requires:**
+1. Root cause identified (Troubleshooting Loop §6 complete)
+2. Fix tested on the failing process
+3. Fix verified by auditor (different engine)
+4. Template updated if the fix is structural
+5. All affected processes notified/updated
+
+---
+
+## 14. SESSION LOG
+
+_Every session that touches this process. Links to LBB for detail._
+
+| Date | What Was Done | LBB Record |
+|------|---------------|-----------|
+| 2026-03-29 | Initial PROCESS.md created (v1 format) | none |
+| 2026-04-01 | Full rewrite to v3 against slot_workbench, C&V audit, gate chain documented | none |
+| 2026-04-01 | Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | none |
 
 ---
 
@@ -224,6 +525,9 @@ _No runs on v2 scope. Prior runs logged in v1 logbook below._
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-04-01 |
-| Version | 2.0.0 |
-| Template Version | 2.0.0 |
-| Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
+| Version | 4.0.0 |
+| Template Version | 4.0.0 |
+| Governing Engine | imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md (parent repo — Barton-Processes inherits) |
+| Logbook Schema | law/logbook_schema.yaml |
+| OSAM Authority | barton-outreach-core/doctrine/OSAM.md |
+| Data Flow | factory/outreach/200-people-worker/DATA_FLOW.md |

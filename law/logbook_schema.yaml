@@ -1,0 +1,42 @@
+# Logbook Schema — Barton-Processes
+# Referenced by PROCESS_TEMPLATE.md v4.0.0 §12
+version: "1.0.0"
+
+rules:
+  - "No logbook until aircraft is certified (auditor sign-off on BUILD)"
+  - "First entry is always the birth certificate"
+  - "Append-only. No edits. No deletions. Immutable."
+  - "Every entry must have all required fields. Incomplete entries rejected."
+  - "Mechanic must log what they READ before starting (context_loaded)"
+  - "Auditor reviews logbook entries, not source code"
+  - "The builder CANNOT be the auditor. Different engine required."
+
+birth_certificate:
+  required_fields:
+    - heir_ref
+    - orbt_entered
+    - orbt_exited
+    - action
+    - authority
+    - gates_passed
+    - checklist_type
+    - checklist_items
+    - execution_trace_ref
+    - signed_by
+    - signed_at
+
+subsequent_entry:
+  required_fields:
+    - heir_ref
+    - orbt_entered
+    - orbt_exited
+    - context_loaded
+    - error_ref
+    - visit_path
+    - strike_count
+    - action
+    - authority
+    - gates_passed
+    - checklist_type
+    - signed_by
+    - signed_at

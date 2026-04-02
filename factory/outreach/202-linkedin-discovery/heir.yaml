@@ -1,0 +1,9 @@
+heir:
+  hub_id: "outreach"
+  sub_hub: "linkedin-discovery"
+  component: "202-linkedin-discovery"
+  process_id: "PROC-202"
+  business_silo: "svg-agency"
+  ctb_position: "factory/outreach/202-linkedin-discovery"
+  parent: "factory/outreach"
+  created_at: "2026-04-02"
