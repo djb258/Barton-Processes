@@ -53,9 +53,15 @@
    - [ ] Spot-check: pick 3 QC numbers, run the queries independently, verify they match
    - [ ] If ANY number doesn't reproduce → reject entire scorecard, flag QC agent for review
 
-5. **Decide**
-   - ALL checkboxes checked with evidence → **CERTIFY**
-   - ANY checkbox missing or evidence insufficient → **REJECT** with diagnostic
+5. **Dave's Sign-Off Check**
+   - [ ] TS scorecard reviewed by Dave Barton (not any human — specifically Dave)?
+   - [ ] Tolerance set and signed by Dave for each comparator?
+   - [ ] Dave's approval documented with date?
+   - No sign-off = CANNOT CERTIFY. Stop here. Return to TS.
+
+6. **Decide**
+   - ALL checkboxes checked with evidence AND Dave's sign-off present → **CERTIFY**
+   - ANY checkbox missing OR evidence insufficient OR no Dave sign-off → **REJECT** with diagnostic
 
 ### Output
 - **CERTIFIED** — ORBT transitions to OPERATE. Birth certificate written to logbook.

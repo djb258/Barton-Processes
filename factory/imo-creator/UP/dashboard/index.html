@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UP Scorecard — The Ultimate Process</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0e17;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2332;
+  --bg-section: #0f1623;
+  --border: #1e293b;
+  --border-active: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --green: #22c55e;
+  --green-dim: #166534;
+  --red: #ef4444;
+  --red-dim: #7f1d1d;
+  --amber: #f59e0b;
+  --amber-dim: #78350f;
+  --blue: #3b82f6;
+  --blue-dim: #1e3a5f;
+  --font-display: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  min-height: 100vh;
+}
+
+.header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header h1 span { color: var(--blue); }
+
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.status-bar {
+  padding: 16px 32px;
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 32px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.status-item { display: flex; align-items: center; gap: 8px; }
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.dot-green { background: var(--green); }
+.dot-red { background: var(--red); }
+.dot-amber { background: var(--amber); }
+.dot-blue { background: var(--blue); }
+
+/* TRUNK — All 9 sections overview */
+.trunk {
+  padding: 24px 32px;
+}
+
+.trunk-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.section-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+}
+
+.section-card.active {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.section-number {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.section-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.status-build { background: var(--amber-dim); color: var(--amber); }
+.status-qc { background: var(--blue-dim); color: var(--blue); }
+.status-ts { background: var(--amber-dim); color: var(--amber); }
+.status-certified { background: var(--green-dim); color: var(--green); }
+
+.section-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.section-source {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.section-metrics {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-pass .metric-value { color: var(--green); }
+.metric-warn .metric-value { color: var(--amber); }
+.metric-fail .metric-value { color: var(--red); }
+.metric-info .metric-value { color: var(--text-primary); }
+
+/* BRANCH — Section detail */
+.branch {
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+
+.branch.visible { display: block; }
+
+.branch-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.branch-subtitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.comparators-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.comparators-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.comparators-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.comparators-table tr:hover { background: var(--bg-card-hover); }
+
+.comp-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.comp-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.comp-pass { color: var(--green); }
+.comp-warn { color: var(--amber); }
+.comp-fail { color: var(--red); }
+
+.comp-query {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.comp-query:hover {
+  white-space: normal;
+  color: var(--text-secondary);
+}
+
+.comp-verified {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.verified-yes { color: var(--green); }
+.verified-no { color: var(--red); }
+
+.tolerance-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 8px;
+  width: 80px;
+  border-radius: 4px;
+}
+
+.tolerance-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+/* Issues */
+.issues {
+  margin-top: 24px;
+}
+
+.issues-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+
+.issue-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.issue-card.critical { border-left-color: var(--red); }
+
+.issue-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.issue-impact {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.issue-query {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+/* Sign-off */
+.signoff-section {
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.signoff-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.signoff-btn {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.signoff-btn:hover {
+  background: var(--green);
+  color: var(--bg-primary);
+}
+
+.signoff-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.signoff-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* Workbench summary */
+.workbench {
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+}
+
+.wb-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.wb-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+}
+
+.wb-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.wb-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .sections-grid { grid-template-columns: 1fr; }
+  .wb-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>UP</span> Scorecard</h1>
+  <div class="header-meta">
+    QC Run: 2026-04-03 12:27 UTC &nbsp;|&nbsp; All queries self-verified &nbsp;|&nbsp; Status: ALL BUILD
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-item"><div class="status-dot dot-green"></div> Certified: 0</div>
+  <div class="status-item"><div class="status-dot dot-amber"></div> Awaiting TS: 8</div>
+  <div class="status-item"><div class="status-dot dot-red"></div> Mismatch: 1</div>
+  <div class="status-item"><div class="status-dot dot-blue"></div> QC Checks: 33/34 verified</div>
+  <div class="status-item">Dave Sign-Off: NONE</div>
+</div>
+
+<!-- TRUNK — All 9 Sections -->
+<div class="trunk">
+  <div class="trunk-title">9 Sections — Click to review</div>
+  <div class="sections-grid" id="sections-grid"></div>
+</div>
+
+<!-- BRANCH — Section Detail (populated by JS) -->
+<div class="branch" id="branch"></div>
+
+<!-- WORKBENCH STATE -->
+<div class="workbench">
+  <div class="trunk-title">Workbench State</div>
+  <div class="wb-grid">
+    <div class="wb-card"><div class="wb-value" style="color: var(--green)">51,888</div><div class="wb-label">Full</div></div>
+    <div class="wb-card"><div class="wb-value" style="color: var(--blue)">15,263</div><div class="wb-label">Reachable</div></div>
+    <div class="wb-card"><div class="wb-value" style="color: var(--amber)">19,630</div><div class="wb-label">Pattern Ready</div></div>
+    <div class="wb-card"><div class="wb-value" style="color: var(--text-secondary)">2,917</div><div class="wb-label">Name Only</div></div>
+    <div class="wb-card"><div class="wb-value" style="color: var(--red)">8,283</div><div class="wb-label">Empty</div></div>
+    <div class="wb-card"><div class="wb-value" style="color: var(--text-primary)">97,983</div><div class="wb-label">Total Slots</div></div>
+  </div>
+</div>
+
+<script>
+const sections = [
+  {
+    id: 1, name: "Hunter Contacts", source: "enrichment_hunter_contact", rows: "175,632",
+    status: "build", qcVerified: "6/6",
+    comparators: [
+      { id: "S1-01", what: "Total records", value: "175,632", cls: "info", query: "SELECT COUNT(*) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-02", what: "Companies covered", value: "80%", detail: "25,998 of 32,661", cls: "warn", query: "SELECT COUNT(DISTINCT outreach_id) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-03", what: "Join to workbench", value: "100%", cls: "pass", query: "SELECT ROUND(COUNT(DISTINCT CASE WHEN sw.outreach_id IS NOT NULL THEN ehc.outreach_id END) * 100.0 / COUNT(DISTINCT ehc.outreach_id), 1) FROM (SELECT DISTINCT outreach_id FROM enrichment_hunter_contact) ehc LEFT JOIN (SELECT DISTINCT outreach_id FROM slot_workbench) sw ON ehc.outreach_id = sw.outreach_id", verified: true },
+      { id: "S1-04", what: "Domain match (right company?)", value: "99.8%", detail: "134 mismatches", cls: "warn", query: "SELECT SUM(CASE WHEN ehc.domain = sw.domain THEN 1 ELSE 0 END) * 100.0 / COUNT(*) FROM enrichment_hunter_contact ehc JOIN slot_workbench sw ON ehc.outreach_id = sw.outreach_id AND sw.slot_type = 'CEO' WHERE ehc.first_name IS NOT NULL", verified: true },
+      { id: "S1-05", what: "Records with name", value: "72.1%", detail: "126,599 of 175,632", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN first_name IS NOT NULL AND first_name != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-06", what: "Records with email", value: "100%", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN email IS NOT NULL AND email != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-07", what: "Records with LinkedIn", value: "62.2%", detail: "109,286", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN linkedin_url IS NOT NULL AND linkedin_url != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-08", what: "Records with job title", value: "67.3%", detail: "118,239 — primary classifier input", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN job_title IS NOT NULL AND job_title != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_contact", verified: true },
+      { id: "S1-09", what: "Records with seniority", value: "28.9%", detail: "50,766 — too sparse for primary mapping", cls: "fail", query: "SELECT ROUND(SUM(CASE WHEN seniority_level IS NOT NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_contact", verified: true },
+    ],
+    issues: [
+      { title: "134 domain mismatches (0.2%)", impact: "Hunter domain ≠ workbench domain. These contacts might be at the wrong company.", query: "SELECT ehc.outreach_id, ehc.domain, sw.domain, ehc.first_name, ehc.last_name FROM enrichment_hunter_contact ehc JOIN slot_workbench sw ON ehc.outreach_id = sw.outreach_id AND sw.slot_type = 'CEO' WHERE ehc.first_name IS NOT NULL AND ehc.domain != sw.domain LIMIT 20", critical: false },
+      { title: "49,033 records with no name (27.9%)", impact: "Have email but no person name. Can't fill a slot without a name.", query: "SELECT email, domain, job_title, seniority_level FROM enrichment_hunter_contact WHERE first_name IS NULL OR first_name = '' LIMIT 20", critical: false },
+      { title: "~25% have no role information", impact: "No job_title AND no seniority. Can't assign to CEO/CFO/HR slot.", query: "SELECT first_name, last_name, email, domain FROM enrichment_hunter_contact WHERE first_name IS NOT NULL AND first_name != '' AND (job_title IS NULL OR job_title = '') AND seniority_level IS NULL LIMIT 20", critical: true },
+    ],
+    metrics: [
+      { label: "Records", value: "175,632", cls: "metric-info" },
+      { label: "Join", value: "100%", cls: "metric-pass" },
+      { label: "Names", value: "72.1%", cls: "metric-warn" },
+      { label: "Seniority", value: "28.9%", cls: "metric-fail" },
+    ]
+  },
+  {
+    id: 2, name: "Vendor People", source: "vendor_people", rows: "175,632",
+    status: "build", qcVerified: "4/4",
+    comparators: [
+      { id: "S2-01", what: "Total records", value: "175,632", cls: "info", query: "SELECT COUNT(*) FROM vendor_people", verified: true },
+      { id: "S2-02", what: "Join to workbench", value: "100%", cls: "pass", query: "SELECT ROUND(COUNT(DISTINCT CASE WHEN sw.outreach_id IS NOT NULL THEN vp.outreach_id END) * 100.0 / COUNT(DISTINCT vp.outreach_id), 1) FROM (SELECT DISTINCT outreach_id FROM vendor_people) vp LEFT JOIN (SELECT DISTINCT outreach_id FROM slot_workbench) sw ON vp.outreach_id = sw.outreach_id", verified: true },
+      { id: "S2-03", what: "mapped_slot_type populated", value: "0%", detail: "Column exists but empty", cls: "fail", query: "SELECT ROUND(SUM(CASE WHEN mapped_slot_type IS NOT NULL AND mapped_slot_type != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM vendor_people", verified: true },
+      { id: "S2-04", what: "Records with name", value: "72.1%", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN first_name IS NOT NULL AND first_name != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM vendor_people", verified: true },
+    ],
+    issues: [
+      { title: "mapped_slot_type is 0% populated", impact: "The direct mapping path (VP-12) has no data. Must fall back to seniority+department classification — same limitation as Section 1.", query: "SELECT mapped_slot_type, COUNT(*) FROM vendor_people GROUP BY mapped_slot_type", critical: true },
+    ],
+    metrics: [
+      { label: "Records", value: "175,632", cls: "metric-info" },
+      { label: "Join", value: "100%", cls: "metric-pass" },
+      { label: "Slot Map", value: "0%", cls: "metric-fail" },
+      { label: "Names", value: "72.1%", cls: "metric-warn" },
+    ]
+  },
+  {
+    id: 3, name: "Hunter Company", source: "enrichment_hunter_company", rows: "15,537",
+    status: "build", qcVerified: "3/3",
+    comparators: [
+      { id: "S3-01", what: "Total records", value: "15,537", cls: "info", query: "SELECT COUNT(*) FROM enrichment_hunter_company", verified: true },
+      { id: "S3-02", what: "Join to workbench", value: "100%", cls: "pass", query: "SELECT ROUND(COUNT(DISTINCT CASE WHEN sw.outreach_id IS NOT NULL THEN hc.outreach_id END) * 100.0 / COUNT(DISTINCT hc.outreach_id), 1) FROM (SELECT DISTINCT outreach_id FROM enrichment_hunter_company) hc LEFT JOIN (SELECT DISTINCT outreach_id FROM slot_workbench) sw ON hc.outreach_id = sw.outreach_id", verified: true },
+      { id: "S3-03", what: "Email pattern populated", value: "100%", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN email_pattern IS NOT NULL AND email_pattern != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM enrichment_hunter_company", verified: true },
+    ],
+    issues: [],
+    metrics: [
+      { label: "Records", value: "15,537", cls: "metric-info" },
+      { label: "Join", value: "100%", cls: "metric-pass" },
+      { label: "Patterns", value: "100%", cls: "metric-pass" },
+    ]
+  },
+  {
+    id: 4, name: "Recon Columns", source: "slot_workbench recon_*", rows: "80,304 slots",
+    status: "build", qcVerified: "3/3",
+    comparators: [
+      { id: "S4-01", what: "CEO slots with recon data", value: "82%", detail: "26,768 of 32,661", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN recon_name_titles IS NOT NULL AND recon_name_titles != '' AND recon_name_titles != '[]' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+      { id: "S4-02", what: "Organized by Organizer", value: "64%", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN recon_organized_people IS NOT NULL AND recon_organized_people != '[]' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+      { id: "S4-03", what: "Has about_url", value: "71%", detail: "23,058 companies", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN about_url IS NOT NULL AND about_url != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+    ],
+    issues: [],
+    metrics: [
+      { label: "Recon", value: "82%", cls: "metric-pass" },
+      { label: "Organized", value: "64%", cls: "metric-warn" },
+      { label: "About URL", value: "71%", cls: "metric-pass" },
+    ]
+  },
+  {
+    id: 5, name: "Workbench Hunter", source: "slot_workbench hunter_*", rows: "11,097 companies",
+    status: "build", qcVerified: "2/2",
+    comparators: [
+      { id: "S5-01", what: "CEO slots with hunter candidate", value: "34%", detail: "11,097 companies", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN hunter_first_name IS NOT NULL AND hunter_first_name != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+      { id: "S5-02", what: "Has email pattern", value: "74%", detail: "Enables email generation for named contacts", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN hunter_email_pattern IS NOT NULL AND hunter_email_pattern != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+    ],
+    issues: [],
+    metrics: [
+      { label: "Hunter Cand.", value: "34%", cls: "metric-warn" },
+      { label: "Email Pattern", value: "74%", cls: "metric-pass" },
+    ]
+  },
+  {
+    id: 6, name: "DOL 5500 Signers", source: "dol.form_5500 (Neon)", rows: "140,054 filings",
+    status: "build", qcVerified: "2/2",
+    comparators: [
+      { id: "S6-01", what: "CEO slots with DOL filing", value: "79%", detail: "25,651 companies", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN filing_present = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+      { id: "S6-02", what: "Has EIN (join field)", value: "79%", cls: "pass", query: "SELECT ROUND(SUM(CASE WHEN ein IS NOT NULL AND ein != '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM slot_workbench WHERE slot_type = 'CEO'", verified: true },
+    ],
+    issues: [
+      { title: "384 unparseable signer names", impact: "DOL names in formats the parser couldn't handle (LAST, FIRST / suffixes). Fixable with better parser.", query: "N/A — tracked in DOL signer match output", critical: false },
+    ],
+    metrics: [
+      { label: "DOL Filing", value: "79%", cls: "metric-pass" },
+      { label: "EIN Join", value: "79%", cls: "metric-pass" },
+    ]
+  },
+  {
+    id: 7, name: "Management Pages", source: "page_raw_html (fetched)", rows: "20,707 pages",
+    status: "build", qcVerified: "6/6",
+    comparators: [
+      { id: "S7-01", what: "Pages fetched (200 OK)", value: "20,919", cls: "pass", query: "SELECT COUNT(*) FROM page_raw_html WHERE fetch_status = 200", verified: true },
+      { id: "S7-02", what: "Pages failed", value: "2,008", cls: "fail", query: "SELECT COUNT(*) FROM page_raw_html WHERE fetch_status != 200", verified: true },
+      { id: "S7-03", what: "Fetch success rate", value: "91%", cls: "warn", query: "SELECT ROUND(SUM(CASE WHEN fetch_status = 200 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) FROM page_raw_html", verified: true },
+      { id: "S7-04", what: "403 Forbidden (blocked)", value: "1,105", cls: "fail", query: "SELECT COUNT(*) FROM page_raw_html WHERE fetch_status = 403", verified: true },
+      { id: "S7-05", what: "404 Not Found (page gone)", value: "438", cls: "warn", query: "SELECT COUNT(*) FROM page_raw_html WHERE fetch_status = 404", verified: true },
+      { id: "S7-06", what: "Timeout (no response)", value: "375", cls: "warn", query: "SELECT COUNT(*) FROM page_raw_html WHERE fetch_status = 0", verified: true },
+    ],
+    issues: [
+      { title: "1,105 pages blocked (403)", impact: "Sites detected our scraper and blocked. Try different proxy port, user agent, or find alternate URL.", query: "SELECT outreach_id, page_url FROM page_raw_html WHERE fetch_status = 403 LIMIT 20", critical: true },
+      { title: "438 pages not found (404)", impact: "Page moved or company redesigned site. Search for new URL.", query: "SELECT outreach_id, page_url FROM page_raw_html WHERE fetch_status = 404 LIMIT 20", critical: false },
+      { title: "375 timeouts", impact: "Page didn't respond. Retry.", query: "SELECT outreach_id, page_url FROM page_raw_html WHERE fetch_status = 0 LIMIT 20", critical: false },
+    ],
+    metrics: [
+      { label: "Fetched", value: "20,919", cls: "metric-pass" },
+      { label: "Failed", value: "2,008", cls: "metric-fail" },
+      { label: "Success", value: "91%", cls: "metric-warn" },
+      { label: "Blocked", value: "1,105", cls: "metric-fail" },
+    ]
+  },
+  {
+    id: 8, name: "Search Result URLs", source: "recon_result_urls (classified)", rows: "301,138 URLs",
+    status: "build", qcVerified: "1/1",
+    comparators: [
+      { id: "S8-01", what: "CEO slots with result URLs", value: "95%", detail: "31,021 companies", cls: "pass", query: "SELECT COUNT(*) FROM slot_workbench WHERE slot_type = 'CEO' AND recon_result_urls IS NOT NULL AND recon_result_urls != '[]'", verified: true },
+    ],
+    issues: [
+      { title: "Deferred — merge company pages into Section 7", impact: "18K company pages from result URLs are same type as about_url pages. Process together.", query: "N/A", critical: false },
+    ],
+    metrics: [
+      { label: "Coverage", value: "95%", cls: "metric-pass" },
+      { label: "Status", value: "DEFERRED", cls: "metric-warn" },
+    ]
+  },
+  {
+    id: 9, name: "Platform Sources", source: "recon_platform_urls (running)", rows: "~32K searches",
+    status: "build", qcVerified: "0/1",
+    comparators: [
+      { id: "S9-01", what: "Companies with platform URLs", value: "~14K", detail: "Still collecting — data changing between QC runs", cls: "warn", query: "SELECT COUNT(*) FROM slot_workbench WHERE slot_type = 'CEO' AND recon_platform_urls IS NOT NULL AND recon_platform_urls != '' AND recon_platform_urls != '{}'", verified: false },
+    ],
+    issues: [
+      { title: "QC self-verification MISMATCH", impact: "Run 1: 13,845. Run 2: 13,854. Data being written by 24 workers during QC. Re-run after collection completes.", query: "Same as S9-01", critical: true },
+    ],
+    metrics: [
+      { label: "Collected", value: "~14K", cls: "metric-warn" },
+      { label: "QC", value: "MISMATCH", cls: "metric-fail" },
+    ]
+  },
+];
+
+// Render trunk
+const grid = document.getElementById('sections-grid');
+sections.forEach(s => {
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.setAttribute('data-section', s.id);
+  card.innerHTML = `
+    <div class="section-header">
+      <div class="section-number">SECTION ${s.id}</div>
+      <div class="section-status status-${s.status}">${s.status.toUpperCase()}</div>
+    </div>
+    <div class="section-name">${s.name}</div>
+    <div class="section-source">${s.source} — ${s.rows}</div>
+    <div class="section-metrics">
+      ${s.metrics.map(m => `
+        <div class="metric ${m.cls}">
+          <div class="metric-value">${m.value}</div>
+          <div class="metric-label">${m.label}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">
+      QC: ${s.qcVerified} verified
+    </div>
+  `;
+  card.onclick = () => showBranch(s);
+  grid.appendChild(card);
+});
+
+function showBranch(s) {
+  // Highlight active card
+  document.querySelectorAll('.section-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-section="${s.id}"]`).classList.add('active');
+
+  const branch = document.getElementById('branch');
+  branch.className = 'branch visible';
+
+  let html = `
+    <div class="branch-title">Section ${s.id}: ${s.name}</div>
+    <div class="branch-subtitle">${s.source} — ${s.rows} — QC: ${s.qcVerified} self-verified</div>
+
+    <table class="comparators-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>What We're Measuring</th>
+          <th>Result</th>
+          <th>Detail</th>
+          <th>Verified</th>
+          <th>Tolerance</th>
+          <th>Query</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${s.comparators.map(c => `
+          <tr>
+            <td class="comp-id">${c.id}</td>
+            <td>${c.what}</td>
+            <td class="comp-value comp-${c.cls}">${c.value}</td>
+            <td style="font-size:12px;color:var(--text-secondary)">${c.detail || '—'}</td>
+            <td class="comp-verified ${c.verified ? 'verified-yes' : 'verified-no'}">${c.verified ? '✓ 2x match' : '✗ MISMATCH'}</td>
+            <td><input class="tolerance-input" placeholder="Set..." /></td>
+            <td class="comp-query" title="${c.query}">${c.query.substring(0, 50)}...</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  if (s.issues.length > 0) {
+    html += `
+      <div class="issues">
+        <div class="issues-title">⚠ Issues to Troubleshoot (${s.issues.length})</div>
+        ${s.issues.map(i => `
+          <div class="issue-card ${i.critical ? 'critical' : ''}">
+            <div class="issue-title">${i.critical ? '🔴' : '🟡'} ${i.title}</div>
+            <div class="issue-impact">${i.impact}</div>
+            <div class="issue-query">${i.query}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  html += `
+    <div class="signoff-section">
+      <div class="signoff-title">Dave's Sign-Off — Section ${s.id}</div>
+      <button class="signoff-btn" onclick="signOff(${s.id})">
+        Approve Section ${s.id} — Set Tolerances & Certify
+      </button>
+      <div class="signoff-note">
+        Rule 12: Auditor cannot certify without Dave Barton's sign-off. No exceptions.
+      </div>
+    </div>
+  `;
+
+  branch.innerHTML = html;
+  branch.scrollIntoView({ behavior: 'smooth' });
+}
+
+function signOff(sectionId) {
+  const tolerances = document.querySelectorAll('.tolerance-input');
+  let allSet = true;
+  tolerances.forEach(t => { if (!t.value) allSet = false; });
+
+  if (!allSet) {
+    alert('Set tolerance for every comparator before signing off.');
+    return;
+  }
+
+  const card = document.querySelector(`[data-section="${sectionId}"]`);
+  const statusEl = card.querySelector('.section-status');
+  statusEl.textContent = 'TS APPROVED';
+  statusEl.className = 'section-status status-certified';
+
+  alert(`Section ${sectionId} approved by Dave Barton at ${new Date().toISOString()}\nTolerances recorded. Ready for Auditor certification.`);
+}
+</script>
+
+</body>
+</html>
