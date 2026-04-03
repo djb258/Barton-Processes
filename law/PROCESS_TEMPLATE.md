@@ -128,7 +128,41 @@ _The plumbing. Which tables this process reads, writes, joins. What's forbidden.
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock §2)
+## 6. DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip. This is how the Bedrock gets applied to this process's data. Every process must complete all three steps. No exceptions._
+
+### Step 1: DEFINE (Build the Key)
+
+_Run C&V on every data element this process touches. Each element gets a description, unique ID, and format. The mathematical equation validates: P(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1. Elements that survive are constants. Elements that don't are variables. Unidentified elements are stored as unidentified — not discarded._
+
+| Element | ID | Format | Description | Constant or Variable |
+|---------|-----|--------|-------------|---------------------|
+| [element] | [unique ID] | [format] | [description] | [C / V] |
+
+### Step 2: MAP (Connect Key to Structure)
+
+_Once every element is defined, map each one to the target structure. Source column → target column. Cannot execute without Step 1 complete._
+
+| Source (this process) | Target (our structure) | Transform |
+|----------------------|----------------------|-----------|
+| [source element ID] | [target column] | [direct / classify / parse] |
+
+### Step 3: JOIN (Path to Spine)
+
+_How does this process's data connect to the spine? What is the join key? Direct, indirect, or fuzzy? Cannot execute without Step 2 complete._
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| [source field] → [spine field] | [direct / indirect / fuzzy] | [how the join works] |
+
+_If no join path exists, back-propagate to Step 1 — the key is missing a field. The Circle closes._
+
+---
+
+## 7. CONSTANTS & VARIABLES (Bedrock §2)
+
+_Summary of what Step 1 (Define) produced. The constants and variables identified by running the equation._
 
 ### Constants (structure — never changes)
 
@@ -148,7 +182,7 @@ _The values that fill the constants. Different every execution._
 
 ---
 
-## 7. STOP CONDITIONS
+## 8. STOP CONDITIONS (Bedrock §6)
 
 _When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviation Model (Bedrock §8)._
 
@@ -163,7 +197,7 @@ _When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviatio
 
 ---
 
-## 8. DEPENDENCIES
+## 9. DEPENDENCIES
 
 ### Upstream (must exist before this runs)
 
@@ -179,7 +213,7 @@ _When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviatio
 
 ---
 
-## 9. SMOKE TEST
+## 10. SMOKE TEST
 
 _Executable verification. Numbered steps with expected output. Not prose — run these._
 
@@ -199,7 +233,7 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
+## 11. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
 
 _The BUILD→OPERATE gate. No analytics passing tolerance = stays on the dyno. You don't flip to OPERATE by saying "it seems to work." The numbers say it works, or they don't._
 
@@ -253,7 +287,7 @@ _The builder cannot certify its own work. The auditor MUST be a different engine
 
 ---
 
-## 11. EXECUTION TRACE (During BUILD)
+## 12. EXECUTION TRACE (During BUILD)
 
 _Append-only record of what happened during build/execution. This is NOT the logbook — the logbook is created only after auditor certification. This is the build journal that the auditor reviews._
 
@@ -303,7 +337,7 @@ _Every run, every step, every result gets traced here. The auditor reads this to
 
 ---
 
-## 12. LOGBOOK (After Certification Only)
+## 13. LOGBOOK (After Certification Only)
 
 _The aircraft's legal identity. Created ONLY when the auditor certifies the process (BUILD → OPERATE). (Bedrock §8, logbook_schema.yaml)_
 
@@ -355,7 +389,7 @@ _The aircraft's legal identity. Created ONLY when the auditor certifies the proc
 
 ---
 
-## 13. FLEET FAILURE REGISTRY & STRIKE TRACKING
+## 14. FLEET FAILURE REGISTRY & STRIKE TRACKING
 
 _Strike tracking at FLEET level, not per-goal. The same failure pattern appearing across multiple goals/runs triggers escalation. (Bedrock §6, §8)_
 
@@ -395,7 +429,7 @@ _When strike 3 fires, the fix goes to ALL processes, not just the one that faile
 
 ---
 
-## 14. SESSION LOG
+## 15. SESSION LOG
 
 _Every session that touches this process. Links to LBB for detail._
 
@@ -412,8 +446,8 @@ _Every session that touches this process. Links to LBB for detail._
 | Created | [date] |
 | Last Modified | [date] |
 | Version | [semver] |
-| Template Version | 4.0.0 |
-| Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md |
+| Template Version | 5.0.0 |
+| Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |
 | Logbook Schema | law/logbook_schema.yaml |
 | OSAM Authority | [path to hub OSAM] |
 | Data Flow | [path to DATA_FLOW.md] |
