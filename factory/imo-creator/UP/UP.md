@@ -188,6 +188,8 @@ QC scorecard feeds back to Orchestrator. If zeros exist, Orchestrator dispatches
 7. **Back-propagation is allowed.** J can send back to D via Orchestrator. The Circle closes.
 8. **HEIR and ORBT are automatic.** The Auditor verifies they exist. If missing, reject.
 9. **Every element gets three properties.** Description, Unique ID, Format. No exceptions. For LLMs and humans alike. Missing any one = not defined. The Auditor rejects anything without all three.
+10. **All evidence must be reproducible.** Every QC scorecard includes the ACTUAL QUERIES that produced the numbers — not just the results. Any human can run the same query independently and get the same number. If they can't reproduce it, the evidence is invalid. LLMs can and do fabricate results. The query IS the proof. No query, no evidence. No evidence, no certification.
+11. **LLMs lie.** This is a known risk, not a theoretical one. An LLM can generate perfect-looking scorecards with fabricated numbers. The guard rail is reproducibility — the human runs the query, gets the same number, or the scorecard is rejected. TS exists specifically because the human must verify, not trust.
 
 ---
 

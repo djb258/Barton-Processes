@@ -37,11 +37,23 @@
 - Recommendation — if zeros exist, which agent needs to rerun
 - Evidence: actual numbers from actual data, not self-reported claims
 
+### Scorecard Format (Non-Negotiable)
+
+Every QC scorecard MUST include:
+1. **The result** — the actual number (e.g., 99.8% domain match)
+2. **The query** — the exact SQL/command that produced the number
+3. **Reproducibility** — any human can run the same query and get the same result
+
+**No query = no evidence. No evidence = no scorecard. No scorecard = TS has nothing to review.**
+
+LLMs can and do fabricate results. The query is the proof. If the human runs the query and gets a different number, the scorecard is invalid and the QC agent's output is rejected.
+
 ### What This Agent Does NOT Do
 - Does not fix problems. Reports them.
 - Does not rerun agents. Recommends to Orchestrator.
 - Does not certify. That's the Auditor.
 - Does not interpret. The equation runs. The numbers speak.
+- Does not summarize without queries. Every number has a query behind it.
 
 ### Operating Instructions
 - TIER0_MATHEMATICAL_PRINCIPLE.md — the equation, the diagnostic vector

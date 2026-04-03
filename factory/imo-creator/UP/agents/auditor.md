@@ -46,6 +46,12 @@
    - [ ] ORBT set? State tracked?
    - [ ] Execution trace written? Every step logged?
    - [ ] Evidence behind every checkbox? Not self-reported claims?
+   - [ ] Every QC number has a reproducible query behind it?
+   - [ ] Human-set tolerance documented with date and who set it?
+
+5. **LLM Fabrication Check**
+   - [ ] Spot-check: pick 3 QC numbers, run the queries independently, verify they match
+   - [ ] If ANY number doesn't reproduce → reject entire scorecard, flag QC agent for review
 
 5. **Decide**
    - ALL checkboxes checked with evidence → **CERTIFY**
