@@ -164,16 +164,55 @@ people.linkedin_snapshots.person_id (run_month = target)
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock §2)
+## 6. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+```
+
+### Step-Level Comparators and Tolerances
+
+**Step 1 — Dependency Gate:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | snapshot_count (inverted: 1 if 0) | Thing | Are snapshots available for target month? | ε_k (zero tolerance — hard stop) | 1 |
+
+**Step 2 — Movement Detection:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_2 | detection_rate (inverted: 1-rate) | Change | % of snapshots with movement detected | 0.95 (≥5% should show movement in any given month) | 1 |
+
+**Step 3 — Signal Classification:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | unclassified_rate | Change | % of movements not mapping to TF-01 or TF-02 | 0.01 (≤1% — classification is deterministic) | 1 |
+
+**Step 4 — Signal Write:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_4 | write_failure_count | Thing | Failed signal inserts | ε_k | 1 |
+| C_5 | dedup_collision_rate | Flow | % of signals hitting ON CONFLICT | 0.50 (≤50% — reruns will dedup) | 1 |
+
+**Process-Level:** `P_500(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..5}`
 
 ### Constants (structure — never changes)
-- Signal types: TF-01 EXECUTIVE_JOINED (magnitude 10, 90 day expiry), TF-02 EXECUTIVE_LEFT (magnitude 8, 90 day expiry)
-- Executive slot filter: CEO, CFO, HR only
-- Classification rules: COMPANY_CHANGED or BOTH_CHANGED = TF-02. TITLE_CHANGED = TF-01.
-- Dependency gate: Process 200 must have snapshots for target month. Zero snapshots = hard stop.
-- Dedup key: (outreach_id, signal_code, run_month) — one signal per company per type per month
-- Signal source: 'talent_flow' (constant string in all signal records)
-- No AI, no external APIs, no proxy. Pure database diff.
+
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| Signal types: TF-01 (joined, mag 10, 90d), TF-02 (left, mag 8, 90d) | signal_type_deviation_count | Thing | ε_k |
+| Executive slot filter: CEO, CFO, HR only | non_executive_signal_count | Thing | ε_k |
+| Classification: COMPANY_CHANGED/BOTH → TF-02, TITLE_CHANGED → TF-01 | classification_deviation_count | Change | ε_k |
+| Dependency gate: 200 must have snapshots for target month | dependency_violation_count | Flow | ε_k |
+| Dedup key: (outreach_id, signal_code, run_month) | dedup_key_deviation_count | Thing | ε_k |
+| No AI, no external APIs, no proxy — pure database diff | external_call_count | Flow | ε_k |
 
 ### Variables (fill — changes every run)
 - Which month is being processed (run_month parameter)
@@ -181,7 +220,7 @@ people.linkedin_snapshots.person_id (run_month = target)
 - How many executive movements detected
 - Split between TF-01 (joined) and TF-02 (left) signals
 - Which companies and people are affected
-- Whether run is dry-run or live
+- Tolerance values k_i (calibrated through operation)
 
 ---
 

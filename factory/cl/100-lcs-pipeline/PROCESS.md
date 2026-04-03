@@ -187,16 +187,59 @@ This replaces the old "SVG Brain" reference. LBB IS the brain. One library, Dewe
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock §2)
+## 6. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+```
+
+### Step-Level Comparators and Tolerances
+
+**Step 1 — CID Compilation:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | gate_failure_rate | Change | % of signals failing 9-gate qualification | 0.30 (≤30% rejection — some companies lack data) | 1 |
+| C_2 | cid_compile_error_rate | Change | % of CID compilations throwing errors | 0.01 (≤1%) | 1 |
+
+**Step 2 — SID Construction:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | no_recipient_rate | Thing | % of CIDs with no reachable contact | 0.15 (≤15%) | 1 |
+| C_4 | sid_error_rate | Change | % of SID constructions failing | 0.01 (≤1%) | 1 |
+
+**Step 3 — MID Delivery:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_5 | delivery_failure_rate | Flow | % of MIDs failing to deliver | 0.05 (≤5%) | 1 |
+| C_6 | bounce_rate | Flow | % of delivered messages bouncing | 0.05 (≤5% — domain health) | 1 |
+| C_7 | domain_cap_rate | Flow | % of time all domains at daily cap | 0.10 (≤10%) | 1 |
+
+**Step 4 — Feedback:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_8 | webhook_miss_rate | Flow | % of deliveries without webhook callback | 0.05 (≤5%) | 1 |
+
+**Process-Level:** `P_100(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..8}`
 
 ### Constants
-- Three-stage compiler: CID → SID → MID. Always sequential.
-- 9 signal types in registry (extensible via INSERT)
-- 11 message frames in registry (extensible via INSERT)
-- 3 delivery adapters: Mailgun, HeyReach, SVG Brain (extensible via INSERT)
-- 14 Mailgun sending domains with rotation
-- Slot priority: CFO → CEO → HR
-- Intelligence tiers: 2 (best data) through 5 (minimal data)
+
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| Three-stage compiler: CID → SID → MID | stage_skip_count | Flow | ε_k |
+| 9 signal types in registry | signal_type_count_deviation | Thing | ε_k |
+| 11 message frames in registry | frame_count_deviation | Thing | ε_k |
+| 3 delivery adapters: MG, HR, SH | adapter_count_deviation | Thing | ε_k |
+| 14 Mailgun domains with rotation | domain_count_deviation | Thing | ε_k |
+| Slot priority: CFO → CEO → HR | priority_deviation_count | Flow | ε_k |
+| Intelligence tiers: 2-5 | tier_range_deviation | Change | ε_k |
 - ORBT 3-strike protocol: AUTO_RETRY → ALT_CHANNEL → HUMAN_ESCALATION
 - ID format: `LCS-{PHASE}-{DATE}-{ULID}`
 

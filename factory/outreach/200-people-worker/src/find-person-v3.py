@@ -190,10 +190,75 @@ def title_matches_slot(title_text, slot_type):
     return any(p in lower for p in patterns)
 
 
+def find_best_match_in_organized(organized_json, slot_type, employees=0):
+    """
+    Gate A (primary): Parse recon_organized_people from 300 Organizer.
+    Format: [{"name": str, "context": str, "bucket": "CEO"|"CFO"|"HR"|"REJECT", "confidence": int}]
+    Already classified by Title Classifier — just match bucket to slot_type.
+
+    Three passes (cheapest/most confident first):
+      1. Exact bucket match with confidence >= 60
+      2. Exact bucket match with any confidence
+      3. REJECT-bucket person at small companies (<50 emp) for CEO slots only
+         (small company + valid name + LinkedIn context = likely the owner)
+
+    Returns {"name": str, "title": str} or None.
+    """
+    if not organized_json:
+        return None
+    try:
+        entries = json.loads(organized_json) if isinstance(organized_json, str) else organized_json
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    if not isinstance(entries, list):
+        return None
+
+    try:
+        emp = int(employees) if employees else 0
+    except (ValueError, TypeError):
+        emp = 0
+
+    # Pass 1: exact bucket match with confidence >= 60
+    for entry in entries:
+        bucket = entry.get("bucket", "REJECT")
+        confidence = entry.get("confidence", 0)
+        name = entry.get("name", "").strip()
+        context = entry.get("context", "")
+
+        if bucket == slot_type and confidence >= 60 and name and _valid_name(name):
+            return {"name": name, "title": context}
+
+    # Pass 2: exact bucket match with any confidence
+    for entry in entries:
+        bucket = entry.get("bucket", "REJECT")
+        name = entry.get("name", "").strip()
+        context = entry.get("context", "")
+
+        if bucket == slot_type and name and _valid_name(name):
+            return {"name": name, "title": context}
+
+    # Pass 3: REJECT-bucket person promotion for small company CEO slots
+    # Rationale: small company (<50 emp), valid person name, found via LinkedIn
+    # context — this is almost always the owner/decision maker.
+    # Only CEO slots — CFO/HR at small companies are rarely findable online.
+    if slot_type == "CEO" and emp < 50:
+        for entry in entries:
+            classification = entry.get("classification", "")
+            name = entry.get("name", "").strip()
+            context = entry.get("context", "")
+
+            # Must be classified as a person (not garbage), just missing title
+            if classification in ("person", "person_with_title") and name and _valid_name(name):
+                return {"name": name, "title": context}
+
+    return None
+
+
 def find_best_match_in_recon(recon_json, slot_type):
     """
-    Gate A: Parse recon_name_titles JSON and find a name matching slot_type.
-    recon_name_titles format: [{"name": "John Smith", "title": "CEO"}, ...]
+    Gate A (fallback): Parse raw recon_name_titles JSON if organized data unavailable.
+    recon_name_titles format: [{"name": "John Smith", "context": "CEO at Company - LinkedIn"}, ...]
     Returns {"name": str, "title": str} or None.
     """
     if not recon_json:
@@ -208,7 +273,8 @@ def find_best_match_in_recon(recon_json, slot_type):
 
     for entry in entries:
         name = entry.get("name", "")
-        title = entry.get("title", "")
+        # Support both old "title" key and new "context" key
+        title = entry.get("title", "") or entry.get("context", "")
         if name and title_matches_slot(title, slot_type):
             return {"name": name.strip(), "title": title.strip()}
     return None
@@ -336,6 +402,7 @@ def update_slot(slot, first, last, full, source, linkedin_url=None):
     """
     Build and execute the UPDATE for a filled slot.
     Process 200 fills NAME only. Email discovery is Process 201's job.
+    Tier is NOT set here — it's computed by recalc_tier after the write.
     Returns True on success.
     """
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -350,19 +417,12 @@ def update_slot(slot, first, last, full, source, linkedin_url=None):
         f"person_found_at = {esc(now)}",
     ]
 
-    # Readiness tier: NAME_ONLY — Process 200 does not fill email (that's 201's job)
-    new_tier = "NAME_ONLY"
-
     if linkedin_url:
         set_parts.append(f"person_linkedin = {esc(linkedin_url)}")
         set_parts.append(f"has_linkedin = 1")
         set_parts.append(f"linkedin_found_at = {esc(now)}")
 
-    # NOTE: Do NOT write person_email, has_email, or email_found_at here.
-    # Email discovery is Process 201's responsibility (silo boundary).
-    # If an email pattern exists, 201 will generate the email when it runs.
-
-    set_parts.append(f"readiness_tier = {esc(new_tier)}")
+    # No tier set here — recalc_tier runs after all writes
 
     sql = f"UPDATE slot_workbench SET {', '.join(set_parts)} WHERE slot_id = {esc(slot_id)}"
     return d1_execute(sql)
@@ -384,7 +444,7 @@ def main():
     sql = (
         f"SELECT slot_id, outreach_id, company_unique_id, slot_type, "
         f"company_name, city, state, domain, company_domain, employees, "
-        f"recon_name_titles, recon_linkedin_people, "
+        f"recon_name_titles, recon_linkedin_people, recon_organized_people, "
         f"hunter_first_name, hunter_last_name, hunter_title, hunter_email, hunter_linkedin, "
         f"hunter_email_pattern, vendor_email_pattern, "
         f"readiness_tier "
@@ -469,10 +529,15 @@ def main():
 
         filled = False
 
-        # ── Gate A: Recon name_titles from Process 300 ───────────
+        # ── Gate A: Organized recon from 300 Organizer (primary), raw recon (fallback)
+        organized = slot.get("recon_organized_people")
         recon = slot.get("recon_name_titles")
-        if recon and not filled:
-            match = find_best_match_in_recon(recon, slot_type)
+        if (organized or recon) and not filled:
+            # Try organized data first (already classified by Title Classifier)
+            match = find_best_match_in_organized(organized, slot_type, employees=slot.get("employees", 0)) if organized else None
+            # Fall back to raw recon if organized didn't match
+            if not match and recon:
+                match = find_best_match_in_recon(recon, slot_type)
             if match:
                 first, last = split_name(match["name"])
                 if first and last:
@@ -627,6 +692,12 @@ def main():
         print(f"  Hit rate:           {total_filled / (total_filled + stats['missed']) * 100:.1f}%")
     print(f"  Output:             {output_file}")
     print("=" * 60)
+
+    # Recalculate tiers from actual state — not hardcoded by this process
+    print("\nRecalculating tiers...")
+    from recalc_tier import recalc_tier_all
+    recalc_tier_all()
+    print("Tiers recalculated.")
 
 
 if __name__ == "__main__":

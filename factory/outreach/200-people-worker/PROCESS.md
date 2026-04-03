@@ -58,7 +58,7 @@ ORDER BY outreach_id
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| 1 — Gate A: Recon | `recon_name_titles` JSON | Parse JSON array from Process 300. Match title keywords to `slot_type` using locked title patterns. | Person name + title filled. Source = `recon_300`. | wrangler d1 (FREE) |
+| 1 — Gate A: Recon | `recon_organized_people` JSON (from 300 Organizer) | Parse organized entries — already sorted by C&V gate, already classified by Title Classifier. Match `bucket` to `slot_type`. | Person name + title filled. Source = `recon_300`. | wrangler d1 (FREE) |
 | 2 — Gate B: Hunter | `hunter_first_name`, `hunter_last_name`, `hunter_title` | Check if Hunter has a candidate for this slot type. Validate title matches slot via same pattern table. | Person name promoted from Hunter. Source = `hunter`. | wrangler d1 (FREE) |
 | 3 — Gate C: Startpage | `company_name`, `city`, `state`, `slot_type`, `employees` | Build natural language query. POST to Startpage via DataImpulse proxy. Parse results for names near LinkedIn URLs and title keywords. | Person name + optional LinkedIn URL. Source = `startpage_v3`. | curl_cffi + DataImpulse proxy (CHEAP) |
 
@@ -147,7 +147,8 @@ _The plumbing. Which tables this process reads, writes, joins. What's forbidden.
 | `domain` | TEXT | CONSTANT | Company domain |
 | `company_domain` | TEXT | CONSTANT | Alternate domain field |
 | `employees` | INTEGER | CONSTANT | Employee count (determines query variation) |
-| `recon_name_titles` | TEXT (JSON) | VARIABLE | Name-title pairs from Process 300 |
+| `recon_name_titles` | TEXT (JSON) | VARIABLE | Raw name-title pairs from Process 300 (use recon_organized_people instead) |
+| `recon_organized_people` | TEXT (JSON) | VARIABLE | Organized + classified entries from 300 Organizer — Gate A reads THIS |
 | `recon_linkedin_people` | TEXT (JSON) | VARIABLE | LinkedIn URLs from Process 300 |
 | `hunter_first_name` | TEXT | VARIABLE | Hunter.io candidate first name |
 | `hunter_last_name` | TEXT | VARIABLE | Hunter.io candidate last name |
@@ -196,39 +197,83 @@ slot_workbench.outreach_id
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock §2)
+## 6. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+DOMESTICATE:  max(r(x)) ≤ α AND var(r_i) ≤ σ_max → stop decomposing
+```
+
+### Step-Level Comparators and Tolerances
+
+**Gate A — Recon Parse (reads recon_organized_people from 300 Organizer):**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | parse_match_rate (inverted: 1-rate) | Change | % of organized entries matching this slot_type | 0.50 (≥50% should match at least one slot) | 1 |
+
+**Gate B — Hunter Promote:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_2 | promote_rate (inverted: 1-rate) | Change | % of hunter candidates successfully promoted | 0.85 (≥15% promotion rate) | 1 |
+
+**Gate C — Startpage Search:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | search_miss_rate | Change | % of searches returning no usable name | 0.60 (≤60% miss rate) | 1 |
+| C_4 | captcha_rate | Change | % of searches hitting CAPTCHA | 0.05 (≤5%) | 1 |
+
+**Writer:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_5 | write_failure_count | Thing | D1 write failures | ε_k | 1 |
+| C_6 | total_fill_rate (inverted: 1-rate) | Change | % of input slots that got a name | 0.30 (≥70% fill across all gates) | 1 |
+
+**Process-Level:** `P_200(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..6}`
+
+### Conditional Logic (Workbench State Routing)
+
+Process 200 only runs on slots where the workbench says name is missing:
+
+```sql
+SELECT * FROM slot_workbench
+WHERE has_name = 0 AND readiness_tier IN ('EMPTY', 'PATTERN_READY', 'HUNTER_READY')
+ORDER BY outreach_id
+```
+
+After 200 fills names, downstream routing:
+- `has_name = 1 AND has_email = 0` → Process 201 (email)
+- `has_name = 1 AND has_linkedin = 0` → Process 202 (LinkedIn)
+- 201 and 202 run in parallel.
 
 ### Constants (structure — never changes)
 
-_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
-
-| Element | Why It's Constant | Validated |
-|---------|-------------------|-----------|
-| 3 slot types: CEO, CFO, HR | Named, formatted, fixed per company. The structure of outreach roles. | IMO: fixed regardless of data flow. CTB: holds at trunk (strategy) and leaf (execution). Circle: still 3 after feedback. |
-| Gate chain order: A -> B -> C | Named sequence. Free before cheap. Never skip. | IMO: order doesn't change with data. CTB: same at every altitude. Circle: revalidated — order holds after runs. |
-| Title matching patterns | Named, formatted (regex patterns). Map title text to slot type. | IMO: patterns are fixed regardless of input text. CTB: same patterns at trunk/leaf. Circle: patterns refined but structure locked. |
-| Query templates | Named, formatted. Natural language patterns that avoid CAPTCHA. | IMO: template structure fixed. CTB: consistent. Circle: validated across runs — no CAPTCHA. |
-| `slot_workbench` as source of truth | Named table. Single read/write target. | IMO: table doesn't change per execution. CTB: holds at all levels. Circle: still the source after runs. |
-| `company_name`, `city`, `state`, `slot_type` | Named, formatted fields. Structure of the slot. | IMO: company identity doesn't change per search. CTB: consistent. Circle: same after feedback. |
-| `domain`, `employees` | Named, formatted. Company structural data. | IMO: fixed per company. CTB: consistent. Circle: holds. |
-| `hunter_email_pattern`, `vendor_email_pattern` | Named, formatted. The pattern IS the structure. READ only by 200 — used as query context, NOT used to generate email (that's 201's job). | IMO: pattern structure is fixed. CTB: same at all levels. Circle: pattern doesn't change after use. |
-| Employee threshold: <25 = "owner" query | Named rule. Small companies don't have "CEO" — they have "owner". | IMO: threshold fixed. CTB: consistent. Circle: validated across company sizes. |
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| 3 slot types: CEO, CFO, HR | slot_type_violation_count | Thing | ε_k |
+| Gate chain order: A → B → C | gate_skip_count | Flow | ε_k |
+| Title matching patterns (from Classifier taxonomy) | pattern_deviation_count | Thing | ε_k |
+| slot_workbench as source of truth | non_workbench_read_count | Thing | ε_k |
+| Gate A reads recon_organized_people (not raw recon_name_titles) | raw_read_count | Flow | ε_k |
+| Employee threshold: <25 = "owner" query | threshold_deviation_count | Change | ε_k |
+| 200 fills NAME only — never email (that's 201) | email_write_count | Change | ε_k |
 
 ### Variables (fill — changes every run)
 
-_The values that fill the constants. Different every execution._
-
-| Element | Why It's Variable | Guard Rails |
-|---------|-------------------|-------------|
-| `recon_name_titles` | The captured text from Process 300. Different per company. | Must be valid JSON array. Capped at 10 entries. |
-| `recon_linkedin_people` | LinkedIn URLs from recon. Different per company. | Must be valid URL format. |
-| `hunter_first_name`, `hunter_last_name`, `hunter_title` | Hunter's candidate data. May or may not exist. May not match slot type. | Title must match via pattern table before promotion. |
-| `person_first_name`, `person_last_name` | THE fill. What we're trying to set. Empty until gate succeeds. | Must have both first and last. Min 2 characters each. |
-| `readiness_tier` | Current state of the slot. Changes as processes fill it. | Process 200 only sets NAME_ONLY. REACHABLE is set by Process 201 when email is found. |
-| Which slots are empty | Changes as gates fill them. | Tracked per run in output JSONL. |
-| Search results from Startpage | Different every query. May have CAPTCHA. | Parse defensively. Validate names. |
-| CAPTCHA rate | Changes per session. | STOP if > 10%. |
-| Fill rate per gate | Changes per run. | Track in logbook. Investigate if plateau for 3 runs. |
+- recon_organized_people entries (from 300 Organizer — different per company)
+- hunter candidate data (may or may not exist per slot)
+- person_first_name, person_last_name (THE fill — empty until gate succeeds)
+- readiness_tier (200 sets NAME_ONLY; 201 sets REACHABLE)
+- Search results from Startpage (Gate C only)
+- CAPTCHA rate, fill rate per gate, cost per run
+- Tolerance values k_i (calibrated through operation)
 
 ---
 
@@ -516,6 +561,12 @@ _Every session that touches this process. Links to LBB for detail._
 | 2026-03-29 | Initial PROCESS.md created (v1 format) | none |
 | 2026-04-01 | Full rewrite to v3 against slot_workbench, C&V audit, gate chain documented | none |
 | 2026-04-01 | Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | none |
+| 2026-04-02 | Math engine added: 6 comparators (C_i/k_i per gate), P(x;θ), conditional logic SQL, Gate A updated to read recon_organized_people | a65dd7b1 |
+| 2026-04-02 | Funnel built (5 layers). L1 CEO promote: 5,057. L2 bucket match: 2. L3 Hunter: 129. L4 slug derive: 2,021. Total free fills: 7,209. | 5db86e97 |
+| 2026-04-02 | find-person-v3.py Gate A updated to read recon_organized_people, Pass 3 REJECT promotion for small CEO slots, employees param added | 5db86e97 |
+| 2026-04-02 | Hunter broad match: 55 fills. DOL 5500 signer match: 1,979 fills (1,000 CFO + 963 HR). Management page scraper test: 30 fills from 100 companies. | 5db86e97 |
+| 2026-04-02 | DATA GAP FOUND: 29K empty slots with 95% data available. 69K about_urls never scraped. 175K Hunter contacts barely matched. 7.5K recon_emails unused. 140K DOL signers never SEEDed. BAR-197 created. | 54f035e9 |
+| 2026-04-02 | Branch 1 database joins running: Hunter seniority→slot mapping + recon_emails→person_email + vendor_people. All structured sources, zero cost. | 54f035e9 |
 
 ---
 
@@ -524,8 +575,8 @@ _Every session that touches this process. Links to LBB for detail._
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-01 |
-| Version | 4.0.0 |
+| Last Modified | 2026-04-02 |
+| Version | 5.0.0 |
 | Template Version | 4.0.0 |
 | Governing Engine | imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md (parent repo — Barton-Processes inherits) |
 | Logbook Schema | law/logbook_schema.yaml |

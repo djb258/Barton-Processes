@@ -48,21 +48,78 @@ One natural-language Startpage query per company captures leadership pages, Link
 
 ### Middle
 
-| Step | Input | What Happens | Output | Tool Used |
-|------|-------|-------------|--------|-----------|
-| 1 | slot_workbench rows | Load all companies with domain + city from D1 | Company list (32,556) | D1 read (wrangler CLI) |
-| 2 | Company list | Build search query per company: `"{company_name} {city} {state} leadership team contact linkedin"` | Query strings | company-recon.py |
-| 3 | Query strings | Search Startpage via DataImpulse sticky proxy (24 parallel workers, ports 11000+, 3s delay, chrome131 impersonation) | Raw HTML search results | curl_cffi + DataImpulse proxy |
-| 4 | Raw HTML | Parse search results: extract result URLs, snippets, about_url candidates, LinkedIn URLs, name/title patterns, emails | Structured JSONL per company | parse-recon.py |
-| 5 | Parsed JSONL | Store each data type to D1 slot_workbench columns via 6 storage scripts | Workbench updated | store-*.py (6 scripts) |
+Each step is its own IMO with comparators C_i, tolerances k_i, and decision function P(x;θ).
+
+| Step | Name | Input | What Happens | Output | Tool Used |
+|------|------|-------|-------------|--------|-----------|
+| 1 | **SEARCHER** | slot_workbench rows (company_name, city, state, domain) | Load companies from D1, build query `"{company_name} {city} {state} leadership team contact linkedin"`, search Startpage via DataImpulse sticky proxy (24 parallel workers, ports 11000+, 3s delay, chrome131). Parse raw HTML: extract result URLs, snippets, about_url candidates, LinkedIn URLs, name/title patterns, emails. | Raw JSONL per company + D1 recon columns populated | company-recon.py + parse-recon.py + curl_cffi + DataImpulse proxy |
+| 2 | **ORGANIZER** | recon_name_titles (JSON array per slot) | C&V three questions on each entry: (1) Can you NAME it as a person? → first+last pattern. (2) Can you define its FORMAT as a title? → matches title taxonomy. (3) Is it the VALUE filling a position (company name, garbage)? → reject. Sort into three piles: person+title, LinkedIn slugs, garbage. | recon_organized_people, recon_organized_linkedin, recon_organized_garbage columns on workbench | organizer.py (NEW) |
+| 3 | **CLASSIFIER** | recon_organized_people (entries with extractable titles) | Match title to role bucket (CEO/CFO/HR/REJECT) via 3-tier architecture: exact dict → regex patterns → RapidFuzz fallback. Confidence 0-100. | Classified candidates with role + confidence per slot | Title Classifier (Snap-On Tool) |
+| 4 | **MATCHER** | recon_organized_linkedin (LinkedIn URL slugs) | Parse slug (e.g., "john-smith-12345" → first=John, last=Smith). Strip trailing hex/numeric IDs, split on hyphens. Compare to slot person name. Require last-name match minimum. | LinkedIn → person mappings per slot | String parsing (parse-recon.py) |
+| 5 | **WRITER** | Validated candidates from steps 2-4 | Write organized + classified + matched data to workbench with source tracking + timestamps. Update about_url, recon columns, last_recon_at. | Workbench updated, downstream processes can consume | store-*.py (6 scripts) |
+
+#### Step-Level Comparators and Tolerances
+
+**Step 1 — SEARCHER:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | capture_rate | Change | % of companies returning valid results (not CAPTCHA/error) | 0.05 (≤5% failure = 95% capture) | 3 (locked — baseline 4.1%) |
+| C_2 | captcha_rate | Change | % of queries hitting CAPTCHA | 0.10 (≤10%) | 2 (baseline 3.9%, tightening) |
+| C_3 | query_throughput | Flow | queries per minute across all workers | 300 (k_3 = max acceptable, inverted: C_3 = 300/actual_qpm, pass if ≤1) | 1 (initial) |
+
+`P_searcher(x;θ) = 1 if max(C_1/k_1, C_2/k_2, C_3/k_3) ≤ 1`
+
+**Step 2 — ORGANIZER:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_4 | garbage_rate | Change | % of entries classified as garbage | 0.30 (≤30% garbage) | 1 (initial — expect ~15% based on sampling) |
+| C_5 | unclassified_rate | Change | % of entries that can't be sorted into any pile | 0.05 (≤5%) | 1 (initial) |
+| C_6 | person_extraction_rate | Thing | % of entries producing a valid person name | 0.50 (inverted: C_6 = 1 - actual_rate, pass if extraction ≥50%) | 1 (initial) |
+
+`P_organizer(x;θ) = 1 if max(C_4/k_4, C_5/k_5, C_6/k_6) ≤ 1`
+
+**Step 3 — CLASSIFIER:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_7 | low_confidence_rate | Change | % of classified entries with confidence < 60 | 0.20 (≤20%) | 1 (initial) |
+| C_8 | reject_rate | Change | % of entries rejected (no title match) | 0.40 (≤40% — many entries won't have titles) | 1 (initial) |
+
+`P_classifier(x;θ) = 1 if max(C_7/k_7, C_8/k_8) ≤ 1`
+
+**Step 4 — MATCHER:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_9 | match_failure_rate | Change | % of LinkedIn slugs that can't match to a person name | 0.60 (≤60% — many slugs are companies, not people) | 1 (initial) |
+| C_10 | false_positive_rate | Change | % of matches where slug name ≠ actual person (spot-check sample) | 0.05 (≤5%) | 1 (initial) |
+
+`P_matcher(x;θ) = 1 if max(C_9/k_9, C_10/k_10) ≤ 1`
+
+**Step 5 — WRITER:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_11 | write_failure_count | Thing | number of D1 write failures | ε_k (near-zero — writes must succeed) | 1 (initial) |
+| C_12 | orphan_row_count | Thing | rows written that don't join back to workbench spine | ε_k (near-zero) | 1 (initial) |
+
+`P_writer(x;θ) = 1 if max(C_11/k_11, C_12/k_12) ≤ 1`
+
+**Process-Level Decision:**
+```
+P_300(x;θ) = 1  if  max_i[C_i(x)/k_i] ≤ 1  for all i ∈ {1..12}
+r(x) = [C_1/k_1, C_2/k_2, ..., C_12/k_12]   (diagnostic vector)
+```
 
 ### Output
 - JSONL backup files in `src/output/` (recon-YYYY-MM-DD.jsonl)
-- D1 `slot_workbench` updated: `about_url`, `recon_linkedin_company`, `recon_linkedin_people`, `recon_name_titles`, `recon_emails`, `recon_result_urls`, `last_recon_at`, timestamps
-- Downstream: 200 (People), 201 (Enrichment), 202 (Email) all read recon data from workbench
+- D1 `slot_workbench` updated: `about_url`, `recon_linkedin_company`, `recon_linkedin_people`, `recon_name_titles`, `recon_emails`, `recon_result_urls`, `recon_organized_people`, `recon_organized_linkedin`, `recon_organized_garbage`, `last_recon_at`, timestamps
+- Downstream: 200 (People) reads `recon_organized_people`, 201 (Email) reads patterns, 202 (LinkedIn) reads `recon_organized_linkedin`
 
 ### Circle (Bedrock S5)
-`--stale 90` re-runs companies not searched in 90 days. After first pass, `about_url` and LinkedIn URLs become constants (the URL mapping). The variable is whether the content behind those URLs changed. Each subsequent run is cheaper because the mapping exists. If CAPTCHA rate rises above 10%, trace the circle — proxy, ports, query pattern, delay.
+`--stale 90` re-runs companies not searched in 90 days. After first pass, `about_url` and LinkedIn URLs become constants (the URL mapping). The variable is whether the content behind those URLs changed. Each subsequent run is cheaper because the mapping exists. If CAPTCHA rate rises above 10%, trace the circle — proxy, ports, query pattern, delay. Sigma tracking on r(x) across runs: tightening = process stabilizing, flat = phantom (something isn't learning), expanding = something upstream changed.
 
 ---
 
@@ -152,20 +209,61 @@ slot_workbench.outreach_id (SPINE)
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock S2)
+## 6. CONSTANTS & VARIABLES (Bedrock S2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+_From TIER0_MATHEMATICAL_PRINCIPLE.md. Applied to every constant and variable in this process._
+
+```
+COMPARATOR
+  C_i(x) → ℝ        a function that measures one structural rule
+  Must satisfy ALL FOUR properties:
+    1. Measurable     — produces numeric value from observable data
+    2. Deterministic  — same input always produces same output
+    3. Representation-invariant — result independent of encoding/format
+    4. Temporally complete — declares measurement support
+
+TOLERANCE
+  k_i ∈ ℝ⁺           the maximum acceptable deviation for comparator C_i
+  k_i ≥ ε_k          tolerance floor — prevents singularity
+
+DECISION FUNCTION
+  P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+
+DIAGNOSTIC VECTOR
+  r(x) = [ C_1(x)/k_1,  C_2(x)/k_2,  ...,  C_n(x)/k_n ]
+
+STABILITY
+  ∀ t ∈ [1..N]:  P(f^t(x); θ) = 1
+  AND  var(r_i(x)) over [t-w..t] ≤ σ_max  for all i
+
+DOMESTICATION
+  max(r(x)) ≤ α  AND  var(r_i(x)) ≤ σ_max  →  stop decomposing
+```
+
+### Tolerance Lifecycle
+
+| Phase | Name | What Happens | When It Ends |
+|-------|------|-------------|-------------|
+| 1 | **Educated Guess** | Initial k_i values set intentionally wide. They will be wrong. | System begins operation. |
+| 2 | **Calibration** | Failures surface. r(x) identifies which C_i(x)/k_i broke. Tighten k_i at observed boundary. | k_i stops moving (convergence) or M_max reached. |
+| 3 | **Stabilization** | k_i locked. Data stopped proving it wrong. | Reopening only if new failure mode. |
 
 ### Constants (structure — never changes)
 
-_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
+_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating. Each constant has an implicit comparator — "did this hold?" is C_i(x)/k_i ≤ 1, not opinion._
 
-- Query pattern: `"{company_name} {city} {state} leadership team contact linkedin"` — one query captures everything
-- Company constants (company_name, city, state) feed the query — they come from SEED, not from this process
-- After first search, `about_url` and LinkedIn URLs become constants (URL mapping is the constant)
-- Search engine: Startpage (no tracking, no personalization, deterministic results)
-- Proxy method: DataImpulse sticky session, ports 11000+, 3s delay, chrome131 impersonation
-- Parse patterns: regex-based extraction for LinkedIn URLs, name/title patterns, emails, about_urls
-- Scripts: company-recon.py (search), parse-recon.py (parse), store-*.py (6 storage scripts)
-- Worker config: 24 parallel workers, 40-port gap between workers, stagger launch by 3s
+| Constant | Comparator C_i | Primitive | Initial k_i | Notes |
+|----------|---------------|-----------|-------------|-------|
+| Query pattern: `"{company_name} {city} {state} leadership team contact linkedin"` | C_query = pattern_deviation_count | Thing | ε_k | One query captures everything — locked after Run 1 |
+| Company constants (company_name, city, state) come from SEED | C_source = non_seed_source_count | Flow | ε_k | 300 never writes to these columns |
+| Search engine: Startpage (deterministic, no personalization) | C_engine = non_startpage_count | Thing | ε_k | Locked vendor |
+| Proxy method: DataImpulse sticky session, ports 11000+, 3s delay, chrome131 | C_proxy = config_deviation_count | Flow | ε_k | Locked after FP-301 fix |
+| 5-step internal model: Searcher → Organizer → Classifier → Matcher → Writer | C_steps = step_skip_count | Flow | ε_k | The process structure |
+| After first search, about_url and LinkedIn URLs become constants (URL mapping) | C_mapping = url_mapping_change_rate | Change | 0.10 (≤10% churn) | URL mapping stabilizes after first pass |
+| Worker config: 24 parallel, 40-port gap, 3s stagger | C_workers = config_deviation_count | Thing | ε_k | Locked after FP-301 fix |
+| Organizer taxonomy: C&V three questions (person? format? value?) | C_taxonomy = question_skip_count | Change | ε_k | The sorting logic is the constant |
 
 ### Variables (fill — changes every run)
 
@@ -173,9 +271,14 @@ _The values that fill the constants. Different every execution._
 
 - Which companies get searched (all on first run, --stale 90 on subsequent)
 - What data comes back from each search (the captured items)
-- Capture rate per run (95.9% on Run 1 — baseline)
-- CAPTCHA rate per run (3.9% on Run 1 — baseline)
-- Cost per run (bandwidth-based, ~$35 for full run)
+- Capture rate per run (C_1 — 95.9% on Run 1 baseline)
+- CAPTCHA rate per run (C_2 — 3.9% on Run 1 baseline)
+- Garbage rate per run (C_4 — TBD, first Organizer run)
+- Person extraction rate per run (C_6 — TBD)
+- Classifier confidence distribution (C_7, C_8 — TBD)
+- Match rate per run (C_9, C_10 — TBD)
+- Cost per run (bandwidth-based, ~$35 for full search run)
+- Tolerance values k_i (calibrated through operation — the variable the lifecycle fills)
 
 ---
 
@@ -233,11 +336,31 @@ If any fails -> that's the break. Don't guess. Run the Troubleshooting Loop (Bed
 
 ---
 
-## 10. ANALYTICS — The Dyno Sheet (Bedrock S2 + S5)
+## 10. ANALYTICS — The Dyno Sheet (Bedrock S2 + S5 + Mathematical Principle)
 
-_The BUILD->OPERATE gate. No analytics passing tolerance = stays on the dyno. The numbers say it works, or they don't._
+_The BUILD→OPERATE gate. Each metric IS a comparator C_i with tolerance k_i. P(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 — that's the gate. No override. No qualitative assessment._
 
-### Process Metrics
+### Process Metrics (as Comparators)
+
+| Metric | C_i | Primitive | Unit | Run 1 Baseline | k_i (tolerance) | Phase |
+|--------|-----|-----------|------|----------------|-----------------|-------|
+| Capture rate | C_1 (inverted: failure_rate) | Change | % failure | 4.1% | 0.05 (≤5%) | 3 (locked) |
+| CAPTCHA rate | C_2 | Change | % | 3.9% | 0.10 (≤10%) | 2 |
+| Query throughput | C_3 (inverted: 300/actual_qpm) | Flow | ratio | ~0.97 | 1.0 | 1 |
+| Garbage rate (Organizer) | C_4 | Change | % | TBD | 0.30 (≤30%) | 1 |
+| Unclassified rate (Organizer) | C_5 | Change | % | TBD | 0.05 (≤5%) | 1 |
+| Person extraction rate (Organizer) | C_6 (inverted: 1-rate) | Thing | ratio | TBD | 0.50 (≥50% extraction) | 1 |
+| Low confidence rate (Classifier) | C_7 | Change | % | TBD | 0.20 (≤20%) | 1 |
+| Reject rate (Classifier) | C_8 | Change | % | TBD | 0.40 (≤40%) | 1 |
+| Match failure rate (Matcher) | C_9 | Change | % | TBD | 0.60 (≤60%) | 1 |
+| False positive rate (Matcher) | C_10 | Change | % | TBD | 0.05 (≤5%) | 1 |
+| Write failures (Writer) | C_11 | Thing | count | 0 | ε_k | 1 |
+| Orphan rows (Writer) | C_12 | Thing | count | 0 | ε_k | 1 |
+
+**Decision:** `P_300(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for all i ∈ {1..12}`
+**Diagnostic:** `r(x) = [C_1/k_1, ..., C_12/k_12]` — mechanic reads this to find what broke
+
+### Legacy Process Metrics (Run 1 — before Organizer)
 
 | Metric | Unit | First Run = Baseline | Target (after baseline) | Tolerance |
 |--------|------|---------------------|------------------------|-----------|
@@ -450,7 +573,11 @@ _Every session that touches this process. Links to LBB for detail._
 |------|---------------|-----------|
 | 2026-03-29 | v1-v3 script iterations: Neon->D1 rewire, Startpage proxy fix, direct fetch design | none |
 | 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none |
-| 2026-04-02 | Run 1: full 32,556 company recon. 95.9% capture. All metrics passed. BUILD->OPERATE. | none |
+| 2026-04-02 | Run 1: full 32,556 company recon. 95.9% capture. All metrics passed. BUILD->OPERATE. | a65dd7b1 |
+| 2026-04-02 | Math engine integrated: 12 comparators C_i, tolerances k_i, P(x;θ) per step. 5-step internal model: Searcher→Organizer→Classifier→Matcher→Writer. Organizer step added (was missing). | a65dd7b1 |
+| 2026-04-02 | Organizer ran ALL 80K slots: 175,340 entries → 83,085 people (47%), 79,628 LinkedIn (45%), 12,627 garbage (7%). P_organizer = 0 (C_6 ratio 1.05 — Phase 2 calibration needed on k_6). | 5db86e97 |
+| 2026-04-02 | 1,275 free_extraction garbage records purged from workbench (NULLed person fields, reset tiers). | 5db86e97 |
+| 2026-04-02 | DATA GAP IDENTIFIED: about_url (69K pages) never scraped. recon_result_urls (93K) never re-parsed. Structure of return data not defined — BAR-197 created. Next: define return structures, then Organizer maps deterministically. | 54f035e9 |
 
 ---
 

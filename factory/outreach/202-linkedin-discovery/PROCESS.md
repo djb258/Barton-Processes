@@ -156,34 +156,80 @@ slot_workbench.outreach_id
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock S2)
+## 6. CONSTANTS & VARIABLES (Bedrock S2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+```
+
+### Step-Level Comparators and Tolerances
+
+**Gate A -- Slug Match (recon_organized_linkedin from 300 Organizer):**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | slug_miss_rate | Change | % of slots where no slug matches person name | 0.60 (≤60% -- many slugs won't match) | 1 |
+
+**Gate B -- Hunter Promote:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_2 | hunter_miss_rate | Change | % of slots where hunter_linkedin is NULL | 0.80 (≤80% -- Hunter coverage sparse for LinkedIn) | 1 |
+
+**Gate C -- Startpage Search:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | search_miss_rate | Change | % of searches returning no LinkedIn URL | 0.40 (≤40% -- LinkedIn results are common on Startpage) | 1 |
+| C_4 | captcha_rate | Change | % of searches hitting CAPTCHA | 0.05 (≤5%) | 1 |
+
+**Writer:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_5 | write_failure_count | Thing | D1 write failures | ε_k | 1 |
+| C_6 | total_fill_rate (inverted: 1-rate) | Change | % of input slots that got a LinkedIn URL | 0.10 (≥90% fill across all gates) | 1 |
+
+**Process-Level:** `P_202(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..6}`
+
+### Conditional Logic (Workbench State Routing)
+
+Process 202 only runs on slots where name exists but LinkedIn is missing:
+
+```sql
+SELECT * FROM slot_workbench
+WHERE has_name = 1 AND has_linkedin = 0
+ORDER BY outreach_id
+```
+
+Runs in parallel with Process 201 (email). Both depend on Process 200 completing first.
 
 ### Constants (structure -- never changes)
 
-_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
-
-- **Gate order: A -> B -> C.** First hit wins. Never changes.
-- **LinkedIn URL pattern:** `linkedin.com/in/{slug}` -- the constant structure. /in/ is the constant, {slug} is the variable.
-- **Slug-to-name parsing rules:** strip trailing hex/numeric IDs, split on hyphens, drop single-char parts. Example: /in/john-smith-12345 -> first=John, last=Smith.
-- **Startpage query format:** `{first} {last} {company} linkedin` (natural language = zero CAPTCHA)
-- **DataImpulse proxy config:** port 10000, sticky session, __cr.us, POST form, chrome131
-- **3-second minimum delay** between Startpage queries
-- **Port rotation interval:** every 50 queries
-- **Minimum match confidence:** last name must match (score >= 2) unless single result
-- **Do not include domain in query** -- returns website results, not LinkedIn profiles
-- **Do not scrape LinkedIn directly** -- search index only
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| Gate order: A → B → C | gate_skip_count | Flow | ε_k |
+| LinkedIn URL pattern: linkedin.com/in/{slug} | url_format_violation_count | Thing | ε_k |
+| Slug-to-name parsing rules | parsing_deviation_count | Change | ε_k |
+| Query format: "{first} {last} {company} linkedin" | query_deviation_count | Thing | ε_k |
+| Proxy config: port 10000, sticky, __cr.us, chrome131 | config_deviation_count | Flow | ε_k |
+| Do not include domain in query | domain_in_query_count | Change | ε_k |
+| Do not scrape LinkedIn directly | direct_scrape_count | Change | ε_k |
+| Gate A reads recon_organized_linkedin (not raw recon) | raw_read_count | Flow | ε_k |
 
 ### Variables (fill -- changes every run)
 
-_The values that fill the constants. Different every execution._
-
-- Which LinkedIn profile matches (many people share names) -- guarded by scoring
-- person_first_name, person_last_name -- the names being matched (from Process 200)
-- recon_linkedin_people content (populated by Process 300, may be empty)
-- hunter_linkedin content (populated by Process 200/Hunter, may be null)
-- Hit rate per gate (tracked in execution trace)
-- Startpage HTML structure (parser may need updating if they change)
-- readiness_tier value after recalculation (FULL / REACHABLE / PATTERN_READY / EMPTY)
+- Which LinkedIn profile matches (guarded by scoring)
+- person_first_name, person_last_name (from Process 200)
+- recon_organized_linkedin content (from 300 Organizer — sorted slugs)
+- hunter_linkedin content (may be null)
+- Hit rate per gate, CAPTCHA rate, cost per run
+- readiness_tier after recalculation (FULL / REACHABLE / PATTERN_READY / EMPTY)
+- Tolerance values k_i (calibrated through operation)
 
 ---
 
@@ -473,6 +519,8 @@ _Every session that touches this process. Links to LBB for detail._
 |------|---------------|-----------|
 | 2026-04-01 | Process doc created (v2.0.0, old format) | none |
 | 2026-04-01 | Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | none |
+| 2026-04-02 | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A reads recon_organized_linkedin. | 5db86e97 |
+| 2026-04-02 | Gate A+B ran all 10,786 slots: 941 Gate A (slug match) + 124 Gate B (Hunter promote) = 1,065 LinkedIn URLs filled. 999 slots → FULL, 66 → REACHABLE. | 5db86e97 |
 
 ---
 
@@ -481,8 +529,8 @@ _Every session that touches this process. Links to LBB for detail._
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-01 |
-| Last Modified | 2026-04-01 |
-| Version | 4.0.0 |
+| Last Modified | 2026-04-02 |
+| Version | 5.0.0 |
 | Template Version | 4.0.0 |
 | Governing Engine | imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md (parent repo — Barton-Processes inherits) |
 | Logbook Schema | law/logbook_schema.yaml |

@@ -33,6 +33,30 @@ Without this, processes run ad-hoc with no dependency tracking, no execution tra
 
 With the mathematical engine integrated, every station's pass/fail is computed by `P(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 else 0`. The diagnostic vector `r(x)` tells the mechanic exactly what broke and by how much. Certification is not opinion — it is bounded variance across consecutive runs.
 
+### 060's Two Jobs
+
+060 is not just for building production line processes. It runs on ANYTHING that needs structure defined — processes, data sections, web pages, page keys, mappings, new domains.
+
+**060 does two things. Always. In this order:**
+
+**Job 1: BUILD THE KEY.** Run the mathematical equation against raw data. C&V on every element. Can you name it? Can you define its format? Give each element a description, unique ID, and format. The equation converges (sigma tightens) until every element is identified or domesticated. The KEY is the output — the complete structure definition of that data source.
+
+**Job 2: MAP THE KEY.** Once the key exists, connect it to the target structure. Column A on the source → column B in our structure. This is a lookup table. Trivial once the key is built.
+
+**060 does NOT map. 060 DEFINES.** It defines the key. Once defined, the mapping writes itself.
+
+The constant extractor agent (`factory/agents/constant-extractor/`) IS the tool that executes Job 1. Point it at any data source — a database table, a web page, a platform page, a DOL filing — and it runs 060 to produce the key. The agent understands 060. 060 is its operating instructions.
+
+### Three Steps — Every Section, Every Source, Every Domain
+
+1. **DEFINE** — Run C&V on every element. Description, unique ID, format. Build the key. This is 060 with the equation. Can't skip to step 2 without this.
+
+2. **MAP** — Connect the key to our structure. This column → that column. Trivial once step 1 is done. Can't do this without the key.
+
+3. **JOIN** — Find the path to the spine. How does this section connect to the outreach_id? (EIN, domain, URL, direct ID.) Without this, structured data floats in space. Can't do this without the map.
+
+**Define. Map. Join. In order. Can't skip. The order is the constant.**
+
 ---
 
 ## 3. IMO — What Comes In, What Happens, What Comes Out

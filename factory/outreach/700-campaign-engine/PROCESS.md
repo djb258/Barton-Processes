@@ -176,18 +176,61 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 
 ## 6. CONSTANTS & VARIABLES (Bedrock §2)
 
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+```
+
+### Step-Level Comparators and Tolerances
+
+**Step 1 — Movement Evaluation:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | model_selection_error_rate | Change | % of CIDs failing model selection | 0.01 (≤1% — deterministic) | 1 |
+
+**Step 2 — Sequence Build:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_2 | untagged_mid_rate | Thing | % of MIDs missing any of the 4 required tags | ε_k (zero tolerance) | 1 |
+
+**Step 3 — Channel Route:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | unreachable_rate | Thing | % of MIDs with no email AND no LinkedIn | 0.10 (≤10%) | 1 |
+
+**Step 4 — Delivery:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_4 | delivery_failure_rate | Flow | % of MIDs failing to deliver | 0.05 (≤5%) | 1 |
+| C_5 | bounce_rate | Flow | % of delivered messages bouncing | 0.05 (≤5%) | 1 |
+
+**Step 5 — Feedback:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_6 | webhook_miss_rate | Flow | % of deliveries without callback within 24h | 0.05 (≤5%) | 1 |
+
+**Process-Level:** `P_700(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..6}`
+
 ### Constants (structure — never changes)
 
-- Two campaign models: NO_MOVEMENT (1 touch/month) and MOVEMENT_DETECTED (3-5 touches/2 weeks)
-- Every MID tagged with 4 fields: path_type, channel, movement_signal, sequence_position
-- Two delivery channels: Mailgun (email) and HeyReach (LinkedIn)
-- Channel selection is deterministic: has email → MG, LinkedIn only → HR, both → MG primary
-- Every MID must trace back to a CID. No orphan messages.
-- CTA link required in every outreach message
-- Movement cadence: every 2-3 days over ~2 weeks
-- No-movement cadence: 1 per month
-- Webhook feedback loop: delivery status feeds back to LCS pipeline
-- Errors write to master error table in D1
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| Two campaign models: NO_MOVEMENT / MOVEMENT_DETECTED | model_count_deviation | Thing | ε_k |
+| 4-field MID tag: path_type, channel, movement_signal, sequence_position | tag_missing_count | Thing | ε_k |
+| Two channels: Mailgun (email), HeyReach (LinkedIn) | channel_count_deviation | Thing | ε_k |
+| Channel selection: email → MG, LinkedIn only → HR, both → MG primary | selection_deviation_count | Flow | ε_k |
+| Every MID traces to a CID — no orphans | orphan_mid_count | Thing | ε_k |
+| CTA link in every message | cta_missing_count | Thing | ε_k |
+| Movement cadence: 2-3 days over ~2 weeks | cadence_deviation_count | Flow | ε_k |
+| No-movement cadence: 1/month | cadence_deviation_count | Flow | ε_k |
 
 ### Variables (fill — changes every run)
 
@@ -198,6 +241,7 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 - Open/click rates per frame type (informs future frame selection)
 - Which sending domain gets assigned (LCS pipeline rotation)
 - Sequence position per company (advances with each delivery)
+- Tolerance values k_i (calibrated through operation)
 
 ---
 

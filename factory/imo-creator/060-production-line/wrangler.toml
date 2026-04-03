@@ -18,7 +18,7 @@ mode = "smart"
 [[d1_databases]]
 binding = "D1_PRODUCTION"
 database_name = "production-line"
-database_id = "PLACEHOLDER"
+database_id = "7535c84b-1a4f-4f68-bc24-3eeaaa28a08f"
 migrations_dir = "migrations"
 
 # Durable Objects — line agents

@@ -169,33 +169,79 @@ slot_workbench.outreach_id
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock S2)
+## 6. CONSTANTS & VARIABLES (Bedrock S2 + Mathematical Principle)
+
+### Mathematical Definitions
+
+```
+DECISION:     P(x;θ) = 1  if  max_i [ C_i(x) / k_i ] ≤ 1  else 0
+DIAGNOSTIC:   r(x) = [ C_1(x)/k_1, ..., C_n(x)/k_n ]
+STABILITY:    ∀ t ∈ [1..N]: P(f^t(x);θ) = 1 AND var(r_i) ≤ σ_max
+```
+
+### Step-Level Comparators and Tolerances
+
+**Gate A -- Pattern Generate:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_1 | pattern_unavailable_rate | Thing | % of slots without an email pattern | 0.60 (≤60% -- many domains won't have known patterns) | 1 |
+
+**Gate B -- Hunter Promote:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_2 | promote_miss_rate | Change | % of slots where hunter_confidence < 80 | 0.85 (≤85% miss -- Hunter coverage is sparse) | 1 |
+
+**Gate C -- Startpage Search:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_3 | search_miss_rate | Change | % of searches returning no email | 0.70 (≤70% -- emails are hard to find via search) | 1 |
+| C_4 | captcha_rate | Change | % of searches hitting CAPTCHA | 0.05 (≤5%) | 1 |
+
+**Writer:**
+
+| C_i | Name | Primitive | Measures | Initial k_i | Phase |
+|-----|------|-----------|----------|-------------|-------|
+| C_5 | write_failure_count | Thing | D1 write failures | ε_k | 1 |
+| C_6 | total_fill_rate (inverted: 1-rate) | Change | % of input slots that got an email | 0.20 (≥80% fill across all gates) | 1 |
+
+**Process-Level:** `P_201(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1 for i ∈ {1..6}`
+
+### Conditional Logic (Workbench State Routing)
+
+Process 201 only runs on slots where name exists but email is missing:
+
+```sql
+SELECT * FROM slot_workbench
+WHERE has_name = 1 AND has_email = 0
+ORDER BY outreach_id
+```
+
+Runs in parallel with Process 202 (LinkedIn). Both depend on Process 200 completing first.
 
 ### Constants (structure -- never changes)
 
-_What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
-
-- **Gate order: A -> B -> C** -- IMO: cheapest/deterministic first regardless of input. CTB: applies at every altitude. Circle: wrong order wastes money on re-runs.
-- **12 email pattern formats** -- {first}.{last}, {f}{last}, {first}, {last}, {first}{last}, {f}.{last}, {first}_{last}, {f}_{last}, {last}.{first}, {last}{f}, {first}.{f_last}, {f_first}.{last}. Named, formatted, validated.
-- **Gate A threshold: has_email_pattern = 1** -- IMO: pattern exists or it doesn't. CTB: same rule for all slots. Circle: no feedback changes this.
-- **Gate B threshold: hunter_confidence >= 80** -- IMO: confidence is the filter regardless of slot. CTB: same threshold everywhere. Circle: threshold validated against bounce rates.
-- **Startpage query pattern: "{first} {last} {company_name} email contact"** -- IMO: natural language avoids CAPTCHA. CTB: same pattern all slots. Circle: query format doesn't change with results.
-- **Common name disambiguation: add city/state** -- IMO: reduces false matches. CTB: same rule for all common names. Circle: still holds after feedback.
-- **Readiness tier calculation: T1/T2/T3/T4** -- IMO: tier depends on filled fields only. CTB: same formula everywhere. Circle: correct tier after re-run.
-- **JSONL audit trail per run** -- IMO: every run produces a log. CTB: same format at all levels. Circle: enables post-run analysis.
-- **Script name: find-email.py** -- Named, formatted, locked.
+| Constant | Comparator | Primitive | k_i |
+|----------|-----------|-----------|-----|
+| Gate order: A → B → C | gate_skip_count | Flow | ε_k |
+| 12 email pattern formats | pattern_deviation_count | Thing | ε_k |
+| Gate B threshold: hunter_confidence ≥ 80 | threshold_deviation_count | Change | ε_k |
+| Startpage query: "{first} {last} {company_name} email contact" | query_deviation_count | Thing | ε_k |
+| Common name disambiguation: add city/state | disambiguation_skip_count | Change | ε_k |
+| JSONL audit trail per run | trail_missing_count | Thing | ε_k |
 
 ### Variables (fill -- changes every run)
 
-_The values that fill the constants. Different every execution._
-
-- **person_first_name, person_last_name** -- The name parts fed into pattern generation. Different per slot.
-- **person_email** -- The email address itself. Changes per person per company.
-- **hunter_confidence value** -- 0-100 integer, compared against constant threshold.
-- **Which gate hits first** -- Depends on available data per slot.
-- **Startpage search results** -- Different HTML per query.
-- **Email scoring result** -- Depends on domain match + name match.
-- **MV credits remaining** -- 111,167 at start, decreasing per check (applies after MV integration -- currently unused).
+- person_first_name, person_last_name (input from Process 200)
+- person_email (THE fill — empty until gate succeeds)
+- hunter_confidence value (0-100, compared against constant threshold)
+- Which gate hits first (depends on available data per slot)
+- Startpage search results (different HTML per query)
+- CAPTCHA rate, fill rate per gate, cost per run
+- Tolerance values k_i (calibrated through operation)
+- MV credits remaining (111,167 — applies after MV integration, currently unused)
 
 ---
 
@@ -494,6 +540,8 @@ _Every session that touches this process. Links to LBB for detail._
 |------|---------------|-----------|
 | 2026-04-02 | Initial PROCESS.md created (v2.0.0 format) | none |
 | 2026-04-01 | Rewritten to PROCESS_TEMPLATE v4.0.0 -- all 14 sections | none |
+| 2026-04-02 | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A ran all 2,478 slots: 226 emails generated via pattern. Gate C not yet run. | 5db86e97 |
+| 2026-04-02 | recon_emails (7.5K) identified as unused data — emails found during 300 recon sitting in JSON array, never written to person_email. Branch 1 database join fixing this. | 54f035e9 |
 
 ---
 
@@ -502,8 +550,8 @@ _Every session that touches this process. Links to LBB for detail._
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-02 |
-| Last Modified | 2026-04-01 |
-| Version | 3.0.0 |
+| Last Modified | 2026-04-02 |
+| Version | 4.0.0 |
 | Template Version | 4.0.0 |
 | Governing Engine | imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md (parent repo — Barton-Processes inherits) |
 | Logbook Schema | law/logbook_schema.yaml |
