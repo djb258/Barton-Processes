@@ -46,7 +46,9 @@ Every QC scorecard MUST include:
 
 **No query = no evidence. No evidence = no scorecard. No scorecard = TS has nothing to review.**
 
-LLMs can and do fabricate results. The query is the proof. If the human runs the query and gets a different number, the scorecard is invalid and the QC agent's output is rejected.
+**Self-verification (mandatory):** QC agent runs every query TWICE. First run produces the number. Second run verifies it. If the two results don't match — flag it. Don't put it on the scorecard. Something is wrong — the data changed, the query is non-deterministic, or the agent fabricated the first result. Two matching runs = verified evidence. Mismatch = investigate before presenting to TS.
+
+LLMs can and do fabricate results. The query is the proof. The double-run catches fabrication at the agent level before the human ever sees it. Then the human can STILL run it independently as a third check.
 
 ### What This Agent Does NOT Do
 - Does not fix problems. Reports them.
