@@ -156,6 +156,35 @@ slot_workbench.outreach_id
 
 ---
 
+
+---
+
+## DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### Define (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| linkedin_url | LD-01 | TEXT, URL (linkedin.com/in/slug) | LinkedIn profile URL for a person | V |
+| profile_name | LD-02 | TEXT, title case, First Last | Name from LinkedIn profile slug | V |
+| outreach_id | LD-03 | TEXT, UUID | Join key to slot_workbench | C |
+| slot_type | LD-04 | TEXT, enum: CEO/CFO/HR | Which slot this LinkedIn resolves to | C |
+
+### Map (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| LD-01 linkedin_url | person_linkedin | Direct |
+| LD-02 profile_name | person_first_name + person_last_name | Split on space |
+
+### Join (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| slot_workbench.outreach_id | direct | outreach_id on workbench row |
+
 ## 6. CONSTANTS & VARIABLES (Bedrock S2 + Mathematical Principle)
 
 ### Mathematical Definitions

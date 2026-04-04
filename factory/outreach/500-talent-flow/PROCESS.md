@@ -164,6 +164,36 @@ people.linkedin_snapshots.person_id (run_month = target)
 
 ---
 
+
+---
+
+## DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### Define (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| slot_state_t0 | TF-01 | TEXT, person name at time T0 | Who was in this slot last check | V |
+| slot_state_t1 | TF-02 | TEXT, person name at time T1 | Who is in this slot now | V |
+| movement_detected | TF-03 | BOOLEAN, 1 or 0 | Did the person in this slot change? | V |
+| outreach_id | TF-04 | TEXT, UUID | Which company | C |
+| slot_type | TF-05 | TEXT, enum: CEO/CFO/HR | Which slot changed | C |
+
+### Map (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| TF-03 movement | signal_people_changed on company_grid | Direct → triggers LCS signal |
+| TF-01/02 old→new name | People sub-hub slot update | Replace person in slot |
+
+### Join (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| slot_workbench.outreach_id | direct | outreach_id on workbench row |
+
 ## 6. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
 
 ### Mathematical Definitions

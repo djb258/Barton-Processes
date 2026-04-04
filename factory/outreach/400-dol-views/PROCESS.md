@@ -157,6 +157,37 @@ dol_form_5500.company_unique_id → territory linkage
 
 ---
 
+
+---
+
+## DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### Define (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| form_5500 | DOL-01 | D1 row, 20+ columns | Annual filing record | C (structure) |
+| sponsor_ein | DOL-02 | TEXT, 9-digit EIN format | Employer ID number — join key to company | C |
+| signer_name | DOL-03 | TEXT, LAST FIRST format | Person who signed the filing | V |
+| schedule_a_broker | DOL-04 | TEXT, free-form | Broker/advisor from Schedule A | V |
+| filing_year | DOL-05 | INTEGER, 4-digit year | Which plan year this filing covers | V |
+
+### Map (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| DOL-02 EIN | slot_workbench.ein | Direct — the join key |
+| DOL-03 signer_name | People sub-hub (CEO/CFO slot fill) | Parse LAST,FIRST → split → classify |
+| DOL-04 broker | slot_workbench.broker_or_advisor | Direct |
+
+### Join (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| dol_form_5500.sponsor_dfe_ein → slot_workbench.ein | indirect (1 hop via EIN) | EIN bridges DOL to company |
+
 ## 6. CONSTANTS & VARIABLES (Bedrock §2)
 
 ### Constants

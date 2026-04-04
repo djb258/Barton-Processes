@@ -174,6 +174,38 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 
 ---
 
+
+---
+
+## DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### Define (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| message_id | CE-01 | TEXT, UUID | Unique message identifier | C |
+| outreach_id | CE-02 | TEXT, UUID | Which company | C |
+| slot_type | CE-03 | TEXT, enum: CEO/CFO/HR | Which person receiving | C |
+| template_id | CE-04 | TEXT, template reference | Which message template | C |
+| send_domain | CE-05 | TEXT, domain format | Which Mailgun domain sends | V |
+| send_status | CE-06 | TEXT, enum: queued/sent/delivered/bounced/opened/clicked | Message lifecycle state | V |
+
+### Map (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| CE-02 outreach_id + CE-03 slot_type | People slot → person_email | Read recipient from slot |
+| CE-04 template_id | Signal Map → message template | Grid Reader signal pattern determines template |
+| CE-05 send_domain | lcs_domain_rotation | Round-robin LRU selection |
+
+### Join (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| slot_workbench.outreach_id | direct | outreach_id links message to company |
+
 ## 6. CONSTANTS & VARIABLES (Bedrock §2)
 
 ### Mathematical Definitions

@@ -209,6 +209,38 @@ slot_workbench.outreach_id (SPINE)
 
 ---
 
+
+---
+
+## DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### Define (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| search_query | REC-01 | TEXT, template: {company} {city} {state} leadership | Startpage search query | C |
+| result_url | REC-02 | TEXT, URL | Search result URL | V |
+| about_url | REC-03 | TEXT, URL | Discovered leadership/about page URL | V |
+| platform_url | REC-04 | TEXT, URL per platform | Platform presence URL | V |
+| recon_name_title | REC-05 | TEXT, JSON array of name+title pairs | Extracted person names and titles | V |
+| outreach_id | REC-06 | TEXT, UUID | Join key | C |
+
+### Map (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| REC-03 about_url | slot_workbench.about_url | Direct |
+| REC-04 platform_url | slot_workbench.recon_platform_urls | JSON merge |
+| REC-05 names/titles | slot_workbench.recon_name_titles | Direct |
+
+### Join (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| slot_workbench.outreach_id | direct | outreach_id on every result row |
+
 ## 6. CONSTANTS & VARIABLES (Bedrock S2 + Mathematical Principle)
 
 ### Mathematical Definitions
