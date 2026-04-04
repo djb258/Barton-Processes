@@ -22,6 +22,8 @@ _What is this thing? The constants that never change regardless of when you read
 | Deployed URL | not deployed |
 | Cron | Manual (batched, after Process 300 completes) |
 | Runtime | Python script (local or container) |
+| Authority | Inherited from imo-creator-v2 (Sovereign) |
+| Last Modified | 2026-04-04 |
 
 ---
 
@@ -197,7 +199,42 @@ slot_workbench.outreach_id
 
 ---
 
-## 6. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
+## 6. DMJ — Define, Map, Join (law/doctrine/DMJ.md)
+
+_Three steps. In order. Can't skip._
+
+### 6a. DEFINE (Build the Key)
+
+| Element | ID | Format | Description | C or V |
+|---------|-----|--------|-------------|--------|
+| slot_workbench row | SW-01 | D1 row, 50+ columns | One slot per company per role (CEO/CFO/HR) | C (structure) |
+| person_first_name | SW-02 | TEXT, title case, 1-30 chars | Person's first name | V (fill) |
+| person_last_name | SW-03 | TEXT, title case, 1-30 chars | Person's last name | V (fill) |
+| person_full_name | SW-04 | TEXT, "{first} {last}" | Concatenated full name | V (derived) |
+| slot_type | SW-05 | TEXT, enum: CEO/CFO/HR | Which role this slot represents | C (structure) |
+| person_source | SW-06 | TEXT, enum: recon/hunter/dol/vendor/manual | Where the person data came from | C (provenance) |
+| readiness_tier | SW-07 | TEXT, enum: FULL/REACHABLE/PATTERN_READY/NAME_ONLY/EMPTY | How complete this slot is | V (state) |
+| outreach_id | SW-08 | TEXT, UUID | Join key to company identity — the spine | C (structure) |
+
+### 6b. MAP (Connect Key to Structure)
+
+| Source | Target | Transform |
+|--------|--------|-----------|
+| recon_organized_people (from 300) | person_first_name + person_last_name | Split name, title case |
+| hunter_contact (EHC-04/05) | person_first_name + person_last_name | Direct |
+| dol_signer_name | person_first_name + person_last_name | Parse "LAST, FIRST" format |
+| job_title / seniority+department | slot_type | Title Classifier → CEO/CFO/HR |
+| Multiple sources | person_source | Tag with source enum |
+
+### 6c. JOIN (Path to Spine)
+
+| Join Path | Type | Description |
+|-----------|------|-------------|
+| slot_workbench.outreach_id → cl_company_identity.outreach_id | Direct | One hop. outreach_id is on every slot row. |
+
+---
+
+## 7. CONSTANTS & VARIABLES (Bedrock §2 + Mathematical Principle)
 
 ### Mathematical Definitions
 
@@ -277,18 +314,21 @@ After 200 fills names, downstream routing:
 
 ---
 
-## 7. STOP CONDITIONS
+## 8. STOP CONDITIONS
 
 _When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviation Model (Bedrock §8)._
 
 | Condition | Action |
 |-----------|--------|
+| Can't answer two-question intake | HALT — process isn't defined |
+| OSAM question can't be routed | HALT — semantic gap, ask human |
+| Budget cap reached on Top Shelf tool | HALT — do not proceed |
 | CAPTCHA > 10% of Gate C searches | HALT — rotate proxy port, check DataImpulse credentials, wait and retry |
 | Errors > 5% of total processed | HALT — check D1 connectivity, wrangler auth |
 | No proxy credentials for Gate C | Skip Gate C, fill only from A/B |
 | Fill rate plateaus for 3 consecutive runs | INVESTIGATE — recon data stale, Hunter exhausted, query patterns need refinement |
 | All slots have has_name = 1 | DONE — nothing to process |
-| Strike 3 on same failure | Troubleshoot/Train -> Airworthiness Directive |
+| Strike 3 on same failure | Troubleshoot/Train → Airworthiness Directive |
 
 ---
 
