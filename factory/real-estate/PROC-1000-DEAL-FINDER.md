@@ -23,7 +23,7 @@ _Every UT doc MUST carry this block at the top. Check a box when the referenced 
 | 9 | BARs Referenced — every BAR this doc touches, with status | ☑ | §3d |
 | 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☑ | §3e |
 | 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
-| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☐ | §9b |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☑ (12 of 14 rows ☑; 2 require manual browser check: GCP quota, DataImpulse spend) | §9b |
 
 ---
 
@@ -75,7 +75,7 @@ flowchart LR
 | ctb_placement | leaf |
 | imo_topology | middle |
 | cc_layer | CC-04 process |
-| services | svg-d1-storage (D1), storage-hub CF Worker, content-fetcher CF Worker, DataImpulse proxy, Google Places API, OSM Overpass API, Nominatim, OpenRouter (vision tail only), Doppler |
+| services | svg-d1-storage (D1), storage-hub CF Worker, content-fetcher CF Worker, DataImpulse proxy, Google Places API, OSM Overpass API, Nominatim, Doppler |
 | secrets_provider | doppler (project: imo-creator, config: dev) |
 | acceptance_criteria | All 7 steps complete: sovereign created → ZIPs filtered → facilities discovered → websites crawled → price_per_sqft populated → saturation calculated → equation evaluated. P=1 ZIPs identified with full market data. |
 
@@ -128,10 +128,10 @@ _Everything this depends on. Read this before running._
 | storage-hub CF Worker | storage-hub · branch · CC-03 | OPERATE | 🟢 | REST API deployed at storage-hub.svg-outreach.workers.dev |
 | content-fetcher CF Worker | content-fetcher · branch · CC-03 | OPERATE | 🟢 | Used by crawl_facility_sites.py via service binding |
 | DataImpulse proxy | vendor · leaf · CC-04 | OPERATE | 🟢 | PROXY_USER, PROXY_PASS, PROXY_PORT=823 in Doppler |
-| Google Places API | vendor · leaf · CC-04 | OPERATE | 🟢 | GOOGLE_PLACES_API_KEY in Doppler — 1K free req/mo then $0.002/req |
+| Google Places API | vendor · leaf · CC-04 | OPERATE | 🟢 | GOOGLE_MAPS_API_KEY in Doppler — 1K free req/mo then $0.002/req |
 | OSM Overpass API | vendor · leaf · CC-04 | OPERATE | 🟢 | Free — no key needed |
 | Nominatim geocoder | vendor · leaf · CC-04 | OPERATE | 🟢 | Free — no key needed |
-| OpenRouter (vision tail) | vendor · leaf · CC-04 | OPERATE | 🟢 | OPENROUTER_API_KEY in Doppler — used only when OSM has no footprint data |
+| OpenRouter | vendor · leaf · CC-04 | OPERATE | 🟢 | OPENROUTER_API_KEY in Doppler — LLM tail arbiter, NOT used by estimate_facility_sqft.py |
 | pub_zips_master | table · trunk · CC-02 | OPERATE | 🟢 | 45,094 ZIPs seeded — read-only reference |
 | Python scripts (factory/agents/up/) | scripts · leaf · CC-04 | OPERATE | 🟢 | All scripts present and tested in PA/WV corridor runs |
 
@@ -148,7 +148,7 @@ _Everything this depends on. Read this before running._
 |-----------|------|-----------------|--------|
 | svg-d1-storage | D1 database | All storage domain tables — facilities, saturation, ZIPs, jurisdictions, build constants | DONE |
 | pub_zips_master | D1 table | 45,094 ZIPs with density, population, county FIPS — geographic filter base | DONE |
-| Doppler (imo-creator, dev) | Secrets | PROXY_USER, PROXY_PASS, PROXY_PORT, GOOGLE_PLACES_API_KEY, OPENROUTER_API_KEY, LBB_API_KEY | DONE |
+| Doppler (imo-creator, dev) | Secrets | PROXY_USER, PROXY_PASS, PROXY_PORT, GOOGLE_MAPS_API_KEY, OPENROUTER_API_KEY, LBB_API_KEY | DONE |
 | Python 3 + pip deps | Runtime | requests, sqlite3 (via wrangler D1), beautifulsoup4, geopy | DONE |
 | wrangler CLI | CLI tool | CWD for all D1 queries: `workers/storage-hub` | DONE |
 
@@ -164,10 +164,10 @@ _Everything this depends on. Read this before running._
 | Item | Type | Cost Tier | Credentials | What It Does |
 |------|------|-----------|-------------|-------------|
 | DataImpulse | Proxy | ~$8-10/full market run | PROXY_USER, PROXY_PASS, PROXY_PORT | Routes scraping through residential IPs |
-| Google Places API | REST API | Free 1K req/mo then $0.002/req | GOOGLE_PLACES_API_KEY | Text search "storage facilities near [ZIP]" |
+| Google Places API | REST API | Free 1K req/mo then $0.002/req | GOOGLE_MAPS_API_KEY | Text search "storage facilities near [ZIP]" |
 | OSM Overpass API | REST API | Free | None | Building polygon queries for sqft estimation |
 | Nominatim | REST API | Free | None | Address → lat/lon geocoding fallback |
-| OpenRouter | LLM API | ~$0.01/image (tail only) | OPENROUTER_API_KEY | Vision model on satellite images when OSM fails |
+| OpenRouter | LLM API | ~$0.01/call | OPENROUTER_API_KEY | LLM tail arbiter — NOT used by estimate_facility_sqft.py (that script is OSM-only) |
 
 ### Secrets
 
@@ -176,8 +176,8 @@ _Everything this depends on. Read this before running._
 | PROXY_USER | imo-creator | dev | discover_google_places.py, crawl_facility_sites.py |
 | PROXY_PASS | imo-creator | dev | same |
 | PROXY_PORT | imo-creator | dev | same (value: 823) |
-| GOOGLE_PLACES_API_KEY | imo-creator | dev | discover_google_places.py |
-| OPENROUTER_API_KEY | imo-creator | dev | estimate_facility_sqft.py (vision fallback) |
+| GOOGLE_MAPS_API_KEY | imo-creator | dev | discover_google_places.py |
+| OPENROUTER_API_KEY | imo-creator | dev | LLM tail arbiter — NOT estimate_facility_sqft.py |
 | LBB_API_KEY | imo-creator | dev | Post-run LBB ingest |
 
 ### 3c. FCEs Attached (Checklist item 8)
@@ -221,7 +221,7 @@ _Everything in this cluster answers: what moves?_
 
 - **ZIP code** — center of the target market (e.g., 15522 for Bedford, PA)
 - **Radius in miles** — market scope (e.g., 50 or 100)
-- **ENV vars** from Doppler: PROXY_USER, PROXY_PASS, PROXY_PORT=823, GOOGLE_PLACES_API_KEY, OPENROUTER_API_KEY
+- **ENV vars** from Doppler: PROXY_USER, PROXY_PASS, PROXY_PORT=823, GOOGLE_MAPS_API_KEY, OPENROUTER_API_KEY
 - **Working directory**: `imo-creator-v2-20260317/factory/agents/up/` for all script runs
 - **Wrangler CWD**: `workers/storage-hub` for all D1 SQL queries
 
@@ -232,7 +232,7 @@ _Everything in this cluster answers: what moves?_
 | 1 | Discover facilities | `discover_google_places.py --zip [ZIP] --radius [MI] --test` then `--all` | sovereign_market_search record, ZIPs in sovereign_market_zips, facilities in pub_storage_facilities | ~30 min (24 agents) | Google Places API credits |
 | 2 | Crawl facility websites | `crawl_facility_sites.py --count 500 --batch N --total-batches 24` | pub_storage_facilities updated with pricing, phone, address; facility_sitemap populated | ~2-3 hrs (24 agents) | ~$8-10 DataImpulse |
 | 3 | Calculate price/sqft | SQL UPDATE | price_per_sqft populated on all facilities with asking_rent_10x10 | Instant | Free |
-| 4 | Estimate building sqft | `estimate_facility_sqft.py --all` | total_sqft, sqft_method per facility | ~1 hr | Free (OSM) or ~$25 (satellite vision fallback) |
+| 4 | Estimate building sqft | `estimate_facility_sqft.py --all` | total_sqft, sqft_method per facility | ~1 hr | Free (OSM only — no vision fallback) |
 | 5 | Calculate saturation | `calc_storage_saturation.py --state [ST]` | pub_market_saturation: one row per ZIP with saturation_ratio, saturation_level, gap_sqft | Instant | Free |
 | 6 | Run equation | Query pub_market_saturation + pub_storage_facilities | P=1 ZIPs list: saturation_ratio < 1.0 AND price_per_sqft > 0.72 | Instant | Free |
 | 7 | Cleanup | SQL DELETE + dedup | Remove no-address facilities, dedup name+ZIP | Instant | Free |
@@ -244,13 +244,13 @@ _Everything in this cluster answers: what moves?_
 
 # Test run first — processes 5 ZIPs, verify output before full run
 PROXY_USER=xxx PROXY_PASS=xxx PROXY_PORT=823 \
-GOOGLE_PLACES_API_KEY=xxx \
+GOOGLE_MAPS_API_KEY=xxx \
 python3 discover_google_places.py --zip 15522 --radius 50 --test
 
 # Verify: check pub_storage_facilities for new rows
 # Then full run with 24 parallel agents:
 PROXY_USER=xxx PROXY_PASS=xxx PROXY_PORT=823 \
-GOOGLE_PLACES_API_KEY=xxx \
+GOOGLE_MAPS_API_KEY=xxx \
 bash run_market_discovery.sh 15522 50 24
 ```
 
@@ -265,7 +265,7 @@ bash run_market_discovery.sh 15522 50 24
 **Expected output:** ~500-2,000 facilities for a 50-mile radius rural market.
 
 **Error handling:**
-- Google Places 429 (rate limit) → wait 60s, retry. If persistent, check GOOGLE_PLACES_API_KEY quota in GCP console.
+- Google Places 429 (rate limit) → wait 60s, retry. If persistent, check GOOGLE_MAPS_API_KEY quota in GCP console.
 - Proxy connection refused → check PROXY_USER/PROXY_PASS in Doppler, verify DataImpulse account balance.
 - D1 write failures → check wrangler is authenticated (`wrangler whoami`) and CWD is workers/storage-hub.
 
@@ -289,8 +289,8 @@ python3 crawl_facility_sites.py --count 500 --batch 2 --total-batches 24
 - Pulls facilities with source_url from pub_storage_facilities
 - Each batch processes its slice: `facility_id % total_batches == batch - 1`
 - Hits each facility website through DataImpulse residential proxy
-- Follows internal links up to 20 pages per site
-- Regex extracts 13 fields: address, phone, pricing (5x5 / 5x10 / 10x10 / 10x15 / 10x20 / 10x30), hours, climate flag, 24hr access, unit count
+- Follows internal links up to 50 pages per site
+- Regex extracts 12 fields: address, phone, pricing (5x5 / 10x10 / 10x15 / 10x20 / 10x30), hours, climate flag, 24hr access, unit count
 - Records which URL each field was found on → facility_sitemap
 - Geocodes addresses via Nominatim (free) when lat/lon is missing
 - Updates pub_storage_facilities.scrape_status = 'crawled' on completion
@@ -300,7 +300,7 @@ python3 crawl_facility_sites.py --count 500 --batch 2 --total-batches 24
 **Error handling:**
 - fetch_failed (HTTP 403/404/timeout) → these are normal; facility has no accessible website. Mark scrape_status='fetch_failed'. Move on.
 - multi_address → site returned multiple address candidates. Mark 'multi_address'. Review manually later.
-- llm_failed → OpenRouter vision call failed. Check OPENROUTER_API_KEY. Retry step 4.
+- llm_failed → OpenRouter call failed (not from estimate_facility_sqft.py — that script is OSM-only). Check OPENROUTER_API_KEY if used elsewhere.
 - Proxy ban detected → rotate proxy session (restart crawl_facility_sites.py). DataImpulse auto-rotates IPs but if blocked domains accumulate, wait 30 min.
 
 #### Step 3 — Calculate Price Per Square Foot
@@ -341,15 +341,16 @@ python3 estimate_facility_sqft.py --all
 - Queries OSM Overpass API with a bounding box around each facility's lat/lon
 - Finds building footprint polygon tagged as amenity=storage or building=yes
 - Calculates sqft from polygon via shoelace formula
-- Falls back to satellite vision (Google Maps satellite + OpenRouter vision model) if OSM has no data
-- Writes total_sqft and sqft_method ('osm' / 'satellite' / 'manual') to pub_storage_facilities
+- Writes total_sqft and sqft_method ('osm_polygon' or 'needs_review') to pub_storage_facilities
+- 'needs_review' = no OSM polygon found; manual review required
 
-**Cost:** Free for OSM. ~$0.01/image for OpenRouter vision fallback. ~$25 total if 2,500 facilities need vision fallback.
+**LIMITATION: Currently hardcoded to Bedford PA corridor (lat 39.59-40.31, lon -79.01 to -78.09). For a new market, update the bounding box constants in the script before running --all.**
+
+**Cost:** Free (OSM only).
 
 **Error handling:**
-- OSM returns empty → normal for new/small facilities. sqft_method='satellite' fallback fires.
-- OpenRouter 429 → reduce concurrency, retry. Check OPENROUTER_API_KEY.
-- All OSM empty → check if lat/lon is populated on facilities (Step 2 geocode may have failed).
+- OSM returns empty → normal for new/small facilities. sqft_method='needs_review' written. Manual review required.
+- All OSM empty → check if lat/lon is populated on facilities (Step 2 geocode may have failed). Also verify bounding box constants in script match the target market area.
 
 #### Step 5 — Calculate Market Saturation
 
@@ -493,6 +494,7 @@ _Which tables this reads, writes, joins. Reference STORAGE_REPO_UT.md (blueprint
 | pub_build_constants | Build math constants (is_active=1) | is_active |
 | pub_jurisdictions | County zoning authority | county_fips |
 | pub_jurisdiction_storage_rules | Setbacks, height limits, permit type | jurisdiction_id |
+| map_layer_registry | Layer definitions for universal map engine (Sub-hub 29) — 9 layers registered | layer_id |
 
 ### WRITE Access
 
@@ -580,7 +582,7 @@ _Three steps. In order. Can't skip._
 | Density filter | EX-006 | People/sqmi | < 500 — rural markets only | C |
 | Population floor | EX-007 | People | > 500 — no ghost towns | C |
 | Batch count | EX-008 | Integer | 24 — parallel agent count for Steps 1 and 2 | C |
-| Max pages per site | EX-009 | Integer | 20 — crawl depth limit | C |
+| Max pages per site | EX-009 | Integer | 50 — crawl depth limit | C |
 | Saturation ratio C1 threshold | EX-010 | Ratio | k1 = 1.0 — market must have room | C |
 | Price floor C2 threshold | EX-011 | USD/sqft/month | k2 = 0.72 — equation lower bound | C |
 | Market price per sqft | EX-012 | USD/sqft/month | AVG(price_per_sqft) per ZIP from competitor data | V |
@@ -626,7 +628,7 @@ _Three steps. In order. Can't skip._
 - Density filter: < 500 people/sqmi (rural only)
 - Population floor: > 500 (no ghost towns)
 - Parallel agents: 24 (tested batch count for Steps 1-2)
-- Max pages per site crawl: 20
+- Max pages per site crawl: 50
 - Saturation threshold — UNDERSERVED: < 0.7
 - Saturation threshold — OVERSATURATED: > 1.0
 
@@ -650,7 +652,7 @@ _Three steps. In order. Can't skip._
 |-----------|--------|
 | Can't answer two-question intake (no ZIP, no radius) | HALT — ask Dave |
 | PROXY_USER / PROXY_PASS not in env | HALT — pull from Doppler before proceeding |
-| GOOGLE_PLACES_API_KEY not in env | HALT — pull from Doppler |
+| GOOGLE_MAPS_API_KEY not in env | HALT — pull from Doppler |
 | pub_zips_master empty in D1 | HALT — run seed_zips_to_d1.py from Neon first |
 | Google Places returns 0 facilities for 5 test ZIPs | HALT — verify API key, check quota, try different ZIP |
 | Step 2 crawl: 0 facilities scraped after 1 hour | HALT — check proxy credentials, verify source_url populated |
@@ -724,7 +726,7 @@ _Run these to confirm the pipeline worked._
 | Claim / Field | Section | Source of Truth | Verification Command / Query | Verified? | Last Check | Value at Check |
 |---------------|---------|-----------------|------------------------------|-----------|-----------|----------------|
 | pub_zips_master has 45,094 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_zips_master` | ☑ | 2026-04-20 | 45,094 |
-| pub_storage_facilities has 12,605 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-20 | 13,022 |
+| pub_storage_facilities has 13,022 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-20 | 13,022 |
 | pub_market_saturation has 26,316 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_market_saturation` | ☑ | 2026-04-20 | 26,316 |
 | 4 sovereign market searches recorded | §3 | svg-d1-storage | `SELECT COUNT(*) FROM sovereign_market_search` | ☑ | 2026-04-20 | 4 |
 | storage-hub worker health | §3 | Worker endpoint | `curl https://storage-hub.svg-outreach.workers.dev/health` | ☑ | 2026-04-20 | {"status":"ok","timestamp":"2026-04-20T09:34:40.503Z","bindings":{"storage_ops":true,"d1_global":true}} |
@@ -760,7 +762,7 @@ _Run these to confirm the pipeline worked._
 
 | Metric | Run 1 (PA/WV) | Run 2 | Run 3 | Trend | Action |
 |--------|-------|-------|-------|-------|--------|
-| Facilities discovered | 12,605 total across 4 runs | — | — | TIGHTENING | Lock batch count at 24 |
+| Facilities discovered | 13,022 total across 4 runs | — | — | TIGHTENING | Lock batch count at 24 |
 | Pricing extraction rate | ~15-25% | — | — | FLAT | Investigate JS-heavy sites |
 | Saturation calc runtime | Instant | — | — | TIGHTENING | Lock as instant step |
 
@@ -785,11 +787,9 @@ FROM pub_storage_facilities f
 JOIN facility_sitemap fs ON f.id = fs.facility_id
 WHERE fs.fields_found LIKE '%pricing%'
 LIMIT 100"
-
-# 2. Run targeted re-crawl against just pricing pages
-# (crawl_facility_sites.py --mode reprice --from-sitemap)
-# Compare price to last value. Update if changed.
 ```
+
+**NOTE: Re-crawl mode not yet built. Current procedure: query facility_sitemap for pricing URLs (query above), then run `crawl_facility_sites.py` on those URLs manually, passing each pricing_url as a target. Compare price to last value. Update if changed. The `--mode reprice --from-sitemap` flag does not exist yet — BAR-332 covers this.**
 
 ---
 
