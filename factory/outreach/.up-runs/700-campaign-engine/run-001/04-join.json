@@ -1,0 +1,74 @@
+{
+  "stage": "04-join",
+  "agent": "j-join",
+  "run": "run-001",
+  "subject": "PROC-700 Campaign Engine",
+  "medium": "executable process",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "status": "proposed",
+
+  "candidate": {
+    "description": "Join path for PROC-700 Campaign Engine to the system spine. Two join dimensions evaluated: (1) governance spine — HEIR identity connecting this process to imo-creator-v2 sovereign, (2) operational spine — data schema join chain connecting runtime data to sovereign_company_id. Both paths resolve. The governance path has an identity mismatch (heir.yaml process_id 'PROC-CAMPAIGN' vs declared 'PROC-700'). The operational path resolves through a multi-hop indirect chain across two D1 databases with implicit column mappings at two hops."
+  },
+
+  "join_path": {
+    "spine": "sovereign_company_id (operational) + imo-creator-v2/PROC-700 (governance)",
+    "type": "indirect",
+    "test_results": {
+      "governance_join": {
+        "path": "heir.yaml.sovereign_ref → imo-creator-v2 (governance spine)",
+        "resolved": true,
+        "notes": "heir.yaml sovereign_ref = 'imo-creator-v2' resolves to the garage (CC-01). However, heir.yaml declares process_id as 'PROC-CAMPAIGN' while PROCESS.md §1 and orchestrator both declare 'PROC-700'. The hub_id is ambiguous — two different identifiers for the same process. This does not break the join (sovereign_ref is the spine key, not process_id), but it is a governance identity deviation that must be reconciled."
+      },
+      "operational_join": {
+        "path": "lcs_cid.sovereign_company_id → outreach_company_target.company_unique_id → people_company_slot.outreach_id → people_people_master.unique_id (via person_unique_id) → campaign_queue.cid_id → lcs_mid_sequence_state.mid_id → lcs_event.mid_id",
+        "resolved": true,
+        "hop_count": 6,
+        "notes": "Full chain documented in PROCESS.md §5. Resolves to sovereign_company_id as the operational spine. Two issues: (1) Hop 1 maps sovereign_company_id to company_unique_id — different column names, no FK declaration, mapping is inferred from semantic equivalence. (2) Hop 2 maps company_unique_id to outreach_id — again different column names, relationship is implicit. Both hops cross from svg-d1-spine to svg-d1-outreach-ops (different D1 databases), requiring application-level routing. Write-side tables (campaign_queue, lcs_mid_sequence_state) are declared but not yet created — process is in BUILD with no src code."
+      },
+      "cross_database_routing": {
+        "boundary": "svg-d1-spine (READ/WRITE) ↔ svg-d1-outreach-ops (READ ONLY)",
+        "documented": true,
+        "notes": "§5 OSAM explicitly declares two databases with different access levels. The join chain crosses this boundary at the outreach_company_target → people_company_slot hop. This is correctly documented in the Data Schema but the join chain notation in §5 does not visually mark the database boundary crossing."
+      }
+    }
+  },
+
+  "comparators": {
+    "governance_identity_deviations": {
+      "status": "evaluable",
+      "measurement": "Count of mismatches between HEIR identity fields and process-declared identity fields. 0 = HEIR and PROCESS.md fully agree on all identity values.",
+      "lower_is_better": true,
+      "value": 1,
+      "detail": "heir.yaml declares process_id as 'PROC-CAMPAIGN'; PROCESS.md §1 and orchestrator both use 'PROC-700'. One field, one mismatch. Does not break the spine join (sovereign_ref is the join key), but creates ambiguous hub_id for governance routing."
+    },
+    "implicit_join_hop_count": {
+      "status": "evaluable",
+      "measurement": "Count of join chain hops where the column mapping requires semantic inference rather than explicit FK declaration (different column names, no documented foreign key relationship). 0 = every hop uses matching column names or declares the FK.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "Hop 1: sovereign_company_id → company_unique_id (different names, inferred equivalence). Hop 2: company_unique_id/outreach_id mapping (different names, relationship implicit from domain knowledge). Remaining 4 hops use explicit or self-documenting column references."
+    },
+    "cross_database_boundary_count": {
+      "status": "evaluable",
+      "measurement": "Count of join chain hops that cross D1 database boundaries, requiring application-level routing rather than native SQL joins. 0 = entire chain within a single database.",
+      "lower_is_better": true,
+      "value": 1,
+      "detail": "One boundary crossing: svg-d1-spine → svg-d1-outreach-ops at the outreach_company_target → people_company_slot hop. Documented in §5 OSAM (two databases listed with different bindings and access levels) but not marked in the join chain notation itself."
+    },
+    "undeclared_write_table_count": {
+      "status": "evaluable",
+      "measurement": "Count of tables referenced in the join chain's write path that do not yet exist and require creation before the join can be exercised at runtime. 0 = all write tables exist.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "campaign_queue and lcs_mid_sequence_state are referenced in §5 WRITE table and join chain but are not yet created in svg-d1-spine. Process is in BUILD with empty src/ — expected, but the join chain cannot be exercised until these tables exist. lcs_event may or may not exist (referenced but not verified)."
+    },
+    "join_chain_boundary_annotation_gap": {
+      "status": "evaluable",
+      "measurement": "Count of join chain boundaries (database crossings, access-level changes) that are not visually annotated in the §5 join chain notation. 0 = all boundaries marked.",
+      "lower_is_better": true,
+      "value": 1,
+      "detail": "The §5 join chain notation shows the full hop sequence but does not mark where the chain crosses from svg-d1-spine to svg-d1-outreach-ops. The OSAM READ/WRITE tables document this separately, but the chain itself should annotate the boundary for agent routing clarity."
+    }
+  }
+}

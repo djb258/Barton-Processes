@@ -1,0 +1,202 @@
+{
+  "candidate": {
+    "description": "PROC-300 (Company Reconnaissance) PROCESS.md — validated against the executable-process invariant set (10 comparators across 24 layers) and Grid Reader structural requirements.",
+    "scope": "factory/outreach/300-blog-worker/PROCESS.md as the primary artifact. heir.yaml and src/ as supporting boundary files. Validation target: US run-003 invariant set for medium 'executable-process'."
+  },
+  "elements": [
+    {
+      "id": "E01-executable-process",
+      "description": "The PROCESS.md exists as a single parseable document with three structural clusters: Identity (§1-§2), Contract (§3-§6), Governance (§7-§14). Maps to L1.",
+      "format": "Markdown document with numbered section headers. Three clusters mapped to Thing/Flow/Change.",
+      "classification": "constant"
+    },
+    {
+      "id": "E02-process-identity",
+      "description": "§1 Identity table + heir.yaml HEIR fields. 10 process fields (ID, Name, Business Silo, CTB Position, ORBT, Strikes, Last Deployed, BAR Reference, Deployed URL, Cron) + 8 HEIR fields in heir.yaml. Maps to L5.",
+      "format": "Markdown table (10 rows) + YAML file (8 fields). 18 total named fields.",
+      "classification": "constant"
+    },
+    {
+      "id": "E03-naming-inconsistency",
+      "description": "Directory name '300-blog-worker', heir.yaml name 'Blog Worker', PROCESS.md title 'Company Reconnaissance'. Three names for one process. Orchestrator flagged this.",
+      "format": "String mismatch across three files.",
+      "classification": "variable"
+    },
+    {
+      "id": "E04-imo-declaration",
+      "description": "§3 IMO section. Two-Question Intake answered (trigger + source). Middle table with 5 columns (Step, Input, What Happens, Output, Tool Used) across 5 rows. Output block names downstream consumers (200, 201, 202). Circle block present (--stale 90 feedback). Maps to L8.",
+      "format": "Two-Question Intake (2 answered questions) + Middle table (5 cols × 5 rows) + Output prose + Circle prose.",
+      "classification": "constant"
+    },
+    {
+      "id": "E05-data-schema-osam",
+      "description": "§5 OSAM section. READ table (2 rows, 3 cols), WRITE table (7 rows, 3 cols), Join Chain (traces to outreach_id spine), Forbidden Paths (4 rows, 2 cols), Query Routing (5 rows, 3 cols). Maps to L9.",
+      "format": "Four sub-sections with markdown tables. Join chain in tree notation.",
+      "classification": "constant"
+    },
+    {
+      "id": "E06-dmj-structure-extraction",
+      "description": "DMJ content exists but is NOT labeled as canonical DMJ tables (Define/Map/Join). §6 C&V section has Constants table (8 rows with C_i, primitive, k_i) and Variables list — this IS the Define step content. §5 OSAM Join Chain IS Join step content. Map step (Source→Target→Transform) is implicit in the Middle table step mappings but not explicitly formatted as a 3-column Map table. Maps to L10.",
+      "format": "Expected: three ordered tables (Define 5-col, Map 3-col, Join 3-col). Found: Define-equivalent in §6 Constants table, Join-equivalent in §5 Join Chain, Map not in canonical format.",
+      "classification": "variable"
+    },
+    {
+      "id": "E07-cv-declaration",
+      "description": "§6 Constants & Variables section. Constants table (8 rows with comparator, primitive, tolerance). Variables bullet list (10 items). Mathematical definitions block present. Maps to L11.",
+      "format": "Two sub-sections: Constants table + Variables bullet list. Mathematical preamble with P(x;θ) definition.",
+      "classification": "constant"
+    },
+    {
+      "id": "E08-guard-rails",
+      "description": "§7 Stop Conditions. 6 rows: CAPTCHA >10%, Error >5%, Cost >$100, Can't answer intake, D1 write failures >1%, Strike 3. All 6 canonical conditions present. Maps to L12.",
+      "format": "Table: 2 columns (Condition, Action). 6 rows.",
+      "classification": "constant"
+    },
+    {
+      "id": "E09-verification",
+      "description": "§9 Smoke Test. 5 numbered executable steps with expected output. Three Primitives Check present with all three questions (Thing, Flow, Change) answered. Maps to L13.",
+      "format": "Numbered code block (5 steps) + Three Primitives Check (3 binary questions).",
+      "classification": "constant"
+    },
+    {
+      "id": "E10-measurement",
+      "description": "§10 Analytics section. Process Metrics table (12 comparators with C_i, primitive, unit, baseline, k_i, phase). Sigma Tracking table (5 metrics, Run 1 baseline, trend = BASELINE). ORBT Gate Rules table (4 transitions). All three sub-sections present. Maps to L14.",
+      "format": "Three sub-sections: Metrics table (12 rows, 7 cols), Sigma table (5 rows, 6 cols), ORBT table (4 rows, 3 cols).",
+      "classification": "constant"
+    },
+    {
+      "id": "E11-execution-trace",
+      "description": "§11 Execution Trace. Run 1 summary table (10 fields) + trace entries table (9 rows with Step/Target/Actual/Delta/Status/Timestamp — 6 columns). Append-only constraint stated. Maps to L15.",
+      "format": "Run summary table + trace entries table. 6 columns present of 14 required (trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by missing from per-step entries).",
+      "classification": "variable"
+    },
+    {
+      "id": "E12-orbt-gate-rules",
+      "description": "§10 ORBT Gate Rule table. All 4 transitions defined: BUILD→OPERATE (3 runs + auditor), OPERATE→REPAIR (metric outside tolerance), REPAIR→OPERATE (fix + auditor), Any→TROUBLESHOOT/TRAIN (Strike 3). Maps to L24.",
+      "format": "Table: 3 columns (From, To, Gate). 4 rows.",
+      "classification": "constant"
+    },
+    {
+      "id": "E13-certification-logbook",
+      "description": "§12 Logbook. Birth Certificate table (8 fields) + Run 1 Entry table (12 fields). Append-only. Created after BUILD→OPERATE. Maps to L16.",
+      "format": "Two tables: Birth Certificate (8 rows), Run 1 Entry (12 rows). signed_by = 'Pending auditor certification'.",
+      "classification": "constant"
+    },
+    {
+      "id": "E14-fleet-learning",
+      "description": "§13 Fleet Failure Registry. Pattern Registry table (2 entries: FP-301, FP-302). Incident Details for each. Strike Rules (1→repair, 2→scrutiny, 3→T/T). Maps to L17.",
+      "format": "Registry table (8 cols) + incident narrative + strike rules list.",
+      "classification": "constant"
+    },
+    {
+      "id": "E15-session-history",
+      "description": "§14 Session Log. 6 entries with Date, What Was Done, LBB Record. Append-only pointer to LBB knowledge store. Maps to L18.",
+      "format": "Table: 3 columns (Date, What Was Done, LBB Record). 6 rows.",
+      "classification": "constant"
+    },
+    {
+      "id": "E16-heir-yaml",
+      "description": "heir.yaml present with 8 fields: sovereign_ref, hub_id, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria.",
+      "format": "YAML file with 8 top-level keys.",
+      "classification": "constant"
+    },
+    {
+      "id": "E17-grid-reader-parseability",
+      "description": "The entire PROCESS.md as a machine-parseable grid. All 14 sections use markdown tables or structured blocks. No prose-only sections blocking programmatic extraction.",
+      "format": "Markdown with consistent table structure per section. Headers map to section IDs.",
+      "classification": "unidentified"
+    },
+    {
+      "id": "E18-step-level-comparators",
+      "description": "§3 Middle section contains per-step comparator tables (C_1 through C_12) with tolerances and P(x;θ) equations. This is beyond the invariant set requirement — the process self-instruments at the step level.",
+      "format": "Per-step comparator tables: 6 columns (C_i, Name, Primitive, Measures, Initial k_i, Phase). 5 step-level P equations.",
+      "classification": "constant"
+    },
+    {
+      "id": "E19-purpose-section",
+      "description": "§2 Why This Exists. Names what breaks without it (200, 201, 202 start blind) and what downstream process starves. Maps to L6.",
+      "format": "Prose block: 2 sentences + 1 rule statement.",
+      "classification": "constant"
+    },
+    {
+      "id": "E20-resources-section",
+      "description": "§4 What It Grabs Off The Wall + §8 Dependencies. Databases table (1 row), Tools table (4 rows), Secrets table (2 rows), Upstream table (1 row), Downstream table (3 rows). Maps to L7.",
+      "format": "Five tables across two sections with distinct column schemas.",
+      "classification": "constant"
+    }
+  ],
+  "comparators": {
+    "C_exists_deviation": {
+      "status": "evaluable",
+      "measurement": "Count of three required cluster headers (Identity/Contract/Governance) MISSING from PROCESS.md. 0 = all present.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_identity_missing_fields": {
+      "status": "evaluable",
+      "measurement": "Count of 18 required identity fields (10 process + 8 HEIR) that are absent or empty. 0 = all present.",
+      "lower_is_better": true,
+      "value": 1
+    },
+    "C_imo_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of IMO sub-component failures: (1) intake questions unanswered, (2) Middle table missing columns, (3) Output missing downstream consumer. Max possible = 3. 0 = fully compliant.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_osam_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of OSAM sub-component failures: (1) READ table absent, (2) join chain missing spine ID, (3) forbidden paths section absent. Max possible = 3. 0 = fully compliant.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_dmj_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of DMJ canonical format gaps: (1) Define table not in 5-col canonical format, (2) Map table not in 3-col Source/Target/Transform format, (3) Join path not in 3-col format. Max possible = 3. 0 = fully compliant.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "C_guardrails_deficit": {
+      "status": "evaluable",
+      "measurement": "max(0, 6 - count_of_declared_stop_conditions). 0 = meets or exceeds 6 canonical conditions.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_verification_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of verification failures: (1) no numbered steps, (2) steps missing expected results, (3) Three Primitives Check absent. Max possible = 3. 0 = fully compliant.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_measurement_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of measurement sub-component failures: (1) metrics table absent or no metrics defined, (2) sigma tracking absent, (3) ORBT gate rules absent. Max possible = 3. 0 = fully compliant.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_trace_missing_fields": {
+      "status": "evaluable",
+      "measurement": "Count of 14 required trace entry fields missing from the per-step schema. Fields present: step, target, actual, delta, status, timestamp (6). Missing: trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by (8).",
+      "lower_is_better": true,
+      "value": 8
+    },
+    "C_orbt_missing_transitions": {
+      "status": "evaluable",
+      "measurement": "Count of 4 required ORBT transitions (BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→T/T) not defined with gate conditions. 0 = all present.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_naming_inconsistency_count": {
+      "status": "evaluable",
+      "measurement": "Count of naming mismatches across PROCESS.md title, heir.yaml name, and directory name. 0 = all aligned.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "C_grid_reader_opaque_sections": {
+      "status": "not_evaluable",
+      "measurement": "Count of sections that cannot be machine-parsed into structured key-value or tabular data. Requires a parser run against the markdown to evaluate.",
+      "lower_is_better": true,
+      "reason": "No grid reader parser has been run against this document yet. Structural inspection suggests all 14 sections use tables or structured blocks, but programmatic verification is pending."
+    }
+  }
+}

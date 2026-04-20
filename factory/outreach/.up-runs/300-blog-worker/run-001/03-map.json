@@ -1,0 +1,231 @@
+{
+  "candidate": {
+    "description": "Mapping of 20 defined elements (02-define.json) from PROC-300 Company Reconnaissance PROCESS.md to the 24-layer invariant set from US run-003 (medium: executable-process). Target structure is the US invariant set — no new structure proposed because the target already exists and is locked.",
+    "target_structure": "US run-003 invariant set: 24 layers (L1-L24) across 3 clusters (Identity/Contract/Governance mapped to Thing/Flow/Change). 10 layers are in the invariant set with explicit comparators. 14 are structural containers or non-invariant leaves.",
+    "mapping_strategy": "Each defined element maps to one or more layers by structural role. Mapping types: direct (element format matches layer format), transformed (element content present but format diverges from layer spec), inferred (element is a property of a layer not explicitly declared), unresolved (element has no clear layer target or conflicts with the target)."
+  },
+  "mappings": [
+    {
+      "source_id": "E01-executable-process",
+      "target": "L1",
+      "type": "direct",
+      "reason": "PROCESS.md exists as a single parseable document with three cluster headers (Identity §1-§2, Contract §3-§6, Governance §7-§14). Matches L1 format exactly."
+    },
+    {
+      "source_id": "E02-process-identity",
+      "target": "L5",
+      "type": "transformed",
+      "reason": "PROCESS.md §1 has 11 process fields (10 required + 1 extra 'Runtime'). heir.yaml has 8 HEIR-like fields but with DIFFERENT content than PROCESS.md describes (Blog Worker vs Company Reconnaissance). The 10+8=18 field count is met structurally, but 8 HEIR fields contain stale/wrong data. Mapping is valid for structure, invalid for content."
+    },
+    {
+      "source_id": "E03-naming-inconsistency",
+      "target": "L5",
+      "type": "unresolved",
+      "reason": "Three names for one process: directory='300-blog-worker', heir.yaml='Blog Worker', PROCESS.md='Company Reconnaissance'. This is not a mapping gap — it is an identity conflict within L5. The process evolved from Blog Worker to Company Reconnaissance but the directory name and heir.yaml were never updated. Requires human decision: rename directory + update heir.yaml, or acknowledge the historical name."
+    },
+    {
+      "source_id": "E04-imo-declaration",
+      "target": "L8",
+      "type": "direct",
+      "reason": "§3 IMO section has all 5 sub-components: Two-Question Intake (2 answered), Middle table (5 cols × 5 rows), Output block (names 200/201/202), Circle block (--stale 90 feedback). Exact match to L8 format."
+    },
+    {
+      "source_id": "E05-data-schema-osam",
+      "target": "L9",
+      "type": "direct",
+      "reason": "§5 OSAM has READ table (2 rows, 3 cols), WRITE table (7 rows, 3 cols), Join Chain (outreach_id spine), Forbidden Paths (4 rows, 2 cols), plus Query Routing (5 rows — bonus beyond L9 spec). All L9 sub-sections present."
+    },
+    {
+      "source_id": "E06-dmj-structure-extraction",
+      "target": "L10",
+      "type": "transformed",
+      "reason": "DMJ content is distributed across non-canonical locations: Define-equivalent content in §6 Constants table (8 rows with C_i, primitive, k_i — but format is NOT the 5-col Element/ID/Format/Description/C-or-V table specified by L19). Map step (Source→Target→Transform 3-col table per L20) is ABSENT — mapping logic is implicit in Middle table step descriptions but never explicit. Join-equivalent in §5 Join Chain (matches L21 intent but uses tree notation not the 3-col Join Path/Type/Description table). Two of three DMJ sub-layers require format transformation."
+    },
+    {
+      "source_id": "E07-cv-declaration",
+      "target": "L11",
+      "type": "direct",
+      "reason": "§6 has Constants table (8 rows) and Variables bullet list (10 items). Matches L11 format: two sub-sections (constants list + variables list). Exceeds minimum by including mathematical definitions and per-constant comparator references."
+    },
+    {
+      "source_id": "E08-guard-rails",
+      "target": "L12",
+      "type": "direct",
+      "reason": "§7 has 6 rows in Condition/Action table. All 6 canonical stop conditions from Bedrock §6/§8 are present: CAPTCHA >10%, Error >5%, Cost >$100, Can't answer intake, D1 write failures >1%, Strike 3. Exact match to L12."
+    },
+    {
+      "source_id": "E09-verification",
+      "target": "L13",
+      "type": "direct",
+      "reason": "§9 has 5 numbered executable steps with expected output + Three Primitives Check with all three questions answered (Thing/Flow/Change). Exact match to L13."
+    },
+    {
+      "source_id": "E10-measurement",
+      "target": "L14",
+      "type": "direct",
+      "reason": "§10 has all three sub-sections: Process Metrics table (12 comparators, 7 cols — maps to L22), Sigma Tracking table (5 metrics, 6 cols — maps to L23), ORBT Gate Rules table (4 transitions, 3 cols — maps to L24). All present."
+    },
+    {
+      "source_id": "E11-execution-trace",
+      "target": "L15",
+      "type": "transformed",
+      "reason": "§11 has Run Summary (10 fields) + Trace Entries (9 rows, 6 cols). L15 requires 14 fields per trace entry. Present: step, target, actual, delta, status, timestamp (6). Missing: trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by (8). Structure exists but schema is incomplete — requires adding 8 fields to each trace entry row."
+    },
+    {
+      "source_id": "E12-orbt-gate-rules",
+      "target": "L24",
+      "type": "direct",
+      "reason": "§10 ORBT Gate Rule table has all 4 transitions with gate conditions: BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→T/T. Exact match to L24."
+    },
+    {
+      "source_id": "E13-certification-logbook",
+      "target": "L16",
+      "type": "direct",
+      "reason": "§12 has Birth Certificate (8 fields) + Run 1 Entry (12 fields). Append-only. Created after BUILD→OPERATE. signed_by = 'Pending auditor certification'. Matches L16 format (7 required fields present in Birth Certificate)."
+    },
+    {
+      "source_id": "E14-fleet-learning",
+      "target": "L17",
+      "type": "direct",
+      "reason": "§13 has Failure Pattern Registry (2 entries, 8 cols) + Incident Details narrative + Strike Rules (1→repair, 2→scrutiny, 3→T/T). Matches L17 format."
+    },
+    {
+      "source_id": "E15-session-history",
+      "target": "L18",
+      "type": "direct",
+      "reason": "§14 has 6 entries with Date/What Was Done/LBB Record. Append-only. Matches L18 3-column format exactly."
+    },
+    {
+      "source_id": "E16-heir-yaml",
+      "target": "L5",
+      "type": "unresolved",
+      "reason": "heir.yaml has 8 HEIR field names (sovereign_ref, hub_id=PROC-BLOG, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria) — field structure maps to L5. BUT content is WRONG: process_id='PROC-BLOG' (should be PROC-300), name='Blog Worker' (should be Company Reconnaissance), runtime='cloudflare-workers' (actual is Python 3 local), services list names CF Workers/Neon/Firecrawl/ScraperAPI (actual is Python/DataImpulse/Startpage/curl_cffi/D1). This file describes a DIFFERENT process than what PROCESS.md documents. Content-level mapping fails completely."
+    },
+    {
+      "source_id": "E17-grid-reader-parseability",
+      "target": "L1",
+      "type": "inferred",
+      "reason": "Grid Reader parseability is a structural property of L1 (the executable process as a single parseable document). All 14 sections use markdown tables or structured blocks. Inference: machine-parseable. Cannot confirm without running a parser — marked inferred, not direct."
+    },
+    {
+      "source_id": "E18-step-level-comparators",
+      "target": "L8",
+      "type": "direct",
+      "reason": "Per-step comparator tables (C_1 through C_12) with tolerances and P(x;θ) equations are embedded in §3 Middle section. This maps to L8 (IMO Declaration) as an extension of the Middle table — the comparators ARE the executable specification of each step. Also partially maps to L14/L22 (measurement) since these same C_i values appear in the Process Metrics table."
+    },
+    {
+      "source_id": "E19-purpose-section",
+      "target": "L6",
+      "type": "direct",
+      "reason": "§2 names what breaks without this process (200/201/202 start blind) and what downstream starves. Matches L6 prose block format with the fixed constraint (must reference downstream dependency)."
+    },
+    {
+      "source_id": "E20-resources-section",
+      "target": "L7",
+      "type": "direct",
+      "reason": "§4 + §8 combined have 5 tables: Databases (1 row), Tools (4 rows), Secrets (2 rows), Upstream (1 row), Downstream (3 rows). Maps to L7 four-table format (Dependencies, Downstream Consumers, Tools & Integrations, Secrets). Dependencies split across §8 Upstream and §4 Databases."
+    }
+  ],
+  "unmapped_elements": [],
+  "unmapped_layers": [
+    {
+      "layer_id": "L2",
+      "name": "Identity Cluster",
+      "reason": "Organizational container — no discrete element in PROCESS.md maps solely to the cluster boundary. The cluster IS the grouping of L5+L6+L7, which are all mapped. No gap — this is structural, not content."
+    },
+    {
+      "layer_id": "L3",
+      "name": "Contract Cluster",
+      "reason": "Organizational container — grouping of L8+L9+L10+L11+L12. All children mapped. No gap."
+    },
+    {
+      "layer_id": "L4",
+      "name": "Governance Cluster",
+      "reason": "Organizational container — grouping of L13+L14+L15+L16+L17+L18. All children mapped. No gap."
+    }
+  ],
+  "gaps": [
+    {
+      "gap_id": "GAP-01",
+      "severity": "high",
+      "layer": "L5",
+      "description": "heir.yaml content describes a completely different process than PROCESS.md. process_id='PROC-BLOG', name='Blog Worker', runtime='cloudflare-workers', services=[CF Worker, Neon, Firecrawl, ScraperAPI]. PROCESS.md says process_id='PROC-300', name='Company Reconnaissance', runtime='Python 3', services=[Startpage, DataImpulse, curl_cffi, D1]. The file was never updated when the process evolved. All 8 HEIR field VALUES are stale or wrong — the STRUCTURE (8 named fields) maps correctly.",
+      "impact": "Any agent reading heir.yaml for routing, filtering, or identity resolution will get wrong answers. HEIR is the VIN number — a wrong VIN means you're working on the wrong aircraft.",
+      "resolution": "Human decision required: rewrite heir.yaml to match current PROCESS.md reality (PROC-300, Company Reconnaissance, Python 3, DataImpulse, etc.)."
+    },
+    {
+      "gap_id": "GAP-02",
+      "severity": "medium",
+      "layer": "L10/L20",
+      "description": "DMJ Map step (L20: Source→Target→Transform 3-column table) is absent from PROCESS.md. Define-equivalent content exists in §6 Constants table but not in canonical 5-column format (Element/ID/Format/Description/C-or-V per L19). Join-equivalent exists in §5 Join Chain but not in canonical 3-column format (Join Path/Type/Description per L21). Content is present, canonical format is not.",
+      "impact": "Agents expecting canonical DMJ tables will fail to parse. The process works operationally because the mapping logic is embedded in the Middle table steps and OSAM, but it's not machine-extractable in the DMJ-standard format.",
+      "resolution": "Add three canonical DMJ tables to PROCESS.md: (1) Define table — 5 cols, extract from §6 Constants, (2) Map table — 3 cols, extract source→target from Middle table, (3) Join table — 3 cols, extract from §5 Join Chain. Content already exists — this is a formatting transform, not new information."
+    },
+    {
+      "gap_id": "GAP-03",
+      "severity": "medium",
+      "layer": "L15",
+      "description": "Execution Trace entries have 6 of 14 required fields. Missing 8: trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by. Run summary captures some of these (run_id, total_duration_ms, total_cost_cents, errors) but not at the per-step level.",
+      "impact": "Auditor cannot verify individual step accountability. Per-step cost allocation impossible. No trace_id means entries can't be referenced by other systems.",
+      "resolution": "Expand trace entry schema to include all 14 fields. For Run 1, backfill where possible from Run Summary. For future runs, emit 14-field entries per Middle table step."
+    },
+    {
+      "gap_id": "GAP-04",
+      "severity": "low",
+      "layer": "L5",
+      "description": "Directory name '300-blog-worker' does not match PROCESS.md name 'Company Reconnaissance'. This is cosmetic but creates ambiguity for humans and any agent that derives process identity from directory name.",
+      "impact": "Low — directory rename is a breaking change for any path-dependent references. Leaving it is confusing but functional.",
+      "resolution": "Human decision: rename directory to '300-company-recon' (breaking change) or document the historical name as an alias in L5 identity."
+    }
+  ],
+  "comparators": {
+    "unmapped_element_count": {
+      "status": "evaluable",
+      "measurement": "Count of elements from 02-define.json that could not be mapped to any target layer. 0 = all elements mapped.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "unmapped_invariant_layer_count": {
+      "status": "evaluable",
+      "measurement": "Count of the 10 invariant-set layers (L1, L5, L8, L9, L10, L12, L13, L14, L15, L24) that have no source element mapped to them. 0 = all invariant layers have at least one mapping.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "unresolved_mapping_count": {
+      "status": "evaluable",
+      "measurement": "Count of mappings with type='unresolved' — elements that map structurally but have content-level conflicts preventing direct use. 0 = all mappings are direct, transformed, or inferred.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "transform_required_count": {
+      "status": "evaluable",
+      "measurement": "Count of mappings with type='transformed' — elements whose content exists but format diverges from the target layer spec, requiring reformatting before agents can parse them. 0 = all mappings are direct or inferred.",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of documented structural gaps between source elements and target layers. Includes format gaps, missing fields, content conflicts. 0 = no gaps.",
+      "lower_is_better": true,
+      "value": 4
+    },
+    "heir_field_divergence_count": {
+      "status": "evaluable",
+      "measurement": "Count of heir.yaml fields whose content contradicts PROCESS.md. 0 = heir.yaml and PROCESS.md are aligned on all identity fields.",
+      "lower_is_better": true,
+      "value": 8
+    },
+    "trace_missing_field_count": {
+      "status": "evaluable",
+      "measurement": "Count of 14 required trace entry fields absent from the per-step schema (from 02-define.json E11). 0 = all 14 fields present.",
+      "lower_is_better": true,
+      "value": 8
+    },
+    "dmj_canonical_format_gap_count": {
+      "status": "evaluable",
+      "measurement": "Count of 3 DMJ sub-layers (L19 Define, L20 Map, L21 Join) whose content is not in the canonical table format specified by the invariant set. 0 = all three DMJ tables in canonical format.",
+      "lower_is_better": true,
+      "value": 2
+    }
+  }
+}

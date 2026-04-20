@@ -1,0 +1,68 @@
+{
+  "candidate": {
+    "description": "PROC-301 Management Page Parser join path evaluation. Two spine connections assessed: (1) governance spine — HEIR identity connecting the process document to the fleet hierarchy via sovereign_ref + hub_id, (2) data spine — outreach_id connecting the process's data operations to the outreach domain's core identity. Both paths are testable from the subject's existing documentation (heir.yaml + PROCESS.md Section 5 OSAM)."
+  },
+  "join_path": {
+    "spine": "outreach_id",
+    "type": "direct",
+    "hops": [
+      {
+        "from": "slot_workbench.outreach_id",
+        "to": "outreach_id (spine)",
+        "mechanism": "Direct column match — outreach_id is a first-class column in slot_workbench, the only table in PROC-301's READ and WRITE paths. No intermediate table, no fuzzy match, no multi-hop resolution required."
+      }
+    ],
+    "governance_join": {
+      "spine": "HEIR (sovereign_ref + hub_id)",
+      "type": "direct",
+      "hops": [
+        {
+          "from": "heir.yaml → sovereign_ref: imo-creator, hub_id: outreach",
+          "to": "fleet/registry/FLEET_REGISTRY.yaml → outreach repo entry",
+          "mechanism": "Direct lookup — sovereign_ref identifies the garage, hub_id identifies the business silo. ctb_placement=leaf positions the process on the CTB."
+        }
+      ],
+      "resolves": true,
+      "evidence": "heir.yaml exists with sovereign_ref=imo-creator and hub_id=outreach. FLEET_REGISTRY.yaml contains an outreach entry. STRUCTURE_MANIFEST.yaml defines the factory/outreach/ path."
+    },
+    "test_results": {
+      "data_join_resolves": true,
+      "data_join_evidence": "PROCESS.md Section 5 OSAM READ table explicitly lists slot_workbench with join key = outreach_id. PROCESS.md Section 3 IMO Input block lists slot_workbench.outreach_id as a named input. The process reads by outreach_id and writes back by outreach_id. No ambiguity.",
+      "governance_join_resolves": true,
+      "governance_join_evidence": "heir.yaml has sovereign_ref=imo-creator (matches garage repo) and hub_id=outreach (matches fleet registry entry). ctb_placement=leaf is correct for a process under factory/outreach/.",
+      "documentation_gap": "The join path EXISTS and RESOLVES but is not DOCUMENTED in two required locations: (1) Section 5 DATA SCHEMA is missing the Join Chain sub-section that would formally declare: outreach_id → slot_workbench.outreach_id (direct). (2) Section 6 DMJ is entirely absent, so the Join table (L21) that would declare the join path type and description does not exist. These are documentation gaps, not join failures — the path is provably traversable from existing content."
+    }
+  },
+  "comparators": {
+    "join_chain_documentation_gap": {
+      "status": "evaluable",
+      "measurement": "Count of required join documentation locations (Join Chain sub-section in Section 5, Join table in Section 6c) that are absent from the subject. Two locations required, both absent.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "join_hop_count": {
+      "status": "evaluable",
+      "measurement": "Number of hops from the process's primary data table to the domain spine. Direct join = 1 hop (slot_workbench.outreach_id → outreach_id). Fewer hops = simpler, more reliable join path.",
+      "lower_is_better": true,
+      "value": 1
+    },
+    "heir_field_gap_affecting_governance_join": {
+      "status": "evaluable",
+      "measurement": "Count of 8 required HEIR fields missing from heir.yaml that degrade the governance join's completeness. Missing: imo_topology, services, secrets_provider, acceptance_criteria. The governance join RESOLVES on sovereign_ref + hub_id alone, but 4 missing fields mean the process is not fully addressable by fleet tooling.",
+      "lower_is_better": true,
+      "value": 4
+    },
+    "cqrs_write_target_ambiguity": {
+      "status": "evaluable",
+      "measurement": "Count of write targets where the join path is ambiguous due to CQRS compliance uncertainty. PROCESS.md WRITE section lists slot_workbench (the grid-level table) but IMO Step 5 references page_contacts as an intermediate table. If page_contacts is the sub-hub canonical table and slot_workbench is a grid view, the join chain has an undocumented intermediate hop. 1 ambiguous write target.",
+      "lower_is_better": true,
+      "value": 1
+    },
+    "unresolved_join_type_count": {
+      "status": "evaluable",
+      "measurement": "Count of join paths where the type (direct/indirect/fuzzy) cannot be confirmed from existing documentation alone. The data join is confirmably direct (outreach_id column exists in READ/WRITE tables). The page_contacts → slot_workbench relationship is unconfirmed (is it a view, a separate table with its own join, or an alias?). 1 unresolved type.",
+      "lower_is_better": true,
+      "value": 1
+    }
+  }
+}

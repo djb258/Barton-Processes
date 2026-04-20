@@ -403,6 +403,8 @@ def update_slot(slot, linkedin_url, source):
         f"person_linkedin = {esc(linkedin_url)}",
         f"has_linkedin = 1",
         f"linkedin_found_at = {esc(now)}",
+        f"linkedin_last_checked_at = {esc(now)}",
+        f"linkedin_changed = 1",
         f"readiness_tier = {esc(new_tier)}",
     ]
 

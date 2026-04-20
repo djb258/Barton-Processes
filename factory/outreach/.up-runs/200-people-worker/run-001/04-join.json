@@ -1,0 +1,63 @@
+{
+  "candidate": {
+    "description": "Join path from 200-people-worker PROCESS.md to the Unified Template v6.0.0 spine (US handoff invariant set, 24 layers). The subject is the medium itself — an executable process document being evaluated against the template that defines what an executable process IS. Three join routes evaluated: identity (PROC-200 → fleet → sovereign), structural (14 sections → 3 clusters → 24 layers), and data domain (slot_workbench.outreach_id → outreach spine)."
+  },
+  "join_path": {
+    "spine": "Unified Template v6.0.0 invariant set (US handoff, 24 layers L1-L24, 10 comparators)",
+    "type": "direct",
+    "test_results": {
+      "identity_route": {
+        "path": "PROC-200 → ctb_placement:leaf → factory/outreach/200-people-worker → sovereign:imo-creator-v2",
+        "resolves": true,
+        "defect": "heir.yaml declares hub_id=PROC-PEOPLE, PROCESS.md declares PROC-200. Two identifiers for one process. Join still resolves — both point to the same CTB position — but the conflict is a consistency fault in the routing key."
+      },
+      "structural_route": {
+        "path": "PROCESS.md (L1) → §1-§2=Identity(L2) + §3-§6=Contract(L3) + §7-§14=Governance(L4) → 20 depth-2/depth-3 layers",
+        "resolves": true,
+        "defect": "20 of 24 layers have direct or transformed mappings from 03-map.json. 2 layers unresolved (L19 DMJ Define, L20 DMJ Map). 2 target layers unmapped by Define stage (L7 Resources, L10 DMJ parent). Structural join is incomplete but majority-attached — the gaps are in specific leaf layers, not in the trunk or cluster attachment."
+      },
+      "data_domain_route": {
+        "path": "slot_workbench.outreach_id → outreach domain spine",
+        "resolves": true,
+        "defect": "None. OSAM §5 declares the join chain: slot_workbench → outreach_id. Single-table, self-contained. Direct join. No multi-hop resolution needed."
+      }
+    }
+  },
+  "comparators": {
+    "identity_conflicts_on_join_path": {
+      "status": "evaluable",
+      "measurement": "Count of identity values on the join path where multiple sources declare conflicting values for the same routing field. 0 = all identity fields consistent across all sources.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "Conflict 1: hub_id — heir.yaml says PROC-PEOPLE, PROCESS.md §1 says PROC-200. Conflict 2: governing_engine — heir.yaml references law/doctrine/TIER0_DOCTRINE.md which does not exist (renamed to FOUNDATIONAL_BEDROCK.md). Both are stale references, not structural breaks — the join resolves through CTB position regardless."
+    },
+    "unresolved_structural_hops": {
+      "status": "evaluable",
+      "measurement": "Count of US handoff layers (L1-L24) where the map artifact classified the mapping as 'unresolved' — no source element exists to connect the subject to that layer. 0 = every layer on the spine has a source attachment.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "L19 (DMJ Define table) — absent as formal 5-column schema. L20 (DMJ Map table) — absent as formal 3-column schema. Both are depth-3 leaves under L10. The subject performs equivalent functions (C&V in §6, OSAM in §5) but not in the target schema. The hop from subject to these layers does not resolve in the expected format."
+    },
+    "unmapped_target_layers": {
+      "status": "evaluable",
+      "measurement": "Count of US handoff layers that the Define stage did not extract a source element for — the join cannot be tested because the mapping itself is absent. 0 = Define was exhaustive, all layers have something to join.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "L7 (Resources) — not extracted by Define stage. The subject likely has dependency/tool/secret information across ARCHITECTURE.md, DATA_SOURCE_REGISTRY.md, and heir.yaml but it was not defined as a discrete element. L10 (DMJ parent container) — children are unresolved so parent container has no structural content to evaluate."
+    },
+    "join_hop_count": {
+      "status": "evaluable",
+      "measurement": "Number of intermediate hops required to reach the spine from the subject's identity. 0 = direct attachment (subject IS the spine instance). Lower = simpler join, less ambiguity.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "The subject IS the medium being evaluated. PROCESS.md is an instance of 'executable process' — the exact medium the Unified Template defines. The join is direct: no intermediate lookup, no fuzzy matching, no multi-hop resolution. The document attaches to the template at L1 (root) and every layer below is a structural check against that direct attachment."
+    },
+    "stale_reference_count": {
+      "status": "evaluable",
+      "measurement": "Count of references on the join path that point to renamed, moved, or non-existent targets. 0 = all references resolve to current targets.",
+      "lower_is_better": true,
+      "value": 2,
+      "detail": "Stale 1: heir.yaml governing_engine → law/doctrine/TIER0_DOCTRINE.md (file renamed to FOUNDATIONAL_BEDROCK.md). Stale 2: standalone OSAM.md references old table names (people_company_slot, people_people_master) while PROCESS.md §5 references slot_workbench. Neither breaks the join — the primary document (PROCESS.md) has correct references — but the secondary files carry dead pointers."
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "candidate": {
+    "description": "Join path from PROC-300 (Company Reconnaissance) mapped elements to the executable-process invariant set spine. The spine is the 10-layer invariant set from US run-003. Join type is direct — PROC-300 IS an instance of the executable-process medium. Every mapped element connects to the invariant set through the layer ID system (L1-L24). The join resolves because the mapping established in 03-map.json provides a complete source→layer→invariant path for all 10 invariant layers."
+  },
+  "join_path": {
+    "spine": "US run-003 invariant set (10 layers: L1, L5, L8, L9, L10, L12, L13, L14, L15, L24). The spine ID is the layer_id field — each invariant layer has a unique ID that mapped elements join on. PROC-300's sections (§1-§14) are the source. The map (03-map.json) is the join table. The invariant set is the spine.",
+    "type": "direct",
+    "test_results": {
+      "L1_executable_process": {
+        "source": "E01-executable-process",
+        "join_key": "L1",
+        "resolved": true,
+        "note": "PROCESS.md exists with three cluster headers. Direct match."
+      },
+      "L5_process_identity": {
+        "source": ["E02-process-identity", "E16-heir-yaml"],
+        "join_key": "L5",
+        "resolved": true,
+        "note": "Structure joins (18 fields present). Content conflict in heir.yaml (8/8 fields stale) does not break the structural join — the path exists, the fill is wrong. E03 naming inconsistency is a content-level conflict within L5, not a missing join path."
+      },
+      "L8_imo_declaration": {
+        "source": ["E04-imo-declaration", "E18-step-level-comparators"],
+        "join_key": "L8",
+        "resolved": true,
+        "note": "All 5 sub-components present. Step-level comparators extend beyond minimum. Direct join."
+      },
+      "L9_data_schema": {
+        "source": "E05-data-schema-osam",
+        "join_key": "L9",
+        "resolved": true,
+        "note": "All 4 sub-sections present. Join chain traces to outreach_id spine. Direct join."
+      },
+      "L10_dmj": {
+        "source": "E06-dmj-structure-extraction",
+        "join_key": "L10",
+        "resolved": true,
+        "note": "Content exists but 2 of 3 sub-layers not in canonical format (L19 Define, L20 Map). The join path resolves — the content IS there — but requires format transformation. Join type at sub-layer level: transformed, not direct."
+      },
+      "L12_guard_rails": {
+        "source": "E08-guard-rails",
+        "join_key": "L12",
+        "resolved": true,
+        "note": "6/6 canonical stop conditions present. Direct join."
+      },
+      "L13_verification": {
+        "source": "E09-verification",
+        "join_key": "L13",
+        "resolved": true,
+        "note": "5 numbered steps + Three Primitives Check. Direct join."
+      },
+      "L14_measurement": {
+        "source": "E10-measurement",
+        "join_key": "L14",
+        "resolved": true,
+        "note": "All 3 sub-sections present (L22 metrics, L23 sigma, L24 ORBT). Direct join."
+      },
+      "L15_execution_trace": {
+        "source": "E11-execution-trace",
+        "join_key": "L15",
+        "resolved": true,
+        "note": "Trace entries exist but schema has 6/14 required fields. The join path resolves (trace section exists at the correct position), but the content is incomplete — 8 fields missing from per-step schema."
+      },
+      "L24_orbt_gate_rules": {
+        "source": "E12-orbt-gate-rules",
+        "join_key": "L24",
+        "resolved": true,
+        "note": "All 4 transitions defined with gate conditions. Direct join."
+      }
+    }
+  },
+  "comparators": {
+    "unresolved_invariant_joins": {
+      "status": "evaluable",
+      "measurement": "Count of 10 invariant-set layers where no source element can join (no path exists). 0 = every invariant layer has at least one resolved join path from a source element.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "content_conflict_count": {
+      "status": "evaluable",
+      "measurement": "Count of join paths where structural connection resolves but content-level data contradicts the target (e.g., heir.yaml fields contain wrong values). These joins exist but carry bad data. 0 = all resolved joins have consistent content.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "format_transform_required": {
+      "status": "evaluable",
+      "measurement": "Count of invariant-layer joins where content exists but is not in the canonical format specified by the layer schema, requiring transformation before machine parsing. 0 = all joins resolve with content already in canonical format.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "incomplete_schema_field_gap": {
+      "status": "evaluable",
+      "measurement": "Total count of required fields missing across all join paths where the schema is incomplete. Sourced from L15 trace entries (8 missing of 14) and L5 heir.yaml (8 stale of 8). 0 = all schemas complete at the join boundary.",
+      "lower_is_better": true,
+      "value": 16
+    },
+    "multi_hop_join_count": {
+      "status": "evaluable",
+      "measurement": "Count of join paths requiring multi-hop resolution (source → intermediate → spine). 0 = all joins are direct single-hop. Higher values indicate fragile join chains that could break if intermediaries change.",
+      "lower_is_better": true,
+      "value": 0
+    }
+  }
+}

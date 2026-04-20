@@ -1,0 +1,71 @@
+{
+  "subject": {
+    "path": "/Users/employeeai/Documents/Barton-Processes/factory/outreach/300-blog-worker",
+    "process_id": "PROC-300",
+    "name": "Company Reconnaissance",
+    "directory_name": "300-blog-worker",
+    "name_mismatch": "Directory says 'blog-worker', heir.yaml says 'Blog Worker', PROCESS.md says 'Company Reconnaissance'. The process evolved — downstream stages should flag this for alignment.",
+    "orbt_current": "OPERATE",
+    "version": "4.0.0",
+    "template_version": "4.0.0",
+    "business_silo": "svg-agency",
+    "medium": "executable process",
+    "us_handoff_medium": "executable-process",
+    "us_run_dir": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003",
+    "invariant_layer_count": 10,
+    "total_layer_count": 24,
+    "domestication_depth": 3
+  },
+  "scope": "Validate PROC-300 (Company Reconnaissance) against the executable-process invariant set from US run-003 (10 comparators across 24 layers) and Grid Reader structural requirements. This is a structuring validation run on an OPERATE-state process — checking whether the existing PROCESS.md satisfies all invariant layers, not building new content.",
+  "boundary": [
+    "factory/outreach/300-blog-worker/PROCESS.md",
+    "factory/outreach/300-blog-worker/CLAUDE.md",
+    "factory/outreach/300-blog-worker/heir.yaml",
+    "factory/outreach/300-blog-worker/src/"
+  ],
+  "excluded": [
+    "factory/outreach/300-blog-worker/src/output/",
+    "Any upstream/downstream process docs (200, 201, 202, 100)",
+    "D1 runtime data in slot_workbench",
+    "Neon vault tables"
+  ],
+  "intent": "Validate PROC-300 against unified template v6.0.0 and Grid Reader requirements. Operator wants to confirm the existing process document conforms to the invariant set discovered by US (10 comparators: L1 Executable Process, L5 Process Identity, L8 IMO Declaration, L9 Data Schema, L10 DMJ, L11 C&V, L12 Guard Rails, L13 Verification, L14 Measurement, L15 Execution Trace, L24 ORBT Gate Rules).",
+  "heir": {
+    "sovereign_ref": "imo-creator-v2",
+    "hub_id": "PROC-300",
+    "ctb_placement": "leaf",
+    "imo_topology": "spoke",
+    "cc_layer": "CC-04",
+    "services": [
+      "Python 3 (company-recon.py, parse-recon.py, organizer.py, store-*.py)",
+      "DataImpulse residential proxy (sticky session, ports 11000+)",
+      "Startpage search engine",
+      "curl_cffi (chrome131 impersonation)",
+      "D1 svg-d1-outreach-ops (slot_workbench)"
+    ],
+    "secrets_provider": "doppler",
+    "acceptance_criteria": [
+      "All 10 invariant-set comparators evaluate to P=1 (pass)",
+      "HEIR 8/8 fields present and non-empty",
+      "IMO Declaration has Two-Question Intake answered + Middle table with 5 columns",
+      "OSAM has READ table, WRITE table, Join Chain to spine, Forbidden Paths",
+      "DMJ sections present: Define table, Map table, Join path",
+      "Guard Rails has >= 6 canonical stop conditions",
+      "Smoke Test has numbered steps with expected results + Three Primitives Check",
+      "Measurement has Process Metrics, Sigma Tracking, ORBT Gate Rules",
+      "Execution Trace has per-step entries with 14-field schema, append-only",
+      "ORBT Gate Rules has all 4 transitions defined with gate conditions",
+      "Grid Reader pattern: process is parseable as structured data, not prose"
+    ]
+  },
+  "orbt": "BUILD",
+  "refused": false,
+  "observations": [
+    "PROC-300 is in OPERATE state with Run 1 complete (32,556 companies, 95.9% capture rate). This UP run is a structural validation, not a state change.",
+    "The PROCESS.md has 14 sections — maps well to the unified template's 3 clusters (Identity/Contract/Governance).",
+    "The heir.yaml exists but has naming inconsistency (Blog Worker vs Company Reconnaissance).",
+    "The PROCESS.md already contains math-engine comparators (C_1 through C_12) with tolerances and P(x;θ) — strong alignment with the mathematical principle.",
+    "DMJ sections (Define/Map/Join) are NOT explicitly labeled as such in the current PROCESS.md — the content may be present but not in the canonical DMJ table format. Downstream Define agent must evaluate.",
+    "Grid Reader requirement: the document is structured with tables and clear sections, but must be validated for machine-parseability at each layer."
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "candidate": {
+    "description": "Join path from PROC-202 (Find LinkedIn) process documentation to the governance spine (imo-creator). Evaluates whether the process is addressable, routable, and auditable from the sovereign governance structure."
+  },
+  "join_path": {
+    "spine": "imo-creator (sovereign_ref → STRUCTURE_MANIFEST.yaml → FLEET_REGISTRY.yaml)",
+    "type": "indirect",
+    "hops": [
+      {
+        "from": "PROC-202 PROCESS.md §1 Identity → process_id = PROC-202, CTB Position = factory/outreach/202-linkedin-discovery",
+        "to": "heir.yaml → hub_id = outreach"
+      },
+      {
+        "from": "heir.yaml hub_id = outreach",
+        "to": "FLEET_REGISTRY.yaml → Barton-Processes repo (github: djb258/Barton-Processes)"
+      },
+      {
+        "from": "FLEET_REGISTRY.yaml → Barton-Processes",
+        "to": "STRUCTURE_MANIFEST.yaml → factory/outreach/ (branch-level CTB position)"
+      },
+      {
+        "from": "STRUCTURE_MANIFEST.yaml factory/outreach/",
+        "to": "imo-creator sovereign (CC-01 authority)"
+      }
+    ],
+    "test_results": {
+      "heir_exists": true,
+      "heir_hub_id_valid": true,
+      "ctb_position_declared": true,
+      "fleet_registry_entry_exists": true,
+      "spine_reachable": true,
+      "process_addressable": true,
+      "round_trip": "imo-creator → STRUCTURE_MANIFEST → FLEET_REGISTRY → Barton-Processes → factory/outreach/202-linkedin-discovery → heir.yaml → hub_id=outreach → imo-creator. Circle closes."
+    }
+  },
+  "comparators": {
+    "heir_field_deviation": {
+      "status": "evaluable",
+      "measurement": "Count of 8 required HEIR schema fields that are missing, empty, or use non-standard names. Fields checked: sovereign_ref, hub_id, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria. Range: 0-8.",
+      "lower_is_better": true,
+      "value": 7,
+      "detail": "Only hub_id matches the required 8-field schema. Missing: sovereign_ref, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria. Non-standard fields present (sub_hub, component, process_id, business_silo, parent, created_at) do not satisfy the schema."
+    },
+    "join_hop_count": {
+      "status": "evaluable",
+      "measurement": "Number of intermediate lookups required to resolve the join from PROC-202 to the governance spine. Direct = 0 (spine ID present in document). Each intermediate lookup adds fragility. Range: 0-N.",
+      "lower_is_better": true,
+      "value": 4,
+      "detail": "4 hops: PROCESS.md → heir.yaml → FLEET_REGISTRY.yaml → STRUCTURE_MANIFEST.yaml → imo-creator. A direct join would have sovereign_ref=imo-creator declared in the HEIR with all 8 fields, reducing to 1 hop."
+    },
+    "dmj_join_table_gap": {
+      "status": "evaluable",
+      "measurement": "Binary: does the process document itself contain the DMJ Join table (L21 — 3 columns: Join Path, Type, Description) that documents its own data join to the domain spine (outreach_id)? 0 = present, 1 = missing. This is distinct from the governance join path above — this measures whether the process documents how its DATA reaches the domain spine.",
+      "lower_is_better": true,
+      "value": 1,
+      "detail": "No DMJ Join table exists in PROCESS.md. The OSAM Join Chain section (§5) declares the path (slot_workbench.outreach_id) but not in the L21 3-column schema. The content exists but the structure does not."
+    },
+    "spine_ambiguity_count": {
+      "status": "evaluable",
+      "measurement": "Count of ambiguous or conflicting spine references found across the process documentation. Multiple conflicting sovereign_refs, missing CTB declarations, or fleet registry mismatches. Range: 0-N.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "No ambiguity. CTB position in PROCESS.md §1 matches heir.yaml ctb_position matches the physical directory path. hub_id=outreach is consistent with factory/outreach/ placement. Fleet registry lists Barton-Processes as the containing repo. All references converge."
+    },
+    "round_trip_break_count": {
+      "status": "evaluable",
+      "measurement": "Count of breaks when tracing the Circle: spine → process → spine. Each break is a hop where the reverse lookup fails or returns a different target. Range: 0-N.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "Forward: imo-creator → STRUCTURE_MANIFEST → FLEET_REGISTRY → Barton-Processes → factory/outreach/202-linkedin-discovery. Reverse: 202-linkedin-discovery → heir.yaml hub_id=outreach → FLEET_REGISTRY Barton-Processes → STRUCTURE_MANIFEST factory/ → imo-creator. Circle closes with zero breaks."
+    }
+  }
+}

@@ -1,0 +1,368 @@
+{
+  "domestication_depth": 3,
+  "handoff_contract": {
+    "medium_slug": "executable-process",
+    "min_runs_for_handoff": 3,
+    "required_by_up": [
+      "layers",
+      "invariant_set",
+      "reverse_route",
+      "domestication_depth"
+    ],
+    "requires_human_tolerances": true
+  },
+  "intent": "structure all processes",
+  "invariant_set": [
+    {
+      "comparator_hint": "C_exists: does a process document exist at the declared CTB position, with all three cluster headers present? Binary.",
+      "layer_id": "L1",
+      "name": "Executable Process",
+      "primitive": "Thing",
+      "why_it_matters": "UP must know this medium exists as a single parseable document with three clusters (Identity/Contract/Governance mapped to Thing/Flow/Change). Without recognizing the medium, UP cannot begin evaluation."
+    },
+    {
+      "comparator_hint": "C_identity: count of 18 required fields (10 process + 8 HEIR) present and non-empty. Ratio: filled/18.",
+      "layer_id": "L5",
+      "name": "Process Identity",
+      "primitive": "Thing",
+      "why_it_matters": "HEIR + ORBT fields are the routing key. An agent cannot filter, prioritize, or check state without identity. A process without identity is unaddressable."
+    },
+    {
+      "comparator_hint": "C_imo: (1) both intake questions answered \u2014 binary, (2) Middle table has \u22651 row with all 5 columns filled, (3) Output block names a downstream consumer. Three sub-comparators, all must pass.",
+      "layer_id": "L8",
+      "name": "IMO Declaration",
+      "primitive": "Flow",
+      "why_it_matters": "The Two-Question Intake + Middle step table IS the executable contract. Agents build execution plans from the Middle table rows. Without IMO, the process is a description, not a specification."
+    },
+    {
+      "comparator_hint": "C_osam: (1) READ table has \u22651 row, (2) join chain traces to a declared spine ID, (3) forbidden paths section present (even if empty list). Three sub-comparators.",
+      "layer_id": "L9",
+      "name": "Data Schema",
+      "primitive": "Thing",
+      "why_it_matters": "OSAM tells agents which tables to read, which to write, and the join chain to the spine. Without it, the process touches data blindly \u2014 no CQRS enforcement, no join integrity."
+    },
+    {
+      "comparator_hint": "C_dmj: (1) Define table (L19) non-empty, (2) Map table (L20) references all Define element IDs, (3) Join path (L21) reaches spine. Sequential dependency: Step N requires Step N-1 complete.",
+      "layer_id": "L10",
+      "name": "Structure Extraction (DMJ)",
+      "primitive": "Change",
+      "why_it_matters": "DMJ is the application layer \u2014 how raw data becomes structured, mapped, and joined constants. Without it, the process collects data but never structures it. The forced order (Define\u2192Map\u2192Join) is itself a constant."
+    },
+    {
+      "comparator_hint": "C_guardrails: count of declared stop conditions \u2265 6 (the canonical set from Bedrock \u00a76/\u00a78). Missing canonical conditions = unguarded failure modes.",
+      "layer_id": "L12",
+      "name": "Guard Rails",
+      "primitive": "Flow",
+      "why_it_matters": "Stop conditions prevent runaway execution and resource burn. Loaded before execution as halt triggers. Without them, a failing process corrupts data and burns budget."
+    },
+    {
+      "comparator_hint": "C_verify: (1) \u22651 numbered step exists, (2) each step has an expected result, (3) Three Primitives Check present with all three questions. Three sub-comparators.",
+      "layer_id": "L13",
+      "name": "Verification",
+      "primitive": "Change",
+      "why_it_matters": "The smoke test is the only executable proof the process works. Run FIRST to validate before full pipeline execution. No verification = untestable = undeployable."
+    },
+    {
+      "comparator_hint": "C_measurement: (1) metrics table (L22) has \u22651 metric defined BEFORE build, (2) sigma tracking (L23) active after 3+ runs, (3) ORBT gate rules (L24) present with all four transitions. Three sub-comparators.",
+      "layer_id": "L14",
+      "name": "Measurement",
+      "primitive": "Change",
+      "why_it_matters": "Analytics define the BUILD\u2192OPERATE gate. Without metrics + sigma tracking + ORBT gate rules, state transitions are subjective. Sigma tracking decides if a process is stable enough to trust."
+    },
+    {
+      "comparator_hint": "C_trace: (1) per-step entry schema declares all 14 required fields, (2) append-only constraint enforced (no UPDATE/DELETE). Two sub-comparators.",
+      "layer_id": "L15",
+      "name": "Execution Trace",
+      "primitive": "Flow",
+      "why_it_matters": "The append-only build journal is what the auditor reads. Without trace entries, certification is impossible. One trace entry must be emitted per Middle table step during execution."
+    },
+    {
+      "comparator_hint": "C_orbt: (1) current ORBT state declared in L5 identity, (2) all four state transitions defined with gate conditions, (3) auditor \u2260 builder enforced for BUILD\u2192OPERATE and REPAIR\u2192OPERATE certification gates. Three sub-comparators.",
+      "layer_id": "L24",
+      "name": "ORBT Gate Rules",
+      "primitive": "Change",
+      "why_it_matters": "The state machine governs process lifecycle. Must check ORBT state before executing \u2014 don't run a BUILD-state process as OPERATE. Strike 3 triggers fleet-wide learning via Airworthiness Directive."
+    }
+  ],
+  "layers": [
+    {
+      "cv": "constant",
+      "depth": 0,
+      "domesticated": false,
+      "format": "A named, formatted unit of work that transforms input to output. Self-contained: identity, contract, governance. One document per process. Exists before any execution.",
+      "id": "L1",
+      "name": "Executable Process",
+      "parent": null,
+      "primitive": "Thing",
+      "zoom_reason": "Root medium \u2014 must decompose to reveal the three structural clusters mapped to Three Primitives (Thing/Flow/Change). Cannot domesticate: it is the container for all structure below."
+    },
+    {
+      "cv": "constant",
+      "depth": 1,
+      "domesticated": false,
+      "format": "The set of layers answering WHAT this process IS. Exists before any execution. Three sub-layers: identity (L5), purpose (L6), resources (L7).",
+      "id": "L2",
+      "name": "Identity Cluster",
+      "parent": "L1",
+      "primitive": "Thing",
+      "zoom_reason": "Structural grouping \u2014 three children with distinct schemas (ID fields, prose, resource tables). All children domesticated. Cluster itself is an organizational container used for altitude filtering."
+    },
+    {
+      "cv": "constant",
+      "depth": 1,
+      "domesticated": false,
+      "format": "The set of layers answering WHAT flows through this process. Five sub-layers: IMO (L8), data schema (L9), structure extraction (L10), C&V output (L11), guard rails (L12).",
+      "id": "L3",
+      "name": "Contract Cluster",
+      "parent": "L1",
+      "primitive": "Flow",
+      "zoom_reason": "Structural grouping \u2014 five children with distinct schemas. All children domesticated. Cluster itself is an organizational container \u2014 the executable contract boundary."
+    },
+    {
+      "cv": "constant",
+      "depth": 1,
+      "domesticated": false,
+      "format": "The set of layers answering HOW this process is controlled, measured, certified, and learned from. Six sub-layers: verification (L13), measurement (L14), execution trace (L15), certification (L16), fleet learning (L17), session history (L18).",
+      "id": "L4",
+      "name": "Governance Cluster",
+      "parent": "L1",
+      "primitive": "Change",
+      "zoom_reason": "Structural grouping \u2014 six children with distinct governance functions. All children domesticated. Cluster itself is an organizational container for audit and state operations."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Two tables: (1) Process table \u2014 fields: ID, Name, Medium, Business Silo, CTB Position, ORBT state, Strikes, Authority, Last Modified, Reference. (2) HEIR table \u2014 fields: sovereign_ref, hub_id, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria. 18 total named fields.",
+      "id": "L5",
+      "name": "Process Identity",
+      "parent": "L2",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 18 named fields across two fixed tables. All formattable. Decomposing individual fields does not change agent routing or parsing behavior."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Prose block: 2-3 sentences. Structural constraint: must name what breaks without this process and what downstream process starves without its output.",
+      "id": "L6",
+      "name": "Purpose",
+      "parent": "L2",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 single prose block with a fixed constraint (must reference downstream dependency). Content is variable fill. Structure is the constraint, not the prose."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Four tables: (1) Dependencies \u2014 4 columns: dependency, type, what it provides, status. (2) Downstream Consumers \u2014 2 columns: consumer, what it needs. (3) Tools & Integrations \u2014 5 columns: item, type, cost tier, credentials, function. (4) Secrets \u2014 4 columns: secret, provider, config, used-by.",
+      "id": "L7",
+      "name": "Resources",
+      "parent": "L2",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 four table schemas with fixed columns. What fills them varies per process. The structure is domain-agnostic \u2014 any process has upstream dependencies, downstream consumers, tools, and secrets."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Five sub-components: (1) Two-Question Intake \u2014 2 fixed questions: 'What triggers this?' + 'How do we get it?' (Bedrock \u00a73). (2) Input block \u2014 prose. (3) Middle table \u2014 5 columns: Step, Input, What Happens, Output, Tool Used. N rows. (4) Output block \u2014 prose + downstream consumer. (5) Circle block \u2014 prose feedback loop description (Bedrock \u00a75).",
+      "id": "L8",
+      "name": "IMO Declaration",
+      "parent": "L3",
+      "primitive": "Flow",
+      "zoom_reason": "STOP \u2014 five sub-components with fixed formats. Middle table schema (5 columns) is the constant; step count and content are variable. The same row parser works regardless of step count. Individual steps are domain-variable fill."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Four sub-sections: (1) READ table \u2014 3 columns: source, what it provides, join key. (2) WRITE table \u2014 3 columns: target, what it writes, when. (3) Join Chain \u2014 tree notation from spine ID. (4) Forbidden Paths \u2014 2 columns: action, why.",
+      "id": "L9",
+      "name": "Data Schema",
+      "parent": "L3",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 four sub-sections with fixed schemas. Which tables and columns fill them is the variable. Enforces CQRS (Bedrock \u00a74): sub-hubs write, reads go through the join chain. Query routing is derived from the join chain \u2014 not a separate structural element."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Three ordered steps with forced dependency: Define \u2192 Map \u2192 Join (DMJ.md). Each step has a distinct table schema (L19, L20, L21). Back-propagation path: Join gaps trigger return to Define (the Circle, Bedrock \u00a75). The order IS the constant. What fills each step is the variable.",
+      "id": "L10",
+      "name": "Structure Extraction (DMJ)",
+      "parent": "L3",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 all three child layers (L19, L20, L21) are domesticated. The parent's remaining structure is the forced order (Define\u2192Map\u2192Join) + back-propagation rule \u2014 both locked by DMJ.md. Agents execute the three steps in sequence using child schemas. No further decomposition changes execution behavior."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Two bullet lists: (1) Constants \u2014 structure that never changes, bullet items. (2) Variables \u2014 fill that changes every run, bullet items. Output of C&V test (Bedrock \u00a72) applied to this specific process.",
+      "id": "L11",
+      "name": "Constants & Variables Declaration",
+      "parent": "L3",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 two lists with fixed semantics (locked vs guarded). Individual items are variable fill. Used for pre-flight validation \u2014 not parsed item-by-item."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Table: 2 columns \u2014 Condition, Action. Six canonical stop conditions from Bedrock \u00a76 + \u00a78: (1) can't answer Two-Question Intake, (2) data schema gap, (3) 5 consecutive errors, (4) budget cap, (5) data quality below threshold, (6) Strike 3. Processes may add domain-specific rows.",
+      "id": "L12",
+      "name": "Guard Rails",
+      "parent": "L3",
+      "primitive": "Flow",
+      "zoom_reason": "STOP \u2014 six canonical conditions are invariant from Bedrock. Domain additions are variable but don't change the table schema. Loaded before execution as halt triggers."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Two sub-sections: (1) Numbered executable steps \u2014 action \u2192 expected result. (2) Three Primitives Check (Bedrock \u00a71) \u2014 Thing existed? Flow reached? Change happened? Binary per question.",
+      "id": "L13",
+      "name": "Verification",
+      "parent": "L4",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 format is fixed (numbered steps + three-question check). Specific test commands are variable fill. Run FIRST to validate before full pipeline execution. No verification = untestable = undeployable."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Three sub-sections with structurally distinct schemas: (1) Process Metrics table (L22), (2) Sigma Tracking table (L23), (3) ORBT Gate Rules table (L24). Together they form the BUILD\u2192OPERATE gate.",
+      "id": "L14",
+      "name": "Measurement",
+      "parent": "L4",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 all three child layers (L22, L23, L24) are domesticated. The parent's remaining structure is the composition rule (all three required for state transitions) and the BUILD\u2192OPERATE gate dependency \u2014 both locked by Bedrock \u00a78. No further decomposition changes state machine logic."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "One schema: Per-step entry \u2014 14 fields: trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by. Append-only.",
+      "id": "L15",
+      "name": "Execution Trace",
+      "parent": "L4",
+      "primitive": "Flow",
+      "zoom_reason": "STOP \u2014 14 named fields with defined formats. Append-only constraint is locked. Individual entries are variable. A run summary is a derived view (CQRS: trace entries are writes, summary is a read aggregation) \u2014 not a separate schema."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Birth Certificate \u2014 created ONLY after BUILD\u2192OPERATE auditor sign-off. 7 fields: heir_ref, orbt_entered, orbt_exited, action, gates_passed (imo/ctb/circle), signed_by, signed_at. Append-only. No logbook during BUILD (Aviation Model, Bedrock \u00a78).",
+      "id": "L16",
+      "name": "Certification Record (Logbook)",
+      "parent": "L4",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 one entry schema with 7 fixed fields. Entries are variable fill. The 'no logbook during BUILD' rule is a constant from Bedrock \u00a78."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Two schemas: (1) Failure Pattern Registry \u2014 7 columns: Pattern ID, Location, Error Code, First Seen, Occurrences, Strike Count, Status. (2) Strike Rules \u2014 1\u2192repair, 2\u2192scrutiny, 3\u2192Troubleshoot/Train\u2192Airworthiness Directive (Bedrock \u00a76/\u00a78).",
+      "id": "L17",
+      "name": "Fleet Learning",
+      "parent": "L4",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 registry schema + escalation rules locked by Bedrock \u00a76/\u00a78. Pattern content is variable fill."
+    },
+    {
+      "cv": "constant",
+      "depth": 2,
+      "domesticated": true,
+      "format": "Table: 3 columns \u2014 Date, What Was Done, Knowledge Record ID. Append-only. Pointer to knowledge store for detail.",
+      "id": "L18",
+      "name": "Session History",
+      "parent": "L4",
+      "primitive": "Flow",
+      "zoom_reason": "STOP \u2014 three columns, append-only. Thinnest structural layer \u2014 a pointer to the knowledge store. Not parsed for execution, only for audit trail."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 5 columns \u2014 Element, ID, Format, Description, C-or-V. Runs C&V (Bedrock \u00a72) on every data element. P(x;\u03b8) evaluates each. Unidentified stored as unidentified, not discarded.",
+      "id": "L19",
+      "name": "Define Step (DMJ Step 1)",
+      "parent": "L10",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 five-column table with fixed semantics. Elements themselves are variable fill. Cannot execute Map without this (forced dependency). DMJ Step 1."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 3 columns \u2014 Source, Target, Transform. Transform types: direct, classify, parse. Lookup table connecting Define output to target structure.",
+      "id": "L20",
+      "name": "Map Step (DMJ Step 2)",
+      "parent": "L10",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 three-column table. Trivial once Define is complete. Cannot execute Join without this (forced dependency). DMJ Step 2."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 3 columns \u2014 Join Path, Type, Description. Join types: direct, indirect, fuzzy. Finds path to spine ID. Back-propagates to Define if gap found (the Circle, Bedrock \u00a75).",
+      "id": "L21",
+      "name": "Join Step (DMJ Step 3)",
+      "parent": "L10",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 three-column table. The Circle closes here \u2014 gap triggers return to L19 (Define). DMJ Step 3."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 5 columns \u2014 Metric, Unit, Baseline, Target, Tolerance. Defined BEFORE build starts. Each metric name is a constant (named, formatted). Values are variable fill.",
+      "id": "L22",
+      "name": "Process Metrics",
+      "parent": "L14",
+      "primitive": "Thing",
+      "zoom_reason": "STOP \u2014 five-column table. Metric definitions locked before build. Values fill in during runs."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 6 columns \u2014 Metric, Run 1, Run 2, Run 3+, Trend, Action. Trend values: TIGHTENING, FLAT, EXPANDING (Bedrock \u00a72). Actions: none, investigate, reclassify. Requires 3+ runs before trends are valid.",
+      "id": "L23",
+      "name": "Sigma Tracking",
+      "parent": "L14",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 three trend categories locked by Bedrock \u00a72. Three action responses locked. Individual measurements across runs are variable fill."
+    },
+    {
+      "cv": "constant",
+      "depth": 3,
+      "domesticated": true,
+      "format": "Table: 3 columns \u2014 From, To, Gate. Four transitions: (1) BUILD\u2192OPERATE: 3 runs within tolerance + auditor sign-off. (2) OPERATE\u2192REPAIR: any metric outside tolerance. (3) REPAIR\u2192OPERATE: fix applied + metric within tolerance + auditor verification. (4) Any\u2192TROUBLESHOOT/TRAIN: Strike 3 (Bedrock \u00a76/\u00a78).",
+      "id": "L24",
+      "name": "ORBT Gate Rules",
+      "parent": "L14",
+      "primitive": "Change",
+      "zoom_reason": "STOP \u2014 four state transitions with fixed gate conditions. ORBT state machine locked by Bedrock \u00a78. Gate conditions are constants. Current ORBT state is a variable."
+    }
+  ],
+  "medium": "executable process",
+  "reverse_route": {
+    "depth": 5,
+    "route": [
+      "value",
+      "property",
+      "type",
+      "layer",
+      "medium"
+    ],
+    "target_value": "a structured, executable, auditable process specification that any agent can parse and execute \u2014 domain-agnostic"
+  },
+  "us_artifact": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003/01-us.json",
+  "us_ready_artifact": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003/02-us-ready.json",
+  "us_run_dir": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003"
+}

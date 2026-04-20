@@ -1,0 +1,250 @@
+{
+  "stage": "03-map",
+  "agent": "m-map",
+  "run": "run-001",
+  "subject": "PROC-700 Campaign Engine",
+  "medium": "executable process",
+  "timestamp": "2026-04-04T00:00:00Z",
+  "status": "proposed",
+
+  "candidate": {
+    "description": "Map 16 defined elements (E01-E16) from 02-define.json to the unified template v6.0.0 target structure (24 layers, 3 clusters). Target structure is the invariant set from US handoff — no new structure proposed because the target already exists. Each source element maps to a declared layer (L1-L24). Mapping types: direct (format matches), transformed (content present but format deviates), inferred (partial content inferred to cover the layer), unresolved (layer not present in source).",
+    "target_structure": "unified template v6.0.0 — 24 layers across 3 clusters (Identity/Contract/Governance mapped to Thing/Flow/Change). Defined by US handoff invariant set. 10 invariant-set layers carry comparators; 14 supplementary layers evaluated for completeness.",
+    "source": "factory/outreach/700-campaign-engine/PROCESS.md + heir.yaml"
+  },
+
+  "mappings": [
+    {
+      "source_id": "E01-executable-process",
+      "target": "L1 — Executable Process",
+      "type": "direct",
+      "reason": "PROCESS.md exists at declared CTB position. All three cluster headers (Identity §1-2, Contract §3-7, Governance §8-13) present as markdown sections. Format matches: single parseable document with three clusters."
+    },
+    {
+      "source_id": "E02-process-identity",
+      "target": "L5 — Process Identity",
+      "type": "transformed",
+      "reason": "Process table present in §1 with 12 fields but uses non-standard names (Last Deployed vs Last Modified) and is missing 2 canonical fields (Medium, Authority). heir.yaml provides 8/8 HEIR fields. Content covers intent of L5 but column names and count deviate from the 18-field canonical schema. Transform required: rename 'Last Deployed' → 'Last Modified', add 'Medium' and 'Authority' fields."
+    },
+    {
+      "source_id": "E03-purpose",
+      "target": "L6 — Purpose",
+      "type": "direct",
+      "reason": "§2 is a prose block naming what breaks ('entire pipeline is a dossier factory with no output') and the downstream dependency (terminal — webhooks feed back to Process 100). Matches L6 format exactly."
+    },
+    {
+      "source_id": "E04-resources",
+      "target": "L7 — Resources",
+      "type": "direct",
+      "reason": "§4 has Tools & Integrations (5 cols) and Secrets (4 cols). §8 has Dependencies (3 cols with status) and Downstream Consumers (2 cols). All four required tables present with correct column schemas."
+    },
+    {
+      "source_id": "E05-imo-declaration",
+      "target": "L8 — IMO Declaration",
+      "type": "direct",
+      "reason": "§3 contains all five sub-components: (1) Two-Question Intake with both questions answered, (2) Input block (4 bullets), (3) Middle table (5 cols × 5 steps), (4) Output block (3 items), (5) Circle block describing webhook feedback. Format matches L8 exactly."
+    },
+    {
+      "source_id": "E06-data-schema",
+      "target": "L9 — Data Schema (OSAM)",
+      "type": "direct",
+      "reason": "§5 has READ table (6 rows, 3 cols), WRITE table (4 rows, 3 cols), Join Chain (tree notation from sovereign_company_id), Forbidden Paths (6 rows, 2 cols), plus Query Routing. All four required sub-sections present in correct format."
+    },
+    {
+      "source_id": "E07-structure-extraction-dmj",
+      "target": "L10 — Structure Extraction (DMJ)",
+      "type": "unresolved",
+      "reason": "L10 requires three ordered tables: Define (L19, 5 cols), Map (L20, 3 cols), Join (L21, 3 cols). §6 has C&V declarations but NO explicit DMJ tables. The join chain in §5 partially covers L21 intent but not in the required table format. All 3 DMJ steps are structurally absent. This is the largest structural gap."
+    },
+    {
+      "source_id": "E08-cv-declaration",
+      "target": "L11 — Constants & Variables Declaration",
+      "type": "direct",
+      "reason": "§6 has Constants list (8 items with comparators, primitives, tolerances) and Variables list (8 items). Also includes mathematical definitions (P(x;θ), r(x), stability) and step-level comparators C_1 through C_6. Exceeds L11 minimum (two bullet lists). Format matches."
+    },
+    {
+      "source_id": "E09-guard-rails",
+      "target": "L12 — Guard Rails",
+      "type": "direct",
+      "reason": "§7 has 10 stop conditions in 2-column Condition/Action table. All 6 canonical conditions present plus 4 domain-specific. Exceeds the minimum of 6. Exact format match."
+    },
+    {
+      "source_id": "E10-verification",
+      "target": "L13 — Verification",
+      "type": "direct",
+      "reason": "§9 has 7 numbered smoke test steps each with expected results. Three Primitives Check present with all three questions (Thing/Flow/Change) and binary answers. Both sub-sections complete. Format matches L13."
+    },
+    {
+      "source_id": "E11-measurement",
+      "target": "L14 — Measurement",
+      "type": "transformed",
+      "reason": "§10 has metrics table (L22, 6 metrics — 5 cols), sigma tracking placeholder (L23 — correct empty format), but ORBT Gate Rules (L24) are 4 bullet points instead of the required 3-column From/To/Gate table. Two of three sub-sections match; L24 sub-section requires format transformation from prose bullets to structured table with explicit 4 state transitions."
+    },
+    {
+      "source_id": "E12-execution-trace",
+      "target": "L15 — Execution Trace",
+      "type": "unresolved",
+      "reason": "L15 requires a 14-field per-step trace schema (trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by). §11 is a session-level logbook with 7 fields — structurally different. The entire 14-field schema is absent. No partial content to transform."
+    },
+    {
+      "source_id": "E13-certification-record",
+      "target": "L16 — Certification Record (Logbook)",
+      "type": "unresolved",
+      "reason": "L16 requires a 7-field birth certificate schema (heir_ref, orbt_entered, orbt_exited, action, gates_passed, signed_by, signed_at). Process is in BUILD so no entries are expected, but the schema placeholder should be declared. No schema declared anywhere in the document."
+    },
+    {
+      "source_id": "E14-fleet-learning",
+      "target": "L17 — Fleet Learning",
+      "type": "transformed",
+      "reason": "§12 has a 6-column tracking table (#, Date, Issue, Root Cause, Fix, Strikes). Canonical L17 requires 7-column Failure Pattern Registry (Pattern ID, Location, Error Code, First Seen, Occurrences, Strike Count, Status) plus dedicated Strike Rules (1→repair, 2→scrutiny, 3→T/T). Content covers the same intent but 5 column name/semantic mismatches, 1 missing column (Status), and Strike Rules not in dedicated format. Transform: rename columns to canonical names, add Status column, extract Strike Rules to dedicated sub-section."
+    },
+    {
+      "source_id": "E15-session-history",
+      "target": "L18 — Session History",
+      "type": "direct",
+      "reason": "§13 has 3 columns (Date, What Was Done, imo-brain Document) matching L18 format (Date, What, Knowledge Record ID). 1 entry. Append-only. Column 3 name differs ('imo-brain Document' vs 'Knowledge Record ID') but maps directly."
+    },
+    {
+      "source_id": "E16-orbt-gate-rules",
+      "target": "L24 — ORBT Gate Rules",
+      "type": "transformed",
+      "reason": "§10 has ORBT gate rules as 4 bullet points with correct content (sigma tightening→lock, sigma flat→investigate, sigma expanding→back-propagate, strike 3→T/T). But L24 requires a structured 3-column table (From/To/Gate) with the 4 explicit state transitions (BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→T/T) and gate conditions. The bullets describe sigma behavior, not state transitions. Transform: rewrite as 4-row table with From/To/Gate columns naming specific ORBT states and gate conditions."
+    },
+    {
+      "source_id": "U01-campaign-content-templates",
+      "target": "L7 — Resources (dependency row)",
+      "type": "inferred",
+      "reason": "Campaign content templates are referenced in §8 Dependencies as 'NOT STARTED'. This is a runtime dependency, not a structural layer. It maps to L7 Resources as a dependency row with status=NOT_STARTED. The invariant set has no dedicated layer for content templates — they are variable fill for the campaign engine's Middle table steps, not structural elements of the process document."
+    },
+    {
+      "source_id": "U02-heyreach-integration",
+      "target": "L7 — Resources (dependency row)",
+      "type": "inferred",
+      "reason": "HeyReach integration is documented as PENDING in §8 Dependencies. Like U01, this is a runtime dependency mapping to L7 Resources. The secret is declared in §4 Secrets table (HEYREACH_API_KEY). The gap is operational (no API key configured), not structural."
+    }
+  ],
+
+  "unmapped_target_layers": [
+    {
+      "target": "L2 — Identity Cluster",
+      "reason": "Organizational container layer (depth 1). Not directly mapped by any single element — it is the grouping of L5 + L6 + L7. No source element needed; structural presence validated via children."
+    },
+    {
+      "target": "L3 — Contract Cluster",
+      "reason": "Organizational container layer (depth 1). Grouping of L8 + L9 + L10 + L11 + L12. Structural presence validated via children."
+    },
+    {
+      "target": "L4 — Governance Cluster",
+      "reason": "Organizational container layer (depth 1). Grouping of L13 + L14 + L15 + L16 + L17 + L18. Structural presence validated via children."
+    },
+    {
+      "target": "L19 — Define Step (DMJ Step 1)",
+      "reason": "Child of L10. Not present in source. The 5-column Define table (Element, ID, Format, Description, C-or-V) does not exist in PROCESS.md. §6 has C&V declarations but not in DMJ Define table format."
+    },
+    {
+      "target": "L20 — Map Step (DMJ Step 2)",
+      "reason": "Child of L10. Not present in source. The 3-column Map table (Source, Target, Transform) does not exist in PROCESS.md."
+    },
+    {
+      "target": "L21 — Join Step (DMJ Step 3)",
+      "reason": "Child of L10. Partially covered by §5 Join Chain (tree notation), but not in the 3-column table format (Join Path, Type, Description). The join chain content exists; the DMJ table format does not."
+    },
+    {
+      "target": "L22 — Process Metrics",
+      "reason": "Child of L14. PRESENT and direct — mapped via E11-measurement parent. §10 metrics table has 6 metrics in 5-column format. No separate element defined for it in 02-define.json because it was evaluated as part of E11."
+    },
+    {
+      "target": "L23 — Sigma Tracking",
+      "reason": "Child of L14. PRESENT as placeholder — mapped via E11-measurement parent. §10 sigma tracking table with correct empty structure. No separate element defined."
+    }
+  ],
+
+  "gap_summary": {
+    "total_elements_defined": 16,
+    "total_unidentified": 2,
+    "mapping_types": {
+      "direct": 8,
+      "transformed": 4,
+      "inferred": 2,
+      "unresolved": 3
+    },
+    "structural_gaps": [
+      {
+        "layer": "L10 / L19 / L20 / L21",
+        "gap": "All three DMJ tables absent. No Define/Map/Join structure in the process document. This is the largest gap — 3 missing tables affecting the entire Structure Extraction layer.",
+        "severity": "high",
+        "remediation": "Add §6a with Define table (5 cols: Element, ID, Format, Description, C-or-V), Map table (3 cols: Source, Target, Transform), and Join table (3 cols: Join Path, Type, Description). Content partially derivable from existing §5 Join Chain and §6 C&V."
+      },
+      {
+        "layer": "L15",
+        "gap": "14-field per-step execution trace schema entirely absent. §11 session logbook is not a substitute.",
+        "severity": "high",
+        "remediation": "Add trace schema declaration with all 14 fields (trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by). Can be an empty table with column headers."
+      },
+      {
+        "layer": "L16",
+        "gap": "Certification record schema not declared. Expected as placeholder during BUILD.",
+        "severity": "medium",
+        "remediation": "Add 7-field schema placeholder (heir_ref, orbt_entered, orbt_exited, action, gates_passed, signed_by, signed_at) with note: 'No entries during BUILD per Bedrock §8.'"
+      },
+      {
+        "layer": "L5",
+        "gap": "2 missing fields (Medium, Authority) from canonical 18-field identity schema.",
+        "severity": "low",
+        "remediation": "Add 'Medium: executable process' and 'Authority: Human + gate enforcement' to §1 process table."
+      },
+      {
+        "layer": "L17",
+        "gap": "5 column name mismatches + 1 missing column (Status) vs canonical Failure Pattern Registry. Strike Rules not in dedicated format.",
+        "severity": "medium",
+        "remediation": "Rename columns to canonical names (Pattern ID, Location, Error Code, First Seen, Occurrences, Strike Count, Status). Add Status column. Add dedicated Strike Rules sub-section (1→repair, 2→scrutiny, 3→T/T)."
+      },
+      {
+        "layer": "L24",
+        "gap": "ORBT gate rules as bullet prose instead of structured 3-column table. 4 state transitions not explicitly declared.",
+        "severity": "medium",
+        "remediation": "Replace 4 bullets with 4-row table: From | To | Gate. Rows: BUILD→OPERATE (3 runs within tolerance + auditor sign-off), OPERATE→REPAIR (any metric outside tolerance), REPAIR→OPERATE (fix applied + metric within tolerance + auditor verification), Any→T/T (Strike 3)."
+      }
+    ]
+  },
+
+  "comparators": {
+    "unresolved_mapping_count": {
+      "status": "evaluable",
+      "measurement": "Count of source elements that could not be mapped to the target structure (type = unresolved). 0 = every defined element has a target. Lower count = fewer structural holes.",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "transform_required_count": {
+      "status": "evaluable",
+      "measurement": "Count of mappings requiring format transformation to conform to target structure (type = transformed). 0 = all mappings are direct. Each transform represents a format deviation that must be corrected before lock.",
+      "lower_is_better": true,
+      "value": 4
+    },
+    "unmapped_target_layer_count": {
+      "status": "evaluable",
+      "measurement": "Count of target layers with no source element mapped to them (excluding organizational container layers L2/L3/L4 which are validated via children). 0 = full coverage.",
+      "lower_is_better": true,
+      "value": 5,
+      "detail": "Unmapped leaf layers: L19 (Define table), L20 (Map table), L21 (Join table — partial content exists but wrong format), L22 and L23 are present but were not given separate define elements. Counting only structurally absent: L19, L20, L21 = 3 absent, L22/L23 = 2 present but unseparated. Conservative count: 5 total unmapped targets including children evaluated under parent."
+    },
+    "total_field_gap": {
+      "status": "evaluable",
+      "measurement": "Sum of individual field-level gaps across all mapped layers. Aggregates: L5 identity (2) + L15 trace (14) + L16 certification (7) + L17 fleet learning (6) + L24 ORBT transitions (4) = 33. Lower = closer to complete structural conformance.",
+      "lower_is_better": true,
+      "value": 33
+    },
+    "dmj_table_gap": {
+      "status": "evaluable",
+      "measurement": "Count of missing DMJ tables out of 3 required (Define L19, Map L20, Join L21). This is the most critical structural gap — DMJ is the application layer. 0 = all three tables present.",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "mapping_confidence_deficit": {
+      "status": "evaluable",
+      "measurement": "Fraction of mappings that are NOT direct out of total mappings. Formula: (transformed + inferred + unresolved) / total = 9/18 = 0.50. Lower = more mappings are exact structural matches. 0 = every mapping is direct.",
+      "lower_is_better": true,
+      "value": 0.50
+    }
+  }
+}

@@ -524,11 +524,14 @@ def main():
             new_tier = calc_readiness_tier(slot, has_email_now=True)
 
             # Write to D1
+            now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             update_sql = (
                 f"UPDATE slot_workbench SET "
                 f"person_email = {escape_sql(found_email)}, "
                 f"has_email = 1, "
                 f"person_source = {escape_sql(found_source)}, "
+                f"email_last_checked_at = {escape_sql(now)}, "
+                f"email_changed = 1, "
                 f"readiness_tier = {escape_sql(new_tier)} "
                 f"WHERE slot_id = {escape_sql(slot_id)}"
             )

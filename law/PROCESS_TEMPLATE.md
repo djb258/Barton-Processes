@@ -5,6 +5,8 @@
 
 ---
 
+# IDENTITY (Thing — what this process IS)
+
 ## 1. IDENTITY
 
 _What is this thing? The constants that never change regardless of when you read this._
@@ -33,35 +35,11 @@ _What breaks without it. What business outcome it serves. If you can't answer th
 
 ---
 
-## 3. IMO — What Comes In, What Happens, What Comes Out
+## 3. RESOURCES
 
-### Two-Question Intake (Bedrock §7)
-1. **"What triggers this?"** — [cron / webhook / manual / upstream process output]
-2. **"How do we get it?"** — [which data source, which API, which table]
+_Every tool, database, integration, API, secret, agent, and dependency this process touches. A mechanic reads this and knows exactly what to set up before the process can run._
 
-### Input
-[What triggers the process. What data it needs. Where that data comes from.]
-
-### Middle
-[What it does — step by step. Each step is its own IMO.]
-
-| Step | Input | What Happens | Output | Tool Used |
-|------|-------|-------------|--------|-----------|
-| 1 | [trigger] | [transformation] | [result] | [tool/API/query] |
-| 2 | [step 1 output] | [transformation] | [result] | [tool/API/query] |
-| N | [step N-1 output] | [transformation] | [final result] | [tool/API/query] |
-
-### Output
-[What comes out. Where it goes. What downstream process consumes it.]
-
-### Circle (Bedrock §5)
-[How output feeds back to input. Logbook entry, imo-brain ingest, ORBT update, metrics that inform next run.]
-
----
-
-## 4. WHAT IT GRABS OFF THE WALL
-
-_Every tool, database, integration, API, secret, and agent this process touches. A mechanic reads this and knows exactly what to set up before the process can run._
+_Merges "What It Grabs Off The Wall" + "Dependencies" — both answer the same question: what must exist before this runs._
 
 ### Databases
 
@@ -87,11 +65,51 @@ _Every tool, database, integration, API, secret, and agent this process touches.
 3. Cheap integrations (Composio routes) — third
 4. Top shelf (per-call APIs, proxy services) — only when free/cheap exhausted
 
+### Upstream (must exist before this runs)
+
+| Dependency | What | Status |
+|-----------|------|--------|
+| [process / data source / service] | [what it provides] | [DONE / PENDING / BLOCKED] |
+
+### Downstream (consumes this process's output)
+
+| Consumer | What It Needs |
+|----------|--------------|
+| [process / service] | [what data it reads from this process's output] |
+
+---
+
+# CONTRACT (Flow — what flows through this process)
+
+## 4. IMO — What Comes In, What Happens, What Comes Out
+
+### Two-Question Intake (Bedrock §7)
+1. **"What triggers this?"** — [cron / webhook / manual / upstream process output]
+2. **"How do we get it?"** — [which data source, which API, which table]
+
+### Input
+[What triggers the process. What data it needs. Where that data comes from.]
+
+### Middle
+[What it does — step by step. Each step is its own IMO.]
+
+| Step | Input | What Happens | Output | Tool Used |
+|------|-------|-------------|--------|-----------|
+| 1 | [trigger] | [transformation] | [result] | [tool/API/query] |
+| 2 | [step 1 output] | [transformation] | [result] | [tool/API/query] |
+| N | [step N-1 output] | [transformation] | [final result] | [tool/API/query] |
+
+### Output
+[What comes out. Where it goes. What downstream process consumes it.]
+
+### Circle (Bedrock §5)
+[How output feeds back to input. Logbook entry, LBB ingest, ORBT update, metrics that inform next run.]
+
 ---
 
 ## 5. OSAM — Where the Data Lives
 
-_The plumbing. Which tables this process reads, writes, joins. What's forbidden. From the hub OSAM (barton-outreach-core/doctrine/OSAM.md)._
+_The plumbing. Which tables this process reads, writes, joins. What's forbidden._
 
 ### READ Access
 
@@ -130,9 +148,9 @@ _The plumbing. Which tables this process reads, writes, joins. What's forbidden.
 
 ## 6. DMJ — Define, Map, Join (law/doctrine/DMJ.md)
 
-_Three steps. In order. Can't skip. This is how the Bedrock gets applied to this process's data. Every process must complete all three steps. No exceptions._
+_Three steps. In order. Can't skip. Each step is its own sub-layer with a distinct table format._
 
-### Step 1: DEFINE (Build the Key)
+### 6a. DEFINE (Build the Key)
 
 _Run C&V on every data element this process touches. Each element gets a description, unique ID, and format. The mathematical equation validates: P(x;θ) = 1 if max_i[C_i(x)/k_i] ≤ 1. Elements that survive are constants. Elements that don't are variables. Unidentified elements are stored as unidentified — not discarded._
 
@@ -140,45 +158,45 @@ _Run C&V on every data element this process touches. Each element gets a descrip
 |---------|-----|--------|-------------|---------------------|
 | [element] | [unique ID] | [format] | [description] | [C / V] |
 
-### Step 2: MAP (Connect Key to Structure)
+### 6b. MAP (Connect Key to Structure)
 
-_Once every element is defined, map each one to the target structure. Source column → target column. Cannot execute without Step 1 complete._
+_Once every element is defined, map each one to the target structure. Source column → target column. Cannot execute without 6a complete._
 
 | Source (this process) | Target (our structure) | Transform |
 |----------------------|----------------------|-----------|
 | [source element ID] | [target column] | [direct / classify / parse] |
 
-### Step 3: JOIN (Path to Spine)
+### 6c. JOIN (Path to Spine)
 
-_How does this process's data connect to the spine? What is the join key? Direct, indirect, or fuzzy? Cannot execute without Step 2 complete._
+_How does this process's data connect to the spine? What is the join key? Direct, indirect, or fuzzy? Cannot execute without 6b complete._
 
 | Join Path | Type | Description |
 |-----------|------|-------------|
 | [source field] → [spine field] | [direct / indirect / fuzzy] | [how the join works] |
 
-_If no join path exists, back-propagate to Step 1 — the key is missing a field. The Circle closes._
+_If no join path exists, back-propagate to 6a — the key is missing a field. The Circle closes._
 
 ---
 
 ## 7. CONSTANTS & VARIABLES (Bedrock §2)
 
-_Summary of what Step 1 (Define) produced. The constants and variables identified by running the equation._
+_Summary of what 6a (Define) produced. The constants and variables identified by running the equation._
 
 ### Constants (structure — never changes)
 
 _What is fixed regardless of what data flows through. If this changes, you're redesigning, not operating._
 
-- [constant 1 — e.g., slot types are CEO, CFO, HR]
-- [constant 2 — e.g., outreach_id is the universal join key]
-- [constant 3 — e.g., well drinks before top shelf]
+- [constant 1]
+- [constant 2]
+- [constant 3]
 
 ### Variables (fill — changes every run)
 
 _The values that fill the constants. Different every execution._
 
-- [variable 1 — e.g., which companies get processed]
-- [variable 2 — e.g., how many slots get filled]
-- [variable 3 — e.g., what data comes back from search]
+- [variable 1]
+- [variable 2]
+- [variable 3]
 
 ---
 
@@ -197,23 +215,9 @@ _When to halt. Not optional. From Troubleshooting Loop (Bedrock §6) and Aviatio
 
 ---
 
-## 9. DEPENDENCIES
+# GOVERNANCE (Change — how this process is controlled)
 
-### Upstream (must exist before this runs)
-
-| Dependency | What | Status |
-|-----------|------|--------|
-| [process / data source / service] | [what it provides] | [DONE / PENDING / BLOCKED] |
-
-### Downstream (consumes this process's output)
-
-| Consumer | What It Needs |
-|----------|--------------|
-| [process / service] | [what data it reads from this process's output] |
-
----
-
-## 10. SMOKE TEST
+## 9. SMOKE TEST
 
 _Executable verification. Numbered steps with expected output. Not prose — run these._
 
@@ -233,38 +237,19 @@ If any fails → that's the break. Don't guess. Run the Troubleshooting Loop (Be
 
 ---
 
-## 11. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
+## 10. ANALYTICS — The Dyno Sheet (Bedrock §2 + §5)
 
-_The BUILD→OPERATE gate. No analytics passing tolerance = stays on the dyno. You don't flip to OPERATE by saying "it seems to work." The numbers say it works, or they don't._
+_The BUILD→OPERATE gate. Three distinct sub-layers that the Grid Reader parses independently._
 
-_This section MUST be defined BEFORE build starts. No analytics spec → no build authorization (BAR-187)._
-
-_This is also the vendor scorecard. When you want to swap a vendor in the Snap-On Toolbox, pull the scorecard for the current one and say: beat these numbers._
-
-### Process Metrics
+### 10a. Process Metrics
 
 _Define BEFORE build starts. These are the instruments on the dyno. Each metric is a constant (named, formatted). The value each run is the variable._
 
 | Metric | Unit | First Run = Baseline | Target (after baseline) | Tolerance |
 |--------|------|---------------------|------------------------|-----------|
 | [metric name] | [count / % / $/unit / ms] | BASELINE | [set after first run] | [acceptable range] |
-| [metric name] | [count / % / $/unit / ms] | BASELINE | [set after first run] | [acceptable range] |
 
-_Example metrics by process type:_
-- _SEED: row count, join integrity %, table coverage_
-- _People: slot fill rate %, hit rate per pass %, cost per filled slot_
-- _Blog: pages fetched, about_urls discovered, people extracted, hit rate %_
-- _LCS: signals processed, CIDs compiled, delivery rate %, bounce rate %_
-
-### Tool Scorecard (per Snap-On sub-hub vendor)
-
-_Track per vendor so you can benchmark swaps. Tool is constant, vendor is variable, scorecard measures the variable._
-
-| Tool # | Vendor | Hit Rate | Cost/Unit | Error Rate | Latency | Period |
-|--------|--------|----------|-----------|------------|---------|--------|
-| [##] | [vendor name] | [%] | [$] | [%] | [ms] | [date range] |
-
-### Sigma Tracking (Bedrock §2)
+### 10b. Sigma Tracking (Bedrock §2)
 
 _After 3+ runs, track whether each metric is tightening, flat, or expanding._
 
@@ -274,7 +259,7 @@ _After 3+ runs, track whether each metric is tightening, flat, or expanding._
 
 _Tightening = real constant, process is stabilizing. Flat = phantom, something isn't learning. Expanding = broken, something upstream changed._
 
-### ORBT Gate Rule
+### 10c. ORBT Gate Rules
 
 | From | To | Gate |
 |------|-----|------|
@@ -287,11 +272,9 @@ _The builder cannot certify its own work. The auditor MUST be a different engine
 
 ---
 
-## 12. EXECUTION TRACE (During BUILD)
+## 11. EXECUTION TRACE (During BUILD)
 
 _Append-only record of what happened during build/execution. This is NOT the logbook — the logbook is created only after auditor certification. This is the build journal that the auditor reviews._
-
-_Every run, every step, every result gets traced here. The auditor reads this to decide: certify or reject._
 
 ### Entry Format (per step, per run)
 
@@ -300,7 +283,7 @@ _Every run, every step, every result gets traced here. The auditor reads this to
 | trace_id | Unique entry identifier | UUID | Yes |
 | run_id | Which execution run this belongs to | UUID (one per goal/batch) | Yes |
 | step | What was attempted | Station ID or action name | Yes |
-| target | Expected outcome (defined in §10 metrics) | Text — measurable | Yes |
+| target | Expected outcome (defined in §10a metrics) | Text — measurable | Yes |
 | actual | What happened | Text — measurable | Yes |
 | delta | Target vs actual | Number or text — the gap | Yes |
 | status | Step outcome | done / failed / skipped | Yes |
@@ -337,21 +320,11 @@ _Every run, every step, every result gets traced here. The auditor reads this to
 
 ---
 
-## 13. LOGBOOK (After Certification Only)
+## 12. LOGBOOK (After Certification Only)
 
-_The aircraft's legal identity. Created ONLY when the auditor certifies the process (BUILD → OPERATE). (Bedrock §8, logbook_schema.yaml)_
+_The aircraft's legal identity. Created ONLY when the auditor certifies the process (BUILD → OPERATE). (Bedrock §8)_
 
 **No logbook during BUILD.** The execution trace (§11) is the build journal. The logbook is born when the auditor signs off.
-
-### Rules (from logbook_schema.yaml)
-
-1. No logbook until aircraft is certified (auditor sign-off on BUILD)
-2. First entry is always the **birth certificate** (certification record)
-3. Append-only. No edits. No deletions. Immutable.
-4. Every entry must have all required fields. Incomplete entries rejected.
-5. Mechanic must log what they READ before starting (context_loaded)
-6. Auditor reviews logbook entries, not source code.
-7. The builder CANNOT be the auditor. Different engine required.
 
 ### Birth Certificate (first entry — created by auditor at certification)
 
@@ -389,7 +362,7 @@ _The aircraft's legal identity. Created ONLY when the auditor certifies the proc
 
 ---
 
-## 14. FLEET FAILURE REGISTRY & STRIKE TRACKING
+## 13. FLEET FAILURE REGISTRY & STRIKE TRACKING
 
 _Strike tracking at FLEET level, not per-goal. The same failure pattern appearing across multiple goals/runs triggers escalation. (Bedrock §6, §8)_
 
@@ -407,8 +380,6 @@ _Strike tracking at FLEET level, not per-goal. The same failure pattern appearin
 
 ### Airworthiness Directive (Strike 3 output)
 
-_When strike 3 fires, the fix goes to ALL processes, not just the one that failed. This updates the template, not just one file._
-
 | Field | Value |
 |-------|-------|
 | AD Number | AD-[YYYY]-[NNN] |
@@ -420,16 +391,9 @@ _When strike 3 fires, the fix goes to ALL processes, not just the one that faile
 | Issued By | [mechanic + auditor sign-off] |
 | Issued At | [timestamp] |
 
-**AD issuance requires:**
-1. Root cause identified (Troubleshooting Loop §6 complete)
-2. Fix tested on the failing process
-3. Fix verified by auditor (different engine)
-4. Template updated if the fix is structural
-5. All affected processes notified/updated
-
 ---
 
-## 15. SESSION LOG
+## 14. SESSION LOG
 
 _Every session that touches this process. Links to LBB for detail._
 
@@ -446,8 +410,6 @@ _Every session that touches this process. Links to LBB for detail._
 | Created | [date] |
 | Last Modified | [date] |
 | Version | [semver] |
-| Template Version | 5.0.0 |
+| Template Version | 6.0.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |
-| Logbook Schema | law/logbook_schema.yaml |
-| OSAM Authority | [path to hub OSAM] |
-| Data Flow | [path to DATA_FLOW.md] |
+| US Validated | [date of US run that validated this template] |

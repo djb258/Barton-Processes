@@ -21,7 +21,8 @@ def build_update(oid, captured_at):
     oid = oid.replace("'", "''")
     captured_at = captured_at.replace("'", "''")
     return (
-        f"UPDATE slot_workbench SET last_recon_at = '{captured_at}' "
+        f"UPDATE slot_workbench SET last_recon_at = '{captured_at}', "
+        f"recon_changed = CASE WHEN last_recon_at IS NULL OR last_recon_at < '{captured_at}' THEN 1 ELSE 0 END "
         f"WHERE outreach_id = '{oid}' "
         f"AND (last_recon_at IS NULL OR last_recon_at < '{captured_at}')"
     )

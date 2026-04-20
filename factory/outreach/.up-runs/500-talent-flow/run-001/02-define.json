@@ -1,0 +1,238 @@
+{
+  "candidate": {
+    "description": "PROC-500 Talent Flow — executable process specification evaluated against the US-derived invariant set (10 comparators, 24 layers). The key is whether the PROCESS.md + heir.yaml + source code, taken as a unit, satisfy the structural requirements for the executable process medium at domestication depth 3.",
+    "scope": "factory/outreach/500-talent-flow (PROCESS.md, heir.yaml, src/talent-flow.py). Structural completeness against the invariant set. Run 1 — propose only, no lock."
+  },
+  "elements": [
+    {
+      "id": "E01-executable-process",
+      "description": "L1 — Root medium. PROCESS.md exists at declared CTB position with 3 cluster headers: Identity (sections 1-2), Contract (sections 3-6), Governance (sections 7-13). 13 numbered sections + Document Control.",
+      "format": "Single markdown document, 3 cluster headers, 13+ sections",
+      "classification": "constant"
+    },
+    {
+      "id": "E02-identity-cluster",
+      "description": "L2 — Identity cluster. Sections 1-2 cover process identity (L5), purpose (L6). Section 4+8 cover resources (L7). Three children present.",
+      "format": "Cluster container — 3 children (L5, L6, L7)",
+      "classification": "constant"
+    },
+    {
+      "id": "E03-contract-cluster",
+      "description": "L3 — Contract cluster. Sections 3-6 cover IMO (L8), OSAM (L9), DMJ (L10 — structurally absent in required format), C&V (L11), guard rails (L12). Five expected children, one structural gap.",
+      "format": "Cluster container — 5 children (L8, L9, L10, L11, L12)",
+      "classification": "constant"
+    },
+    {
+      "id": "E04-governance-cluster",
+      "description": "L4 — Governance cluster. Sections 7-13 cover verification (L13), measurement (L14), execution trace (L15 — schema not declared), certification (L16 — correct absence in BUILD), fleet learning (L17), session history (L18). Six expected children, one structural gap.",
+      "format": "Cluster container — 6 children (L13-L18)",
+      "classification": "constant"
+    },
+    {
+      "id": "E05-process-identity",
+      "description": "L5 — 18 required fields. Process table: 10/10 present (ID=PROC-500, Name, Silo, Sub-Hub, CTB, ORBT=BUILD, Strikes=0, LastDeployed, BAR=BAR-50, URL). HEIR: 8/8 present in heir.yaml. DATA QUALITY ISSUE: heir.yaml declares runtime=cloudflare-workers, snap_on_tools=[LinkedInCheck, ScraperAPI], ut_sub_hubs=[fetcher, proxy-router, cache-layer] — all contradict PROCESS.md which says Python 3, no external APIs, pure DB diff. Fields present but values inconsistent.",
+      "format": "Two tables: 10 process fields + 8 HEIR fields = 18 total",
+      "classification": "constant"
+    },
+    {
+      "id": "E06-purpose",
+      "description": "L6 — Section 2 'WHY THIS EXISTS'. Names what breaks without this process (outreaching to ghosts) and what downstream process starves (Process 100 gets stale CIDs). Structural constraint satisfied.",
+      "format": "Prose block with downstream dependency reference",
+      "classification": "constant"
+    },
+    {
+      "id": "E07-resources",
+      "description": "L7 — Section 4 'WHAT IT GRABS OFF THE WALL' + Section 8 'DEPENDENCIES'. Dependencies table (3 upstream), downstream consumers table (1), tools table (2 items), secrets table (1 secret). All 4 sub-tables present.",
+      "format": "Four tables: dependencies, downstream, tools, secrets",
+      "classification": "constant"
+    },
+    {
+      "id": "E08-imo-declaration",
+      "description": "L8 — Section 3 'IMO'. (1) Two-Question Intake: both answered — trigger=monthly after Process 200, source=database diff. (2) Middle table: 4 rows, all 5 columns (Step, Input, What Happens, Output, Tool Used). (3) Output block names Process 100 as downstream consumer. (4) Circle block describes 90-day expiry feedback loop. All 5 sub-components present.",
+      "format": "5 sub-components: intake (2 questions), input (prose), middle (table 5 cols), output (prose+consumer), circle (prose)",
+      "classification": "constant"
+    },
+    {
+      "id": "E09-data-schema",
+      "description": "L9 — Section 5 'OSAM'. (1) READ table: 4 rows (linkedin_snapshots, people_master, company_slot, v_territory_companies). (2) Join chain: traces person_id → unique_id → person_unique_id → outreach_id (spine). (3) Forbidden paths: 5 items. (4) Query routing: 6 questions mapped to tables/columns. Grid Reader compatible — output joins to outreach_id.",
+      "format": "4 sub-sections: READ table, WRITE table, join chain, forbidden paths",
+      "classification": "constant"
+    },
+    {
+      "id": "E10-dmj-structure-extraction",
+      "description": "L10 — NOT PRESENT IN REQUIRED FORMAT. Section 6 has Constants & Variables declarations with mathematical definitions and step-level comparators, but does NOT contain the DMJ three-step structure: (1) L19 Define table (5 cols: Element, ID, Format, Description, C-or-V) — absent, (2) L20 Map table (3 cols: Source, Target, Transform) — absent, (3) L21 Join table (3 cols: Join Path, Type, Description) — absent. The forced Define→Map→Join order is not implemented. This is the largest structural gap.",
+      "format": "Three ordered tables: Define (L19) → Map (L20) → Join (L21)",
+      "classification": "variable"
+    },
+    {
+      "id": "E11-cv-declaration",
+      "description": "L11 — Section 6 'CONSTANTS & VARIABLES'. Two sections: (1) Constants list with comparator, primitive, k_i for each. (2) Variables list with 6 items. Mathematical definitions include P(x;θ), r(x), stability equation. Present and well-structured.",
+      "format": "Two bullet lists: constants (locked) + variables (guarded) + mathematical block",
+      "classification": "constant"
+    },
+    {
+      "id": "E12-guard-rails",
+      "description": "L12 — Section 7 'STOP CONDITIONS'. 7 conditions declared: (1) can't answer intake ✓, (2) snapshots=0 ✓, (3) DATABASE_URL missing ✓, (4) psql unavailable ✓, (5) unknown movement_type ✓, (6) signal write fails ✓, (7) Strike 3 ✓. Count ≥ 6 satisfied. Canonical coverage: intake ✓, data gap ✓, consecutive errors — not explicit, budget cap — not listed ($0 cost), data quality ✓, Strike 3 ✓. Missing 1-2 canonical conditions but total count passes threshold.",
+      "format": "Table: 2 columns — Condition, Action. ≥6 rows.",
+      "classification": "constant"
+    },
+    {
+      "id": "E13-verification",
+      "description": "L13 — Section 9 'SMOKE TEST'. (1) 5 numbered steps with expected results. (2) Three Primitives Check present with all 3 questions (Thing, Flow, Change). All sub-comparators pass.",
+      "format": "Numbered steps (action → expected) + Three Primitives Check (3 binary questions)",
+      "classification": "constant"
+    },
+    {
+      "id": "E14-measurement",
+      "description": "L14 — Section 10 'ANALYTICS'. (1) Metrics table: 6 metrics defined with type and baseline=BASELINE. (2) Sigma Tracking table: present, empty (no runs yet — correct for BUILD). (3) ORBT Gate Rules: has sigma direction rules (tightening/flat/expanding) + Strike 3 rule. STRUCTURAL GAP: does not explicitly enumerate all 4 ORBT state transitions (BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→T/T) with gate conditions. Partial coverage.",
+      "format": "3 sub-sections: metrics table (5 cols), sigma tracking (6 cols), ORBT gate rules (3 cols)",
+      "classification": "constant"
+    },
+    {
+      "id": "E15-execution-trace",
+      "description": "L15 — Section 11 'LOGBOOK'. STRUCTURAL GAP: section contains only 'No runs logged yet.' The 14-field per-step entry schema (trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by) is NOT declared. Append-only constraint mentioned but not enforceable without schema declaration. Source code writes to stdout only — no trace entries emitted to any persistent store.",
+      "format": "One schema: 14 named fields per step entry. Append-only.",
+      "classification": "variable"
+    },
+    {
+      "id": "E16-certification-record",
+      "description": "L16 — Correctly absent. Process is in BUILD state. No logbook until BUILD→OPERATE auditor sign-off (Aviation Model, Bedrock §8). No deviation.",
+      "format": "Birth certificate — 7 fields. Created only after certification.",
+      "classification": "constant"
+    },
+    {
+      "id": "E17-fleet-learning",
+      "description": "L17 — Section 12 'KNOWN ISSUES & STRIKE TRACKING'. 8 known issues logged, all at strike 0. Table structure present with 6 columns (close to the 7-column Failure Pattern Registry). Strike rules referenced implicitly.",
+      "format": "Two schemas: failure pattern registry (7 cols) + strike rules",
+      "classification": "constant"
+    },
+    {
+      "id": "E18-session-history",
+      "description": "L18 — Section 13 'SESSION LOG'. 1 entry. Table with 3 columns (Date, What Was Done, Knowledge Record ID — mapped as 'imo-brain Document'). Append-only pointer.",
+      "format": "Table: 3 columns. Append-only.",
+      "classification": "constant"
+    },
+    {
+      "id": "E19-define-step",
+      "description": "L19 — DMJ Step 1. ABSENT. Section 6 has C&V output but NOT in the 5-column Define table format (Element, ID, Format, Description, C-or-V). The mathematical comparator table in section 6 partially overlaps but uses different column schema.",
+      "format": "Table: 5 columns — Element, ID, Format, Description, C-or-V",
+      "classification": "variable"
+    },
+    {
+      "id": "E20-map-step",
+      "description": "L20 — DMJ Step 2. ABSENT. No Source→Target→Transform mapping table exists in the document. Cannot execute without L19.",
+      "format": "Table: 3 columns — Source, Target, Transform",
+      "classification": "variable"
+    },
+    {
+      "id": "E21-join-step",
+      "description": "L21 — DMJ Step 3. ABSENT as DMJ format. The OSAM join chain (section 5) provides join path information but NOT in the L21 format (Join Path, Type, Description with back-propagation to L19). Functionally equivalent data exists but structural format does not match.",
+      "format": "Table: 3 columns — Join Path, Type, Description",
+      "classification": "variable"
+    },
+    {
+      "id": "E22-process-metrics",
+      "description": "L22 — Present in section 10. 6 metrics: snapshots compared, movements detected, TF-01 count, TF-02 count, detection rate, false positive rate. All BASELINE. Defined before build. Column schema close to standard (5 cols) but uses 'Type' instead of 'Unit' and lacks explicit 'Tolerance' column.",
+      "format": "Table: 5 columns — Metric, Unit, Baseline, Target, Tolerance",
+      "classification": "constant"
+    },
+    {
+      "id": "E23-sigma-tracking",
+      "description": "L23 — Present in section 10. Table structure with 5 columns (Run Date, Metric, Value, Sigma Direction, Notes). Empty — correct for BUILD with 0 runs. Format differs from standard (6 cols with Run 1/2/3+/Trend/Action).",
+      "format": "Table: 6 columns — Metric, Run 1, Run 2, Run 3+, Trend, Action",
+      "classification": "constant"
+    },
+    {
+      "id": "E24-orbt-gate-rules",
+      "description": "L24 — Partially present in section 10 as 'ORBT Gate Rule'. Has sigma direction → action mappings and Strike 3 rule. STRUCTURAL GAP: does not enumerate all 4 state transitions (BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→TROUBLESHOOT_TRAIN) with explicit gate conditions. Missing auditor ≠ builder enforcement for certification gates.",
+      "format": "Table: 3 columns — From, To, Gate. 4 transitions required.",
+      "classification": "variable"
+    },
+    {
+      "id": "E25-heir-data-integrity",
+      "description": "Cross-document inconsistency between heir.yaml and PROCESS.md. heir.yaml declares: runtime=cloudflare-workers (actual: Python 3), snap_on_tools=[LinkedInCheck, ScraperAPI] (actual: none used), ut_sub_hubs=[fetcher, proxy-router, cache-layer] (actual: pure DB diff). 3 field groups with contradictory values. Fields exist but values are stale/incorrect.",
+      "format": "HEIR YAML field values vs PROCESS.md declarations",
+      "classification": "variable"
+    },
+    {
+      "id": "E26-sql-injection-surface",
+      "description": "Source code (talent-flow.py) uses f-string interpolation for all SQL queries (lines 97-101, 113-132, 165-183). run_month and person_id are injected directly into SQL without parameterization. Known attack surface. Not a structural template gap but an executable process integrity issue.",
+      "format": "Python source: parameterized queries vs string interpolation",
+      "classification": "unidentified"
+    },
+    {
+      "id": "E27-hardcoded-credentials",
+      "description": "Source code line 26-27: DATABASE_URL fallback contains full Neon connection string with username and password in cleartext. Listed as Known Issue #3 but not resolved. Security constant violated.",
+      "format": "Environment variable with no-credential fallback",
+      "classification": "variable"
+    },
+    {
+      "id": "E28-section-numbering-offset",
+      "description": "PROCESS.md uses 13 numbered sections. Unified Template specifies 14. Section numbering diverges at section 3 (IMO in process) vs section 4 (IMO in template). Section mapping offset means automated parsers expecting template section numbers will misalign.",
+      "format": "14 numbered sections matching Unified Template",
+      "classification": "unidentified"
+    }
+  ],
+  "comparators": {
+    "C_exists_deviation": {
+      "status": "evaluable",
+      "measurement": "Count of 3 cluster headers (Identity/Contract/Governance) absent from PROCESS.md. 0 = all present.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_identity_missing_fields": {
+      "status": "evaluable",
+      "measurement": "18 minus count of non-empty fields across process table (10) and HEIR (8). 0 = all 18 present. Note: does not penalize value inconsistency between heir.yaml and PROCESS.md — that is tracked in E25.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_imo_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 IMO sub-comparators failing: (1) both intake questions answered, (2) Middle table ≥1 row with all 5 columns, (3) output names downstream consumer. 0 = all pass.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_osam_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 OSAM sub-comparators failing: (1) READ table ≥1 row, (2) join chain to spine ID, (3) forbidden paths present. 0 = all pass.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_dmj_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 DMJ sub-comparators failing: (1) Define table (L19) non-empty in 5-column format, (2) Map table (L20) references Define IDs, (3) Join path (L21) reaches spine. Section 6 has C&V content but not in DMJ table format. All 3 fail.",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "C_guardrails_canonical_gap": {
+      "status": "evaluable",
+      "measurement": "max(0, 6 - count_of_declared_stop_conditions). 7 conditions declared. Threshold met. Note: canonical coverage has 1-2 gaps (no explicit '5 consecutive errors' or 'budget cap') but total count passes.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_verify_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 verification sub-comparators failing: (1) ≥1 numbered step exists, (2) each step has expected result, (3) Three Primitives Check present. 0 = all pass.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "C_measurement_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 measurement sub-comparators failing: (1) metrics table defined before build, (2) sigma tracking active after 3+ runs (N/A for run 0 — pass structurally), (3) ORBT gate rules with all 4 transitions. Sub (3) fails: only sigma direction rules + Strike 3 present, not all 4 explicit ORBT transitions.",
+      "lower_is_better": true,
+      "value": 1
+    },
+    "C_trace_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 2 trace sub-comparators failing: (1) per-step entry schema declares all 14 required fields, (2) append-only constraint enforced. Section 11 has no schema declaration. Both fail.",
+      "lower_is_better": true,
+      "value": 2
+    },
+    "C_orbt_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 ORBT sub-comparators failing: (1) current ORBT state declared in identity — PASS (BUILD in section 1), (2) all 4 state transitions defined with gate conditions — FAIL (partial), (3) auditor ≠ builder enforced — FAIL (not declared). 2 of 3 fail.",
+      "lower_is_better": true,
+      "value": 2
+    }
+  }
+}

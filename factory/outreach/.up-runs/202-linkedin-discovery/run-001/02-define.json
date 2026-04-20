@@ -1,0 +1,194 @@
+{
+  "candidate": {
+    "description": "PROC-202 (Find LinkedIn) process documentation evaluated against Unified Template v6.0.0 (3 clusters, 14 sections) and US invariant set (10 comparators, 24 layers)",
+    "scope": "factory/outreach/202-linkedin-discovery — all documentation files (PROCESS.md, heir.yaml, CLAUDE.md, DATA_FLOW.md)"
+  },
+  "elements": [
+    {
+      "id": "E01-document-existence",
+      "description": "Process document exists at declared CTB position with parseable structure",
+      "format": "Single markdown file at factory/outreach/202-linkedin-discovery/PROCESS.md",
+      "classification": "constant"
+    },
+    {
+      "id": "E02-cluster-headers",
+      "description": "Three cluster headers (Identity / Contract / Governance) mapped to Three Primitives (Thing / Flow / Change) per Unified Template v6.0.0",
+      "format": "Three H2 headers: '## Identity Cluster', '## Contract Cluster', '## Governance Cluster' — each grouping their child sections",
+      "classification": "constant"
+    },
+    {
+      "id": "E03-section-numbering",
+      "description": "14 sections organized under 3 clusters with cluster-relative numbering per Unified Template v6.0.0",
+      "format": "Identity §1-3, Contract §4-8, Governance §9-14 — cluster prefix required",
+      "classification": "constant"
+    },
+    {
+      "id": "E04-process-identity-table",
+      "description": "Process table with 10 named fields: ID, Name, Medium, Business Silo, CTB Position, ORBT state, Strikes, Authority, Last Modified, Reference",
+      "format": "Markdown table, 10 rows, all non-empty",
+      "classification": "constant"
+    },
+    {
+      "id": "E05-heir-table",
+      "description": "HEIR table with 8 required fields: sovereign_ref, hub_id, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria",
+      "format": "Markdown table or YAML file with all 8 fields present and non-empty",
+      "classification": "constant"
+    },
+    {
+      "id": "E06-imo-declaration",
+      "description": "IMO section with Two-Question Intake, Input block, Middle table (5 columns), Output block naming downstream consumer, Circle block",
+      "format": "5 sub-components per L8 schema: (1) 2 intake questions, (2) prose input, (3) 5-column table, (4) output + consumer, (5) circle description",
+      "classification": "constant"
+    },
+    {
+      "id": "E07-data-schema-osam",
+      "description": "OSAM section with READ table, WRITE table, Join Chain to spine ID, Forbidden Paths",
+      "format": "4 sub-sections: READ (3 cols), WRITE (3 cols), Join Chain (tree notation), Forbidden Paths (2 cols)",
+      "classification": "constant"
+    },
+    {
+      "id": "E08-dmj-define-table",
+      "description": "DMJ Step 1 — Define table with 5 columns: Element, ID, Format, Description, C-or-V",
+      "format": "Markdown table, 5 columns, ≥1 row per data element, unidentifieds preserved",
+      "classification": "constant"
+    },
+    {
+      "id": "E09-dmj-map-table",
+      "description": "DMJ Step 2 — Map table with 3 columns: Source, Target, Transform. References all Define element IDs",
+      "format": "Markdown table, 3 columns, transform types: direct/classify/parse",
+      "classification": "constant"
+    },
+    {
+      "id": "E10-dmj-join-table",
+      "description": "DMJ Step 3 — Join table with 3 columns: Join Path, Type, Description. Reaches spine ID",
+      "format": "Markdown table, 3 columns, join types: direct/indirect/fuzzy",
+      "classification": "constant"
+    },
+    {
+      "id": "E11-guard-rails",
+      "description": "Stop conditions table with ≥6 canonical conditions from Bedrock §6/§8",
+      "format": "Markdown table, 2 columns (Condition, Action), 6 canonical + domain-specific rows",
+      "classification": "constant"
+    },
+    {
+      "id": "E12-verification",
+      "description": "Smoke test with numbered executable steps (action → expected result) plus Three Primitives Check",
+      "format": "Numbered list + 3-question binary check (Thing/Flow/Change)",
+      "classification": "constant"
+    },
+    {
+      "id": "E13-process-metrics",
+      "description": "Metrics table defined BEFORE build with Metric, Unit, Baseline, Target, Tolerance columns",
+      "format": "Markdown table, 5 columns, ≥1 row defined before first run",
+      "classification": "constant"
+    },
+    {
+      "id": "E14-sigma-tracking",
+      "description": "Sigma tracking table with Metric, Run 1-3+, Trend, Action columns — active after 3+ runs",
+      "format": "Markdown table, 6 columns, Trend values: TIGHTENING/FLAT/EXPANDING",
+      "classification": "constant"
+    },
+    {
+      "id": "E15-orbt-gate-rules",
+      "description": "ORBT state machine with 4 transitions, gate conditions, auditor ≠ builder enforced",
+      "format": "Markdown table, 3 columns (From, To, Gate), 4 rows for 4 transitions",
+      "classification": "constant"
+    },
+    {
+      "id": "E16-execution-trace-schema",
+      "description": "Per-step entry schema with 14 required fields, append-only constraint",
+      "format": "14 named fields: trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by",
+      "classification": "constant"
+    },
+    {
+      "id": "E17-cv-declaration",
+      "description": "Constants & Variables section with mathematical definitions (P(x;θ), r(x), stability) and per-step comparators",
+      "format": "Two lists (constants bullet, variables bullet) plus comparator tables with C_i, k_i, primitive grounding",
+      "classification": "constant"
+    },
+    {
+      "id": "E18-current-section-layout",
+      "description": "Existing flat 14-section layout (§1-14) without cluster grouping — the as-is state vs the to-be Unified Template structure",
+      "format": "Flat numbered sections: 1.Identity, 2.Purpose, 3.IMO, 4.Resources, 5.OSAM, 6.C&V, 7.Stop, 8.Dependencies, 9.Smoke, 10.Analytics, 11.Trace, 12.Logbook, 13.Fleet, 14.Session",
+      "classification": "variable"
+    },
+    {
+      "id": "E19-heir-yaml-current",
+      "description": "Current heir.yaml with non-standard field names (sub_hub, component, process_id, business_silo, parent, created_at) — only hub_id matches required schema",
+      "format": "YAML file with 8 fields, 1 matching required schema, 7 non-standard or missing",
+      "classification": "variable"
+    }
+  ],
+  "comparators": {
+    "cluster_header_gap": {
+      "status": "evaluable",
+      "measurement": "Count of missing cluster headers out of 3 required (Identity Cluster, Contract Cluster, Governance Cluster). Measured by scanning H2 headers in PROCESS.md.",
+      "lower_is_better": true,
+      "value": 3,
+      "detail": "PROCESS.md uses flat numbered sections (## 1. IDENTITY, ## 3. IMO, etc). Zero cluster-level headers present. All 3 missing."
+    },
+    "identity_field_gap": {
+      "status": "evaluable",
+      "measurement": "Count of missing or empty fields out of 18 required (10 process table + 8 HEIR). Process table checked against L5 schema. HEIR checked against 8-field schema.",
+      "lower_is_better": true,
+      "value": 9,
+      "detail": "Process table missing 2 of 10 (Medium, Authority). HEIR missing 7 of 8 (sovereign_ref, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria). hub_id is only HEIR match. Total gap: 9."
+    },
+    "imo_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 sub-comparators that fail: (1) both intake questions answered, (2) Middle table ≥1 row with all 5 columns, (3) Output block names downstream consumer. Range: 0-3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 3 pass. Two-Question Intake answered (§3). Middle table has 3 rows × 5 columns (§3). Output names LCS Pipeline and HeyReach as consumers (§3)."
+    },
+    "osam_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 sub-comparators that fail: (1) READ table ≥1 row, (2) join chain traces to spine ID, (3) forbidden paths section present. Range: 0-3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 3 pass. READ table has 1 row with join key (§5). Join chain traces slot_workbench.outreach_id → company-level data (§5). Forbidden paths has 4 rows (§5)."
+    },
+    "dmj_table_deficit": {
+      "status": "evaluable",
+      "measurement": "Count of missing DMJ tables out of 3 required: (1) Define table (5 cols: Element/ID/Format/Description/C-or-V), (2) Map table (3 cols: Source/Target/Transform), (3) Join table (3 cols: Join Path/Type/Description). Range: 0-3.",
+      "lower_is_better": true,
+      "value": 3,
+      "detail": "None of the 3 DMJ tables exist. Section 6 has C&V declarations and comparator tables (related content) but not the explicit DMJ table schemas required by L19/L20/L21. All 3 tables missing."
+    },
+    "stop_condition_deficit": {
+      "status": "evaluable",
+      "measurement": "max(0, 6 - count_of_canonical_stop_conditions). The 6 canonical conditions from Bedrock §6/§8: (1) can't answer intake, (2) data schema gap, (3) 5 consecutive errors, (4) budget cap, (5) data quality below threshold, (6) Strike 3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 6 canonical conditions present in §7: (1) can't answer intake ✓, (2) CAPTCHA rate / connection errors cover data schema gap ✓, (3) 5 consecutive connection errors ✓, (4) budget cap ✓, (5) Gate C hit rate < 30% ✓, (6) Strike 3 → T/T ✓. Plus 2 domain-specific."
+    },
+    "verification_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 sub-comparators that fail: (1) ≥1 numbered step exists, (2) each step has expected result, (3) Three Primitives Check present with all 3 questions. Range: 0-3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 3 pass. 6 numbered steps in §9. Each has expected result. Three Primitives Check present with Thing/Flow/Change questions."
+    },
+    "measurement_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 sub-comparators that fail: (1) metrics table ≥1 metric defined before build, (2) sigma tracking active after 3+ runs, (3) ORBT gate rules present with all 4 transitions. Range: 0-3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 3 pass. Metrics table has 7 metrics defined before build (§10). Sigma tracking table present with 5 metrics (empty — needs 3+ runs, which is correct for BUILD state). ORBT gate rules present with all 4 transitions (§10)."
+    },
+    "trace_schema_field_gap": {
+      "status": "evaluable",
+      "measurement": "Count of missing fields out of 14 required in execution trace schema + append-only violation count. Range: 0-15.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 14 fields present in §11: trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by. Append-only constraint declared."
+    },
+    "orbt_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 sub-comparators that fail: (1) current ORBT state declared in identity, (2) all 4 state transitions defined with gate conditions, (3) auditor ≠ builder enforced. Range: 0-3.",
+      "lower_is_better": true,
+      "value": 0,
+      "detail": "All 3 pass. ORBT = BUILD declared in §1 identity table. 4 transitions defined in §10 ORBT Gate Rule table. Auditor ≠ builder stated explicitly: 'The builder cannot certify its own work.'"
+    }
+  }
+}

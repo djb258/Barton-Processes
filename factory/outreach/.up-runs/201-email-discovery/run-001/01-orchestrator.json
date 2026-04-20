@@ -1,0 +1,89 @@
+{
+  "subject": {
+    "name": "PROC-201: Find Email",
+    "medium": "executable process",
+    "path": "/Users/employeeai/Documents/Barton-Processes/factory/outreach/201-email-discovery",
+    "files": [
+      "PROCESS.md",
+      "CLAUDE.md",
+      "heir.yaml",
+      "DATA_FLOW.md",
+      "src/find-email.py",
+      "src/output/"
+    ],
+    "process_id": "PROC-201",
+    "business_silo": "outreach",
+    "current_orbt": "BUILD",
+    "process_version": "4.0.0",
+    "template_version": "4.0.0"
+  },
+  "scope": "Validate PROC-201 (Find Email) process documentation against the executable-process invariant set from US run-003. Evaluate all 10 invariant layers (L1, L5, L8, L9, L10, L12, L13, L14, L15, L24) for structural completeness. The subject is a single process specification — not its runtime behavior or data output.",
+  "boundary": [
+    "factory/outreach/201-email-discovery/PROCESS.md",
+    "factory/outreach/201-email-discovery/CLAUDE.md",
+    "factory/outreach/201-email-discovery/heir.yaml",
+    "factory/outreach/201-email-discovery/DATA_FLOW.md",
+    "factory/outreach/201-email-discovery/src/find-email.py"
+  ],
+  "excluded": [
+    "src/output/ (runtime artifacts, not structure)",
+    "slot_workbench data (runtime fill, not process structure)",
+    "Other processes (200, 202, 300 — upstream/downstream, not in scope)"
+  ],
+  "intent": "Validate PROC-201 against unified template v6.0.0 and Grid Reader requirements — evaluate whether the existing process document conforms to the invariant set discovered by US for the executable-process medium.",
+  "us_handoff": {
+    "medium": "executable process",
+    "medium_slug": "executable-process",
+    "us_run_dir": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003",
+    "layers_count": 24,
+    "invariant_set_count": 10,
+    "domestication_depth": 3,
+    "reverse_route_depth": 5
+  },
+  "invariant_set_summary": [
+    {"layer_id": "L1", "name": "Executable Process", "primitive": "Thing", "check": "Process document exists at declared CTB position with three cluster headers"},
+    {"layer_id": "L5", "name": "Process Identity", "primitive": "Thing", "check": "18 required fields (10 process + 8 HEIR) present and non-empty"},
+    {"layer_id": "L8", "name": "IMO Declaration", "primitive": "Flow", "check": "Two-Question Intake answered, Middle table with >=1 row (5 columns), Output names downstream consumer"},
+    {"layer_id": "L9", "name": "Data Schema", "primitive": "Thing", "check": "READ table >=1 row, join chain to spine ID, forbidden paths present"},
+    {"layer_id": "L10", "name": "Structure Extraction (DMJ)", "primitive": "Change", "check": "Define table non-empty, Map references all Define IDs, Join path reaches spine"},
+    {"layer_id": "L12", "name": "Guard Rails", "primitive": "Flow", "check": ">=6 declared stop conditions from canonical set"},
+    {"layer_id": "L13", "name": "Verification", "primitive": "Change", "check": ">=1 numbered step with expected result, Three Primitives Check present"},
+    {"layer_id": "L14", "name": "Measurement", "primitive": "Change", "check": "Metrics table defined before build, sigma tracking active after 3+ runs, ORBT gate rules present"},
+    {"layer_id": "L15", "name": "Execution Trace", "primitive": "Flow", "check": "Per-step entry schema with 14 required fields, append-only enforced"},
+    {"layer_id": "L24", "name": "ORBT Gate Rules", "primitive": "Change", "check": "Current ORBT state declared, four state transitions defined, auditor != builder enforced"}
+  ],
+  "heir": {
+    "sovereign_ref": "imo-creator",
+    "hub_id": "outreach",
+    "ctb_placement": "leaf",
+    "imo_topology": "middle",
+    "cc_layer": "CC-03",
+    "services": ["cloudflare-d1", "dataimpulse-proxy", "startpage-search", "doppler"],
+    "secrets_provider": "doppler",
+    "acceptance_criteria": [
+      "All 10 invariant set comparators evaluated with measurements",
+      "P score computed per comparator and overall",
+      "DMJ steps evaluated in forced order (Define->Map->Join)",
+      "Guard rails include all 6 canonical stop conditions",
+      "HEIR identity has all 8 fields populated",
+      "ORBT gate rules define all 4 transitions",
+      "Execution trace schema declares all 14 fields",
+      "Three Primitives Check present in verification section"
+    ]
+  },
+  "orbt": "BUILD",
+  "refused": false,
+  "run_metadata": {
+    "run_number": 1,
+    "min_runs_for_lock": 3,
+    "created_at": "2026-04-04T17:39:41.053716+00:00",
+    "orchestrator_written_at": "2026-04-04T18:00:00+00:00"
+  },
+  "downstream_instructions": {
+    "02-define": "Evaluate PROCESS.md sections against L19 (Define Step). The subject already has Section 6 (C&V) with comparators and tolerances defined. Check: does every data element have ID, format, description, C-or-V classification?",
+    "03-map": "Evaluate PROCESS.md Section 5 (OSAM) against L20 (Map Step). Check: do READ/WRITE tables map source elements to target structure? Does DATA_FLOW.md provide the mapping?",
+    "04-join": "Evaluate PROCESS.md join chain against L21 (Join Step). Check: does the join chain reach the spine ID (outreach_id)? Is the path documented?",
+    "05-qc": "Compute P score for each invariant set comparator. Evaluate overall P(x;θ) = 1 if max_i[C_i(x)/k_i] <= 1.",
+    "06-audit": "Cannot audit on run 1. Produce receipt noting minimum 3 runs required before certification."
+  }
+}

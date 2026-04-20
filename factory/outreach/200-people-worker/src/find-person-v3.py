@@ -415,6 +415,8 @@ def update_slot(slot, first, last, full, source, linkedin_url=None):
         f"person_source = {esc(source)}",
         f"has_name = 1",
         f"person_found_at = {esc(now)}",
+        f"person_last_checked_at = {esc(now)}",
+        f"person_changed = 1",
     ]
 
     if linkedin_url:

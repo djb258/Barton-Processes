@@ -1,0 +1,75 @@
+{
+  "candidate": {
+    "description": "Join path for PROC-400 DOL Views (executable process) to the organizational spine via HEIR identity fields. The process document at factory/outreach/400-dol-views attaches to the imo-creator sovereign through ctb_placement (leaf), cc_layer (CC-04), and sovereign_ref (imo-creator-v2). Join resolves despite 3 identity field inconsistencies between heir.yaml and PROCESS.md. Run 1 of minimum 3 — proposal only, no lock."
+  },
+  "join_path": {
+    "spine": "imo-creator sovereign → STRUCTURE_MANIFEST.yaml CTB tree → factory/outreach/400-dol-views",
+    "type": "direct",
+    "test_results": {
+      "ctb_position_exists": {
+        "field": "ctb_placement",
+        "value": "factory/outreach/400-dol-views",
+        "resolved": true,
+        "evidence": "Directory exists with PROCESS.md, CLAUDE.md, heir.yaml, src/001_dol_views.sql"
+      },
+      "sovereign_ref_resolves": {
+        "field": "sovereign_ref",
+        "value": "imo-creator-v2",
+        "resolved": true,
+        "evidence": "imo-creator-v2 is the active sovereign repo (CC-01 in FLEET_REGISTRY)"
+      },
+      "cc_layer_valid": {
+        "field": "cc_layer",
+        "value": "CC-04",
+        "resolved": true,
+        "evidence": "CC-04 is a valid layer in the concentric circle model"
+      },
+      "hub_id_resolves": {
+        "field": "hub_id (process_id in heir.yaml)",
+        "heir_yaml_value": "PROC-DOL",
+        "process_md_value": "PROC-400",
+        "resolved": true,
+        "evidence": "Both refer to the same process at the same CTB position. Join resolves by position, but the ID conflict must be reconciled — one canonical hub_id required for agent routing"
+      },
+      "orbt_state_consistent": {
+        "field": "status/ORBT",
+        "heir_yaml_value": "build",
+        "process_md_value": "OPERATE",
+        "resolved": false,
+        "evidence": "State conflict between heir.yaml (build) and PROCESS.md §1 (OPERATE). Agents checking ORBT from different files will get different answers. Does not break the join path but breaks state routing."
+      },
+      "data_join_chain": {
+        "field": "OSAM L9 join chain (data-level, not process-level)",
+        "declared_chain": "sponsor_dfe_ein → ack_id → company_unique_id (outreach spine)",
+        "resolved": "not_tested",
+        "evidence": "Data-level join chain declared in PROCESS.md §5. Would require database query to verify resolution. Not in scope for process-to-organizational-spine join evaluation."
+      }
+    }
+  },
+  "comparators": {
+    "join_key_inconsistencies": {
+      "status": "evaluable",
+      "measurement": "Count of HEIR/identity fields with conflicting values between heir.yaml and PROCESS.md. Each inconsistency is a field where two authoritative files disagree on the value for the same named position. (1) process_id: PROC-DOL vs PROC-400, (2) status/ORBT: build vs OPERATE, (3) sovereign_ref: imo-creator-v2 (heir.yaml) vs imo-creator (01-orchestrator.json heir block).",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "unresolvable_spine_hops": {
+      "status": "evaluable",
+      "measurement": "Count of hops in the join chain (process → ctb_position → sub_hub → business_silo → sovereign) where the target entity does not exist or cannot be verified. All 4 hops resolve: ctb_position exists on disk, outreach sub-hub exists in STRUCTURE_MANIFEST, svg-agency silo exists in FLEET_REGISTRY, sovereign imo-creator-v2 is the active repo.",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "orphan_layer_count": {
+      "status": "evaluable",
+      "measurement": "Count of 17 mapped elements from 03-map.json where the target layer has no declared position on the CTB tree. All 24 target layers (L1-L24) have positions defined in the US handoff invariant set. The 2 unresolved mappings (E05-DMJ at L10, E14-certification at L16) are content gaps, not join gaps — the layers exist structurally, the content is absent. E17-sql-source maps to 'domain-artifact' which is outside the template tree — 1 element with no formal CTB layer target.",
+      "lower_is_better": true,
+      "value": 1
+    },
+    "state_conflicts": {
+      "status": "evaluable",
+      "measurement": "Count of identity fields where the ORBT/lifecycle state disagrees across authoritative files. heir.yaml says 'build', PROCESS.md says 'OPERATE', orchestrator set run ORBT to 'BUILD'. An agent reading heir.yaml routes to BUILD behavior; reading PROCESS.md routes to OPERATE behavior. Each conflict is a routing fork.",
+      "lower_is_better": true,
+      "value": 1
+    }
+  }
+}

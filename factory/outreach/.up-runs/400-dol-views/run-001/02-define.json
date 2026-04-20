@@ -1,0 +1,172 @@
+{
+  "candidate": {
+    "description": "PROC-400 DOL Views — SQL view library (6 read-only views) against DOL Form 5500 filings. Evaluated as an executable process document against the unified template v6.0.0 invariant set (24 layers, 10 comparators).",
+    "scope": "Structural completeness of PROCESS.md, heir.yaml, and src/001_dol_views.sql against the US handoff invariant set. Run 1 of minimum 3 — proposal only, no lock."
+  },
+  "elements": [
+    {
+      "id": "E01-executable-process",
+      "description": "L1 — The PROCESS.md file exists at factory/outreach/400-dol-views/PROCESS.md. Three cluster headers present: Identity (§1-4), Contract (§3-6), Governance (§7-12). Parseable as a single document.",
+      "format": "Markdown document with 13 numbered sections, three structural clusters mapped to Thing/Flow/Change.",
+      "classification": "constant"
+    },
+    {
+      "id": "E02-process-identity",
+      "description": "L5 — Process Identity. §1 contains 10 process fields (Process ID, Name, Business Silo, Sub-Hub, CTB Position, ORBT, Strikes, Last Deployed, BAR Reference, Runtime). heir.yaml contains 8 HEIR fields (sovereign_ref, hub_id via process_id, ctb_placement, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria). 18/18 fields present and non-empty.",
+      "format": "Two tables: process table (10 fields) + HEIR YAML (8 fields). 18 total named fields.",
+      "classification": "constant"
+    },
+    {
+      "id": "E03-imo-declaration",
+      "description": "L8 — IMO Declaration. Two-Question Intake present (§3, Bedrock §7). Middle table has 4 rows with 5 columns (Step, Input, What Happens, Output, Tool Used). Output names downstream consumer (Process 100 LCS Pipeline). Circle described (annual EBSA → import → seed → views → LCS → targeting).",
+      "format": "Five sub-components: Two-Question Intake (2 questions), Input (prose), Middle (5-col table, 4 rows), Output (prose + consumer), Circle (prose).",
+      "classification": "constant"
+    },
+    {
+      "id": "E04-data-schema",
+      "description": "L9 — Data Schema (OSAM). READ table (§5) has 6 entries with source/provides/join-key columns. Join chain traces from sponsor_dfe_ein through ack_id to company_unique_id (spine). Forbidden paths present with 4 entries (action + why). WRITE access explicitly declared as none (read-only process).",
+      "format": "Four sub-sections: READ table (3 cols, 6 rows), WRITE table (3 cols, 1 row declaring none), Join Chain (tree notation), Forbidden Paths (2 cols, 4 rows).",
+      "classification": "constant"
+    },
+    {
+      "id": "E05-dmj-structure-extraction",
+      "description": "L10 — Structure Extraction (DMJ). No formal Define/Map/Join step tables exist. §6 has a Constants & Variables section (two bullet lists) which is L11, not L10. The three DMJ step tables (L19 Define 5-col, L20 Map 3-col, L21 Join 3-col) are entirely absent from PROCESS.md.",
+      "format": "Expected: three ordered step tables (Define → Map → Join) per DMJ.md. Actual: absent.",
+      "classification": "variable"
+    },
+    {
+      "id": "E06-guard-rails",
+      "description": "L12 — Guard Rails. §7 declares 7 stop conditions in a 2-column table (Condition, Action). Includes all 6 canonical conditions: data format change (halt), row count drop (halt), quality threshold (EIN match <80%), zero-row view (halt), type inconsistency (halt), Strike 3 (Troubleshoot/Train). Plus 1 domain-specific (annual import not completed by Q2).",
+      "format": "Table: 2 columns — Condition, Action. 7 rows (≥6 canonical minimum).",
+      "classification": "constant"
+    },
+    {
+      "id": "E07-verification",
+      "description": "L13 — Verification. §9 has 9 numbered executable smoke test steps, each with action → expected result. Three Primitives Check present with all three questions (Thing: tables exist? Flow: queries return rows? Change: boolean signals computed correctly?).",
+      "format": "Two sub-sections: numbered steps (9 entries with action/expected), Three Primitives Check (3 binary questions).",
+      "classification": "constant"
+    },
+    {
+      "id": "E08-measurement",
+      "description": "L14 — Measurement. §10 has metrics table with 5 columns (Metric, Type, Baseline, First Run, Notes) — deviates from L22 spec (Metric, Unit, Baseline, Target, Tolerance): missing Target and Tolerance columns. Sigma tracking table present with 5 columns (Run Date, Metric, Value, Sigma Direction, Notes) — deviates from L23 spec (Metric, Run1, Run2, Run3+, Trend, Action): wrong structure. ORBT gate rules present as 4 bullet-point rules — not as L24 3-column table (From, To, Gate).",
+      "format": "Expected: three sub-sections matching L22/L23/L24 schemas. Actual: three sub-sections present but all deviate from required column schemas.",
+      "classification": "variable"
+    },
+    {
+      "id": "E09-execution-trace",
+      "description": "L15 — Execution Trace. No 14-field trace schema exists. §11 Logbook has narrative entries (date, ORBT, trigger, records, errors, tools, result, learnings, ORBT after) — 9 narrative fields, not the required 14-field structured schema (trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by). Append-only intent present but not enforced by schema.",
+      "format": "Expected: per-step entry schema with 14 named fields, append-only. Actual: narrative logbook entries with ~9 ad-hoc fields.",
+      "classification": "variable"
+    },
+    {
+      "id": "E10-orbt-gate-rules",
+      "description": "L24 — ORBT Gate Rules. Current ORBT state declared in §1 identity (OPERATE). §10 has ORBT gate rules as 4 bullet points (tightening→lock, flat→investigate, expanding→reclassify, strike 3→Troubleshoot/Train) — these are sigma interpretation rules, NOT the 4 state transitions required by L24 (BUILD→OPERATE, OPERATE→REPAIR, REPAIR→OPERATE, Any→TROUBLESHOOT/TRAIN with gate conditions). Auditor ≠ builder constraint not explicitly stated.",
+      "format": "Expected: 3-column table (From, To, Gate) with 4 explicit transitions + auditor separation. Actual: 4 sigma rules as bullets (wrong content) + no auditor separation.",
+      "classification": "variable"
+    },
+    {
+      "id": "E11-cv-declaration",
+      "description": "L11 — Constants & Variables Declaration. §6 has two bullet lists: 10 constants and 6 variables. Correctly separates structure (locked) from fill (guarded). Present and well-formed.",
+      "format": "Two bullet lists: Constants (10 items), Variables (6 items). Output of C&V test applied to this process.",
+      "classification": "constant"
+    },
+    {
+      "id": "E12-purpose",
+      "description": "L6 — Purpose. §2 has 2-sentence prose naming what breaks without this process (LCS Pipeline has no DOL intelligence for CID tiers 2-3) and what downstream process starves (outreach blind without it).",
+      "format": "Prose block, 2 sentences, names downstream dependency.",
+      "classification": "constant"
+    },
+    {
+      "id": "E13-resources",
+      "description": "L7 — Resources. §4 has blueprint reference, snap-on tools table, databases table, tools & integrations table, secrets table. §8 has upstream dependencies table and downstream consumers table. All four L7 sub-tables present.",
+      "format": "Four tables: Dependencies (§8, 2 upstream), Downstream Consumers (§8, 2 consumers), Tools & Integrations (§4, 2 tools), Secrets (§4, 1 secret).",
+      "classification": "constant"
+    },
+    {
+      "id": "E14-certification-record",
+      "description": "L16 — Certification Record (Logbook). No formal certification record exists with the required 7-field schema (heir_ref, orbt_entered, orbt_exited, action, gates_passed, signed_by, signed_at). Process is in OPERATE state but no BUILD→OPERATE auditor sign-off documented.",
+      "format": "Expected: 7-field append-only birth certificate created after auditor sign-off. Actual: absent.",
+      "classification": "unidentified"
+    },
+    {
+      "id": "E15-fleet-learning",
+      "description": "L17 — Fleet Learning. §12 Known Issues has 6 columns (not 7): #, Date, Issue, Root Cause, Fix, Strikes. Missing Pattern ID and Status columns vs L17 spec (Pattern ID, Location, Error Code, First Seen, Occurrences, Strike Count, Status). Strike escalation rules not explicitly present as separate sub-section.",
+      "format": "Expected: 7-column Failure Pattern Registry + Strike Rules sub-section. Actual: 6-column Known Issues table, partial schema overlap.",
+      "classification": "variable"
+    },
+    {
+      "id": "E16-session-history",
+      "description": "L18 — Session History. §13 has 3-column table (Date, What Was Done, imo-brain Document). Matches L18 spec (Date, What Was Done, Knowledge Record ID) with column rename. Append-only. 3 entries.",
+      "format": "Table: 3 columns — Date, What Was Done, Knowledge Record ID. Append-only.",
+      "classification": "constant"
+    },
+    {
+      "id": "E17-sql-source",
+      "description": "The 6 SQL view definitions in src/001_dol_views.sql. Implements the 6 detection signals: filing status, renewal window, premium pressure, market comparison, carrier changes, broker changes. Pure SQL — deterministic, no AI required.",
+      "format": "SQL file with 6 CREATE OR REPLACE VIEW statements against dol schema.",
+      "classification": "constant"
+    }
+  ],
+  "comparators": {
+    "cluster_header_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 3 required cluster headers (Identity/Contract/Governance) missing from PROCESS.md. Grounded in Thing (does the structure exist?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "identity_field_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 18 required fields (10 process + 8 HEIR) that are missing or empty. Grounded in Thing (does each field exist with content?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "imo_sub_component_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 IMO sub-comparators failing: (1) both intake questions answered, (2) Middle table ≥1 row with all 5 columns, (3) Output names downstream consumer. Grounded in Flow (does the contract flow through?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "data_schema_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 3 data schema sub-comparators failing: (1) READ table ≥1 row, (2) join chain traces to spine ID, (3) forbidden paths present. Grounded in Thing (does the schema declaration exist?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "dmj_step_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 3 DMJ step tables missing or structurally incomplete: (1) Define L19 5-col table, (2) Map L20 3-col table referencing all Define IDs, (3) Join L21 3-col table reaching spine. Grounded in Change (does the structure extraction happen?).",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "guardrail_deficit": {
+      "status": "evaluable",
+      "measurement": "max(0, 6 - count of canonical stop conditions declared). 6 canonical conditions from Bedrock §6/§8. Grounded in Flow (do halt triggers exist to stop runaway execution?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "verification_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 3 verification sub-comparators failing: (1) ≥1 numbered step exists, (2) each step has expected result, (3) Three Primitives Check present with all 3 questions. Grounded in Change (does the verification happen correctly?).",
+      "lower_is_better": true,
+      "value": 0
+    },
+    "measurement_schema_deviations": {
+      "status": "evaluable",
+      "measurement": "Count of 3 measurement sub-components deviating from required schema: (1) metrics table missing Target/Tolerance columns vs L22 5-col spec, (2) sigma tracking wrong column structure vs L23 6-col spec, (3) ORBT gate rules not in L24 3-col table format. Grounded in Change (does the measurement mechanism match spec?).",
+      "lower_is_better": true,
+      "value": 3
+    },
+    "trace_field_gaps": {
+      "status": "evaluable",
+      "measurement": "Count of 14 required trace schema fields absent. Fields: trace_id, run_id, step, target, actual, delta, status, error_code, error_message, tools_used, duration_ms, cost_cents, timestamp, signed_by. Grounded in Flow (does the trace schema exist to carry execution records?).",
+      "lower_is_better": true,
+      "value": 14
+    },
+    "orbt_gate_sub_failures": {
+      "status": "evaluable",
+      "measurement": "Count of 3 ORBT sub-comparators failing: (1) current ORBT state declared in identity, (2) all 4 state transitions defined with gate conditions, (3) auditor ≠ builder enforced. Grounded in Change (does the state machine govern transitions correctly?).",
+      "lower_is_better": true,
+      "value": 2
+    }
+  }
+}

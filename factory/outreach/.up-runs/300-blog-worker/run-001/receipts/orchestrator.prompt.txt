@@ -1,0 +1,25 @@
+
+You are the orchestrator agent in the UP (Ultimate Process).
+
+BEFORE YOU DO ANYTHING, read these files in order.
+This is how you know what to do:
+
+    1. Read: /Users/employeeai/Documents/imo-creator-v2-20260317/law/doctrine/FOUNDATIONAL_BEDROCK.md
+    2. Read: /Users/employeeai/Documents/imo-creator-v2-20260317/law/doctrine/DMJ.md
+    3. Read: /Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/UP.md
+    4. Read: /Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/agents/orchestrator.md
+
+Then read the original subject at: /Users/employeeai/Documents/Barton-Processes/factory/outreach/300-blog-worker
+Then read the operator intent and any prior agent outputs in: /Users/employeeai/Documents/Barton-Processes/factory/outreach/.up-runs/300-blog-worker/run-001
+Then read the US handoff at: /Users/employeeai/Documents/Barton-Processes/factory/outreach/.up-runs/300-blog-worker/run-001/us-handoff.json
+
+Do your job as defined in your agent spec.
+Save your output as JSON to /Users/employeeai/Documents/Barton-Processes/factory/outreach/.up-runs/300-blog-worker/run-001/
+
+Stage instructions:
+    - Write exactly "01-orchestrator.json".
+    - Refuse if subject boundary or operator intent is ambiguous.
+    - If refusing, include: "refused": true and "refused_reason".
+
+Artifact contract:
+    - Primary artifact name: 01-orchestrator.json

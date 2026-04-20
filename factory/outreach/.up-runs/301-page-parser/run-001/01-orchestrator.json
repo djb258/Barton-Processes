@@ -1,0 +1,126 @@
+{
+  "subject": {
+    "id": "PROC-301",
+    "name": "Management Page Parser",
+    "medium": "executable process",
+    "path": "/Users/employeeai/Documents/Barton-Processes/factory/outreach/301-page-parser",
+    "business_silo": "svg-agency",
+    "current_orbt": "BUILD",
+    "current_template_version": "4.0.0",
+    "files": [
+      "PROCESS.md",
+      "CLAUDE.md",
+      "heir.yaml",
+      "src/page-parser.py",
+      "src/key_builder_constants.py",
+      "src/fetch-pages.py",
+      "src/fetch-pages-parallel.py",
+      "src/fetch-structure.py",
+      "src/classify-urls.py",
+      "src/output/"
+    ],
+    "existing_heir": {
+      "heir_ref": "PROC-301",
+      "sovereign_ref": "imo-creator",
+      "hub_id": "outreach",
+      "cc_layer": "CC-03",
+      "sub_hub": "301-page-parser",
+      "component": "page-parser",
+      "ctb_placement": "leaf",
+      "created_at": "2026-04-03"
+    },
+    "heir_gaps": [
+      "Missing imo_topology (required by law/heir_schema.yaml)",
+      "Missing services (required by law/heir_schema.yaml)",
+      "Missing secrets_provider (required by law/heir_schema.yaml)",
+      "Missing acceptance_criteria (required by law/heir_schema.yaml)",
+      "Contains non-standard fields: heir_ref, sub_hub, component, created_at"
+    ]
+  },
+  "scope": "Validate the PROC-301 process documentation (PROCESS.md + heir.yaml) against the current Unified Template (6th locked constant at law/UNIFIED_TEMPLATE.md) and the Grid Reader Pattern (law/doctrine/GRID_READER_PATTERN.md). Identify structural gaps, section misalignment, missing sections, and non-conformance. The Unified Template defines 14 sections in 3 clusters (Identity/Contract/Governance mapped to Thing/Flow/Change). The Grid Reader Pattern defines PROC-301's role as an Updater in the People sub-hub — requirements for baseline timestamps, change detection timestamps, and grid-as-view compliance apply.",
+  "boundary": [
+    "PROCESS.md — the primary process document (14 sections, template version 4.0.0)",
+    "heir.yaml — HEIR identity (8-field schema compliance)",
+    "CLAUDE.md — process-specific operating instructions",
+    "law/UNIFIED_TEMPLATE.md — the standard (6th locked constant, 14 sections, 3 clusters)",
+    "law/doctrine/GRID_READER_PATTERN.md — the operational pattern (DRAFT, Updater role requirements)",
+    "us-handoff.json — the invariant set (10 layers, 24 sub-layers, domestication depth 3)"
+  ],
+  "boundary_exclusions": [
+    "src/ implementation code — this run validates documentation structure, not code correctness",
+    "Downstream process documents (200, 201, 202, 300) — not in scope",
+    "D1 schema or slot_workbench DDL — not in scope for documentation validation"
+  ],
+  "intent": "Validate PROC-301 documentation against Unified Template (the 6th locked constant) and Grid Reader Pattern requirements. Operator specified 'v6.0.0' — the Unified Template file itself does not carry a version number; the subject currently declares Template Version 4.0.0. The file at law/UNIFIED_TEMPLATE.md IS the standard regardless of version label. Grid Reader Pattern is DRAFT status but defines the Updater role that PROC-301 fills in the outreach domain.",
+  "heir": {
+    "sovereign_ref": "imo-creator",
+    "hub_id": "301-page-parser",
+    "ctb_placement": "leaf",
+    "imo_topology": "middle",
+    "cc_layer": "CC-03",
+    "services": ["D1 (svg-d1-outreach-ops)", "DataImpulse proxy", "curl_cffi"],
+    "secrets_provider": "doppler",
+    "acceptance_criteria": [
+      "PROCESS.md sections match Unified Template 14-section / 3-cluster structure",
+      "All 10 invariant-set layers from US handoff have corresponding sections with correct schemas",
+      "HEIR in heir.yaml has all 8 required fields per law/heir_schema.yaml",
+      "DMJ section (Section 6) present with Define/Map/Join tables",
+      "Grid Reader Updater requirements met: baseline timestamps documented, change detection approach specified, grid-as-view compliance (writes to sub-hub tables, grid reads)",
+      "All comparators (C_1 through C_7) traceable to invariant set layers",
+      "ORBT gate rules complete with all 4 transitions"
+    ]
+  },
+  "orbt": "BUILD",
+  "refused": false,
+  "pre_observations": {
+    "structural_gaps_detected": [
+      {
+        "gap": "Missing DMJ section",
+        "detail": "Unified Template Section 6 (DMJ — Define, Map, Join) is absent from the subject. The subject embeds Key Builder concepts in the IMO Middle steps but does not have the explicit three-table DMJ structure (Define table L19, Map table L20, Join table L21) required by the template and the US invariant set layer L10.",
+        "invariant_layer": "L10"
+      },
+      {
+        "gap": "Section numbering and naming mismatch",
+        "detail": "Subject uses 1-14 numbering with non-standard names (WHY THIS EXISTS vs PURPOSE, WHAT IT GRABS OFF THE WALL vs RESOURCES, OSAM vs DATA SCHEMA, SMOKE TEST vs VERIFICATION). Unified Template uses different section numbers and names.",
+        "invariant_layer": "L1"
+      },
+      {
+        "gap": "Missing cluster headers",
+        "detail": "Unified Template groups sections into 3 clusters: IDENTITY (Thing), CONTRACT (Flow), GOVERNANCE (Change). Subject has no cluster headers — sections are flat-listed.",
+        "invariant_layer": "L2, L3, L4"
+      },
+      {
+        "gap": "HEIR incomplete",
+        "detail": "heir.yaml has 7 fields but is missing 4 of the 8 required fields (imo_topology, services, secrets_provider, acceptance_criteria) and contains 4 non-standard fields (heir_ref, sub_hub, component, created_at).",
+        "invariant_layer": "L5"
+      },
+      {
+        "gap": "Dependencies separated from Resources",
+        "detail": "Unified Template Section 3 (RESOURCES) includes Dependencies + Downstream Consumers + Tools + Secrets as one section. Subject splits Dependencies into its own Section 8.",
+        "invariant_layer": "L7"
+      },
+      {
+        "gap": "Grid Reader timestamp fields not documented",
+        "detail": "Grid Reader Pattern requires two timestamps per field (last_checked, last_changed) for Updater processes. Subject's OSAM section does not document these timestamp fields in the WRITE table. The writes mention person_found_at and linkedin_found_at but not the Grid Reader canonical timestamp pair.",
+        "invariant_layer": "L9"
+      },
+      {
+        "gap": "No Join Chain in OSAM",
+        "detail": "Unified Template Data Schema section requires a Join Chain (tree notation from spine ID). Subject has READ/WRITE/Forbidden Paths but no Join Chain subsection.",
+        "invariant_layer": "L9"
+      }
+    ],
+    "strengths_detected": [
+      "IMO Declaration is thorough: two-question intake answered, 7-step Middle table with all 5 columns, Circle section present",
+      "Comparators well-defined: 7 comparators with C_i notation, tolerances k_i, primitives assigned, decision function P_301(x;θ) stated",
+      "Constants & Variables section follows Bedrock §2 with mathematical definitions",
+      "ORBT gate rules present with all 4 transitions",
+      "Sigma tracking table present (awaiting data from runs)",
+      "Execution trace schema referenced (14 fields, append-only)",
+      "Fleet failure registry present",
+      "Session log with 6 entries documenting build history",
+      "Stop conditions include Strike 3 → AD escalation"
+    ],
+    "version_note": "Operator intent specifies 'unified template v6.0.0'. The Unified Template at law/UNIFIED_TEMPLATE.md does not carry an explicit version number. The subject declares Template Version 4.0.0. This UP run will validate against the file as it exists — the file IS the standard."
+  }
+}

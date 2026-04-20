@@ -1,0 +1,182 @@
+{
+  "stages": {
+    "define": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "heir_check": {
+          "heir_present": true,
+          "heir_fields_count": 8,
+          "heir_fields_required": 8,
+          "heir_complete": true,
+          "orbt_in_orchestrator": "BUILD",
+          "orbt_valid": true
+        },
+        "non_nullity": {
+          "sum_abs_ci": 22,
+          "threshold": 0,
+          "passes": true
+        },
+        "comparator_legality": {
+          "total_comparators": 10,
+          "all_evaluable": true,
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_lower_is_better": true,
+          "all_grounded_in_primitive": true,
+          "invalid_comparators": []
+        },
+        "comparator_results": {
+          "cluster_header_gaps":         { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "identity_field_gaps":         { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "imo_sub_component_failures":  { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "data_schema_gaps":            { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "dmj_step_gaps":               { "ci": 3,  "ki": 1, "ratio": 3.00,  "passes": false },
+          "guardrail_deficit":           { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "verification_gaps":           { "ci": 0,  "ki": 1, "ratio": 0.00,  "passes": true  },
+          "measurement_schema_deviations": { "ci": 3, "ki": 1, "ratio": 3.00, "passes": false },
+          "trace_field_gaps":            { "ci": 14, "ki": 1, "ratio": 14.00, "passes": false },
+          "orbt_gate_sub_failures":      { "ci": 2,  "ki": 1, "ratio": 2.00,  "passes": false }
+        },
+        "max_ratio": 14.00,
+        "failing_comparators": [
+          "dmj_step_gaps (3/1 = 3.00)",
+          "measurement_schema_deviations (3/1 = 3.00)",
+          "trace_field_gaps (14/1 = 14.00)",
+          "orbt_gate_sub_failures (2/1 = 2.00)"
+        ],
+        "passing_comparators": 6,
+        "failing_comparators_count": 4,
+        "total_comparators_evaluated": 10
+      },
+      "reasons": [
+        "P=0: 4 of 10 comparators exceed tolerance. max_ratio = 14.00 (trace_field_gaps).",
+        "dmj_step_gaps = 3: All 3 DMJ step tables (L19 Define, L20 Map, L21 Join) are entirely absent. This is the single largest structural gap by layer count.",
+        "measurement_schema_deviations = 3: All 3 measurement sub-sections (L22 metrics, L23 sigma, L24 ORBT gates) exist but deviate from required column schemas.",
+        "trace_field_gaps = 14: No structured 14-field trace schema exists. Narrative logbook with ~9 ad-hoc fields is not a substitute. Highest raw gap count.",
+        "orbt_gate_sub_failures = 2: ORBT gate rules expressed as sigma interpretation bullets, not as 4 state transitions in 3-col table. Auditor ≠ builder not stated.",
+        "6 of 10 comparators pass cleanly (0/1 ratio): cluster headers, identity fields, IMO, data schema, guard rails, verification.",
+        "Status: provisional — Run 1 of minimum 3, no human tolerances declared, 4 comparators failing. Cannot be lockable.",
+        "Note: tolerance k_i = 1 used as default (no human tolerances present). Human tolerances may adjust thresholds for Run 2+, but structural absences (dmj, trace) will remain failing regardless of tolerance adjustment."
+      ]
+    },
+    "map": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "non_nullity": {
+          "sum_abs_ci": 60,
+          "threshold": 0,
+          "passes": true
+        },
+        "comparator_legality": {
+          "total_comparators": 5,
+          "all_evaluable": true,
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_lower_is_better": true,
+          "all_grounded_in_primitive": true,
+          "invalid_comparators": []
+        },
+        "comparator_results": {
+          "unresolved_mapping_count":  { "ci": 2,  "ki": 1, "ratio": 2.00,  "passes": false },
+          "schema_deviation_count":    { "ci": 4,  "ki": 1, "ratio": 4.00,  "passes": false },
+          "target_gap_count":          { "ci": 4,  "ki": 1, "ratio": 4.00,  "passes": false },
+          "unmapped_field_count":      { "ci": 43, "ki": 1, "ratio": 43.00, "passes": false },
+          "direct_mapping_deficit":    { "ci": 7,  "ki": 1, "ratio": 7.00,  "passes": false }
+        },
+        "max_ratio": 43.00,
+        "failing_comparators": [
+          "unresolved_mapping_count (2/1 = 2.00)",
+          "schema_deviation_count (4/1 = 4.00)",
+          "target_gap_count (4/1 = 4.00)",
+          "unmapped_field_count (43/1 = 43.00)",
+          "direct_mapping_deficit (7/1 = 7.00)"
+        ],
+        "passing_comparators": 0,
+        "failing_comparators_count": 5,
+        "total_comparators_evaluated": 5
+      },
+      "reasons": [
+        "P=0: All 5 comparators exceed tolerance. max_ratio = 43.00 (unmapped_field_count).",
+        "unresolved_mapping_count = 2: E05-DMJ (L10) and E14-certification (L16) have zero target content. Structural holes.",
+        "schema_deviation_count = 4: E08-measurement (L14), E09-trace (L15), E10-ORBT (L24), E15-fleet-learning (L17) all require schema restructuring.",
+        "target_gap_count = 4: Of 10 invariant set layers, 4 have structural gaps requiring remediation (L10/L14/L15/L24).",
+        "unmapped_field_count = 43: Total individual fields/columns absent or wrong across all gap layers. Dominated by trace (14), DMJ (11), sigma tracking (6), ORBT (3), certification (7), fleet learning (6).",
+        "direct_mapping_deficit = 7: 7 of 17 defined elements did not achieve direct mapping (4 transformed, 2 unresolved, 1 inferred).",
+        "10 of 17 elements map directly — the process has strong foundational coverage but significant gaps in DMJ, measurement, trace, and fleet learning schemas.",
+        "6 detailed remediation paths documented in unmapped_gaps (G01-G06). These are actionable.",
+        "Status: provisional — all comparators failing, no human tolerances."
+      ]
+    },
+    "join": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "non_nullity": {
+          "sum_abs_ci": 5,
+          "threshold": 0,
+          "passes": true
+        },
+        "comparator_legality": {
+          "total_comparators": 4,
+          "all_evaluable": true,
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_lower_is_better": true,
+          "all_grounded_in_primitive": true,
+          "invalid_comparators": []
+        },
+        "comparator_results": {
+          "join_key_inconsistencies":  { "ci": 3, "ki": 1, "ratio": 3.00, "passes": false },
+          "unresolvable_spine_hops":   { "ci": 0, "ki": 1, "ratio": 0.00, "passes": true  },
+          "orphan_layer_count":        { "ci": 1, "ki": 1, "ratio": 1.00, "passes": true  },
+          "state_conflicts":           { "ci": 1, "ki": 1, "ratio": 1.00, "passes": true  }
+        },
+        "max_ratio": 3.00,
+        "failing_comparators": [
+          "join_key_inconsistencies (3/1 = 3.00)"
+        ],
+        "passing_comparators": 3,
+        "failing_comparators_count": 1,
+        "total_comparators_evaluated": 4
+      },
+      "reasons": [
+        "P=0: 1 of 4 comparators exceeds tolerance. max_ratio = 3.00 (join_key_inconsistencies).",
+        "join_key_inconsistencies = 3: Three identity field conflicts between heir.yaml and PROCESS.md: (1) process_id PROC-DOL vs PROC-400, (2) status/ORBT build vs OPERATE, (3) sovereign_ref naming. Each is an agent routing fork.",
+        "unresolvable_spine_hops = 0: All 4 hops in the CTB join chain resolve (ctb_position → outreach → svg-agency → imo-creator-v2). Process is structurally attached to the tree.",
+        "orphan_layer_count = 1: E17-sql-source maps to domain-artifact with no formal CTB layer. Acceptable — runtime code is not a template layer. Minor.",
+        "state_conflicts = 1: heir.yaml says 'build', PROCESS.md says 'OPERATE'. Agents reading different files get different ORBT states. Fixable — reconcile to one canonical state.",
+        "Join is the strongest stage — the process is structurally connected to the spine. The 3 inconsistencies are reconcilable data fixes, not architectural breaks.",
+        "Status: provisional — Run 1, join key conflicts remain."
+      ]
+    }
+  },
+  "cross_run": {},
+  "run_summary": {
+    "run_number": 1,
+    "min_runs_for_lock": 3,
+    "overall_p": 0,
+    "stages_passing": 0,
+    "stages_failing": 3,
+    "total_comparators_across_stages": 19,
+    "passing_comparators_across_stages": 9,
+    "failing_comparators_across_stages": 10,
+    "worst_stage": "map",
+    "worst_ratio": 43.00,
+    "best_stage": "join",
+    "best_ratio": 3.00,
+    "heir_check": "PASS — all 8 fields present in 01-orchestrator.json heir block",
+    "orbt_check": "PASS — orchestrator orbt = BUILD",
+    "human_tolerances_present": false,
+    "lockable": false,
+    "provisional_reasons": [
+      "Run 1 of minimum 3 — no lock possible on first run regardless of P values",
+      "No human-owned ts-tolerances.json present — all k_i defaulted to 1 (strictest possible)",
+      "4 structural gaps require remediation before any stage can pass (DMJ tables, trace schema, measurement schemas, ORBT gate table)",
+      "3 HEIR identity inconsistencies between heir.yaml and PROCESS.md require reconciliation",
+      "Cross-run metrics unavailable — no prior runs exist for sigma tracking"
+    ],
+    "strength_assessment": "Process has strong foundational coverage: 6/10 invariant set comparators pass at Define, join chain resolves to spine, 10/17 elements map directly. Gaps are concentrated in 4 areas (DMJ, measurement, trace, fleet learning) — all are schema additions/restructures to an existing document, not architectural rebuilds."
+  }
+}

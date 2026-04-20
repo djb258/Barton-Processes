@@ -1,0 +1,193 @@
+{
+  "stages": {
+    "define": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "heir_orbt_check": {
+          "heir_fields_present": 8,
+          "heir_fields_required": 8,
+          "heir_pass": true,
+          "orbt_value": "BUILD",
+          "orbt_pass": true
+        },
+        "non_nullity": {
+          "sum_abs_ci": 13,
+          "epsilon": 0.1,
+          "pass": true,
+          "note": "Signal present — 13 total deviation across 11 evaluable comparators."
+        },
+        "comparator_legality": {
+          "total": 12,
+          "evaluable": 11,
+          "not_evaluable": 1,
+          "invalid": 0,
+          "not_evaluable_ids": ["C_grid_reader_opaque_sections"],
+          "note": "All 11 evaluable comparators are measurable (integer counts), deterministic (same input → same count), and representation-invariant (structural checks, not format-dependent). Temporal completeness: single evaluation point (Run 1 only) — sufficient for provisional classification, insufficient for lock."
+        },
+        "decision_vector": {
+          "C_exists_deviation":        { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_identity_missing_fields": { "value": 1, "k": 2, "ratio": 0.50, "pass": true },
+          "C_imo_gap_count":           { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_osam_gap_count":          { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_dmj_gap_count":           { "value": 2, "k": 1, "ratio": 2.00, "pass": false },
+          "C_guardrails_deficit":      { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_verification_gap_count":  { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_measurement_gap_count":   { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_trace_missing_fields":    { "value": 8, "k": 4, "ratio": 2.00, "pass": false },
+          "C_orbt_missing_transitions":{ "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "C_naming_inconsistency_count": { "value": 2, "k": 1, "ratio": 2.00, "pass": false }
+        },
+        "max_ratio": 2.00,
+        "breaking_comparators": [
+          "C_dmj_gap_count (2/1 = 2.00) — 2 of 3 DMJ sub-layers not in canonical format",
+          "C_trace_missing_fields (8/4 = 2.00) — 8 of 14 required trace fields missing from per-step schema",
+          "C_naming_inconsistency_count (2/1 = 2.00) — directory, heir.yaml, and PROCESS.md use different names"
+        ],
+        "tolerance_notes": "k_i values set conservatively: k=1 for binary/count comparators (0 = pass, ≥1 = fail), k=2 for identity fields (allows 2 minor gaps), k=4 for trace fields (allows partial schema on Run 1). These are provisional tolerances — human-owned ts-tolerances.json required before audit."
+      },
+      "reasons": [
+        "P=0: three comparators exceed tolerance — C_dmj_gap_count, C_trace_missing_fields, C_naming_inconsistency_count.",
+        "PROVISIONAL because: Run 1 (no stability data, no cross-run sigma tracking possible). Lock requires ≥3 runs.",
+        "C_dmj_gap_count=2: Define-equivalent content exists in §6 Constants table but NOT in canonical 5-col format (Element/ID/Format/Description/C-or-V). Map table (Source/Target/Transform) is entirely absent. Content is present, canonical format is missing.",
+        "C_trace_missing_fields=8: Execution Trace has 6 of 14 required per-step fields. Missing: trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by.",
+        "C_naming_inconsistency_count=2: Three different names for one process — directory='300-blog-worker', heir.yaml='Blog Worker', PROCESS.md='Company Reconnaissance'. Human decision required.",
+        "C_grid_reader_opaque_sections not evaluable: no parser has been run against the markdown. Visual inspection suggests all 14 sections are table-based, but this is inference not measurement."
+      ]
+    },
+    "map": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "non_nullity": {
+          "sum_abs_ci": 27,
+          "epsilon": 0.1,
+          "pass": true,
+          "note": "Strong signal — 27 total deviation across 8 evaluable comparators."
+        },
+        "comparator_legality": {
+          "total": 8,
+          "evaluable": 8,
+          "not_evaluable": 0,
+          "invalid": 0,
+          "note": "All 8 comparators are integer counts derived from structural matching between define elements and US invariant set layers. Measurable, deterministic, representation-invariant. Temporal completeness: single evaluation point."
+        },
+        "decision_vector": {
+          "unmapped_element_count":         { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "unmapped_invariant_layer_count": { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "unresolved_mapping_count":       { "value": 2, "k": 1, "ratio": 2.00, "pass": false },
+          "transform_required_count":       { "value": 3, "k": 2, "ratio": 1.50, "pass": false },
+          "gap_count":                      { "value": 4, "k": 2, "ratio": 2.00, "pass": false },
+          "heir_field_divergence_count":    { "value": 8, "k": 2, "ratio": 4.00, "pass": false },
+          "trace_missing_field_count":      { "value": 8, "k": 4, "ratio": 2.00, "pass": false },
+          "dmj_canonical_format_gap_count": { "value": 2, "k": 1, "ratio": 2.00, "pass": false }
+        },
+        "max_ratio": 4.00,
+        "breaking_comparators": [
+          "heir_field_divergence_count (8/2 = 4.00) — ALL 8 heir.yaml fields contain stale/wrong content vs PROCESS.md",
+          "gap_count (4/2 = 2.00) — 4 structural gaps documented (GAP-01 through GAP-04)",
+          "unresolved_mapping_count (2/1 = 2.00) — E03 naming inconsistency + E16 heir.yaml content conflict",
+          "transform_required_count (3/2 = 1.50) — E02 identity, E06 DMJ, E11 trace all need format transforms",
+          "trace_missing_field_count (8/4 = 2.00) — same 8 missing fields as define stage",
+          "dmj_canonical_format_gap_count (2/1 = 2.00) — L19 Define table and L20 Map table not in canonical format"
+        ],
+        "tolerance_notes": "Same conservative k_i basis as define stage. heir_field_divergence is the worst — 4.00 ratio. heir.yaml describes a different process entirely (PROC-BLOG, Blog Worker, CF Workers, Firecrawl, ScraperAPI vs PROC-300, Company Reconnaissance, Python 3, DataImpulse, Startpage)."
+      },
+      "reasons": [
+        "P=0: six of eight comparators exceed tolerance. The dominant failure is heir.yaml content divergence (ratio 4.00).",
+        "PROVISIONAL because: Run 1 (no cross-run comparison possible).",
+        "heir_field_divergence_count=8: The VIN number describes a different aircraft. This is the single highest-priority fix — any agent reading heir.yaml for routing will operate on the wrong identity.",
+        "gap_count=4: Four gaps identified (GAP-01 heir content, GAP-02 DMJ format, GAP-03 trace schema, GAP-04 directory name). All have documented resolutions.",
+        "Positive: unmapped_element_count=0 (all 20 elements found a home), unmapped_invariant_layer_count=0 (all 10 invariant layers have at least one source). The structure IS there — the failures are content staleness and format gaps, not missing structure.",
+        "No back-propagation triggered: map comparators did not break any define-stage comparator (all failures are additive map-specific measurements, not contradictions of define values)."
+      ]
+    },
+    "join": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "non_nullity": {
+          "sum_abs_ci": 20,
+          "epsilon": 0.1,
+          "pass": true,
+          "note": "Signal present — 20 total deviation across 5 evaluable comparators."
+        },
+        "comparator_legality": {
+          "total": 5,
+          "evaluable": 5,
+          "not_evaluable": 0,
+          "invalid": 0,
+          "note": "All 5 comparators are integer counts. Measurable, deterministic, representation-invariant. Temporal completeness: single evaluation point."
+        },
+        "decision_vector": {
+          "unresolved_invariant_joins":    { "value": 0, "k": 1, "ratio": 0.00, "pass": true },
+          "content_conflict_count":        { "value": 2, "k": 1, "ratio": 2.00, "pass": false },
+          "format_transform_required":     { "value": 2, "k": 1, "ratio": 2.00, "pass": false },
+          "incomplete_schema_field_gap":   { "value": 16, "k": 4, "ratio": 4.00, "pass": false },
+          "multi_hop_join_count":          { "value": 0, "k": 1, "ratio": 0.00, "pass": true }
+        },
+        "max_ratio": 4.00,
+        "breaking_comparators": [
+          "incomplete_schema_field_gap (16/4 = 4.00) — 16 total missing fields across L15 trace (8) and L5 heir.yaml (8)",
+          "content_conflict_count (2/1 = 2.00) — L5 heir.yaml and L5 naming inconsistency carry bad data through the join",
+          "format_transform_required (2/1 = 2.00) — L10 DMJ and L15 trace join paths require format transformation"
+        ],
+        "tolerance_notes": "incomplete_schema_field_gap uses k=4 (allowing partial schemas on Run 1). Even with generous tolerance, 16 missing fields produces ratio 4.00. The gap is dominated by heir.yaml (8 wrong fields) + trace schema (8 missing fields)."
+      },
+      "reasons": [
+        "P=0: three of five comparators exceed tolerance. Dominant failure is incomplete_schema_field_gap (ratio 4.00).",
+        "PROVISIONAL because: Run 1 (no stability data).",
+        "Positive: ALL 10 invariant-layer join paths resolve (unresolved_invariant_joins=0). Every invariant layer has at least one source element with a valid structural path. The spine is connected — the content and format need repair, not the architecture.",
+        "Positive: multi_hop_join_count=0. All joins are direct single-hop — no fragile intermediary chains.",
+        "The same two root causes propagate through all three stages: (1) heir.yaml content is entirely stale — wrong process_id, wrong name, wrong runtime, wrong services. (2) Execution trace schema is incomplete — 8 of 14 fields missing per-step. Fixing these two issues would flip multiple comparators across all three stages.",
+        "DMJ canonical format gap (2 of 3 sub-layers) is a formatting issue, not a content gap. The Define-equivalent and Join-equivalent content exists but is not in the canonical table format (L19: 5-col, L20: 3-col, L21: 3-col). This is a transform, not a rebuild."
+      ]
+    }
+  },
+  "cross_run": {},
+  "summary": {
+    "overall_p": 0,
+    "stages_passing": 0,
+    "stages_failing": 3,
+    "stages_total": 3,
+    "status": "provisional",
+    "root_causes": [
+      {
+        "id": "RC-01",
+        "description": "heir.yaml content describes a different process (PROC-BLOG/Blog Worker/CF Workers) than what PROCESS.md documents (PROC-300/Company Reconnaissance/Python 3). All 8 HEIR fields carry stale data.",
+        "impact": "Breaks comparators in all 3 stages: C_naming_inconsistency_count (define), heir_field_divergence_count (map), content_conflict_count + incomplete_schema_field_gap (join).",
+        "resolution": "Human decision: rewrite heir.yaml to match PROCESS.md reality. This is an identity fix, not a structural change."
+      },
+      {
+        "id": "RC-02",
+        "description": "Execution trace schema has 6 of 14 required per-step fields. Missing 8: trace_id, run_id, error_code, error_message, tools_used, duration_ms, cost_cents, signed_by.",
+        "impact": "Breaks C_trace_missing_fields (define), trace_missing_field_count (map), incomplete_schema_field_gap (join).",
+        "resolution": "Expand per-step trace entry schema to 14 fields. For Run 1, backfill from Run Summary where possible."
+      },
+      {
+        "id": "RC-03",
+        "description": "DMJ content exists but 2 of 3 sub-layers not in canonical table format. L19 Define (5-col: Element/ID/Format/Description/C-or-V) and L20 Map (3-col: Source/Target/Transform) tables are absent. L21 Join is partially present via OSAM Join Chain.",
+        "impact": "Breaks C_dmj_gap_count (define), dmj_canonical_format_gap_count (map), format_transform_required (join).",
+        "resolution": "Add three canonical DMJ tables to PROCESS.md. Content already exists scattered across §5 and §6 — this is a formatting transform, not new content creation."
+      }
+    ],
+    "what_is_working": [
+      "10/10 invariant-layer join paths resolve — the spine is fully connected",
+      "20/20 defined elements mapped — no orphans",
+      "0 multi-hop joins — all paths are direct",
+      "IMO Declaration (L8) is direct match — all 5 sub-components present with step-level comparators",
+      "OSAM/Data Schema (L9) is direct match — READ, WRITE, Join Chain, Forbidden Paths all present",
+      "Guard Rails (L12) — all 6 canonical stop conditions present",
+      "Verification (L13) — 5 numbered steps + Three Primitives Check",
+      "Measurement (L14) — all 3 sub-sections (L22 metrics, L23 sigma, L24 ORBT gates)",
+      "ORBT Gate Rules (L24) — all 4 transitions with gate conditions",
+      "HEIR in orchestrator — 8/8 fields present, ORBT=BUILD correct"
+    ],
+    "cannot_lock_because": [
+      "Run 1 of minimum 3 required — no stability data, no cross-run sigma tracking",
+      "3 root causes produce P=0 across all three stages",
+      "Human-owned ts-tolerances.json not yet provided — current k_i values are QC-provisional",
+      "Grid reader parseability (C_grid_reader_opaque_sections) not yet evaluable — no parser run"
+    ]
+  }
+}

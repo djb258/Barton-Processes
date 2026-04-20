@@ -1,0 +1,177 @@
+{
+  "stages": {
+    "define": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "comparator_count": 10,
+        "comparators_legal": 10,
+        "comparators_passing": 6,
+        "comparators_failing": 4,
+        "non_nullity_sum": 8,
+        "non_nullity_pass": true,
+        "tolerances_defined": false,
+        "tolerances_note": "No ts-tolerances.json — formal P(x;θ) with calibrated k_i cannot be computed. Raw comparator values evaluated against natural thresholds (value > 0 = deviation).",
+        "comparator_legality": {
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_representation_invariant": true,
+          "all_grounded_in_primitive": true,
+          "illegal_comparators": []
+        },
+        "diagnostic_vector": {
+          "C_exists_deviation": {"value": 0, "max_possible": 3, "status": "pass"},
+          "C_identity_missing_fields": {"value": 0, "max_possible": 18, "status": "pass"},
+          "C_imo_sub_failures": {"value": 0, "max_possible": 3, "status": "pass"},
+          "C_osam_sub_failures": {"value": 0, "max_possible": 3, "status": "pass"},
+          "C_dmj_sub_failures": {"value": 3, "max_possible": 3, "status": "fail", "note": "Complete structural absence — all 3 DMJ sub-comparators fail. L19 (Define table), L20 (Map table), L21 (Join table) absent in required format."},
+          "C_guardrails_canonical_gap": {"value": 0, "max_possible": 6, "status": "pass"},
+          "C_verify_sub_failures": {"value": 0, "max_possible": 3, "status": "pass"},
+          "C_measurement_sub_failures": {"value": 1, "max_possible": 3, "status": "fail", "note": "L24 ORBT gate rules incomplete — sigma direction rules present but all 4 state transitions not explicitly enumerated."},
+          "C_trace_sub_failures": {"value": 2, "max_possible": 2, "status": "fail", "note": "Complete structural absence — 14-field entry schema not declared, append-only not enforceable. Section 11 is empty placeholder."},
+          "C_orbt_sub_failures": {"value": 2, "max_possible": 3, "status": "fail", "note": "ORBT state declared (pass), but 4 state transitions not enumerated (fail) and auditor≠builder not enforced (fail)."}
+        }
+      },
+      "reasons": [
+        "P=0: 4 of 10 comparators have non-zero values indicating structural gaps.",
+        "BLOCKER: C_dmj_sub_failures=3/3 — DMJ three-step structure (L10, L19, L20, L21) completely absent. Section 6 has C&V content but not in Define→Map→Join table format. This is the largest structural gap.",
+        "BLOCKER: C_trace_sub_failures=2/2 — Execution trace schema (L15) not declared. No 14-field entry schema. Source code writes to stdout only. No persistent trace possible.",
+        "GAP: C_orbt_sub_failures=2/3 — ORBT state declared correctly (BUILD) but gate transition table missing. No auditor≠builder enforcement declared.",
+        "GAP: C_measurement_sub_failures=1/3 — Metrics and sigma tracking present. ORBT gate rules (L24) only partially covered.",
+        "STRENGTH: 6 comparators at 0 — root medium (L1), identity (L5), IMO (L8), OSAM (L9), guard rails (L12), verification (L13) all structurally complete.",
+        "CROSS-DOCUMENT: heir.yaml fields (runtime=cloudflare-workers, snap_on_tools, ut_sub_hubs) contradict PROCESS.md (Python 3, no APIs, pure DB diff). Define correctly classified this as variable (E25).",
+        "STATUS: Provisional — not lockable on Run 1 per UP rules. Structural gaps in 4 comparators prevent lock even if 3 runs were complete. Gaps are identifiable and fixable."
+      ]
+    },
+    "map": {
+      "p": 0,
+      "status": "provisional",
+      "diagnostics": {
+        "comparator_count": 5,
+        "comparators_legal": 5,
+        "comparators_passing": 0,
+        "comparators_failing": 5,
+        "non_nullity_sum": 25,
+        "non_nullity_pass": true,
+        "tolerances_defined": false,
+        "comparator_legality": {
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_representation_invariant": true,
+          "all_grounded_in_primitive": true,
+          "illegal_comparators": []
+        },
+        "diagnostic_vector": {
+          "unmapped_element_count": {"value": 4, "status": "fail", "note": "E25 (heir inconsistency), E26 (SQL injection), E27 (hardcoded creds), E28 (section numbering) — cross-cutting findings with no single target layer. E26/E27 correctly documented as L17 fleet learning entries, not structural mappings."},
+          "unresolved_mapping_count": {"value": 8, "status": "fail", "note": "8 elements cannot connect to target structure without new construction. 5 structural (E10, E15, E19, E20, E24) + 3 cross-cutting (E25, E26, E27). The 5 structural unresolves trace directly to define-stage failures in DMJ, trace, and ORBT."},
+          "format_deviation_count": {"value": 7, "status": "fail", "note": "7 mappings typed 'transformed' — source data exists but format mismatches target schema. Column renames (E22), schema reshaping (E23), value corrections (E05), canonical completions (E12, E14), column additions (E17), label updates (E18). All fixable without new construction."},
+          "target_layer_gap_count": {"value": 5, "status": "fail", "note": "L10, L15, L19, L20, L24 have no direct or transformed mapping. These 5 layers are the BUILD list — they must be constructed before the subject can pass define comparators."},
+          "inferred_mapping_count": {"value": 1, "status": "fail", "note": "E21 (join step) — OSAM data provides functionally equivalent join path but not in L21 format. Transform from OSAM to L21 is feasible. Lower risk than unresolved."}
+        }
+      },
+      "reasons": [
+        "P=0: All 5 comparators have non-zero values. Map correctly identifies downstream consequences of define-stage structural gaps.",
+        "CASCADING: 5 target layer gaps (L10, L15, L19, L20, L24) trace to define-stage failures. Map cannot resolve what define has not yet structured.",
+        "ACTIONABLE: 7 format deviations are all fixable with column renames, schema reshaping, and value corrections — no new construction required for these.",
+        "CORRECT CLASSIFICATION: 4 unmapped elements (E25-E28) are cross-cutting findings that do not belong to a single target layer. Map correctly leaves them unmapped rather than force-fitting.",
+        "MAP QUALITY: The map agent correctly separated 'exists but wrong format' (transformed) from 'does not exist' (unresolved) from 'exists elsewhere' (inferred). Classification granularity is sound.",
+        "STATUS: Provisional — blocked downstream of define failures. Map itself is well-executed; the gaps are in the source material, not the mapping logic."
+      ]
+    },
+    "join": {
+      "p": 1,
+      "status": "provisional",
+      "diagnostics": {
+        "comparator_count": 5,
+        "comparators_legal": 5,
+        "comparators_passing": 3,
+        "comparators_failing": 2,
+        "non_nullity_sum": 4,
+        "non_nullity_pass": true,
+        "tolerances_defined": false,
+        "comparator_legality": {
+          "all_measurable": true,
+          "all_deterministic": true,
+          "all_representation_invariant": true,
+          "all_grounded_in_primitive": true,
+          "illegal_comparators": []
+        },
+        "diagnostic_vector": {
+          "join_hop_count": {"value": 3, "status": "info", "note": "3-hop indirect join: person_id → unique_id → person_unique_id → outreach_id. All intermediate tables declared in OSAM READ table. Hop count is a complexity metric, not a pass/fail — 3 hops is normal for a spoke process joining to spine."},
+          "unresolvable_hop_count": {"value": 0, "status": "pass"},
+          "join_path_ambiguity_count": {"value": 0, "status": "pass"},
+          "missing_dmj_join_format": {"value": 1, "status": "fail", "note": "Join path data exists in OSAM (section 5) but not in formal L21 format (Join Path, Type, Description). This is a define-stage structural debt — the join PATH resolves, the FORMAT does not comply."},
+          "fleet_identity_gap_count": {"value": 0, "status": "pass"}
+        },
+        "join_resolution_summary": {
+          "data_spine_resolves": true,
+          "fleet_identity_resolves": true,
+          "grid_reader_compatible": true,
+          "all_hops_declared": true,
+          "zero_ambiguity": true
+        }
+      },
+      "reasons": [
+        "P=1: Join path resolves. Data spine connects through 3 declared hops with zero ambiguity. Fleet identity resolves via sovereign_ref → fleet registry. Grid Reader compatible — output joins to outreach_id.",
+        "FORMAT GAP: missing_dmj_join_format=1 — join path exists in OSAM but not in L21 formal table. This is inherited debt from the define-stage DMJ absence, not a join resolution failure. When DMJ is built (define fix), L21 can be populated from existing OSAM data.",
+        "SOVEREIGN_REF DISCREPANCY: Orchestrator heir has sovereign_ref='imo-creator', heir.yaml has 'imo-creator-v2'. Does not break join resolution (both reference the same fleet) but values should be reconciled.",
+        "STATUS: Provisional — functionally strongest stage. Join resolution works. Cannot be lockable on Run 1 per UP rules, and the L21 format gap prevents full structural compliance."
+      ]
+    }
+  },
+  "heir_orbt_check": {
+    "heir_fields_present": 8,
+    "heir_fields_required": 8,
+    "heir_pass": true,
+    "heir_fields": {
+      "sovereign_ref": {"present": true, "value": "imo-creator", "note": "Discrepancy: heir.yaml says 'imo-creator-v2'. Reconcile."},
+      "hub_id": {"present": true, "value": "PROC-TALENT-FLOW"},
+      "ctb_placement": {"present": true, "value": "leaf"},
+      "imo_topology": {"present": true, "value": "spoke"},
+      "cc_layer": {"present": true, "value": "CC-04"},
+      "services": {"present": true, "value": ["Python 3 script (current runtime — not yet CF Worker)", "Neon PostgreSQL via psql subprocess", "Doppler (secrets)"]},
+      "secrets_provider": {"present": true, "value": "doppler"},
+      "acceptance_criteria": {"present": true, "value": "12 criteria listed"}
+    },
+    "orbt_value": "BUILD",
+    "orbt_pass": true,
+    "heir_yaml_inconsistencies": [
+      "sovereign_ref: orchestrator='imo-creator' vs heir.yaml='imo-creator-v2'",
+      "runtime: orchestrator/PROCESS.md='Python 3 script' vs heir.yaml='cloudflare-workers'",
+      "snap_on_tools: heir.yaml lists LinkedInCheck, ScraperAPI — PROCESS.md says no external APIs",
+      "ut_sub_hubs: heir.yaml lists fetcher, proxy-router, cache-layer — PROCESS.md is a pure DB diff"
+    ]
+  },
+  "overall": {
+    "run_number": 1,
+    "lock_eligible": false,
+    "lock_reason": "Run 1 of minimum 3 required. Additionally, define P=0 and map P=0 due to structural gaps.",
+    "tolerances_status": "NOT_SET — no ts-tolerances.json exists. Human-owned tolerances required before audit stage.",
+    "stages_passing": 1,
+    "stages_failing": 2,
+    "structural_blockers": [
+      "DMJ (L10, L19, L20, L21) — completely absent. Three-step Define→Map→Join structure must be built.",
+      "Execution Trace (L15) — 14-field schema not declared. Must be added to PROCESS.md.",
+      "ORBT Gate Rules (L24) — 4 state transitions not explicitly enumerated. Must be built to full spec.",
+      "heir.yaml — 3 field groups (runtime, snap_on_tools, ut_sub_hubs) contradict PROCESS.md. Values must be corrected."
+    ],
+    "format_fixes_needed": [
+      "Process Metrics (L22) — column rename: 'Type' → 'Unit', add 'Tolerance' column.",
+      "Sigma Tracking (L23) — schema reshape: run-per-row → run-per-column format.",
+      "Fleet Learning (L17) — add 7th column to match Failure Pattern Registry spec.",
+      "Session History (L18) — column label: 'imo-brain Document' → 'Knowledge Record ID' (LBB reference).",
+      "Guard Rails (L12) — add explicit '5 consecutive errors' and 'budget cap' canonical conditions.",
+      "Section numbering — 13 sections vs template 14. Renumber or add missing section."
+    ],
+    "strengths": [
+      "Root medium (L1) — PROCESS.md exists with all 3 cluster headers.",
+      "Process Identity (L5) — 18/18 fields present (values need correction, structure is complete).",
+      "IMO Declaration (L8) — all 5 sub-components present, Two-Question Intake answered, Middle table executable.",
+      "Data Schema (L9) — OSAM fully declared, join chain to spine, forbidden paths listed. Grid Reader compatible.",
+      "Guard Rails (L12) — 7 stop conditions, threshold of 6 met.",
+      "Verification (L13) — 5 smoke test steps + Three Primitives Check.",
+      "Join path — resolves end-to-end. Data spine, fleet identity, and Grid Reader compatibility all confirmed."
+    ]
+  },
+  "cross_run": {}
+}
