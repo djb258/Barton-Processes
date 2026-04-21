@@ -726,7 +726,7 @@ _Run these to confirm the pipeline worked._
 | Claim / Field | Section | Source of Truth | Verification Command / Query | Verified? | Last Check | Value at Check |
 |---------------|---------|-----------------|------------------------------|-----------|-----------|----------------|
 | pub_zips_master has 45,094 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_zips_master` | ☑ | 2026-04-20 | 45,094 |
-| pub_storage_facilities has 13,022 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-20 | 13,022 |
+| pub_storage_facilities has 3,700 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-20 | 3,700 |
 | pub_market_saturation has 26,316 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_market_saturation` | ☑ | 2026-04-20 | 26,316 |
 | 4 sovereign market searches recorded | §3 | svg-d1-storage | `SELECT COUNT(*) FROM sovereign_market_search` | ☑ | 2026-04-20 | 4 |
 | storage-hub worker health | §3 | Worker endpoint | `curl https://storage-hub.svg-outreach.workers.dev/health` | ☑ | 2026-04-20 | {"status":"ok","timestamp":"2026-04-20T09:34:40.503Z","bindings":{"storage_ops":true,"d1_global":true}} |
@@ -762,7 +762,7 @@ _Run these to confirm the pipeline worked._
 
 | Metric | Run 1 (PA/WV) | Run 2 | Run 3 | Trend | Action |
 |--------|-------|-------|-------|-------|--------|
-| Facilities discovered | 13,022 total across 4 runs | — | — | TIGHTENING | Lock batch count at 24 |
+| Facilities discovered | 3,700 total across 4 runs | — | — | TIGHTENING | Lock batch count at 24 |
 | Pricing extraction rate | ~15-25% | — | — | FLAT | Investigate JS-heavy sites |
 | Saturation calc runtime | Instant | — | — | TIGHTENING | Lock as instant step |
 
