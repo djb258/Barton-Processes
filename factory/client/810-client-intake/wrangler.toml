@@ -7,5 +7,10 @@ binding = "D1"
 database_name = "client-intake-810"
 database_id = ""  # TODO: wrangler d1 create client-intake-810
 
+[[d1_databases]]
+binding = "CENSUS_DB"
+database_name = "census"
+database_id = "c7b63950-ad08-426f-a07b-f30f1b9fc0bf"
+
 [vars]
 # NEON_URL set via wrangler secret put
