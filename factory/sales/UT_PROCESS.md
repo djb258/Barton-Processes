@@ -179,6 +179,15 @@ The purpose block must state what the runtime does, what breaks without it, who 
 | `NEON_URL` | sales-navigator | dev | Outreach snapshot seeding |
 | `SALES_DATABASE_URL` | imo-creator | dev | Schema references and runtime docs |
 
+### Peer Cross-Links (per dispatch DISPATCH_UT_SALES_REPAIR_2026-04-22.md)
+
+| Peer Artifact | Role | Path |
+|---------------|------|------|
+| Blueprint UT | Governance sibling - 30k hub-level manual for the sales system | `Sales Process/UT_BLUEPRINT.md` |
+| Blueprint Diagram | Visual companion - mermaid flowchart of the cycle | `Sales Process/docs/blueprints/sales-cycle-flow.md` |
+| Dispatch (this) | Work order that governs these artifacts | `imo-creator-v2/factory/dispatch/DISPATCH_UT_SALES_REPAIR_2026-04-22.md` |
+| Audit Report | Gate 3 audit verdict + findings | `imo-creator-v2/law/doctrine/AUDITS/SALES_UT_AUDIT_2026-04-22.md` |
+
 ### Fill Rule
 
 The resources section must name the runtime dependencies, the portal surface, the downstream client chain, and the secrets that make the process executable.
@@ -236,6 +245,29 @@ The IMO section must show the trigger, the source, the ordered runtime steps, th
 ---
 
 ## 5. DATA SCHEMA / OSAM
+
+### Process Composition
+
+```mermaid
+flowchart TB
+  G1[Gate 1 Factfinder] --> G2[Gate 2 Education]
+  G2 --> FORK{Gate 3 + Async Vendor Loop}
+  FORK --> G3[Gate 3 Service]
+  FORK --> LOOP[Async Vendor Pricing Loop]
+  LOOP --> DB[DB-Filled Precondition]
+  G3 --> DB
+  DB --> G4[Gate 4 Numbers]
+  G4 --> CLOSE[Close]
+```
+
+| Sub-Process | HEIR (hub_id · ctb · cc_layer) | ORBT | Exit Trigger | Composable In |
+|-------------|--------------------------------|------|-------------|---------------|
+| Gate 1 Factfinder | PROC-SALES-CHAIN · branch · CC-04 | BUILD | Meeting 2 booked | Sales portal runtime, transcript capture, checklist row |
+| Gate 2 Education | PROC-SALES-CHAIN · branch · CC-04 | BUILD | Meeting 3 booked and vendor loop started | Sales portal runtime, vendor request fork, checklist row |
+| Gate 3 Service | PROC-SALES-CHAIN · branch · CC-04 | BUILD | Meeting 4 booked plus DB-filled precondition | Sales portal runtime, service state, checklist row |
+| Gate 4 Numbers | PROC-SALES-CHAIN · branch · CC-04 | BUILD | Close | Sales portal runtime, proposal output, sale outcome |
+| Async Vendor Pricing Loop | PROC-SALES-CHAIN · branch · CC-04 | BUILD | cron-driven, calendar trigger waived | Gate 2 fork, vendor request rows, vendor responses |
+| DB-Filled Precondition | PROC-SALES-CHAIN · branch · CC-04 | BUILD | precondition, not prospect-facing | Gate 4 gate, Monte Carlo inputs, proposal readiness |
 
 ### READ Access
 
@@ -429,6 +461,23 @@ Separate the fixed runtime structure from the per-prospect values that change on
 
 ## 8. STOP CONDITIONS
 
+### Circle Setpoint
+
+The sales circle has ONE setpoint: **the next observable action required to progress the stage.** The observable follows a three-rule precedence ladder - the higher rule wins when rules collide.
+
+| Rule | Observable | When Applied | Source Dispatch Constant |
+|------|-----------|--------------|--------------------------|
+| 1. DEFAULT | Next meeting booked (Calendly / Google Calendar event) | Prospect-facing gates (1, 2, 3) | Constant #1 - Trigger Ladder |
+| 2. EXCEPTION | Vendor response received (email -> parsed -> DB row) | Vendor-dependent gates (Async Vendor Loop) - calendar trigger WAIVED | Constant #1 - Exception Rule |
+| 3. PRECONDITION | DB filled (all invoice-backed vendor_pricing_requests parsed) | Gate 4 - cannot schedule until pricing complete | Constant #1 - Precondition Rule |
+
+**Setpoint violation triggers:**
+- Rule 1 fail -> SALE-STALLED after N days no booking -> nag sequence fires
+- Rule 2 fail -> vendor nag cron continues; Strike 3 -> Troubleshoot/Train
+- Rule 3 fail -> Gate 4 meeting cannot be scheduled; portal page shows "pricing in progress"
+
+Sigma tracks each rule's latency. Tightening = healthy. Expanding = upstream break.
+
 | Condition | Action |
 |-----------|--------|
 | Trigger cannot be stated | HALT |
@@ -557,4 +606,3 @@ Intentionally empty during BUILD. The auditor fills the birth certificate after 
 | US Validated | pending |
 | Governing Engine | `law/doctrine/FOUNDATIONAL_BEDROCK.md` + `law/doctrine/DMJ.md` + `law/doctrine/PROCESS_FILL_INSTRUCTIONS.md` |
 | Parent | `law/UNIFIED_TEMPLATE.md` |
-
