@@ -1,0 +1,21 @@
+[
+  {"id": "BC-01", "name": "Medical", "default_offered": true},
+  {"id": "BC-02", "name": "Dental", "default_offered": true},
+  {"id": "BC-03", "name": "Vision", "default_offered": true},
+  {"id": "BC-04", "name": "Life (Basic)", "default_offered": true},
+  {"id": "BC-05", "name": "Life (Voluntary)", "default_offered": true},
+  {"id": "BC-06", "name": "AD&D", "default_offered": true},
+  {"id": "BC-07", "name": "STD", "default_offered": true},
+  {"id": "BC-08", "name": "LTD", "default_offered": true},
+  {"id": "BC-09", "name": "FSA", "default_offered": false},
+  {"id": "BC-10", "name": "DCFSA", "default_offered": false},
+  {"id": "BC-11", "name": "HSA", "default_offered": false},
+  {"id": "BC-12", "name": "EAP", "default_offered": false},
+  {"id": "BC-13", "name": "Accident", "default_offered": false},
+  {"id": "BC-14", "name": "Critical Illness", "default_offered": false},
+  {"id": "BC-15", "name": "Hospital Indemnity", "default_offered": false},
+  {"id": "BC-16", "name": "Telehealth", "default_offered": false},
+  {"id": "BC-17", "name": "Commuter", "default_offered": false},
+  {"id": "BC-18", "name": "Legal", "default_offered": false},
+  {"id": "BC-19", "name": "Pet", "default_offered": false}
+]

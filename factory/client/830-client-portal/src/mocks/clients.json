@@ -1,0 +1,5 @@
+[
+  {"client_id": "CLT-ACME-2026", "company_name": "Acme Corp", "ein": "12-3456789", "domicile_state": "PA", "sovereign_id": "cl-acme-2026"},
+  {"client_id": "CLT-GLOBEX-2026", "company_name": "Globex Inc", "ein": "98-7654321", "domicile_state": "NY", "sovereign_id": "cl-globex-2026"},
+  {"client_id": "CLT-INITECH-2026", "company_name": "Initech LLC", "ein": "55-5555555", "domicile_state": "TX", "sovereign_id": "cl-initech-2026"}
+]

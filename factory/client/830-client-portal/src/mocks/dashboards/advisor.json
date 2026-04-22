@@ -1,0 +1,16 @@
+{
+  "client_id": "CLT-ACME-2026",
+  "kpis": [
+    {"label": "Recent Activity (7d)", "value": "5 events", "trend": "2 tickets, 1 hire, 2 comms", "direction": "neutral"},
+    {"label": "Pending Actions", "value": "2", "trend": "COBRA notice, OE window", "direction": "neutral"},
+    {"label": "Commission (YTD)", "value": "$4,680", "trend": "+$780/mo", "direction": "neutral"},
+    {"label": "Client Health Score", "value": "87/100", "trend": "+3 from last quarter", "direction": "up"}
+  ],
+  "activity_log": [
+    {"date": "2026-04-10", "type": "hire", "description": "Carlos Mendez enrolled — 30-day OE window open"},
+    {"date": "2026-04-08", "type": "ticket", "description": "TKT-004 opened — VSP directory inquiry"},
+    {"date": "2026-04-05", "type": "ticket", "description": "TKT-005 opened — Aetna specialist pre-auth"},
+    {"date": "2026-03-15", "type": "compliance", "description": "1095-C filing confirmed complete"},
+    {"date": "2026-02-20", "type": "ticket", "description": "TKT-003 resolved — ID card delivered"}
+  ]
+}

@@ -1,5 +1,15 @@
 # CLAUDE.md — Process 830: Client Portal
 
+## Status: SKELETON (2026-04-22)
+
+This Pages project is a visual skeleton. All routes + screens render with mock data.
+No backend wiring yet. See README.md for the WIRE-HERE punch list.
+
+Governing UT: `Barton-Processes/factory/client/UT_PROCESSES.md` v1.2.0 (CERTIFIED)
+Blueprint: `client/docs/UT_BLUEPRINT.md` v1.2.0 (CERTIFIED)
+
+---
+
 ## Governing Doctrine
 
 **Before any work on this process, read and follow:**

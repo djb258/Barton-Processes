@@ -1,0 +1,23 @@
+{
+  "client_id": "CLT-ACME-2026",
+  "kpis": [
+    {"label": "Total Premium Spend (YTD)", "value": "$312,480", "trend": "+4.2%", "direction": "up"},
+    {"label": "Monthly Invoice (Apr)", "value": "$52,080", "trend": "-1.1%", "direction": "down"},
+    {"label": "Cost Per Employee", "value": "$6,502/yr", "trend": "+3.8%", "direction": "up"},
+    {"label": "YTD vs Budget", "value": "98.6%", "trend": "On track", "direction": "neutral"}
+  ],
+  "invoice_trend": [
+    {"month": "Nov", "amount": 49200},
+    {"month": "Dec", "amount": 49800},
+    {"month": "Jan", "amount": 51200},
+    {"month": "Feb", "amount": 51900},
+    {"month": "Mar", "amount": 52660},
+    {"month": "Apr", "amount": 52080}
+  ],
+  "plan_breakdown": [
+    {"benefit_class": "Medical", "monthly_cost": 44200, "pct": 84.9},
+    {"benefit_class": "Dental", "monthly_cost": 4940, "pct": 9.5},
+    {"benefit_class": "Vision", "monthly_cost": 940, "pct": 1.8},
+    {"benefit_class": "Other", "monthly_cost": 2000, "pct": 3.8}
+  ]
+}

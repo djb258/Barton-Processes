@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "wrangler pages dev src",
+    "deploy": "wrangler pages deploy src",
+    "dev:worker": "wrangler dev",
+    "deploy:worker": "wrangler deploy",
     "d1:add-slug": "wrangler d1 execute client-intake-810 --file=src/migrations/001_add_slug.sql"
   },
   "devDependencies": {

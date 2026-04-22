@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal — SVG Agency</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- App shell — router mounts pages into #main-content -->
+  <div id="app">
+    <div id="topbar">
+      <!-- Rendered by header.js -->
+      <span class="brand">SVG Agency</span>
+    </div>
+    <div id="layout">
+      <div id="sidebar">
+        <!-- Rendered by sidebar.js -->
+      </div>
+      <main id="main-content">
+        <p style="padding:24px;color:#888">Loading...</p>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

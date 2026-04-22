@@ -1,0 +1,15 @@
+{
+  "client_id": "CLT-ACME-2026",
+  "kpis": [
+    {"label": "Total Plan Quotes", "value": "3", "trend": "Medical, Dental, Vision", "direction": "neutral"},
+    {"label": "Composite Rate PEPM", "value": "$868", "trend": "+4.1% vs prior year", "direction": "up"},
+    {"label": "Enrolled Lives", "value": "48", "trend": "EE: 6, Dep: 7", "direction": "neutral"},
+    {"label": "Risk Score", "value": "1.04", "trend": "Slightly above average", "direction": "up"}
+  ],
+  "demographics": [
+    {"tier": "EE Only", "count": 4, "avg_age": 38},
+    {"tier": "EE + Spouse", "count": 1, "avg_age": 42},
+    {"tier": "EE + Child(ren)", "count": 1, "avg_age": 35},
+    {"tier": "Family", "count": 0, "avg_age": null}
+  ]
+}

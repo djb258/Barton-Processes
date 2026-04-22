@@ -1,0 +1,42 @@
+[
+  {
+    "plan_id": "PLN-001", "client_id": "CLT-ACME-2026", "benefit_class": "Medical",
+    "carrier": "Aetna", "plan_name": "Aetna Choice POS II", "vendor_benefit_id": "AET-CPP2-2026",
+    "effective_date": "2026-01-01", "renewal_date": "2026-12-31",
+    "cs_phone": "1-800-872-3862", "cs_email": "memberservices@aetna.com",
+    "am_name": "Jessica Hartley", "am_phone": "484-555-0110", "am_email": "jhartley@aetna.com",
+    "rate_ee": 520.00, "rate_ee_sp": 1040.00, "rate_ee_ch": 988.00, "rate_family": 1508.00
+  },
+  {
+    "plan_id": "PLN-002", "client_id": "CLT-ACME-2026", "benefit_class": "Dental",
+    "carrier": "Delta Dental", "plan_name": "Delta PPO Plus Premier", "vendor_benefit_id": "DD-PPO-2026",
+    "effective_date": "2026-01-01", "renewal_date": "2026-12-31",
+    "cs_phone": "1-800-932-0783", "cs_email": "members@deltadentalpa.com",
+    "am_name": "Michael Torres", "am_phone": "610-555-0220", "am_email": "mtorres@deltadentalpa.com",
+    "rate_ee": 38.00, "rate_ee_sp": 76.00, "rate_ee_ch": 72.00, "rate_family": 110.00
+  },
+  {
+    "plan_id": "PLN-003", "client_id": "CLT-ACME-2026", "benefit_class": "Vision",
+    "carrier": "VSP", "plan_name": "VSP Choice Plan", "vendor_benefit_id": "VSP-CH-2026",
+    "effective_date": "2026-01-01", "renewal_date": "2026-12-31",
+    "cs_phone": "1-800-877-7195", "cs_email": "membersupport@vsp.com",
+    "am_name": "Sarah Chen", "am_phone": "717-555-0330", "am_email": "schen@vsp.com",
+    "rate_ee": 9.50, "rate_ee_sp": 19.00, "rate_ee_ch": 17.50, "rate_family": 27.00
+  },
+  {
+    "plan_id": "PLN-004", "client_id": "CLT-GLOBEX-2026", "benefit_class": "Medical",
+    "carrier": "United Healthcare", "plan_name": "UHC Choice Plus", "vendor_benefit_id": "UHC-CP-2026",
+    "effective_date": "2026-01-01", "renewal_date": "2026-12-31",
+    "cs_phone": "1-866-892-3995", "cs_email": "members@uhc.com",
+    "am_name": "Robert Kim", "am_phone": "212-555-0440", "am_email": "rkim@uhc.com",
+    "rate_ee": 610.00, "rate_ee_sp": 1220.00, "rate_ee_ch": 1159.00, "rate_family": 1769.00
+  },
+  {
+    "plan_id": "PLN-005", "client_id": "CLT-INITECH-2026", "benefit_class": "Medical",
+    "carrier": "BCBS Texas", "plan_name": "Blue Advantage HMO", "vendor_benefit_id": "BCBSTX-BA-2026",
+    "effective_date": "2026-01-01", "renewal_date": "2026-12-31",
+    "cs_phone": "1-888-697-0683", "cs_email": "members@bcbstx.com",
+    "am_name": "Linda Nguyen", "am_phone": "214-555-0550", "am_email": "lnguyen@bcbstx.com",
+    "rate_ee": 480.00, "rate_ee_sp": 960.00, "rate_ee_ch": 912.00, "rate_family": 1392.00
+  }
+]

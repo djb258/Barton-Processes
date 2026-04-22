@@ -1,0 +1,14 @@
+{
+  "client_id": "CLT-ACME-2026",
+  "kpis": [
+    {"label": "Active Employees", "value": "6", "trend": "+1 this month", "direction": "up"},
+    {"label": "Pending Elections", "value": "1", "trend": "New hire OE window", "direction": "neutral"},
+    {"label": "Events This Month", "value": "2", "trend": "1 hire, 1 term", "direction": "neutral"},
+    {"label": "New Hires (YTD)", "value": "2", "trend": "+2 vs Q1 2025", "direction": "up"}
+  ],
+  "upcoming_events": [
+    {"date": "2026-04-30", "event": "OE window closes — Carlos Mendez"},
+    {"date": "2026-05-15", "event": "COBRA notice due — Susan Brown"},
+    {"date": "2026-06-01", "event": "60-day review — Carlos Mendez"}
+  ]
+}

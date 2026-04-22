@@ -1,0 +1,14 @@
+{
+  "client_id": "CLT-ACME-2026",
+  "kpis": [
+    {"label": "Days to Renewal", "value": "253", "trend": "Dec 31, 2026", "direction": "neutral"},
+    {"label": "Vendors Up for Renewal", "value": "3", "trend": "Aetna, Delta, VSP", "direction": "neutral"},
+    {"label": "Projected Rate Change", "value": "+5.2%", "trend": "Market avg: +7.1%", "direction": "up"},
+    {"label": "Quote Status", "value": "Not Started", "trend": "Action needed Oct 2026", "direction": "neutral"}
+  ],
+  "vendor_renewals": [
+    {"vendor": "Aetna", "benefit_class": "Medical", "renewal_date": "2026-12-31", "current_rate_ee": 520.00, "quote_status": "not_started"},
+    {"vendor": "Delta Dental", "benefit_class": "Dental", "renewal_date": "2026-12-31", "current_rate_ee": 38.00, "quote_status": "not_started"},
+    {"vendor": "VSP", "benefit_class": "Vision", "renewal_date": "2026-12-31", "current_rate_ee": 9.50, "quote_status": "not_started"}
+  ]
+}
