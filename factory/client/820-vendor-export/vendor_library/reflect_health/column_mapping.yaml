@@ -1,0 +1,15 @@
+description: master_census to reflect_health column mappings. Empty template - populate
+  via DMJ mapping phase.
+source_vendor: master_census
+target_vendor: reflect_health
+confidence_levels:
+- locked
+- auto
+- review
+transform_types:
+- passthrough
+- date_format
+- enum_map
+- derived
+- unmapped
+mappings: []

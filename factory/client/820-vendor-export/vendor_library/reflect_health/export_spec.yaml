@@ -1,0 +1,17 @@
+vendor: reflect_health
+file_format: CSV
+delimiter: comma
+encoding: UTF-8
+header_row: true
+header_names: exact_original_labels - DO NOT CHANGE without providing mapping
+file_naming: PENDING - check with Reflect Health for naming convention
+transport: PENDING - check with Reflect Health (likely SFTP or manual upload per Instructions
+  sheet)
+frequency: PENDING - confirm with client
+tab_rule: Automated job loads Tab 1. Ensure data is in first tab.
+notes:
+- 'Instructions sheet: DO NOT CHANGE HEADER NAMES WITHOUT PROVIDING MAPPING'
+- Remove non-required columns not in use (do not leave blanks for optional cols)
+- Format numeric fields as text to preserve leading zeros (prefix with single quote
+  in Excel)
+- Unused optional columns can be omitted entirely

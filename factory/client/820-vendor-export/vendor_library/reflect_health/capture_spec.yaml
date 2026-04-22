@@ -1,0 +1,67 @@
+vendor: reflect_health
+description: Fields we must capture in master_census to satisfy Reflect Health minimum
+  + full template
+minimum_required_fields:
+- reflect_health_col: RH-002
+  reflect_health_label: SubscriberNumber
+  category: identity
+- reflect_health_col: RH-003
+  reflect_health_label: RelationshipCode
+  category: identity
+- reflect_health_col: RH-004
+  reflect_health_label: MemberLastName
+  category: identity
+- reflect_health_col: RH-005
+  reflect_health_label: MemberFirstName
+  category: identity
+- reflect_health_col: RH-007
+  reflect_health_label: AddressLine1
+  category: contact
+- reflect_health_col: RH-009
+  reflect_health_label: City
+  category: contact
+- reflect_health_col: RH-010
+  reflect_health_label: State
+  category: contact
+- reflect_health_col: RH-011
+  reflect_health_label: ZipCode
+  category: contact
+- reflect_health_col: RH-015
+  reflect_health_label: DateOfBirth
+  category: identity
+- reflect_health_col: RH-017
+  reflect_health_label: Gender
+  category: identity
+- reflect_health_col: RH-018
+  reflect_health_label: SocialSecurityNumber
+  category: identity
+- reflect_health_col: RH-019
+  reflect_health_label: HiredDate
+  category: employment
+- reflect_health_col: RH-027
+  reflect_health_label: ClientLevelCode
+  category: coverage
+- reflect_health_col: RH-028
+  reflect_health_label: GroupNumber
+  category: coverage
+- reflect_health_col: RH-029
+  reflect_health_label: GroupLocationNumber
+  category: coverage
+- reflect_health_col: RH-034
+  reflect_health_label: MedicalCoverageType
+  category: medical
+- reflect_health_col: RH-035
+  reflect_health_label: MedicalCoverageTier
+  category: medical
+- reflect_health_col: RH-036
+  reflect_health_label: MedicalEffectiveDate
+  category: medical
+- reflect_health_col: RH-037
+  reflect_health_label: MedicalTerminationDate
+  category: medical
+notes:
+- subscriber_number = employee SSN (9-digit). Used as join key.
+- 'RelationshipCode enum: 1=subscriber, 2=spouse, 3=child, 4=other'
+- 'Gender enum: M/F/U'
+- All dates in YYYY-MM-DD format
+- Leading zeros must be preserved (format as text in Excel)

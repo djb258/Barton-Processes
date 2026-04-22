@@ -1,0 +1,31 @@
+ClientLevelCode:
+  description: Maps internal S&S ClientLevelCode to Reflect Health file ClientLevelCode
+  columns:
+  - SS_ClientLevelCode
+  - File_ClientLevelCode
+  values: PENDING - populate from Reflect Health when client codes are known
+GroupNumber:
+  description: Maps internal S&S GroupNumber to Reflect Health file GroupNumber
+  columns:
+  - SS_GroupNumber
+  - File_GroupNumber
+  values: PENDING - populate from Reflect Health when group numbers are assigned
+GroupLocationNumber:
+  description: Maps internal S&S GroupLocationNumber to Reflect Health file GroupLocationNumber
+  columns:
+  - SS_GroupLocationNumber
+  - File_GroupLocationNumber
+  values: PENDING - populate from Reflect Health when location codes are known
+RelationshipCode:
+  description: Identifies relationship of member to subscriber
+  values:
+    '1': Subscriber
+    '2': Spouse
+    '3': Child
+    '4': Other
+Gender:
+  description: Member gender
+  values:
+    M: Male
+    F: Female
+    U: Unknown
