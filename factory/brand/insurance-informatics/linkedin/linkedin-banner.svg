@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1584 396" width="1584" height="396">
+  <!-- LinkedIn Banner — Insurance Informatics -->
+  <!-- LinkedIn recommended: 1584x396px -->
+
+  <!-- Background: deep navy -->
+  <rect x="0" y="0" width="1584" height="396" fill="#0F2044"/>
+
+  <!-- Subtle grid lines (informatics / data feel) -->
+  <line x1="0" y1="99" x2="1584" y2="99" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="0" y1="198" x2="1584" y2="198" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="0" y1="297" x2="1584" y2="297" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="264" y1="0" x2="264" y2="396" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="528" y1="0" x2="528" y2="396" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="792" y1="0" x2="792" y2="396" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="1056" y1="0" x2="1056" y2="396" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+  <line x1="1320" y1="0" x2="1320" y2="396" stroke="#FFFFFF" stroke-width="0.3" opacity="0.08"/>
+
+  <!-- Accent bar left edge -->
+  <rect x="0" y="0" width="6" height="396" fill="#2563EB"/>
+
+  <!-- // mark — large, left-anchored, code font, electric blue -->
+  <text
+    x="80"
+    y="248"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="700"
+    font-size="140"
+    fill="#2563EB"
+    letter-spacing="8"
+    opacity="0.95"
+  >//</text>
+
+  <!-- INSURANCE wordmark -->
+  <text
+    x="300"
+    y="192"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="700"
+    font-size="54"
+    fill="#FFFFFF"
+    letter-spacing="6"
+  >INSURANCE</text>
+
+  <!-- Rule -->
+  <line x1="300" y1="205" x2="1060" y2="205" stroke="#2563EB" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- INFORMATICS wordmark -->
+  <text
+    x="300"
+    y="260"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="54"
+    fill="#2563EB"
+    letter-spacing="6"
+  >INFORMATICS</text>
+
+  <!-- Tagline -->
+  <text
+    x="300"
+    y="316"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="300"
+    font-size="20"
+    fill="#FFFFFF"
+    letter-spacing="3"
+    opacity="0.6"
+  >ENGINEERING-GRADE BENEFITS INTELLIGENCE</text>
+
+  <!-- Domain — category proof -->
+  <text
+    x="300"
+    y="348"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="400"
+    font-size="14"
+    fill="#2563EB"
+    letter-spacing="2"
+    opacity="0.7"
+  >insuranceinformatics.com</text>
+
+  <!-- Right side: data bar accent cluster -->
+  <rect x="1360" y="196" width="28" height="148" rx="4" fill="#2563EB" opacity="0.9"/>
+  <rect x="1400" y="228" width="28" height="116" rx="4" fill="#2563EB" opacity="0.6"/>
+  <rect x="1440" y="168" width="28" height="176" rx="4" fill="#FFFFFF" opacity="0.15"/>
+  <rect x="1480" y="248" width="28" height="96" rx="4" fill="#2563EB" opacity="0.4"/>
+  <rect x="1520" y="216" width="28" height="128" rx="4" fill="#2563EB" opacity="0.25"/>
+  <rect x="1560" y="276" width="28" height="68" rx="4" fill="#2563EB" opacity="0.15"/>
+</svg>
