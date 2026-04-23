@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insurance Informatics — LinkedIn Carousel Template</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #111;
+    font-family: 'Inter', sans-serif;
+    padding: 40px;
+  }
+
+  .label {
+    color: #4a6a9a;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(3, 380px);
+    gap: 24px 20px;
+    padding-bottom: 40px;
+  }
+
+  .slide-wrap {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .slide-num {
+    color: #34d399;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  /* Each slide is 1080x1080 scaled to 380px */
+  .slide {
+    width: 380px;
+    height: 380px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    /* Actual dimensions are 1080×1080 — scaled via transform */
+    transform-origin: top left;
+  }
+
+  .slide-inner {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    transform: scale(0.3519); /* 380/1080 */
+    transform-origin: top left;
+  }
+
+  /* ── Base background ── */
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 40% 40%, #132348 0%, #060d1e 100%);
+  }
+
+  /* ── Bokeh glows ── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .glow-bl { width: 900px; height: 900px; left: -220px; top: 380px; background: #1e40af; opacity: 0.22; }
+  .glow-tr { width: 860px; height: 860px; left: 620px; top: -220px; background: #0ea5e9; opacity: 0.14; }
+  .glow-gr { width: 520px; height: 520px; left: 380px; top: 100px; background: #10b981; opacity: 0.11; }
+
+  /* ── Arc ── */
+  .arc-svg {
+    position: absolute;
+    top: -300px;
+    left: 460px;
+    width: 1060px;
+    height: 1060px;
+    opacity: 0.09;
+    pointer-events: none;
+  }
+  .arc-svg-inner {
+    position: absolute;
+    top: -120px;
+    left: 620px;
+    width: 700px;
+    height: 700px;
+    opacity: 0.13;
+    pointer-events: none;
+  }
+
+  /* ── Bottom rule ── */
+  .bottom-rule {
+    position: absolute;
+    bottom: 80px;
+    left: 60px;
+    right: 60px;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ── Top logo (every slide) ── */
+  .top-logo {
+    position: absolute;
+    top: 48px;
+    left: 60px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    z-index: 10;
+  }
+  .top-logo .tl-slash {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 110px;
+    color: #2563EB;
+    letter-spacing: 6px;
+    line-height: 1;
+  }
+  .top-logo .tl-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 1;
+  }
+  .top-logo .tl-ins  { font-size: 42px; font-weight: 700; color: #fff; letter-spacing: 6px; text-transform: uppercase; }
+  .top-logo .tl-inf  { font-size: 42px; font-weight: 300; color: #34d399; letter-spacing: 6px; text-transform: uppercase; }
+
+  /* ── Mini wordmark (bottom of every slide) ── */
+  .mini-wordmark {
+    position: absolute;
+    bottom: 42px;
+    left: 60px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mini-slash {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    color: #2563EB;
+    letter-spacing: 3px;
+  }
+  .mini-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1;
+  }
+  .mini-ins { font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 2.5px; }
+  .mini-inf { font-size: 11px; font-weight: 300; color: #34d399; letter-spacing: 2.5px; }
+
+
+  /* ════════════════════════════════
+     SLIDE 1 — COVER
+  ════════════════════════════════ */
+  .s1-slash {
+    position: absolute;
+    top: 180px;
+    left: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 110px;
+    color: #2563EB;
+    letter-spacing: 12px;
+    line-height: 1;
+  }
+
+  .s1-eyebrow {
+    position: absolute;
+    top: 108px;
+    right: 60px;
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .s1-headline {
+    position: absolute;
+    top: 280px;
+    left: 60px;
+    right: 60px;
+    font-size: 82px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.05;
+    letter-spacing: -1px;
+  }
+
+  .s1-headline span { color: #34d399; }
+
+  .s1-sub {
+    position: absolute;
+    top: 680px;
+    left: 60px;
+    right: 200px;
+    font-size: 24px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 1px;
+    line-height: 1.5;
+  }
+
+  .s1-swipe {
+    position: absolute;
+    bottom: 42px;
+    right: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #34d399;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .s1-swipe::after {
+    content: '→';
+    font-size: 18px;
+  }
+
+
+  /* ════════════════════════════════
+     SLIDES 2–5 — CONTENT
+  ════════════════════════════════ */
+  .accent-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: #2563EB;
+  }
+
+  .slide-counter {
+    position: absolute;
+    top: 64px;
+    right: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #34d399;
+    letter-spacing: 3px;
+  }
+
+  .content-number {
+    position: absolute;
+    top: 54px;
+    left: 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 120px;
+    font-weight: 700;
+    color: rgba(37, 99, 235, 0.15);
+    line-height: 1;
+    letter-spacing: -4px;
+  }
+
+  .content-headline {
+    position: absolute;
+    top: 260px;
+    left: 80px;
+    right: 60px;
+    font-size: 64px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.08;
+    letter-spacing: -0.5px;
+  }
+
+  .content-headline span { color: #34d399; }
+
+  .content-body {
+    position: absolute;
+    top: 580px;
+    left: 80px;
+    right: 60px;
+    font-size: 26px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+  }
+
+  .content-swipe {
+    position: absolute;
+    bottom: 42px;
+    right: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 2px;
+  }
+
+
+  /* ════════════════════════════════
+     SLIDE 6 — CTA
+  ════════════════════════════════ */
+  .cta-slash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -65%);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 160px;
+    color: #2563EB;
+    letter-spacing: 16px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .cta-wordmark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 10%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cta-rule {
+    width: 360px;
+    height: 1.5px;
+    background: #2563EB;
+    opacity: 0.5;
+    margin: 8px 0;
+  }
+
+  .cta-ins {
+    font-size: 40px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+  }
+
+  .cta-inf {
+    font-size: 40px;
+    font-weight: 300;
+    color: #34d399;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+  }
+
+  .cta-tag {
+    position: absolute;
+    top: 76%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .cta-contact {
+    position: absolute;
+    bottom: 42px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1.5px;
+  }
+
+  .cta-contact a { color: #2563EB; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<p class="label">Insurance Informatics — LinkedIn Carousel Template · 1080×1080px · 6 Slides</p>
+
+<div class="strip">
+
+  <!-- ═══════════════ SLIDE 1 — COVER ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">01 / COVER</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-bl"></div>
+        <div class="glow glow-tr"></div>
+        <div class="glow glow-gr"></div>
+        <svg class="arc-svg" viewBox="0 0 1060 1060" fill="none"><circle cx="530" cy="530" r="528" stroke="white" stroke-width="1.5"/></svg>
+        <svg class="arc-svg-inner" viewBox="0 0 700 700" fill="none"><circle cx="350" cy="350" r="348" stroke="#34d399" stroke-width="1"/></svg>
+
+        <div class="top-logo">
+          <span class="tl-slash">//</span>
+          <div class="tl-brand">
+            <span class="tl-ins">INSURANCE</span>
+            <span class="tl-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="s1-eyebrow">SWIPE TO READ</div>
+        <div class="s1-headline">YOUR HOOK<br>HEADLINE<br><span>GOES HERE</span></div>
+        <div class="s1-sub">One-line context or secondary positioning statement for this post topic.</div>
+
+        <div class="bottom-rule"></div>
+        <div class="mini-wordmark">
+          <span class="mini-slash">//</span>
+          <div class="mini-brand">
+            <span class="mini-ins">INSURANCE</span>
+            <span class="mini-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="s1-swipe">SWIPE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SLIDE 2 — CONTENT ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">02 / CONTENT</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-tr"></div>
+        <div class="accent-bar"></div>
+        <div class="top-logo">
+          <span class="tl-slash">//</span>
+          <div class="tl-brand">
+            <span class="tl-ins">INSURANCE</span>
+            <span class="tl-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="slide-counter">02 / 06</div>
+        <div class="content-number">01</div>
+        <div class="content-headline">POINT<br>HEADLINE<br><span>HERE</span></div>
+        <div class="content-body">Supporting detail or insight. Keep it to 2–3 sentences max. One clear idea per slide.</div>
+        <div class="bottom-rule"></div>
+        <div class="mini-wordmark">
+          <span class="mini-slash">//</span>
+          <div class="mini-brand">
+            <span class="mini-ins">INSURANCE</span>
+            <span class="mini-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="content-swipe">SWIPE →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SLIDE 3 — CONTENT ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">03 / CONTENT</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-bl"></div>
+        <div class="accent-bar"></div>
+        <div class="top-logo">
+          <span class="tl-slash">//</span>
+          <div class="tl-brand">
+            <span class="tl-ins">INSURANCE</span>
+            <span class="tl-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="slide-counter">03 / 06</div>
+        <div class="content-number">02</div>
+        <div class="content-headline">POINT<br>HEADLINE<br><span>HERE</span></div>
+        <div class="content-body">Supporting detail or insight. Keep it to 2–3 sentences max. One clear idea per slide.</div>
+        <div class="bottom-rule"></div>
+        <div class="mini-wordmark">
+          <span class="mini-slash">//</span>
+          <div class="mini-brand">
+            <span class="mini-ins">INSURANCE</span>
+            <span class="mini-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="content-swipe">SWIPE →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SLIDE 4 — CONTENT ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">04 / CONTENT</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-gr"></div>
+        <div class="accent-bar"></div>
+        <div class="top-logo">
+          <span class="tl-slash">//</span>
+          <div class="tl-brand">
+            <span class="tl-ins">INSURANCE</span>
+            <span class="tl-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="slide-counter">04 / 06</div>
+        <div class="content-number">03</div>
+        <div class="content-headline">POINT<br>HEADLINE<br><span>HERE</span></div>
+        <div class="content-body">Supporting detail or insight. Keep it to 2–3 sentences max. One clear idea per slide.</div>
+        <div class="bottom-rule"></div>
+        <div class="mini-wordmark">
+          <span class="mini-slash">//</span>
+          <div class="mini-brand">
+            <span class="mini-ins">INSURANCE</span>
+            <span class="mini-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="content-swipe">SWIPE →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SLIDE 5 — CONTENT ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">05 / CONTENT</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-tr"></div>
+        <div class="glow glow-bl"></div>
+        <div class="accent-bar"></div>
+        <div class="top-logo">
+          <span class="tl-slash">//</span>
+          <div class="tl-brand">
+            <span class="tl-ins">INSURANCE</span>
+            <span class="tl-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="slide-counter">05 / 06</div>
+        <div class="content-number">04</div>
+        <div class="content-headline">POINT<br>HEADLINE<br><span>HERE</span></div>
+        <div class="content-body">Supporting detail or insight. Keep it to 2–3 sentences max. One clear idea per slide.</div>
+        <div class="bottom-rule"></div>
+        <div class="mini-wordmark">
+          <span class="mini-slash">//</span>
+          <div class="mini-brand">
+            <span class="mini-ins">INSURANCE</span>
+            <span class="mini-inf">INFORMATICS</span>
+          </div>
+        </div>
+        <div class="content-swipe">LAST SLIDE →</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SLIDE 6 — CTA ═══════════════ -->
+  <div class="slide-wrap">
+    <span class="slide-num">06 / CTA</span>
+    <div class="slide">
+      <div class="slide-inner">
+        <div class="bg"></div>
+        <div class="glow glow-bl"></div>
+        <div class="glow glow-tr"></div>
+        <div class="glow glow-gr"></div>
+        <svg class="arc-svg" viewBox="0 0 1060 1060" fill="none"><circle cx="530" cy="530" r="528" stroke="white" stroke-width="1.5"/></svg>
+
+        <div class="cta-slash">//</div>
+        <div class="cta-wordmark">
+          <div class="cta-ins">INSURANCE</div>
+          <div class="cta-rule"></div>
+          <div class="cta-inf">INFORMATICS</div>
+        </div>
+        <div class="cta-tag">Engineering-Grade Benefits Intelligence</div>
+
+        <div class="bottom-rule"></div>
+        <div class="cta-contact">
+          <span><a href="#">insuranceinformatics.com</a></span>
+          <span>·</span>
+          <span><a href="#">linkedin.com/in/davidbarton</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
