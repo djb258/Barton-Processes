@@ -40,22 +40,33 @@ _Everything in this cluster answers: what exists? These are constants that don't
 | Name | Real Estate Deal Finder — Full Lifecycle Execution |
 | Medium | process |
 | Business Silo | real-estate |
-| CTB Position | branch / real-estate / deal-finder / execution |
+| CTB Position | `barton-enterprises → real-estate → briar-valley → self-storage → find` |
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — STORAGE_REPO_UT.md (imo-creator domains/storage/) is the parent blueprint |
 | Last Modified | 2026-04-16 |
 | BAR Reference | BAR-325, BAR-326, BAR-327, BAR-328, BAR-329, BAR-330, BAR-331, BAR-332 |
 | Owner | Dave Barton — on the hook at 2 AM |
-| ctb_node | `barton-enterprises/real-estate/self-storage/deal-finder` |
+| ctb_node | `barton-enterprises/real-estate/briar-valley/self-storage/find` |
+
+**Six Dimensions (per `law/doctrine/THE_SIX_DIMENSIONS.md`):**
+
+| Dimension | Answer |
+|-----------|--------|
+| WHO | Dave Barton (sovereign), Claude Code mechanics, Codex auditor |
+| WHAT | Execution process for self-storage deal finding, building, and operating |
+| WHEN | On-demand per sovereign market search |
+| WHERE | ctb_node: barton-enterprises/real-estate/briar-valley/self-storage/find |
+| WHY | Without it, execution requires reconstruction from memory every session |
+| HOW | Derived from STORAGE_REPO_UT.md (blueprint) + Atlas §4 SOP |
 
 ### 1b. Geometry (Checklist item 11 — Bedrock §4 + §7)
 
-**CTB Position:** `trunk → real-estate → self-storage → deal-finder → execution` (this doc is the execution leaf of the deal-finder branch)
+**CTB Position:** `barton-enterprises → real-estate → briar-valley → self-storage → find` (this doc is the execution process at the find leaf)
 
 **Hub-Spoke Role:** Hub — all pipeline logic lives here across three phases. Scripts are the Middle. D1 is the rim (schema in, read-only views out).
 
-**Altitude:** 5k execution — exact commands, exact scripts, exact costs. The blueprint (STORAGE_REPO_UT.md) is at 30k. This doc is at 5k.
+**Altitude:** 10K operational — exact step sequence. Individual FIND steps drill to 5K. The blueprint (STORAGE_REPO_UT.md) is at 30K.
 
 ```mermaid
 flowchart LR
@@ -209,14 +220,14 @@ _Everything this depends on. Read this before running._
 
 | BAR | Title | HEIR (`bar-id · ctb · cc_layer`) | ORBT | Status | Relation |
 |-----|-------|----------------------------------|------|--------|----------|
-| BAR-325 | Storage market discovery scripts | BAR-325 · leaf · CC-04 | BUILD | Todo | implements FIND Steps 1-2 |
-| BAR-326 | Facility website crawler | BAR-326 · leaf · CC-04 | BUILD | Todo | implements FIND Step 2 |
-| BAR-327 | Saturation calculation engine | BAR-327 · leaf · CC-04 | BUILD | Todo | implements FIND Step 5 / website vendor tournament |
-| BAR-328 | Go/No-Go equation wiring | BAR-328 · leaf · CC-04 | BUILD | Todo | implements FIND Step 6 |
-| BAR-329 | Deal pipeline + Telegram alerts | BAR-329 · leaf · CC-04 | BUILD | In Progress | implements deal_pipeline FIND→BUILD transition |
+| BAR-325 | Storage domain spec — pipeline design + D1 schema | BAR-325 · leaf · CC-04 | BUILD | Todo | implements — sovereign + demographics foundation |
+| BAR-326 | Google Places API wired; discover_google_places.py built | BAR-326 · leaf · CC-04 | BUILD | Todo | implements — FIND: Market Discovery leaf |
+| BAR-327 | crawl_facility_sites.py v2 (50-page depth, sitemap, 12-field extraction) | BAR-327 · leaf · CC-04 | BUILD | Todo | implements — FIND: Competitor Intel + Pricing leaves |
+| BAR-328 | calc_storage_saturation.py built + PA run (26,316 rows) | BAR-328 · leaf · CC-04 | BUILD | Todo | implements — FIND: Saturation leaf |
+| BAR-329 | estimate_facility_sqft.py (OSM primary) + price_per_sqft derived | BAR-329 · leaf · CC-04 | BUILD | In Progress | implements — FIND: Saturation leaf (sqft input) |
 | BAR-330 | Gate access vendor selection | BAR-330 · leaf · CC-04 | BUILD | Todo | implements OPERATE gate access |
 | BAR-331 | Facility operations schema | BAR-331 · leaf · CC-04 | BUILD | Todo | implements OPERATE D1 tables |
-| BAR-332 | Annual re-crawl procedure | BAR-332 · leaf · CC-04 | BUILD | Todo | implements FIND annual refresh |
+| BAR-332 | run_market_discovery.sh 24-agent launcher + equation v1 | BAR-332 · leaf · CC-04 | BUILD | Todo | implements — FIND: Go/No-Go Equation leaf |
 
 ### 3e. LBB Subjects Fed (Checklist item 10)
 
@@ -1303,21 +1314,21 @@ No data is lost during FIND — scripts write to D1 after each batch. Resume by 
 
 | Claim / Field | Section | Source of Truth | Verification Command / Query | Verified? | Last Check | Value at Check |
 |---------------|---------|-----------------|------------------------------|-----------|-----------|----------------|
-| pub_zips_master has 45,094 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_zips_master` | ☑ | 2026-04-20 | 45,094 |
-| pub_storage_facilities has 3,700+ rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-20 | 3,700 |
-| pub_market_saturation has 26,316 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_market_saturation` | ☑ | 2026-04-20 | 26,316 |
-| 4 sovereign market searches recorded | §3 | svg-d1-storage | `SELECT COUNT(*) FROM sovereign_market_search` | ☑ | 2026-04-20 | 4 |
-| storage-hub worker health | §3 | Worker endpoint | `curl https://storage-hub.svg-outreach.workers.dev/health` | ☑ | 2026-04-20 | {"status":"ok","bindings":{"storage_ops":true,"d1_global":true}} |
-| PROXY_PORT = 823 | §4 | Doppler imo-creator dev | `doppler secrets get PROXY_PORT` | ☑ | 2026-04-20 | 823 |
+| pub_zips_master has 45,094 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_zips_master` | ☑ | 2026-04-24 | 45,094 |
+| pub_storage_facilities has 4,996 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_storage_facilities` | ☑ | 2026-04-24 | 4,996 |
+| pub_market_saturation has 26,316 rows | §3 | svg-d1-storage | `SELECT COUNT(*) FROM pub_market_saturation` | ☑ | 2026-04-24 | 26,316 |
+| 6 sovereign market searches recorded | §3 | svg-d1-storage | `SELECT COUNT(*) FROM sovereign_market_search` | ☑ | 2026-04-24 | 6 |
+| storage-hub worker health | §3 | Worker endpoint | `curl https://storage-hub.svg-outreach.workers.dev/health` | ☑ | 2026-04-24 | {"status":"ok","bindings":{"storage_ops":true,"d1_global":true}} |
+| PROXY_PORT = 823 | §4 | Doppler imo-creator dev | `doppler secrets get PROXY_PORT` | ☑ | 2026-04-24 | 823 |
 | Google Places API free tier = 1K req/mo | §3 | GCP Console | Check quota in Google Cloud Console | ☐ | — | Manual check required |
-| discover_google_places.py exists | §4 | Filesystem | `ls factory/agents/up/discover_google_places.py` | ☑ | 2026-04-20 | EXISTS |
-| crawl_facility_sites.py exists | §4 | Filesystem | `ls factory/agents/up/crawl_facility_sites.py` | ☑ | 2026-04-20 | EXISTS |
-| estimate_facility_sqft.py exists | §4 | Filesystem | `ls factory/agents/up/estimate_facility_sqft.py` | ☑ | 2026-04-20 | EXISTS |
-| calc_storage_saturation.py exists | §4 | Filesystem | `ls factory/agents/up/calc_storage_saturation.py` | ☑ | 2026-04-20 | EXISTS |
-| populate_flood_zones.py exists | §4 | Filesystem | `ls factory/agents/up/populate_flood_zones.py` | ☑ | 2026-04-16 | EXISTS |
-| populate_topography.py exists | §4 | Filesystem | `ls factory/agents/up/populate_topography.py` | ☑ | 2026-04-16 | EXISTS |
-| run_market_discovery.sh exists | §4 | Filesystem | `ls factory/agents/up/run_market_discovery.sh` | ☑ | 2026-04-20 | EXISTS |
-| Price floor constant = $0.72/sqft/month | §7 | STORAGE_REPO_UT.md §7 | `SELECT * FROM pub_build_constants WHERE is_active=1` | ☑ | 2026-04-20 | building_cost_per_sqft=24 confirmed; price_floor lives in STORAGE_REPO_UT.md §7 |
+| discover_google_places.py exists | §4 | Filesystem | `ls factory/agents/up/discover_google_places.py` | ☑ | 2026-04-24 | EXISTS |
+| crawl_facility_sites.py exists | §4 | Filesystem | `ls factory/agents/up/crawl_facility_sites.py` | ☑ | 2026-04-24 | EXISTS |
+| estimate_facility_sqft.py exists | §4 | Filesystem | `ls factory/agents/up/estimate_facility_sqft.py` | ☑ | 2026-04-24 | EXISTS |
+| calc_storage_saturation.py exists | §4 | Filesystem | `ls factory/agents/up/calc_storage_saturation.py` | ☑ | 2026-04-24 | EXISTS |
+| populate_flood_zones.py exists | §4 | Filesystem | `ls factory/agents/up/populate_flood_zones.py` | ☑ | 2026-04-24 | EXISTS |
+| populate_topography.py exists | §4 | Filesystem | `ls factory/agents/up/populate_topography.py` | ☑ | 2026-04-24 | EXISTS |
+| run_market_discovery.sh exists | §4 | Filesystem | `ls factory/agents/up/run_market_discovery.sh` | ☑ | 2026-04-24 | EXISTS |
+| Price floor constant = $0.72/sqft/month | §7 | STORAGE_REPO_UT.md §7 | `SELECT * FROM pub_build_constants WHERE is_active=1` | ☑ | 2026-04-24 | building_cost_per_sqft=24 confirmed; price_floor lives in STORAGE_REPO_UT.md §7 |
 | DataImpulse bandwidth cost ~$8-10/run | §3 | DataImpulse dashboard | Check actual spend per run | ☐ | — | Manual check required |
 
 ---
@@ -1424,13 +1435,9 @@ _Created ONLY when the auditor certifies (BUILD → OPERATE). No logbook during 
 
 ## 13. FLEET FAILURE REGISTRY
 
-| Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
-|-----------|----------|-----------|-----------|-------------|-------------|--------|
-| FP-001 | crawl_facility_sites.py | multi_address | 2026-04-16 | 1,651 facilities | 0 | OPEN — requires manual review |
-| FP-002 | crawl_facility_sites.py | fetch_failed | 2026-04-16 | 269 facilities | 0 | OPEN — no accessible website |
-| FP-003 | estimate_facility_sqft.py | llm_failed | 2026-04-16 | 14 facilities | 0 | OPEN — retry on next run |
+Fleet Failure Registry is maintained in `STORAGE_REPO_UT.md` §13 (authoritative). This doc inherits from it.
 
-**Strike 1:** Repair. **Strike 2:** Scrutiny. **Strike 3:** Troubleshoot/Train → Airworthiness Directive.
+See `domains/storage/STORAGE_REPO_UT.md` §13 for all active FP entries (FP-001 through FP-004), strike counts, and Airworthiness Directives.
 
 ---
 
@@ -1457,7 +1464,8 @@ _Every touch on this doc is a maintenance action. Append-only._
 |-----------|-------|--------|---------------|----------|------------|
 | 2026-04-16 09:00 UTC | Claude (claude-sonnet-4-6) | RETROFIT | Initial doc created from PROCESS.md blueprint + MARKET_DISCOVERY_RUNBOOK.md. UT template v2.6.0 applied. 7 FIND execution steps documented with exact commands. | Barton-Processes/factory/real-estate/PROC-1000-DEAL-FINDER.md created | pending |
 | 2026-04-20 09:35 UTC | Claude (claude-sonnet-4-6) | VERIFY | Codex audit fix: §9b Live Verification — ran all verifiable commands against live system. §3d BAR statuses corrected. Cross-references updated to STORAGE_REPO_UT.md. | §9b, §3d, §2, §1, §5, Document Control updated | pending |
-| 2026-04-16 00:00 UTC | Claude (claude-sonnet-4-6) | EDIT | v2.0.0 — full three-phase lifecycle expansion per Atlas §4 Build SOP and Six Dimensions. Steps 1-9 FIND (added Steps 6-7: flood zones + topography, 12-comparator equation), Steps 10-14 BUILD (permitting, site plan, SBA 504, construction milestones, CO), Steps 15-20 OPERATE (website, tenants, payments, gates, maintenance, monthly reporting). Sovereign lifecycle D1 flow table added. build_milestones and facility_operations schemas documented (PENDING migration). Template v2.7.0 applied (ctb_node field). | Barton-Processes/factory/real-estate/PROC-1000-DEAL-FINDER.md overwritten | pending |
+| 2026-04-24 09:00 UTC | Claude Sonnet 4.6 (agent) | EDIT | Codex audit fixes applied: ctb_node corrected to briar-valley/self-storage/find; CTB Position text updated; §9b counts refreshed (4,996 facilities, 6 sovereigns) with date 2026-04-24; §3d BAR titles reconciled to STORAGE_REPO_UT.md §3d (authoritative); §13 Fleet Failure Registry replaced with reference to STORAGE_REPO_UT.md §13; v2.0.0 logbook timestamp corrected to 2026-04-24; Six Dimensions table added to §1; Altitude changed to 10K operational. | 8 Codex findings (C1-C6, I1, I2) all applied | pending |
+| 2026-04-24 00:00 UTC | Claude (claude-sonnet-4-6) | EDIT | v2.0.0 — full three-phase lifecycle expansion per Atlas §4 Build SOP and Six Dimensions. Steps 1-9 FIND (added Steps 6-7: flood zones + topography, 12-comparator equation), Steps 10-14 BUILD (permitting, site plan, SBA 504, construction milestones, CO), Steps 15-20 OPERATE (website, tenants, payments, gates, maintenance, monthly reporting). Sovereign lifecycle D1 flow table added. build_milestones and facility_operations schemas documented (PENDING migration). Template v2.7.0 applied (ctb_node field). | Barton-Processes/factory/real-estate/PROC-1000-DEAL-FINDER.md overwritten | pending |
 
 ---
 
@@ -1466,7 +1474,7 @@ _Every touch on this doc is a maintenance action. Append-only._
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-16 |
-| Last Modified | 2026-04-16 |
+| Last Modified | 2026-04-24 |
 | Version | 2.0.0 |
 | Template Version | 2.7.0 |
 | Medium | process |
