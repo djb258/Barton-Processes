@@ -1,0 +1,12 @@
+sovereign_ref: imo-creator
+hub_id: PROC-2800
+ctb_placement: leaf
+imo_topology: middle
+cc_layer: CC-04
+services: [Cloudflare D1 (kiddos), Cloudflare Workers]
+secrets_provider: doppler
+acceptance_criteria:
+  - Each person renders at kiddos.bartonenterprises.com/:slug
+  - Portal shows academic, sports, health data per person
+  - Correlation view renders sports vs health over time
+  - Cross-person data isolation enforced (no leakage)
