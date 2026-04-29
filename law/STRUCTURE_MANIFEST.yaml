@@ -3,13 +3,14 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # Status: GATED (conforms to imo-creator-v2 STRUCTURE_MANIFEST.yaml — LOCKED)
 # Authority: imo-creator-v2/law/STRUCTURE_MANIFEST.yaml defines the pattern.
-#            This file applies it to Barton-Processes and codifies R1-R8.
+#            This file applies it to Barton-Processes and codifies R1-R9.
 # Created: 2026-03-26
-# Last Modified: 2026-04-29 (Stage 2.5 CTB Cleanup — R1-R8 codified)
+# Last Modified: 2026-04-29 (Stage 4.5 — added R9 file location doctrine)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-version: "3.0.0"
+version: "3.1.0"
 effective_date: "2026-04-29"
+revision_note: "v3.1.0 adds R9 (file location doctrine) per law/FILE_LOCATION_DOCTRINE.md"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IDENTITY
@@ -122,6 +123,26 @@ ctb_rules:
     description: "Garage-internal infrastructure (LBB, UP, adapter-build) lives in imo-creator-v2, not here"
     enforcement: "manual scan"
     violation_action: "move to archive/relocated-to-v2-YYYY-MM-DD/"
+
+  R9:
+    name: "process_specific_files_only_inside_uts"
+    description: "Every process-specific file MUST live inside its UT folder. Repo-wide doctrine only at trunk root + law/ + docs/ (cross-process) + scripts/ + log/ + archive/. Anywhere else is a violation."
+    doctrine: "law/FILE_LOCATION_DOCTRINE.md"
+    enforcement: "scripts/validate-ctb.sh (R9 check) + auditor gates G42/G43/G44"
+    violation_action: "move file into _archived-fragments/ of relevant process; if cross-process, move to docs/"
+    allowed_paths:
+      trunk_root_files: [CLAUDE.md, README.md, INDEX.md, EXECUTION_ORDER.md, D1_DATA_DICTIONARY.md, .gitignore]
+      trunk_dirs: [law, docs, scripts, log, archive, factory]
+      ut_folder_files: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, package.json, package-lock.json, tsconfig.json]
+      ut_folder_dirs: [src, src-*, migrations, _archived-fragments, vendor_library, proxy, scripts, bulk-update]
+      exempt_silos: [_stubs, content]
+    forbidden_patterns:
+      - "Loose .md/.yaml/.json at silo level (e.g., factory/client/UT_PROCESSES.md)"
+      - "Per-process CLAUDE.md / README.md / PRD.md / ERD.md / OSAM.md / MANIFEST.md / AUDIT_REPORT.md / LEARNINGS.md at folder root (must consolidate into PROCESS-UT.md or archive)"
+      - "Mid-tier orphans (factory/<silo>/<sub-silo>/<process>/ — max 3 levels deep)"
+      - "Garage-internal silos (factory/imo-creator/, factory/UP/, etc.)"
+      - "Build artifacts not gitignored (.wrangler/, .up-runs/, node_modules/)"
+      - ".gitkeep at factory/ or silo level (not needed; numbered subdirs already track)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FACTORY SILOS (current state 2026-04-29)

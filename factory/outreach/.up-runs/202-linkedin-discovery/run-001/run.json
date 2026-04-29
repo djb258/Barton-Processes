@@ -1,9 +1,0 @@
-{
-  "created_at": "2026-04-04T17:55:15.123392+00:00",
-  "min_runs_for_lock": 3,
-  "operator_intent": "Validate against unified template v6.0.0 and Grid Reader requirements",
-  "repo_root": "/Users/employeeai/Documents/imo-creator-v2-20260317",
-  "run_number": 1,
-  "subject_path": "/Users/employeeai/Documents/Barton-Processes/factory/outreach/202-linkedin-discovery",
-  "us_run_dir": "/Users/employeeai/Documents/imo-creator-v2-20260317/factory/agents/up/us-runs/executable-process/run-003"
-}

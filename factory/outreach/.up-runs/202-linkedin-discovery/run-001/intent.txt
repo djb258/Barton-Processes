@@ -1,1 +1,0 @@
-Validate against unified template v6.0.0 and Grid Reader requirements

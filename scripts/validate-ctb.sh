@@ -90,11 +90,44 @@ if [ -d "law/doctrine" ]; then
 fi
 
 # ─────────────────────────────────────────────────────────────
+# R9: every file under factory/ must live inside a UT folder
+# (per law/FILE_LOCATION_DOCTRINE.md — process-specific files only inside UTs)
+# Exemptions: factory/_stubs/, factory/content/ (silo-level exempt)
+# ─────────────────────────────────────────────────────────────
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    factory/_stubs/*) ;;
+    factory/content/*) ;;
+    factory/*/[0-9]*-*/PROCESS-UT.md) ;;
+    factory/*/[0-9]*-*/DOCTRINE.md) ;;
+    factory/*/[0-9]*-*/heir.yaml) ;;
+    factory/*/[0-9]*-*/orbt.yaml) ;;
+    factory/*/[0-9]*-*/wrangler.toml) ;;
+    factory/*/[0-9]*-*/package.json) ;;
+    factory/*/[0-9]*-*/package-lock.json) ;;
+    factory/*/[0-9]*-*/tsconfig.json) ;;
+    factory/*/[0-9]*-*/src/*) ;;
+    factory/*/[0-9]*-*/src-*/*) ;;
+    factory/*/[0-9]*-*/migrations/*) ;;
+    factory/*/[0-9]*-*/proxy/*) ;;
+    factory/*/[0-9]*-*/scripts/*) ;;
+    factory/*/[0-9]*-*/bulk-update/*) ;;
+    factory/*/[0-9]*-*/_archived-fragments/*) ;;
+    factory/*/[0-9]*-*/vendor_library/*) ;;
+    *)
+      echo "R9 FAIL: '$f' is outside any UT folder (process-specific files must live inside factory/<silo>/<NNN-name>/)"
+      errors=$((errors+1))
+      ;;
+  esac
+done < <(find factory -type f 2>/dev/null)
+
+# ─────────────────────────────────────────────────────────────
 # Report
 # ─────────────────────────────────────────────────────────────
 echo ""
 if [ "$errors" -eq 0 ]; then
-  echo "validate-ctb.sh: PASS — all CTB rules satisfied (R1, R2, R3, R4)"
+  echo "validate-ctb.sh: PASS — all CTB rules satisfied (R1, R2, R3, R4, R9)"
   exit 0
 else
   echo "validate-ctb.sh: FAIL — $errors violation(s) found"

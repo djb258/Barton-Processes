@@ -100,7 +100,7 @@ Barton-Processes/              ← trunk root (governance files only)
 │       └── production-line/
 │
 ├── scripts/                   ← Validation + utility scripts
-│   └── validate-ctb.sh        ← CTB rule enforcer (R1-R8)
+│   └── validate-ctb.sh        ← CTB rule enforcer (R1-R4 + R9)
 │
 ├── archive/                   ← Read-only historical record
 │   ├── v1-extractions-2026-04-29.tar.gz
@@ -114,7 +114,7 @@ Barton-Processes/              ← trunk root (governance files only)
 
 ---
 
-## CTB RULES (R1-R8)
+## CTB RULES (R1-R9)
 
 See `law/STRUCTURE_MANIFEST.yaml` for machine-readable enforcement.
 
@@ -126,8 +126,9 @@ See `law/STRUCTURE_MANIFEST.yaml` for machine-readable enforcement.
 - **R6** — Non-numbered content (video, brand) goes in `factory/content/` only
 - **R7** — Empty silos live in `factory/_stubs/`; not at silo level
 - **R8** — Garage-internal (LBB, UP, adapter-build) lives in `imo-creator-v2/`, not here
+- **R9** — **No file lives in this repo without being inside a UT folder OR being repo-wide doctrine.** Process-specific files go inside `factory/<silo>/<NNN-name>/` (PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, src/, _archived-fragments/, etc.). Cross-process docs go in `docs/`. Trunk root + `law/` reserved for repo-wide governance only. **Hard rule, machine-enforced.** See `law/FILE_LOCATION_DOCTRINE.md`.
 
-Run `scripts/validate-ctb.sh` to check R1-R3-R4 compliance. Exit 0 = clean.
+Run `scripts/validate-ctb.sh` to check R1-R4 + R9 compliance. Exit 0 = clean.
 
 ---
 
