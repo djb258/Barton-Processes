@@ -1,0 +1,11 @@
+process_id: "PROC-202-linkedin-discovery"
+process_number: "202"
+state: "BUILD"  # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 0
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — UT v2.7.0 standardization"
+auto_pause_threshold:
+  metric: "captcha_rate"
+  red_value: "0.10 (10% captcha rate triggers Gate C halt)"
+ad_active: null  # AD-NNN reference if Strike 3 is reached
+notes: "Gate A+B ran on 2026-04-02: 941 Gate A hits + 124 Gate B hits = 1,065 URLs filled across 10,786 slots. Gate C pending (proxy creds required). Process stays BUILD until 3 clean runs with all comparators within tolerance and auditor sign-off."

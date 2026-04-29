@@ -1,0 +1,11 @@
+process_id: "PROC-900-SALES-PORTAL"
+process_number: "900"
+state: "BUILD" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 0
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — UT v2.7.0 standardization Wave 1"
+auto_pause_threshold:
+  metric: "D1 sales_state_errors row count"
+  red_value: "3 errors in 1 hour"
+ad_active: null # AD-NNN reference if Strike 3 is reached
+notes: "Worker not yet deployed. D1 database not yet created (database_id blank in wrangler.toml). Monte Carlo (Meeting 2) not yet built. CQRS gap: sales_state_errors table missing. Unresolved audit gaps in §13 FLEET FAILURE REGISTRY of PROCESS-UT.md. Process 800 (Client Mint) is downstream gate — do not mark OPERATE until sales close → client mint chain is verified end-to-end."

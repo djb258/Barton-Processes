@@ -1,0 +1,11 @@
+process_id: "PROC-200-PEOPLE-WORKER"
+process_number: "200"
+state: "REPAIR" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 1
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — Strike 1 active FP-200-01 (spurious person_email_verified flag)"
+auto_pause_threshold:
+  metric: "fp_200_01_gauge"
+  red_value: "> 0 rows WHERE person_email_verified=1 AND has_verified_email=0"
+ad_active: null # AD-200 reference if Strike 3 is reached
+notes: "FP-200-01 OPEN: person_email_verified=1 was set spuriously where MV did not pass. Rows must be audited and corrected before state returns to OPERATE. See PROCESS-UT.md §13 for full failure registry entry."

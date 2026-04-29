@@ -1,26 +1,46 @@
 # HEIR — 500 Talent Flow
+# 8-field WHERE coordinate. All 8 fields required per gate G23.
 # Reads People snapshots. Detects executive movement. Depends on 200.
+
+# Field 1: sovereign_ref — which garage owns this process
+sovereign_ref: "imo-creator-v2"
+
+# Field 2: hub_id — stable unique identifier for this process
+hub_id: "PROC-TALENT-FLOW"
+
+# Field 3: ctb_placement — position on the Christmas Tree Backbone
+# Full path: barton-enterprises/svg-agency/outreach/talent-flow
+ctb_placement: "barton-enterprises/svg-agency/outreach/talent-flow"
+
+# Field 4: imo_topology — role in the IMO geometry
+# spoke = sensor process; feeds the hub (LCS Pipeline)
+imo_topology: "spoke"
+
+# Field 5: cc_layer — CC-01 Sovereign → CC-02 Hub → CC-03 Branch → CC-04 Leaf
+cc_layer: "CC-04"
+
+# Field 6: services — what this process runs on
+services:
+  - "Neon PostgreSQL (people schema + outreach schema, via psql)"
+  - "Python 3 script (src/talent-flow.py — not yet a CF Worker)"
+
+# Field 7: secrets_provider — where secrets live
+secrets_provider: "doppler"
+
+# Field 8: acceptance_criteria — P=1 definition; what must be true for this process to be CERTIFIED
+acceptance_criteria:
+  - "Process 200 must complete monthly LinkedIn snapshot refresh before Process 500 runs"
+  - "Movement detection compares current vs prior month snapshots (deterministic diff, no AI)"
+  - "Emits TF-01 (EXECUTIVE_JOINED) and TF-02 (EXECUTIVE_LEFT) signals to outreach.signal_output"
+  - "Dedup key (outreach_id, signal_code, run_month) prevents duplicate signals on re-run"
+
+# --- Supplemental fields (not part of the 8-field HEIR contract) ---
 process_id: "PROC-TALENT-FLOW"
 process_number: "500"
 name: "Talent Flow"
 blueprint_owner: "barton-outreach-core"
-runtime: "cloudflare-workers"
+runtime: "python3"
 status: "build"
-sovereign_ref: "imo-creator-v2"
-ctb_placement: "leaf"
-cc_layer: "CC-04"
-imo_topology: "spoke"
-
-services:
-  - "CF Worker (monthly cron — runs AFTER 200-people-worker)"
-  - "Neon via Hyperdrive"
-secrets_provider: "doppler"
-
-snap_on_tools:
-  - {id: "TOOL-003", name: "LinkedInCheck", tier: "free"}
-  - {id: "TOOL-005", name: "ScraperAPI", tier: "cheap"}
-
-ut_sub_hubs: ["16-fetcher", "18-proxy-router", "20-cache-layer"]
 
 movement_detection:
   type: "deterministic"
@@ -28,14 +48,9 @@ movement_detection:
   method: "Compare People snapshot month-over-month. Slot changes = executive movement."
   output: "0 or 1 per slot"
   signals: ["EXECUTIVE_JOINED", "EXECUTIVE_LEFT"]
-  note: "This is the People movement detection applied specifically to executive-level slots"
+  signal_codes: ["TF-01", "TF-02"]
+  note: "People movement detection applied specifically to executive-level slots (CEO, CFO, HR)"
 
-acceptance_criteria:
-  - "Runs AFTER 200-people-worker completes monthly refresh"
-  - "Compares current vs previous People snapshot"
-  - "Emits BIT signals for executive movement"
-  - "Errors write to master error table (D1)"
-
-depends_on: [200]  # MUST run after People worker
-feeds: [600, 100]  # BIT, LCS
+depends_on: [200]
+feeds: [600, 100]
 bars: ["BAR-50"]

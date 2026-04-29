@@ -1,8 +1,22 @@
-heir_ref: PROC-301
+# HEIR — PROC-301 Page Parser
+# V2 format | 8 required fields | UT v2.7.0 | Updated: 2026-04-29
+# V1 fields (heir_ref: PROC-301, sub_hub: 301-page-parser, component: page-parser, created_at: 2026-04-03)
+# superseded by this V2 format. V1 content preserved in _archived-fragments/ via original heir.yaml reference.
+
 sovereign_ref: imo-creator
 hub_id: outreach
+ctb_placement: "barton-enterprises/svg-agency/outreach/factory/301-page-parser"
+imo_topology: middle
 cc_layer: CC-03
-sub_hub: 301-page-parser
-component: page-parser
-ctb_placement: leaf
-created_at: 2026-04-03
+services:
+  - svg-d1-outreach-ops           # D1 database — reads slot_workbench.about_url, writes slot_workbench fields
+  - DataImpulse                   # Residential proxy — escalation only (on direct fetch failure / 403 / 429)
+  - curl_cffi                     # HTTP fetch library — primary direct fetch channel
+  - key_builder_constants.py      # Snap-On Tool — classification constants (Toolbox sub-hub 28)
+secrets_provider: doppler         # imo-creator → dev → DATAIMPULSE_PROXY, D1_OUTREACH (service binding)
+acceptance_criteria:
+  - "fetch_failure_rate ≤ 0.20 (warn at 0.20, halt at 0.30)"
+  - "no_names_rate ≤ 0.40 over any 50-company window"
+  - "write_failure_count = 0 (ε tolerance — any D1 write failure triggers investigation)"
+  - "slots_filled_per_company_avg ≥ 1.5 across last 100 companies processed"
+  - "3 consecutive clean runs + Codex auditor sign-off required to transition BUILD → OPERATE"

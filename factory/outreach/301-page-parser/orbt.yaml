@@ -1,0 +1,28 @@
+# ORBT — PROC-301 Page Parser
+# OBD diagnostic state | UT v2.7.0 | Created: 2026-04-29
+
+state: BUILD
+# BUILD = process documented, not yet operating in production with clean run history.
+# Transitions: BUILD → OPERATE (3 consecutive clean runs + auditor sign-off)
+#              OPERATE → REPAIR (active fix in flight)
+#              REPAIR → OPERATE (fix verified, loop closed)
+#              Any state → TROUBLESHOOT_TRAIN (Strike 3 on same failure pattern)
+
+strikes: 0
+# Strike count for recurring failures on same failure class.
+# Strike 3 → TROUBLESHOOT_TRAIN state. Do not repair again without root cause lock.
+
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, heir.yaml written; fragments archived"
+
+auto_pause_threshold: 3
+# Halt and page operator after this many consecutive fetch failures on a single run.
+
+ad_active: false
+# No Airworthiness Directive active. AD is issued after Strike 3 fleet-wide fix.
+
+notes: >
+  Initial BUILD state. PROCESS-UT.md consolidates all prior fragment content (PROCESS.md + CLAUDE.md).
+  Codex Auditor Stage 3 must verify G21-G30 before state can advance to OPERATE.
+  Key prior failure logged: FP-301-01 (loose name match — unidentified elements mis-classified as person_name).
+  Resolution locked in D-301-03 (key_builder_constants.py is a structural constant; no runtime loosening).

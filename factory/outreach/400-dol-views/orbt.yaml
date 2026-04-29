@@ -1,0 +1,28 @@
+# ORBT — Process 400 DOL Views
+# OBD diagnostic state for PROC-400
+# States: BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+
+process_id: "PROC-400"
+name: "DOL Views"
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — PROCESS-UT.md, DOCTRINE.md, heir.yaml written; fragments archived; UT v2.7.0 standardization complete"
+
+# State history
+state_history:
+  - state: "BUILD"
+    entered_at: "2026-03-19T00:00:00Z"
+    reason: "Initial build — 6 views created in Neon PostgreSQL dol schema"
+  - state: "OPERATE"
+    entered_at: "2026-03-25T00:00:00Z"
+    reason: "D1 seed complete (171,040 rows); views confirmed queryable; BAR-49 closed"
+
+# Strike log (append only — never delete)
+strike_log: []
+
+# Active repair (populated when state = REPAIR)
+active_repair: null
+
+# Airworthiness Directives (populated when strikes = 3)
+airworthiness_directives: []

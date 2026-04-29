@@ -1,0 +1,11 @@
+process_id: "PROC-100-LCS-PIPELINE"
+process_number: "100"
+state: "REPAIR" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 2
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "Bounce-rate root cause quarantined 2026-04-28; email gate SQL fix (has_verified_email = 1) in flight; 356 slot_workbench rows nulled, 4 in-flight MIDs canceled, 190 recipient_emails nulled. LBB: 3cfc7d65-0624-44d9-89cf-cb1946d2de87"
+auto_pause_threshold:
+  metric: "bounce_rate_per_domain_24h"
+  red_value: ">2%"
+ad_active: null # AD-100 pending if Strike 3 reached
+notes: "REPAIR phase. Do not promote to OPERATE until: (1) D-100-01 gate fix deployed and smoke-tested, (2) 7-day bounce rate confirmed below 2% across all active domains, (3) auditor verifies PROCESS-UT.md §9b gauges green. FP-100-01 is OPEN."

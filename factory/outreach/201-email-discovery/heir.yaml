@@ -1,9 +1,63 @@
-heir:
-  hub_id: "outreach"
-  sub_hub: "email-discovery"
-  component: "201-email-discovery"
-  process_id: "PROC-201"
-  business_silo: "svg-agency"
-  ctb_position: "factory/outreach/201-email-discovery"
-  parent: "factory/outreach"
-  created_at: "2026-04-02"
+# HEIR — 201 Email Discovery
+# VIN: 8-field identity, stamped at build, never changes
+# Template: heir.yaml v2.0.0 (HEIR standard, STAGE-1-CODEX-MECHANIC-OUTPUT.md §1)
+# NOTE: Rewritten from legacy 9-field format during UT v2.7.0 consolidation 2026-04-29
+# Prior fields: hub_id, sub_hub, component, process_id, business_silo, ctb_position, parent, created_at
+
+# Field 1: Sovereign reference — which garage owns this
+sovereign_ref: imo-creator-v2
+
+# Field 2: Hub ID — which operational silo
+hub_id: outreach
+
+# Field 3: CTB placement — position on the Christmas Tree Backbone
+ctb_placement: "barton-enterprises/svg-agency/factory/outreach/201-email-discovery"
+
+# Field 4: IMO topology — where in I->M->O this sits
+# middle = all processing happens here; this process is the transformation engine
+imo_topology: middle
+
+# Field 5: CC layer — Cloudflare/Codex architectural layer
+# CC-03 = process layer (local Python script, no CF Worker deployment)
+cc_layer: CC-03
+
+# Field 6: Services consumed
+services:
+  - name: D1 svg-d1-outreach-ops
+    role: read-write (slot_workbench)
+    binding: wrangler subprocess (local Python calls wrangler d1 execute)
+  - name: Hunter.io API
+    role: Gate B email pattern lookup
+    binding: HTTP via HUNTER_API_KEY
+  - name: DataImpulse Residential Proxy
+    role: Gate C Startpage search (anonymized)
+    binding: HTTP proxy via PROXY_USER + PROXY_PASS
+  - name: Million Verifier (planned)
+    role: Gate D email verification (NOT YET INTEGRATED - FP-201-01)
+    binding: TBV - pending integration
+
+# Field 7: Secrets provider
+secrets_provider: doppler
+secrets_project: imo-creator
+secrets_env: dev
+secrets_keys:
+  - HUNTER_API_KEY
+  - PROXY_USER
+  - PROXY_PASS
+  - MV_API_KEY  # planned - not yet in use
+
+# Field 8: Acceptance criteria
+acceptance_criteria:
+  - "person_email_verified MUST track MV verdict, never the existence of a guess (D-201-01)"
+  - "Gate order MUST be A->B->C; no skipping or reordering (D-201-04)"
+  - "Pattern guesses MUST NOT write to person_email until gate hit confirmed (D-201-03)"
+  - "Hunter confidence floor for Gate B promotion MUST be >= 80 (D-201-07)"
+  - "Gate C score floor MUST be >= 30 (D-201-08)"
+  - "Each run MUST produce a JSONL audit trail (D-201-09)"
+  - "Slots with has_email=1 MUST be skipped (D-201-02)"
+  - "person_email write MUST atomically set has_email=1 (D-201-05)"
+
+# Stamp metadata
+stamped_at: "2026-04-29"
+stamped_by: "sonnet-runner-wave1-packet5"
+prior_created_at: "2026-04-02"

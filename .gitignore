@@ -16,6 +16,7 @@ dist/
 build/
 .next/
 .wrangler/
+.up-runs/
 
 # IDE
 .vscode/
@@ -31,7 +32,7 @@ Thumbs.db
 *.log
 log/*.json
 .superpowers/
-factory/svg-agency/300-blog-worker/src/output/
+factory/outreach/300-blog-worker/src/output/
 factory/outreach/301-page-parser/src/output/html/
 factory/outreach/200-people-worker/src/output/*.jsonl
 factory/outreach/201-email-discovery/src/output/*.jsonl

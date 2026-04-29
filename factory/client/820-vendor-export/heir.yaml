@@ -1,37 +1,24 @@
-# HEIR — 820 Vendor Export
-process_id: "PROC-VENDOR-EXPORT"
-process_number: "820"
-name: "Vendor Export"
-blueprint_owner: "client"
-runtime: "cloudflare-workers"
-status: "build"
+# HEIR — 820-vendor-export
+# 8-field standard format. Stamped at build. Never changes core fields.
+
 sovereign_ref: "imo-creator-v2"
-governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
-ctb_placement: "leaf"
-cc_layer: "CC-04"
+hub_id: "vendor-export-820"
+ctb_placement: "barton-enterprises/svg-agency/client/820-vendor-export"
 imo_topology: "egress"
+cc_layer: "CC-04"
 
 services:
-  - "CF Worker (cron + HTTP)"
-  - "D1 (read canonical working tables)"
-  - "KV (vendor blueprint mappings)"
+  - "CF Worker (cron trigger 0 5 * * * + HTTP endpoints)"
+  - "D1: vendor-export-820 (export_log, export_error, export_schedule)"
+  - "D1: 810 canonical read-only (person, election, plan, vendor, external_identity_map)"
+  - "KV: vendor blueprint mappings (blueprint:{vendor_id})"
+
 secrets_provider: "doppler"
 
-two_question_intake:
-  what_triggers: "Cron schedule or manual trigger"
-  how_do_we_get_it: "Read D1 canonical working tables"
-
-export_schedule:
-  daily: ["TPA", "PBM"]
-  weekly: ["Guardian Life", "Mutual of Omaha"]
-
 acceptance_criteria:
-  - "Reads from D1 canonical tables only"
-  - "Applies vendor blueprint mapping from KV"
-  - "Translates internal UUIDs to external IDs"
-  - "Logs every export to export_log"
-  - "Missing external ID mapping logs error, skips record"
-  - "Daily exports for TPA/PBM, weekly for carriers"
-
-depends_on: [810]
-feeds: []
+  - "Reads from D1 canonical tables owned by 810 only — never writes to 810 tables"
+  - "Vendor blueprint field mapping loaded from KV at blueprint:{vendor_id} for every run"
+  - "Internal UUIDs translated to vendor external IDs via external_identity_map before output"
+  - "Every export run writes a row to export_log with record_count, status, exported_at"
+  - "Missing external ID mapping logs MISSING_EXTERNAL_ID to export_error and skips record"
+  - "TPA and PBM export daily; Guardian Life and Mutual of Omaha export weekly on WEEKLY_DAY"

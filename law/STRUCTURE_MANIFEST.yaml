@@ -1,14 +1,15 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # STRUCTURE MANIFEST — Barton-Processes
 # ═══════════════════════════════════════════════════════════════════════════════
-# Status: GATED (conforms to imo-creator STRUCTURE_MANIFEST.yaml — LOCKED)
-# Authority: imo-creator/law/STRUCTURE_MANIFEST.yaml defines the pattern.
-#            This file applies it to Barton-Processes.
+# Status: GATED (conforms to imo-creator-v2 STRUCTURE_MANIFEST.yaml — LOCKED)
+# Authority: imo-creator-v2/law/STRUCTURE_MANIFEST.yaml defines the pattern.
+#            This file applies it to Barton-Processes and codifies R1-R8.
 # Created: 2026-03-26
+# Last Modified: 2026-04-29 (Stage 2.5 CTB Cleanup — R1-R8 codified)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-version: "2.0.0"
-effective_date: "2026-03-26"
+version: "3.0.0"
+effective_date: "2026-04-29"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IDENTITY
@@ -17,103 +18,218 @@ effective_date: "2026-03-26"
 identity:
   name: "Barton-Processes"
   role: "Process Engine — the muscle"
-  parent: "imo-creator (CC-01 Sovereign)"
+  parent: "imo-creator-v2 (CC-01 Sovereign)"
   relationship: "Children conform to parent. Never the reverse."
+  ctb_position: "branch — under Barton Enterprises trunk"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# THE FOUR BUSINESS SILOS
+# CTB RULES (R1-R8) — Machine-Readable Enforcement
+# Validator: scripts/validate-ctb.sh
 # ─────────────────────────────────────────────────────────────────────────────
-# Each business is a sovereign silo. Cross-silo communication is a violation.
-# IMO-Creator is the parent. The other three are children.
-# Same engine (Tier 0), different fuel (business domain).
 
-business_silos:
+ctb_rules:
 
-  imo-creator:
-    role: "PARENT — shared global infrastructure"
-    path: "factory/imo-creator/"
-    owns:
-      - "Global reference tables (ZIP codes, geo lookups)"
-      - "Meta-processes (adapter-build)"
-      - "Shared tools used by all businesses"
-    d1_database: "TBD — imo-d1-global (reference tables)"
-    cross_silo_rule: "Children READ from parent. Never WRITE."
-    processes:
-      - number: "000"
-        name: "Adapter Build"
-        status: "ACTIVE"
+  R1:
+    name: "trunk_root_allowlist"
+    description: "Only allowlisted files and directories at Barton-Processes/ root"
+    allowed_files:
+      - "CLAUDE.md"
+      - "README.md"
+      - "INDEX.md"
+      - "EXECUTION_ORDER.md"
+      - "D1_DATA_DICTIONARY.md"
+      - ".gitignore"
+    allowed_dirs:
+      - "law"
+      - "docs"
+      - "scripts"
+      - "log"
+      - "archive"
+      - "factory"
+    enforcement: "scripts/validate-ctb.sh R1"
+    violation_action: "archive or remove"
 
-  svg-agency:
-    role: "CHILD — SVG insurance outreach"
-    path: "factory/outreach/"
-    owns:
-      - "All SVG insurance processes (100-900)"
-      - "Service agent coverage zones (3 agents)"
-      - "DOL filing intelligence"
-      - "People enrichment pipeline"
-      - "LCS outreach pipeline"
-    d1_databases:
-      outreach: "svg-d1-outreach-ops (73a285b8)"
-      spine: "svg-d1-spine (641a9a1e)"
-    neon_vault: "Neon PostgreSQL via Hyperdrive"
-    data_flow: "factory/outreach/DATA_FLOW.md"
-    osam: "barton-outreach-core/doctrine/OSAM.md (v1.1.2)"
+  R2:
+    name: "law_allowlist"
+    description: "Only allowlisted governance files in law/"
+    allowed_files:
+      - "heir.yaml"
+      - "orbt.yaml"
+      - "process-registry.yaml"
+      - "STRUCTURE_MANIFEST.yaml"
+      - "ingress-manifest.yaml"
+      - "logbook_schema.yaml"
+      - "PROCESS_TEMPLATE.md"
+      - "PROCESS_AUDIT_TEMPLATE.md"
+    note: "law/doctrine/ must be empty (remove .gitkeep when present)"
+    enforcement: "scripts/validate-ctb.sh R2"
+    violation_action: "archive"
+
+  R3:
+    name: "factory_silo_no_loose_files"
+    description: "factory/<silo>/ contains only subdirectories, no loose files"
+    exemptions:
+      - "_stubs/ (reserved silos awaiting numbered processes)"
+      - "content/ (non-numbered content production folder)"
+    enforcement: "scripts/validate-ctb.sh R3"
+    violation_action: "move to archive/silo-level-fragments-YYYY-MM-DD/ or into relevant process _archived-fragments/"
+
+  R4:
+    name: "process_ut_shape"
+    description: "Each factory/<silo>/<NNN-name>/ has the locked UT shape"
+    required_entries:
+      - "PROCESS-UT.md"      # Consolidated UT (14 sections, 13-item pre-flight, 16 anchors)
+      - "DOCTRINE.md"        # Locked rules for this process
+      - "heir.yaml"          # HEIR identity (8 fields)
+      - "orbt.yaml"          # ORBT state (OPERATE/REPAIR/BUILD/TROUBLESHOOT_TRAIN)
+      - "_archived-fragments/"  # Intra-process history (read-only)
+    additional_for_deployable:
+      - "wrangler.toml"      # CF Worker config
+      - "package.json"
+      - "tsconfig.json"
+      - "src/"
+      - "migrations/"        # if D1
+    max_entries_deployable: 10
+    enforcement: "scripts/validate-ctb.sh R4"
+    violation_action: "add missing file or move extra to _archived-fragments/"
+
+  R5:
+    name: "no_mid_tier_orphans"
+    description: "No orphaned process folders at non-numbered paths under factory/"
+    archive_pattern: "archive/orphans-YYYY-MM-DD/"
+    enforcement: "manual scan"
+    violation_action: "move to archive/orphans-YYYY-MM-DD/"
+
+  R6:
+    name: "content_silo_for_non_numbered"
+    description: "Non-numbered content folders (video, brand) go in factory/content/ only"
+    allowed_content_path: "factory/content/"
+    enforcement: "manual scan"
+    violation_action: "move to factory/content/"
+
+  R7:
+    name: "empty_silos_in_stubs"
+    description: "Empty business silos awaiting processes live in factory/_stubs/"
+    current_stubs:
+      - "factory/_stubs/personal/"
+      - "factory/_stubs/real-estate/"
+      - "factory/_stubs/production-line/"
+    enforcement: "manual scan"
+    violation_action: "move to factory/_stubs/"
+
+  R8:
+    name: "no_garage_internal_in_bp"
+    description: "Garage-internal infrastructure (LBB, UP, adapter-build) lives in imo-creator-v2, not here"
+    enforcement: "manual scan"
+    violation_action: "move to archive/relocated-to-v2-YYYY-MM-DD/"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FACTORY SILOS (current state 2026-04-29)
+# ─────────────────────────────────────────────────────────────────────────────
+
+factory_silos:
+
+  cl:
+    path: "factory/cl/"
+    description: "Company Lifecycle and Client Mint processes"
     processes:
       - number: "100"
-        name: "LCS Pipeline"
-        status: "ACTIVE"
-      - number: "200"
-        name: "People Worker"
-        status: "REWRITE"
-      - number: "300"
-        name: "Blog Worker"
-        status: "ACTIVE"
-      - number: "400"
-        name: "DOL Views"
-        status: "ACTIVE"
-      - number: "500"
-        name: "Talent Flow"
-        status: "ACTIVE"
-      - number: "600"
-        name: "BIT Scoring"
-        status: "RETIRED"
-      - number: "700"
-        name: "Campaign Engine"
-        status: "ACTIVE"
+        title: "LCS Pipeline"
+        orbt: "REPAIR"
+        deployable: true
       - number: "800"
-        name: "Client Mint"
-        status: "ACTIVE"
+        title: "Client Mint"
+        orbt: "BUILD"
+        deployable: true
+
+  outreach:
+    path: "factory/outreach/"
+    description: "SVG Outreach — seed, enrichment, scoring, campaign"
+    processes:
+      - number: "010"
+        title: "SEED D1"
+        orbt: "OPERATE"
+        deployable: false
+      - number: "200"
+        title: "People Worker"
+        orbt: "REPAIR"
+        deployable: true
+      - number: "201"
+        title: "Email Discovery"
+        orbt: "BUILD"
+        deployable: false
+      - number: "202"
+        title: "LinkedIn Discovery"
+        orbt: "BUILD"
+        deployable: false
+      - number: "300"
+        title: "Blog Worker"
+        orbt: "BUILD"
+        deployable: false
+      - number: "301"
+        title: "Page Parser"
+        orbt: "BUILD"
+        deployable: false
+      - number: "400"
+        title: "DOL Views"
+        orbt: "OPERATE"
+        deployable: false
+      - number: "500"
+        title: "Talent Flow"
+        orbt: "BUILD"
+        deployable: false
+      - number: "600"
+        title: "BIT Scoring"
+        orbt: "TROUBLESHOOT_TRAIN"
+        deployable: false
+      - number: "700"
+        title: "Campaign Engine"
+        orbt: "BUILD"
+        deployable: false
+
+  client:
+    path: "factory/client/"
+    description: "Client data intake, vendor export, portal"
+    processes:
       - number: "810"
-        name: "Client Intake"
-        status: "ACTIVE"
+        title: "Client Intake"
+        orbt: "BUILD"
+        deployable: true
       - number: "820"
-        name: "Vendor Export"
-        status: "ACTIVE"
+        title: "Vendor Export"
+        orbt: "BUILD"
+        deployable: true
+        notes: "vendor_library/ subfolder — TBV"
       - number: "830"
-        name: "Client Portal"
-        status: "ACTIVE"
+        title: "Client Portal"
+        orbt: "BUILD"
+        deployable: true
+
+  sales:
+    path: "factory/sales/"
+    description: "Sales portal and meeting tools"
+    processes:
       - number: "900"
-        name: "Sales Portal"
-        status: "ACTIVE"
-      - number: "—"
-        name: "Intelligence Engine"
-        status: "ACTIVE"
+        title: "Sales Portal"
+        orbt: "BUILD"
+        deployable: true
 
-  real-estate:
-    role: "CHILD — real estate processes"
-    path: "factory/real-estate/"
-    owns: []
-    d1_database: "TBD"
-    processes: []
-    status: "EMPTY — ready for build"
+  content:
+    path: "factory/content/"
+    description: "Non-numbered content production folders (not data-movement processes)"
+    note: "NOT registered in process-registry.yaml. Dewey 1700-1799 reserved for content production."
+    entries:
+      - "1700-video-ctb/"
+      - "1800-cf-stream-upload/"
+      - "brand-assets/"
 
-  personal:
-    role: "CHILD — personal ops"
-    path: "factory/personal/"
-    owns: []
-    d1_database: "TBD"
-    processes: []
-    status: "EMPTY — ready for build"
+  _stubs:
+    path: "factory/_stubs/"
+    description: "Reserved silos awaiting future numbered processes"
+    entries:
+      - "personal/"
+      - "real-estate/"
+      - "production-line/"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CROSS-SILO RULES
@@ -121,72 +237,28 @@ business_silos:
 
 cross_silo_rules:
   - "Each business is a sovereign silo"
-  - "Cross-silo communication is a violation"
-  - "SVG does not know Real Estate exists"
-  - "Children conform to parent (imo-creator). Never the reverse."
-  - "IMO-Creator owns global infrastructure. Children READ, never WRITE."
+  - "Cross-silo communication is a violation — branches talk through trunk only"
+  - "SVG Outreach does not know Client exists (and vice versa)"
+  - "Children conform to parent (imo-creator-v2). Never the reverse."
   - "Same engine (Tier 0), different fuel (business domain)"
+  - "Garage (imo-creator-v2) = brain. This repo = muscle. Brain governs."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ALLOWED ROOT DIRECTORIES (from imo-creator STRUCTURE_MANIFEST.yaml)
-# ─────────────────────────────────────────────────────────────────────────────
-
-allowed_directories:
-  law:
-    purpose: "Governance — doctrine, registries, templates, audit template"
-    connects_to_trunk_via: "Inherited from imo-creator"
-
-  factory:
-    purpose: "All executable processes — organized by business silo"
-    connects_to_trunk_via: "Each silo conforms to law/"
-    structure: "factory/{business-silo}/{NNN-process-name}/"
-
-  docs:
-    purpose: "Documentation — ADRs, architecture decisions"
-    connects_to_trunk_via: "Records what law governs and factory produces"
-
-  log:
-    purpose: "Process execution receipts"
-
-  scripts:
-    purpose: "Extraction playbook and utilities"
-
-  archive:
-    purpose: "Retired processes and v1 extractions"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PER-PROCESS REQUIRED FILES
-# ─────────────────────────────────────────────────────────────────────────────
-# Every process directory MUST contain these files.
-# Template: law/PROCESS_TEMPLATE.md v4.0.0
-
-process_structure:
-  required_files:
-    - "heir.yaml"        # Process identity (HEIR — 8 fields)
-    - "CLAUDE.md"        # Agent operating instructions with Bedrock doctrine
-    - "PROCESS.md"       # Process documentation (14-section format, PROCESS_TEMPLATE.md v4.0.0)
-  recommended_files:
-    - "OSAM.md"          # Semantic access map (subset of hub OSAM)
-    - "ERD.md"           # Entity relationship diagram
-    - "PRD.md"           # Product requirements document
-    - "LEARNINGS.md"     # Agent logbook (from factory/LEARNINGS_TEMPLATE.md)
-    - "src/"             # Executable code
-    - "wrangler.toml"    # CF Worker config (if applicable)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GATE ENFORCEMENT (inherited from imo-creator)
+# GATE ENFORCEMENT
 # ─────────────────────────────────────────────────────────────────────────────
 
 enforcement:
+  validator_script: "scripts/validate-ctb.sh"
   model: "gate-based"
   gates:
     - name: "tier0_validation"
       validator: "IMO + CTB + Circle (simultaneously)"
-      defined_by: "imo-creator/law/doctrine/FOUNDATIONAL_BEDROCK.md"
+      defined_by: "imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md"
     - name: "ctb_position"
-      validator: "Process must declare its business silo and process number"
+      validator: "Every file/process declares its silo and number"
       defined_by: "This file (STRUCTURE_MANIFEST.yaml)"
     - name: "cqrs_write_path"
-      validator: "Changes enter from leaves, promote through review"
-      defined_by: "imo-creator/law/doctrine/FOUNDATIONAL_BEDROCK.md §4"
+      validator: "Changes enter from leaves, promote upward through gates"
+      defined_by: "imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md §4"
   audit_template: "law/PROCESS_AUDIT_TEMPLATE.md"
+  registry: "law/process-registry.yaml v2.0.0"

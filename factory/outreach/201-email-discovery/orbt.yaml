@@ -1,0 +1,35 @@
+# ORBT — 201 Email Discovery
+# OBD diagnostic: current operational state of this process
+# Template: orbt.yaml v1.0.0 (from STAGE-1-CODEX-MECHANIC-OUTPUT.md §4)
+
+process_id: PROC-201
+process_name: "201-email-discovery"
+sovereign_ref: imo-creator-v2
+hub_id: outreach
+
+# ORBT State
+# Valid states: BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+state: BUILD
+
+# Strike count from FLEET FAILURE REGISTRY (§13 of PROCESS-UT.md)
+# Current: FP-201-01 open — Strike 1
+strikes: 1
+
+# Active failure packets (open items in §13)
+active_failures:
+  - id: FP-201-01
+    description: "person_email_verified set to 1 spuriously when MV has not passed"
+    status: OPEN
+    strike: 1
+    opened_at: "2026-04-29"
+
+# Last state transition
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written; state remains BUILD until FP-201-01 resolved and MV integrated"
+
+# Next required action before OPERATE promotion
+promotion_gate:
+  - "Resolve FP-201-01: trace which process writes person_email_verified=1 without MV confirmation"
+  - "Integrate Million Verifier (Gate D) into find-email.py"
+  - "Auditor review of UT v2.7.0 output (G21-G30)"
+  - "Human promotion sign-off"

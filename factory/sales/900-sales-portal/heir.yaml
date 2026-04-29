@@ -1,49 +1,23 @@
 # HEIR — 900 Sales Portal
-process_id: "PROC-SALES-PORTAL"
-process_number: "900"
-name: "Sales Portal"
-blueprint_owner: "ctb-sales-navigator"
-runtime: "cloudflare-workers"
-status: "build"
+# Aviation Model VIN — 8 fields, stamped at build, never changes.
+# Extended fields from prior heir.yaml preserved in _archived-fragments/CLAUDE.md.
 sovereign_ref: "imo-creator-v2"
-governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
+hub_id: "sales-portal-900"
 ctb_placement: "leaf"
-cc_layer: "CC-04"
 imo_topology: "egress"
-
+cc_layer: "CC-04"
 services:
-  - "CF Worker (HTTP)"
-  - "D1 (sales working tables + outreach read)"
+  - "CF Worker (HTTP GET/POST)"
+  - "D1 sales-portal-900 (working tables)"
+  - "Neon PostgreSQL (outreach vault, read-only)"
 secrets_provider: "doppler"
-
-two_question_intake:
-  what_triggers: "User navigates to app.svgagency.com/sales/:slug/:meeting"
-  how_do_we_get_it: "Resolve slug to sales_id from D1, query meeting data, render page"
-
-pages:
-  - {route: "/:slug/meeting1", name: "Fact Finder", access: "read-write"}
-  - {route: "/:slug/meeting2", name: "Insurance Education", access: "read-only"}
-  - {route: "/:slug/meeting3", name: "Systems Education", access: "read-only"}
-  - {route: "/:slug/meeting4", name: "Financials", access: "read-only"}
-
-data_sources:
-  meeting1_pulls_from:
-    - "outreach.company_target (company profile)"
-    - "outreach.dol (DOL filings, EIN, carrier, renewal month)"
-    - "people.company_slot + people.people_master (CEO/CFO/HR contacts)"
-    - "outreach.blog (content signals)"
-    - "outreach.bit_scores (buyer intent score)"
-  meeting2_reads: "sales.sales_factfinder + monte_carlo_results (future)"
-  meeting3_reads: "sales.sales_systems"
-  meeting4_reads: "sales.sales_quotes"
-
 acceptance_criteria:
-  - "Meeting 1 pre-populates form from outreach 5 sub-hubs via sovereign ID"
-  - "Meeting 1 form writes validated data to sales.sales_factfinder in D1"
-  - "Meetings 2-4 are read-only presentation pages"
-  - "Meeting 2 will display Monte Carlo results when built"
-  - "Meeting 4 shows quoted costs by insurance line"
-  - "All pages branded per prospect"
-
-depends_on: [200, 600]  # People Worker + BIT Scoring feed outreach data
-feeds: []
+  - "Meeting 1 pre-populates form from outreach 5 sub-hubs via sovereign_id"
+  - "Meeting 1 form writes validated data to sales_factfinder in D1"
+  - "Meetings 2-4 are read-only presentation pages — no write path"
+  - "Meeting 2 renders Monte Carlo results when simulation engine is built"
+  - "Meeting 4 shows quoted costs by insurance line grouped by benefit_type"
+  - "Phase sequence enforced: factfinder -> insurance -> systems -> financials -> closed (no skipping)"
+  - "All meeting pages branded per prospect slug"
+  - "sales_state_errors CQRS gap resolved before OPERATE transition"
+  - "Worker deployed and /health returns 200 before OPERATE transition"

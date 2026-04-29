@@ -1,0 +1,11 @@
+process_id: "PROC-800-CLIENT-MINT"
+process_number: "800"
+state: "BUILD" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 0
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — wrangler.toml has empty database_id; worker not deployed"
+auto_pause_threshold:
+  metric: "open_errors"
+  red_value: "3"
+ad_active: null
+notes: "D1 database_id not yet set in wrangler.toml. No auth on endpoints. Worker not deployed. Run wrangler d1 create client-mint-800 before OPERATE."

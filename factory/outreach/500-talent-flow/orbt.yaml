@@ -1,0 +1,37 @@
+# orbt.yaml — Process 500: Talent Flow
+# ORBT = Operate / Repair / Build / Troubleshoot_Train
+# This is the OBD diagnostic for the process. State is explicit, not inferred.
+
+process_id: "PROC-TALENT-FLOW"
+process_number: 500
+process_name: "Talent Flow"
+
+state: BUILD
+# BUILD = process exists but has not been deployed or run in production.
+# Transition to OPERATE when: first clean monthly run completes with no strikes.
+
+strikes: 0
+# Strikes are incremented by the Auditor on confirmed failures.
+# Strike 3 → state must move to TROUBLESHOOT_TRAIN.
+
+last_transition_at: "2026-04-29T00:00:00Z"
+last_transition_reason: "UT consolidation — fragments archived, PROCESS-UT.md and DOCTRINE.md written at folder root"
+
+known_issues:
+  - issue: "Credentials hardcoded in DB_URL default in src/talent-flow.py"
+    bar: "TBV"
+    status: "open"
+  - issue: "SEED-WORK-PUSH pattern not implemented (BAR-60 scope)"
+    bar: "BAR-60"
+    status: "open"
+  - issue: "TF-03 and TF-04 signals not yet implemented (BAR-50 scope)"
+    bar: "BAR-50"
+    status: "planned"
+
+next_milestone: "First production monthly run — requires Process 200 to complete 2026-05 refresh"
+
+# State transition log (append-only)
+transitions:
+  - state: BUILD
+    at: "2026-04-29T00:00:00Z"
+    reason: "UT consolidation — initial state from UT v2.7.0 standardization"

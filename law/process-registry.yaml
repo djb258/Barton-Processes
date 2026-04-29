@@ -1,282 +1,225 @@
-# ═══════════════════════════════════════════════════════════════
-# PROCESS REGISTRY — Master list of all numbered processes
-# ═══════════════════════════════════════════════════════════════
-# Authority: Claude Code maintains (human approves)
-# Rule: Must match actual factory/ directory contents exactly
-# Source: Dashboard processes.ts is the planning view;
-#         this file is the implementation record.
-# ═══════════════════════════════════════════════════════════════
+registry_version: "2.0.0"
+last_updated: "2026-04-29"
+sovereign_authority: "imo-creator-v2"
 
-registry_version: "1.0.0"
-last_updated: "2026-03-14"
-
-# ───────────────────────────────────────────────────────────────
-# Process numbering:
-#   001-005  company-lifecycle-cl extractions
-#   006-011  barton-outreach-core extractions
-#   012      field-monitor (imo-creator snap-on)
-#   013-014  client extractions
-#   015      sales extractions
-#   016+     reserved for barton-storage / future
-# ───────────────────────────────────────────────────────────────
+# Dewey numbering scheme:
+# 010-099  CL bootstrap (SEED, schemas)
+# 100-199  CL — Company Lifecycle pipeline
+# 200-299  Outreach — people / contact enrichment
+# 300-399  Outreach — content / signal recon
+# 400-499  Outreach — DOL / regulatory views
+# 500-599  Outreach — talent flow / movement
+# 600-699  Outreach — scoring / aggregation
+# 700-799  Outreach — campaign engine, voice, sequencing
+# 800-899  Client
+# 900-999  Sales
+# 1000-1999  Real estate (reserved)
+# 1700-1799  Content production (video, stream)
 
 processes:
 
-  # ── company-lifecycle-cl (001-005) ──────────────────────────
+  # ── outreach / CL bootstrap (010-099) ───────────────────────
 
-  - number: "001"
-    id: "PROC-NEON-DB-AGENT"
-    name: "Neon DB Agent"
-    source_repo: "company-lifecycle-cl"
-    source_paths:
-      - "neon/"
-      - "neon/agent/"
-    runtime: "node"
-    status: "extracted"
-    description: "Neon CLI agent + DB scripts — identity gate, domain verification, collision detection, migration runners, schema verification"
+  - dewey: "bp.010"
+    number: "010"
+    title: "SEED D1"
+    silo: "outreach"
+    call_number: "factory/outreach/010-seed-d1/"
+    repair_manual: "factory/outreach/010-seed-d1/PROCESS-UT.md"
+    heir_ref: "factory/outreach/010-seed-d1/heir.yaml"
+    orbt_ref: "factory/outreach/010-seed-d1/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "002"
-    id: "PROC-CL-PIPELINE"
-    name: "CL Pipeline"
-    source_repo: "company-lifecycle-cl"
-    source_paths:
-      - "pipeline/"
-    runtime: "node"
-    status: "extracted"
-    description: "Pipeline orchestrator, ingest, intake_service, lifecycle_worker, backfill, adapters"
+  # ── cl / Company Lifecycle (100-199) ────────────────────────
 
-  - number: "003"
-    id: "PROC-LCS-RUNTIME"
-    name: "LCS Runtime"
-    source_repo: "company-lifecycle-cl"
-    source_paths:
-      - "src/runtime/lcs/"
-    runtime: "typescript"
-    status: "extracted"
-    description: "Cron runner, context assembler, matview refresh, signal bridge, webhook handler"
+  - dewey: "bp.100"
+    number: "100"
+    title: "LCS Pipeline"
+    silo: "cl"
+    call_number: "factory/cl/100-lcs-pipeline/"
+    repair_manual: "factory/cl/100-lcs-pipeline/PROCESS-UT.md"
+    heir_ref: "factory/cl/100-lcs-pipeline/heir.yaml"
+    orbt_ref: "factory/cl/100-lcs-pipeline/orbt.yaml"
+    mc_page: "Control Deck > Outreach Ops"
+    deployable: true
 
-  - number: "004"
-    id: "PROC-LCS-DELIVERY"
-    name: "LCS Delivery"
-    source_repo: "company-lifecycle-cl"
-    source_paths:
-      - "src/app/lcs/"
-    runtime: "typescript"
-    status: "extracted"
-    description: "Delivery runner, delivery queue, adapters (mailgun, heyreach, sales-handoff), id-minter, pipeline orchestrator + 7 steps"
-    dashboard_ref: "PROC-LCS"
+  # ── outreach / people + contact enrichment (200-299) ────────
 
-  - number: "005"
-    id: "PROC-LCS-GATES"
-    name: "LCS Gates"
-    source_repo: "company-lifecycle-cl"
-    source_paths:
-      - "src/sys/lcs/gates/"
-    runtime: "typescript"
-    status: "extracted"
-    description: "Capacity gate, freshness gate, suppression engine"
+  - dewey: "bp.200"
+    number: "200"
+    title: "People Worker"
+    silo: "outreach"
+    call_number: "factory/outreach/200-people-worker/"
+    repair_manual: "factory/outreach/200-people-worker/PROCESS-UT.md"
+    heir_ref: "factory/outreach/200-people-worker/heir.yaml"
+    orbt_ref: "factory/outreach/200-people-worker/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: true
 
-  # ── barton-outreach-core (006-011) ──────────────────────────
+  - dewey: "bp.201"
+    number: "201"
+    title: "Email Discovery"
+    silo: "outreach"
+    call_number: "factory/outreach/201-email-discovery/"
+    repair_manual: "factory/outreach/201-email-discovery/PROCESS-UT.md"
+    heir_ref: "factory/outreach/201-email-discovery/heir.yaml"
+    orbt_ref: "factory/outreach/201-email-discovery/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "006"
-    id: "PROC-DOL-ENRICH"
-    name: "DOL Enrichment"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/dol-filings/imo/middle/"
-    runtime: "python"
-    status: "extracted"
-    description: "EIN resolution, Form 5500 + Schedule A filing data enrichment, dumb_worker, ein_matcher, importers"
-    dashboard_ref: "PROC-DOL-ENRICH"
+  - dewey: "bp.202"
+    number: "202"
+    title: "LinkedIn Discovery"
+    silo: "outreach"
+    call_number: "factory/outreach/202-linkedin-discovery/"
+    repair_manual: "factory/outreach/202-linkedin-discovery/PROCESS-UT.md"
+    heir_ref: "factory/outreach/202-linkedin-discovery/heir.yaml"
+    orbt_ref: "factory/outreach/202-linkedin-discovery/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "007"
-    id: "PROC-PEOPLE-ENRICH"
-    name: "People Enrichment"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/people-intelligence/imo/middle/"
-    runtime: "python"
-    status: "extracted"
-    description: "Contact slot filling, email generation, verification waterfall, LinkedIn monitor, movement engine"
-    dashboard_ref: "PROC-PEOPLE-ENRICH"
+  # ── outreach / content + signal recon (300-399) ─────────────
 
-  - number: "008"
-    id: "PROC-BLOG-SIGNAL"
-    name: "Blog Signal Detection"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/blog-content/imo/"
-    runtime: "python"
-    status: "extracted"
-    description: "Signal sweep, entity extraction, company matching, content parsing"
-    dashboard_ref: "PROC-BLOG-SIGNAL"
+  - dewey: "bp.300"
+    number: "300"
+    title: "Blog Worker"
+    silo: "outreach"
+    call_number: "factory/outreach/300-blog-worker/"
+    repair_manual: "factory/outreach/300-blog-worker/PROCESS-UT.md"
+    heir_ref: "factory/outreach/300-blog-worker/heir.yaml"
+    orbt_ref: "factory/outreach/300-blog-worker/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "009"
-    id: "PROC-TALENT-FLOW"
-    name: "Talent Flow"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/talent-flow/"
-    runtime: "python"
-    status: "extracted"
-    description: "Executive movement detection via people sub-hub slot state changes"
-    dashboard_ref: "PROC-TALENT-FLOW"
+  - dewey: "bp.301"
+    number: "301"
+    title: "Page Parser"
+    silo: "outreach"
+    call_number: "factory/outreach/301-page-parser/"
+    repair_manual: "factory/outreach/301-page-parser/PROCESS-UT.md"
+    heir_ref: "factory/outreach/301-page-parser/heir.yaml"
+    orbt_ref: "factory/outreach/301-page-parser/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "010"
-    id: "PROC-OUTREACH-EXEC"
-    name: "Outreach Execution"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/outreach-execution/"
-    runtime: "python"
-    status: "extracted"
-    description: "Outreach execution workers"
+  # ── outreach / DOL + regulatory views (400-499) ─────────────
 
-  - number: "011"
-    id: "PROC-OUTREACH-SCRIPTS"
-    name: "Outreach Scripts"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "scripts/"
-    runtime: "python"
-    status: "extracted"
-    description: "Utility executables — audit, market CSV builders, domain discovery, data loading"
+  - dewey: "bp.400"
+    number: "400"
+    title: "DOL Views"
+    silo: "outreach"
+    call_number: "factory/outreach/400-dol-views/"
+    repair_manual: "factory/outreach/400-dol-views/PROCESS-UT.md"
+    heir_ref: "factory/outreach/400-dol-views/heir.yaml"
+    orbt_ref: "factory/outreach/400-dol-views/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  # ── field-monitor / imo-creator snap-on (012) ──────────────
+  # ── outreach / talent flow + movement (500-599) ─────────────
 
-  - number: "012"
-    id: "PROC-FIELD-MONITOR"
-    name: "Field Monitor"
-    source_repo: "imo-creator"
-    source_paths:
-      - "fleet/snap-on/field-monitor/"
-    runtime: "cloudflare-workers"
-    status: "extracted"
-    description: "4 CF Workers (fetcher, orchestrator, parser-registry, proxy-router) + shared types + scheduler"
+  - dewey: "bp.500"
+    number: "500"
+    title: "Talent Flow"
+    silo: "outreach"
+    call_number: "factory/outreach/500-talent-flow/"
+    repair_manual: "factory/outreach/500-talent-flow/PROCESS-UT.md"
+    heir_ref: "factory/outreach/500-talent-flow/heir.yaml"
+    orbt_ref: "factory/outreach/500-talent-flow/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  # ── client (013-014) ────────────────────────────────────────
+  # ── outreach / scoring + aggregation (600-699) ──────────────
 
-  - number: "013"
-    id: "PROC-CLIENT-AI"
-    name: "Client AI Services"
-    source_repo: "client"
-    source_paths:
-      - "src/ai/"
-    runtime: "python"
-    status: "extracted"
-    description: "MCP server, sidecar server, agent library, HEIR checks"
+  - dewey: "bp.600"
+    number: "600"
+    title: "BIT Scoring"
+    silo: "outreach"
+    call_number: "factory/outreach/600-bit-scoring/"
+    repair_manual: "factory/outreach/600-bit-scoring/PROCESS-UT.md"
+    heir_ref: "factory/outreach/600-bit-scoring/heir.yaml"
+    orbt_ref: "factory/outreach/600-bit-scoring/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: false
 
-  - number: "014"
-    id: "PROC-CLIENT-UI-API"
-    name: "Client UI API"
-    source_repo: "client"
-    source_paths:
-      - "src/ui/api/"
-    runtime: "node"
-    status: "extracted"
-    description: "API endpoints — hello, llm, ssot/save, subagents, test"
+  # ── outreach / campaign engine + sequencing (700-799) ───────
 
-  # ── sales (015) ─────────────────────────────────────────────
+  - dewey: "bp.700"
+    number: "700"
+    title: "Campaign Engine"
+    silo: "outreach"
+    call_number: "factory/outreach/700-campaign-engine/"
+    repair_manual: "factory/outreach/700-campaign-engine/PROCESS-UT.md"
+    heir_ref: "factory/outreach/700-campaign-engine/heir.yaml"
+    orbt_ref: "factory/outreach/700-campaign-engine/orbt.yaml"
+    mc_page: "Control Deck > Outreach Ops"
+    deployable: false
 
-  - number: "015"
-    id: "PROC-SALES-MEETING"
-    name: "Sales Meeting Service"
-    source_repo: "sales"
-    source_paths:
-      - "src/app/meetings/"
-      - "src/sys/integrations/"
-    runtime: "typescript"
-    status: "extracted"
-    description: "Meeting service + Supabase/Doppler integrations"
+  # ── client (800-899) ────────────────────────────────────────
 
-  # ── BIT Scoring (016) — cross-hub aggregation ───────────────
+  - dewey: "bp.800"
+    number: "800"
+    title: "Client Mint"
+    silo: "cl"
+    call_number: "factory/cl/800-client-mint/"
+    repair_manual: "factory/cl/800-client-mint/PROCESS-UT.md"
+    heir_ref: "factory/cl/800-client-mint/heir.yaml"
+    orbt_ref: "factory/cl/800-client-mint/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: true
 
-  - number: "016"
-    id: "PROC-BIT-SCORING"
-    name: "BIT Scoring"
-    source_repo: "barton-outreach-core"
-    source_paths:
-      - "hubs/company-target/"
-    runtime: "python"
-    status: "extracted"
-    description: "Buyer Intent Tracker — signal aggregation across all sub-hubs into authorization bands (0-5)"
-    dashboard_ref: "PROC-BIT-SCORING"
+  - dewey: "bp.810"
+    number: "810"
+    title: "Client Intake"
+    silo: "client"
+    call_number: "factory/client/810-client-intake/"
+    repair_manual: "factory/client/810-client-intake/PROCESS-UT.md"
+    heir_ref: "factory/client/810-client-intake/heir.yaml"
+    orbt_ref: "factory/client/810-client-intake/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: true
 
-  # ── LCS Pipeline v2 (017) — unified CID→SID→MID CF Worker ──
+  - dewey: "bp.820"
+    number: "820"
+    title: "Vendor Export"
+    silo: "client"
+    call_number: "factory/client/820-vendor-export/"
+    repair_manual: "factory/client/820-vendor-export/PROCESS-UT.md"
+    heir_ref: "factory/client/820-vendor-export/heir.yaml"
+    orbt_ref: "factory/client/820-vendor-export/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: true
+    notes: "vendor_library/ subfolder present — TBV whether it belongs in process shape or content silo"
 
-  - number: "017"
-    id: "PROC-LCS-PIPELINE-V2"
-    name: "LCS Pipeline v2"
-    source_repo: "imo-creator-v2"
-    source_paths:
-      - "workers/lcs-pipeline/"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "Unified CID→SID→MID CF Worker — full circle with webhook feedback, ORBT 3-strike, gates, BAR-152 numbering. Replaces 003/004/005 as single deployable unit."
-    dashboard_ref: "PROC-LCS"
-    replaces: ["003", "004", "005"]
-    bars: ["BAR-131", "BAR-132", "BAR-48", "BAR-152"]
+  - dewey: "bp.830"
+    number: "830"
+    title: "Client Portal"
+    silo: "client"
+    call_number: "factory/client/830-client-portal/"
+    repair_manual: "factory/client/830-client-portal/PROCESS-UT.md"
+    heir_ref: "factory/client/830-client-portal/heir.yaml"
+    orbt_ref: "factory/client/830-client-portal/orbt.yaml"
+    mc_page: "Watch Tower"
+    deployable: true
 
-  # ── client (800-820) ──────────────────────────────────────────
+  # ── sales (900-999) ─────────────────────────────────────────
 
-  - number: "800"
-    id: "PROC-CLIENT-MINT"
-    name: "Client Mint"
-    source_repo: "client"
-    source_paths:
-      - "blueprint-only"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "Receives CL sovereign ID → mints client_id → populates clnt.client in D1 → vaults to Neon"
-
-  - number: "810"
-    id: "PROC-CLIENT-DATA-INTAKE"
-    name: "Client Data Intake"
-    source_repo: "client"
-    source_paths:
-      - "blueprint-only"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "CSV/API intake → Zod validate → D1 staging → promote to canonical → vault to Neon. Handles S2-S5 spokes."
-
-  - number: "820"
-    id: "PROC-VENDOR-EXPORT"
-    name: "Vendor Export"
-    source_repo: "client"
-    source_paths:
-      - "blueprint-only"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "Cron — reads D1 canonical → applies vendor blueprint mapping (KV) → generates export files. Daily TPA/PBM, weekly carriers."
-
-  - number: "830"
-    id: "PROC-CLIENT-PORTAL"
-    name: "Client Portal"
-    source_repo: "client"
-    source_paths:
-      - "blueprint-only"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "5 client-facing pages (renewal, CEO, HR, underwriting, service agent). Path-based routing, shared D1 with 810, SSR HTML, client branding. Agent page has ticket write capability."
-
-  # ── sales (900) ───────────────────────────────────────────
-
-  - number: "900"
-    id: "PROC-SALES-PORTAL"
-    name: "Sales Portal"
-    source_repo: "ctb-sales-navigator"
-    source_paths:
-      - "blueprint-only"
-    runtime: "cloudflare-workers"
-    status: "build"
-    description: "4 sales meeting pages. Meeting 1 fact finder (read-write, pulls outreach 5 sub-hubs). Meetings 2-4 presentation/read-only. Monte Carlo results on Meeting 2."
+  - dewey: "bp.900"
+    number: "900"
+    title: "Sales Portal"
+    silo: "sales"
+    call_number: "factory/sales/900-sales-portal/"
+    repair_manual: "factory/sales/900-sales-portal/PROCESS-UT.md"
+    heir_ref: "factory/sales/900-sales-portal/heir.yaml"
+    orbt_ref: "factory/sales/900-sales-portal/orbt.yaml"
+    mc_page: "Control Deck > Sales Ops"
+    deployable: true
 
 # ═══════════════════════════════════════════════════════════════
-# EXTRACTION STATUS LEGEND
+# ORBT STATE LEGEND
 # ═══════════════════════════════════════════════════════════════
-# pending-extraction  — identified, not yet moved
-# extracted           — files moved to factory/NNN-name/
-# verified            — source repo confirmed ZERO executables remain
-# active              — process is running in production
-# retired             — archived, no longer executing
+# OPERATE          — running in production
+# REPAIR           — broken, under active fix
+# BUILD            — being built, not yet deployed
+# TROUBLESHOOT_TRAIN — strike 3, root cause investigation
 # ═══════════════════════════════════════════════════════════════

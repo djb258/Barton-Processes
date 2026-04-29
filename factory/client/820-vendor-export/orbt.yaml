@@ -1,0 +1,17 @@
+orbt:
+  state: BUILD
+  strikes: 0
+  last_transition_at: "2026-04-29T00:00:00Z"
+  last_transition_reason: "UT consolidation — UT v2.7.0 standardization Wave 1 Packet 14"
+
+state_history:
+  - state: BUILD
+    at: "2026-04-29T00:00:00Z"
+    reason: "Initial state — process not yet deployed (D1/KV IDs not provisioned)"
+
+notes:
+  - "D1 database_id empty in wrangler.toml — requires wrangler d1 create vendor-export-820"
+  - "KV namespace id empty in wrangler.toml — requires wrangler kv namespace create vendor-export-820"
+  - "No delivery mechanism implemented for generated export files"
+  - "Depends on 810-client-intake reaching OPERATE state before this process can promote"
+  - "Promote to OPERATE only after: D1+KV provisioned, vendor blueprints loaded, 810 OPERATE confirmed"

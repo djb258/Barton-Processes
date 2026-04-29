@@ -1,0 +1,22 @@
+sovereign_ref: imo-creator-v2
+hub_id: 010-seed-d1
+ctb_placement: leaf
+imo_topology: spoke
+cc_layer: CC-04
+services:
+  - lcs-hub
+  - svg-d1-outreach-ops
+  - svg-d1-spine
+  - neon-postgresql
+secrets_provider: doppler
+acceptance_criteria:
+  - Column inventory snapshot taken before any SEED run
+  - SEED direction is strictly Neon → D1 (never reverse)
+  - INSERT OR REPLACE used on all D1 writes (idempotent)
+  - D1.batch() used for all bulk writes (no single-row loops)
+  - 32702 companies locked constant after coverage filter
+  - Join integrity >= 95% (outreach_id spine) or HALT
+  - D1 write error rate <= 10% or HALT
+  - Undocumented columns block SEED until documented
+  - Coverage filter (Haversine ZIP gate) applied before every SEED run
+  - Post-SEED row counts match Neon seed_views row counts exactly

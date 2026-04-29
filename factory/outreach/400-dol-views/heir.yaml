@@ -1,48 +1,58 @@
-# HEIR — 400 DOL Views
-# NOT a worker. A reference library with query views.
-# Annual import is manual (EBSA download). This just defines the views.
-process_id: "PROC-DOL"
-process_number: "400"
+# HEIR — Process 400 DOL Views
+# 8-field identity record. Stamped at build. Never changes.
+# Updated to UT v2.7.0 standard 8-field format 2026-04-29.
+
+process_id: "PROC-400"
 name: "DOL Views"
-blueprint_owner: "barton-outreach-core"
-runtime: "sql-views"  # Not a CF Worker — just views in Neon
-status: "build"
+
+# --- 8 STANDARD FIELDS ---
+
 sovereign_ref: "imo-creator-v2"
+
+hub_id: "400-dol-views"
+
 ctb_placement: "leaf"
+# Full CTB path: barton-enterprises → svg-agency → outreach → 400-dol-views
+
+imo_topology: "egress"
+# Read-only views against static DOL data. Emits signals to downstream (PROC-100 LCS, PROC-600 BIT).
+
 cc_layer: "CC-04"
-imo_topology: "egress"  # Read-only views against static data
 
 services:
-  - "Neon PostgreSQL (direct — no worker needed)"
-secrets_provider: "doppler"
+  - "Neon PostgreSQL (dol schema — view definitions and ad-hoc queries)"
+  - "Cloudflare D1 (d1-lcs-hub — seeded 2026-03-25, 171,040 rows)"
 
-snap_on_tools: []  # No external tools. Direct Neon queries.
-ut_sub_hubs: []
+secrets_provider: "doppler"
+# Project: imo-creator, environment: dev
+
+acceptance_criteria:
+  - "All 6 views queryable from CF Worker via Hyperdrive without error"
+  - "Gate 3 (filing status), Gate 4 (renewal window), Gate 5 (premium pressure) evaluate correctly using these views"
+  - "PEPM benchmarking by state/size/carrier available via v_dol_market_comparison"
+
+# --- EXTENDED FIELDS (non-standard, preserved for reference) ---
+
+runtime: "sql-views"
+# Not a CF Worker — view definitions only. No deployable artifact.
+
+depends_on: []
+# Independent — static annual EBSA data import
+
+feeds:
+  - 100  # LCS (PROC-100) — Gates 3/4/5
+  - 600  # BIT (PROC-600) — TBV
 
 data_volumes:
   ein_matches: "1.4M (entire US)"
   form_5500_rows: "11M+ (2023-2025)"
+  d1_seeded_rows: "171,040 (2026-03-25)"
   linked_to_ct: "partial subset of 96K"
 
-movement_detection:
-  type: "deterministic"
-  ai_required: false
-  method: "Compare filing years — renewal, premium, carrier, broker changes"
-  output: "0 (no actionable change) or 1 (movement)"
-  signals: ["RENEWAL_APPROACHING", "PREMIUM_INCREASE", "CARRIER_CHANGE", "BROKER_CHANGE", "PLAN_CHANGE", "OVERPAYING"]
-
-views_to_build:
-  - "v_dol_renewal_window — companies approaching renewal (Gate 4)"
-  - "v_dol_premium_pressure — YoY cost increase (Gate 5)"
-  - "v_dol_market_comparison — PEPM by state/carrier for competitive analysis"
-  - "v_dol_filing_status — which companies have filings (Gate 3)"
-  - "v_dol_carrier_changes — carrier instability signal"
-  - "v_dol_broker_changes — broker churn signal"
-
-acceptance_criteria:
-  - "All views query-able from CF Worker via Hyperdrive"
-  - "Gate 3/4/5 can evaluate using these views"
-  - "PEPM benchmarking by state/size available"
-
-depends_on: []  # Independent — static data
-feeds: [600, 100]  # BIT, LCS
+views_defined:
+  - "dol.v_dol_filing_status"
+  - "dol.v_dol_renewal_window"
+  - "dol.v_dol_premium_pressure"
+  - "dol.v_dol_market_comparison"
+  - "dol.v_dol_carrier_changes"
+  - "dol.v_dol_broker_changes"

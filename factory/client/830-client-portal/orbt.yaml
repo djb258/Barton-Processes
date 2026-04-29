@@ -1,0 +1,11 @@
+orbt:
+  process_id: "830-client-portal"
+  state: "BUILD"
+  strikes: 0
+  last_transition_at: "2026-04-29T00:00:00Z"
+  last_transition_reason: "UT v2.7.0 consolidation — PROCESS-UT.md and DOCTRINE.md written; folder locked to 9-entry shape"
+  notes: |
+    Worker code exists (skeleton state as of 2026-04-22). All routes render with mock data.
+    No live D1 binding — database_id blank in wrangler.toml (known issue FP-830-01).
+    No authentication per page audience (known issue FP-830-02).
+    State transitions to OPERATE when: D1 binding wired, slug column migrated, all 5 pages render live data.

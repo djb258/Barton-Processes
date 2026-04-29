@@ -1,0 +1,11 @@
+process_id: PROC-010
+name: SVG D1 SEED
+state: OPERATE
+strikes: 0
+last_transition_at: 2026-04-29T00:00:00Z
+last_transition_reason: UT consolidation
+notes: >
+  Clean SEED completed 2026-04-01. D1 re-seeded from Neon seed_views.
+  32,702 companies locked. All dirty rows cleared. Coverage tables cleaned
+  (3 agents, 3 active zones). SEED v1 operational. SEED v2 design (BAR-190)
+  pending Phase 1 build (sovereign ID stamping for 2.4M DOL companies).

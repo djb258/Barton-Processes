@@ -1,5 +1,25 @@
 heir:
+  sovereign_ref: "imo-creator"
   hub_id: "outreach"
+  ctb_placement: "leaf"
+  imo_topology: "middle"
+  cc_layer: "CC-03"
+  services:
+    - "svg-d1-outreach-ops (D1 sqlite, binding D1_OUTREACH)"
+    - "DataImpulse proxy (Gate C only)"
+    - "Startpage search (Gate C, via proxy)"
+  secrets_provider: "doppler"
+  acceptance_criteria:
+    - "Gate order A -> B -> C is strictly enforced; no gate may be skipped out of order"
+    - "LinkedIn URL must match pattern linkedin.com/in/{slug} before any write"
+    - "Domain must never be included in Startpage query"
+    - "LinkedIn profiles must not be scraped directly (search index only)"
+    - "CAPTCHA rate must stay below 10%; halt Gate C if 3 consecutive CAPTCHAs"
+    - "Proxy must use port 10000 sticky session with __cr.us country targeting"
+    - "Write target is slot_workbench only; no writes to Neon vault or other tables"
+    - "All slots with has_name = 1 AND has_linkedin = 0 are eligible; no others"
+
+  # Legacy fields preserved for back-compat
   sub_hub: "linkedin-discovery"
   component: "202-linkedin-discovery"
   process_id: "PROC-202"

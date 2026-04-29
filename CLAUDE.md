@@ -1,243 +1,164 @@
 # CLAUDE.md — Barton-Processes
 
-## IDENTITY
+## Identity
 
-This is the **process engine** governed by **imo-creator**.
+This is the **process engine** — where data moves. Governed by **imo-creator-v2** (the Garage).
 
-Blueprint repos are the **brain** (static schemas, doctrine, definitions — ZERO workers).
-This repo is the **muscle** (every executable process across the fleet).
+Blueprint repos are the **brain** (schemas, doctrine, definitions — ZERO workers).
+This repo is the **muscle** (every executable process across the fleet — 16 numbered, Dewey-classified).
 
 **Hub ID**: barton-processes
-**Hub Name**: Barton Processes
-**Domain**: process-engine
-**Authority**: Inherited from imo-creator (Sovereign)
+**Sovereign Authority**: imo-creator-v2 (CC-01)
+**CTB Position**: Branch — child of Barton Enterprises trunk, parent of all process leaves
 
 ---
 
-## CANONICAL REFERENCE
+## STARTUP PROTOCOL — Every Session
 
-| Template | imo-creator Path | Version |
-|----------|------------------|---------|
-| Architecture | law/doctrine/ARCHITECTURE.md | 2.1.0 |
-| Tools | law/integrations/TOOLS.md | 1.1.0 |
-| OSAM | law/semantic/OSAM.md | 1.1.0 |
-| PRD | fleet/car-template/docs/PRD_HUB.md | 1.0.0 |
-| ADR | fleet/adr-templates/ADR.md | 1.0.0 |
-| Checklist | fleet/checklists/HUB_COMPLIANCE.md | 1.0.0 |
+1. Read this file (CLAUDE.md) — front door
+2. Read `INDEX.md` — Dewey card catalog of every process
+3. Read `EXECUTION_ORDER.md` — operational dependency graph
+4. Read `law/process-registry.yaml` — machine-readable index (v2.0.0)
+5. Read `law/heir.yaml` + `law/orbt.yaml` — repo identity + state
 
 ---
 
-## STARTUP PROTOCOL
+## PROCESS INDEX (front door)
 
-Every session, before any work:
+| # | Process | Folder | ORBT | MC Page |
+|---|---------|--------|------|---------|
+| 010 | SEED D1 | [factory/outreach/010-seed-d1/](factory/outreach/010-seed-d1/) | OPERATE | Watch Tower |
+| 100 | LCS Pipeline | [factory/cl/100-lcs-pipeline/](factory/cl/100-lcs-pipeline/) | REPAIR | Outreach Ops |
+| 200 | People Worker | [factory/outreach/200-people-worker/](factory/outreach/200-people-worker/) | REPAIR | Watch Tower |
+| 201 | Email Discovery | [factory/outreach/201-email-discovery/](factory/outreach/201-email-discovery/) | BUILD | Watch Tower |
+| 202 | LinkedIn Discovery | [factory/outreach/202-linkedin-discovery/](factory/outreach/202-linkedin-discovery/) | BUILD | Watch Tower |
+| 300 | Blog Worker | [factory/outreach/300-blog-worker/](factory/outreach/300-blog-worker/) | BUILD | Watch Tower |
+| 301 | Page Parser | [factory/outreach/301-page-parser/](factory/outreach/301-page-parser/) | BUILD | Watch Tower |
+| 400 | DOL Views | [factory/outreach/400-dol-views/](factory/outreach/400-dol-views/) | OPERATE | Watch Tower |
+| 500 | Talent Flow | [factory/outreach/500-talent-flow/](factory/outreach/500-talent-flow/) | BUILD | Watch Tower |
+| 600 | BIT Scoring | [factory/outreach/600-bit-scoring/](factory/outreach/600-bit-scoring/) | TROUBLESHOOT_TRAIN | Watch Tower |
+| 700 | Campaign Engine | [factory/outreach/700-campaign-engine/](factory/outreach/700-campaign-engine/) | BUILD | Outreach Ops |
+| 800 | Client Mint | [factory/cl/800-client-mint/](factory/cl/800-client-mint/) | BUILD | Watch Tower |
+| 810 | Client Intake | [factory/client/810-client-intake/](factory/client/810-client-intake/) | BUILD | Watch Tower |
+| 820 | Vendor Export | [factory/client/820-vendor-export/](factory/client/820-vendor-export/) | BUILD | Watch Tower |
+| 830 | Client Portal | [factory/client/830-client-portal/](factory/client/830-client-portal/) | BUILD | Watch Tower |
+| 900 | Sales Portal | [factory/sales/900-sales-portal/](factory/sales/900-sales-portal/) | BUILD | Sales Ops |
 
-1. Read this file (`CLAUDE.md`) — identity, permissions, rules
-2. Read `law/heir.yaml` — process engine identity
-3. Read `law/orbt.yaml` — current operational mode
-4. Read `law/process-registry.yaml` — master process list
+For full detail per process: open its `PROCESS-UT.md` (14 sections, 13-item pre-flight, 16 stable anchors).
 
 ---
 
-## REPO STRUCTURE
+## REPO STRUCTURE (CTB)
 
 ```
-barton-processes/
-├── CLAUDE.md                         # This file
-├── README.md                         # Repo overview
+Barton-Processes/              ← trunk root (governance files only)
+├── CLAUDE.md
+├── README.md
+├── INDEX.md
+├── EXECUTION_ORDER.md
+├── D1_DATA_DICTIONARY.md
 ├── .gitignore
 │
-├── law/                              # GOVERNANCE
-│   ├── PROCESS_TEMPLATE.md           # LOCKED — single template for ALL processes
-│   ├── PROCESS_AUDIT_TEMPLATE.md     # 8-gate pre-flight inspection
-│   ├── STRUCTURE_MANIFEST.yaml       # 4 business silos structure
-│   ├── heir.yaml                     # Process engine identity (HEIR)
-│   ├── orbt.yaml                     # Operational mode (ORBT)
-│   ├── process-registry.yaml         # Master list of all processes
-│   ├── ingress-manifest.yaml         # Cross-silo dependencies
-│   └── doctrine/                     # Inherited doctrine from Garage
+├── law/                       ← governance layer
+│   ├── heir.yaml
+│   ├── orbt.yaml
+│   ├── process-registry.yaml  ← machine-readable index (v2.0.0)
+│   ├── STRUCTURE_MANIFEST.yaml
+│   ├── ingress-manifest.yaml
+│   ├── logbook_schema.yaml
+│   ├── PROCESS_TEMPLATE.md
+│   └── PROCESS_AUDIT_TEMPLATE.md
 │
-├── factory/                          # ALL EXECUTABLE PROCESSES (4 sovereign silos)
-│   ├── imo-creator/                  #   PARENT — shared global infrastructure
-│   │   └── 000-adapter-build/        #   Meta-process: how to build any domain adapter
-│   ├── svg-agency/                   #   CHILD — SVG insurance outreach (processes 100-900)
-│   │   ├── DATA_FLOW.md              #   Plumbing diagram (Neon → D1, all joins)
-│   │   ├── 100-lcs-pipeline/         #   Each process is its own self-contained unit:
-│   │   ├── 200-people-worker/        #     └── PROCESS.md (from PROCESS_TEMPLATE — the rebuild manual)
-│   │   ├── 300-blog-worker/          #     └── src/ (executable code)
-│   │   └── ...                       #     └── wrangler.toml (CF Worker config)
-│   ├── real-estate/                  #   CHILD — real estate processes
-│   └── personal/                     #   CHILD — personal ops processes
+├── factory/                   ← process silos
+│   ├── cl/                    ← Company Lifecycle
+│   │   ├── 100-lcs-pipeline/
+│   │   └── 800-client-mint/
+│   ├── outreach/              ← SVG Outreach (010, 200-700)
+│   │   ├── 010-seed-d1/
+│   │   ├── 200-people-worker/
+│   │   ├── 201-email-discovery/
+│   │   ├── 202-linkedin-discovery/
+│   │   ├── 300-blog-worker/
+│   │   ├── 301-page-parser/
+│   │   ├── 400-dol-views/
+│   │   ├── 500-talent-flow/
+│   │   ├── 600-bit-scoring/
+│   │   └── 700-campaign-engine/
+│   ├── client/                ← Client processes (810-830)
+│   │   ├── 810-client-intake/
+│   │   ├── 820-vendor-export/
+│   │   └── 830-client-portal/
+│   ├── sales/                 ← Sales (900)
+│   │   └── 900-sales-portal/
+│   ├── content/               ← Non-process content production
+│   │   ├── 1700-video-ctb/
+│   │   ├── 1800-cf-stream-upload/
+│   │   └── brand-assets/
+│   └── _stubs/                ← Reserved silos (no processes yet)
+│       ├── personal/
+│       ├── real-estate/
+│       └── production-line/
 │
-├── docs/                             # DOCUMENTATION
-│   └── adr/                          # Architecture Decision Records
+├── scripts/                   ← Validation + utility scripts
+│   └── validate-ctb.sh        ← CTB rule enforcer (R1-R8)
 │
-├── log/                              # Process execution receipts
-├── scripts/                          # Extraction playbook + utilities
-└── archive/                          # Retired processes
+├── archive/                   ← Read-only historical record
+│   ├── v1-extractions-2026-04-29.tar.gz
+│   ├── v1-extractions-README.md
+│   ├── orphans-2026-04-29/
+│   └── relocated-to-v2-2026-04-29/
+│
+├── docs/
+└── log/
 ```
 
 ---
 
-## BUSINESS SILOS (4 sovereign silos under factory/)
+## CTB RULES (R1-R8)
 
-| Silo | Role | Path | Status |
-|------|------|------|--------|
-| **imo-creator** | PARENT — shared global infrastructure | `factory/imo-creator/` | ACTIVE |
-| **svg-agency** | CHILD — SVG insurance outreach | `factory/outreach/` | ACTIVE |
-| **real-estate** | CHILD — real estate processes | `factory/real-estate/` | EMPTY |
-| **personal** | CHILD — personal ops | `factory/personal/` | EMPTY |
+See `law/STRUCTURE_MANIFEST.yaml` for machine-readable enforcement.
 
-Children conform to parent. Never the reverse. Cross-silo communication is a violation.
-IMO-Creator owns global tables (ZIP codes, geo lookups) that children READ but never WRITE.
+- **R1** — Trunk root: only allowlisted files + dirs (CLAUDE.md, README.md, INDEX.md, EXECUTION_ORDER.md, D1_DATA_DICTIONARY.md, .gitignore + law/ docs/ scripts/ log/ archive/ factory/)
+- **R2** — `law/` only allowlisted governance files; no `law/doctrine/` subtree
+- **R3** — `factory/<silo>/` has only numbered subfolders, no loose files
+- **R4** — Each `factory/<silo>/<NNN-name>/` has PROCESS-UT.md + DOCTRINE.md + heir.yaml + orbt.yaml + _archived-fragments/ (+ wrangler.toml/src/package.json/etc. for deployable)
+- **R5** — Mid-tier orphans go to `archive/orphans-YYYY-MM-DD/`, not floating in factory
+- **R6** — Non-numbered content (video, brand) goes in `factory/content/` only
+- **R7** — Empty silos live in `factory/_stubs/`; not at silo level
+- **R8** — Garage-internal (LBB, UP, adapter-build) lives in `imo-creator-v2/`, not here
 
-## PROCESS NUMBERING
-
-### imo-creator (parent — global)
-| Number | Name | Status |
-|--------|------|--------|
-| 000 | Adapter Build (meta-process) | ACTIVE |
-
-### svg-agency (child — insurance)
-| Number | Name | Status |
-|--------|------|--------|
-| 100 | LCS Pipeline | ACTIVE |
-| 200 | People Worker | REWRITE (v2 in progress) |
-| 300 | Blog Worker | ACTIVE |
-| 400 | DOL Views | ACTIVE |
-| 500 | Talent Flow | ACTIVE |
-| 600 | BIT Scoring | RETIRED 2026-03-25 |
-| 700 | Campaign Engine | ACTIVE |
-| 800 | Client Mint | ACTIVE |
-| 810 | Client Intake | ACTIVE |
-| 820 | Vendor Export | ACTIVE |
-| 830 | Client Portal | ACTIVE |
-| 900 | Sales Portal | ACTIVE |
-| — | Intelligence Engine | ACTIVE |
-
-### real-estate (child)
-_No processes yet._
-
-### personal (child)
-_No processes yet._
+Run `scripts/validate-ctb.sh` to check R1-R3-R4 compliance. Exit 0 = clean.
 
 ---
 
-## GOVERNANCE DIRECTION
+## GOVERNANCE
 
-| Action | Permitted |
-|--------|-----------|
-| Read parent doctrine | YES |
-| Extract processes from blueprint repos | YES (with playbook) |
-| Create new numbered process directories | YES |
-| Update process-registry.yaml | YES |
-| Modify parent doctrine | **FORBIDDEN** |
-| Push changes to parent | **FORBIDDEN** |
-| Add executables to blueprint repos | **FORBIDDEN** |
-| Submit ADR to parent | YES (change request only) |
+- Children conform to parent (imo-creator-v2). Never the reverse.
+- Blueprint repos = brain. This repo = muscle.
+- Every process is numbered, Dewey-classified, and registered in `law/process-registry.yaml`.
+- Auditor enforces rules. Determinism first.
+- ASK > INFER. When uncertain, HALT and ask.
+- The 13 locked constants in `imo-creator-v2/CLAUDE.md` are human-only. No LLM touches them.
 
 ---
 
-## WHAT CLAUDE CODE CAN DO IN THIS REPO
+## DOCTRINE LOAD ORDER (inherited from v2)
 
-| Action | Permitted |
-|--------|-----------|
-| Read all files | YES |
-| Extract processes using playbook | YES |
-| Create process directories under factory/ | YES |
-| Create process heir.yaml files | YES |
-| Update law/process-registry.yaml | YES |
-| Update law/ingress-manifest.yaml | YES |
-| Report violations | YES |
-| Modify parent doctrine files | NO |
-| Skip extraction playbook steps | NO |
-| Invent structure beyond doctrine | NO |
-| Use LLM as primary solution | NO |
-| Leave executables in blueprint repos | NO |
+1. `imo-creator-v2/law/doctrine/KEY.md` — vocabulary first
+2. `imo-creator-v2/CLAUDE.md` — architecture
+3. `imo-creator-v2/law/doctrine/BARTON_ENTERPRISES_WORLD_ATLAS.md` — the legend
+4. `imo-creator-v2/law/doctrine/FOUNDATIONAL_BEDROCK.md` — physics
+5. This `CLAUDE.md` — BP-specific governance
 
 ---
 
-## EXTRACTION RULES
-
-1. **Use the playbook** — `scripts/extraction-playbook.md` defines every step
-2. **Number sequentially** — no gaps in factory/ numbering
-3. **One heir.yaml per process** — declares dependencies, runtime, log targets
-4. **Update registry after every extraction** — process-registry.yaml must match factory/
-5. **Verify zero remaining** — source blueprint must have ZERO executables in extracted paths
-6. **Archive, don't delete** — retired code goes to archive/, never vanishes
-
----
-
-## DATA INVENTORY — What Already Exists
-
-**READ THIS BEFORE BUILDING ANY DATA PIPELINE OR SEED JOB.**
-
-### D1: svg-d1-spine (641a9a1e)
-| Table | Rows | Source | Status |
-|-------|------|--------|--------|
-| `cl_company_identity` | 117,154 | Neon vault (original ingest) | LOADED |
-| `lcs_signal_queue` | 10 | Pipeline-generated | ACTIVE |
-| `lcs_cid` | 8 | Pipeline-generated | ACTIVE |
-| `lcs_sid` | 0 | Pipeline-generated | ACTIVE |
-| `lcs_mid` | 0 | Pipeline-generated | ACTIVE |
-| `lcs_event` | 12 | Pipeline-generated | ACTIVE |
-| `lcs_err0` | 4 | Pipeline-generated | ACTIVE |
-| `lcs_frame_registry` | 11 | Manual seed | CONFIG |
-| `lcs_adapter_registry` | 3 | Manual seed | CONFIG |
-| `lcs_signal_registry` | 9 | Manual seed | CONFIG |
-| `lcs_domain_rotation` | 14 | Manual seed | CONFIG |
-
-### D1: svg-d1-outreach-ops (73a285b8)
-| Table | Rows | Source | Status |
-|-------|------|--------|--------|
-| `outreach_company_target` | 32,704 | Neon `outreach.company_target` | LOADED |
-| `outreach_dol` | 36,247 | Neon `outreach.dol` | LOADED |
-| `outreach_people` | 109,443 | Neon `outreach.people` | LOADED |
-| `outreach_blog` | 49,062 | Neon `outreach.blog` | LOADED |
-| `people_company_slot` | 43,209 | Neon `people.company_slot` | LOADED |
-| `people_people_master` | 32,106 | Neon `people.people_master` | LOADED |
-| `outreach_outreach` | 32,704 | Neon `outreach.outreach` | LOADED |
-| `dol_form_5500` | 14,252 | Neon `dol.form_5500` | LOADED |
-| `dol_schedule_a` | 17,890 | Neon `dol.schedule_a_part1` | LOADED |
-| `dol_schedule_c` | 33,810 | Neon `dol.schedule_c_part1_item2` | LOADED |
-| `dol_schedule_other` | 105,088 | Neon `dol.schedule_*` | LOADED |
-| `coverage_service_agent` | 9 | Neon `coverage.service_agent` | LOADED |
-| `coverage_service_agent_coverage` | 21 | Neon coverage zones | LOADED |
-
-### Neon Vault (via Hyperdrive)
-- **Purpose:** System of record. SEED source ONLY.
-- **Rule:** Never queried during pipeline WORK phase. All reads from D1.
-- **Lifecycle:** SEED → WORK → PUSH
-
-### What does NOT need a SEED job:
-- People data (already in D1: 109K outreach_people, 43K slots, 32K master)
-- Blog data (already in D1: 49K rows)
-- DOL summary (already in D1: 36K rows in outreach_dol)
-- Company targeting (already in D1: 32K rows)
-
-### What DOES need a SEED job:
-- Any NEW Neon table not listed above (all current data is LOADED)
-
-**Last audited: 2026-03-25 | DOL SEED completed: 171,040 rows, 27,868 companies, 0 errors**
-
----
-
-## GOLDEN RULES
-
-1. **This repo conforms to imo-creator. Parent defines, children conform.**
-2. **Blueprint repos = brain. This repo = muscle. Never mix.**
-3. **Every process is numbered and registered. No exceptions.**
-4. **Extraction is repeatable. Follow the playbook.**
-5. **Determinism first. LLM as tail only.**
-6. **ASK > INFER. When uncertain, HALT.**
-
----
-
-## Document Control
+## DOCUMENT CONTROL
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-14 |
-| Last Modified | 2026-03-14 |
+| Last Modified | 2026-04-29 (Stage 2.5 CTB Cleanup) |
+| Version | 2.0.0 |
 | Status | ACTIVE |
-| Authority | imo-creator (Inherited) |
-| BAR | BAR-136 |
+| Authority | imo-creator-v2 (Inherited) |
+| Audit | imo-creator-v2/law/doctrine/AUDITS/AUDIT-2026-04-29-barton-processes-ctb.md |

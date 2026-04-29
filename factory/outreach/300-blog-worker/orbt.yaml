@@ -1,0 +1,13 @@
+process_id: "PROC-300-BLOG-WORKER"
+process_number: "300"
+state: "BUILD" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+# Note: PROCESS.md birth certificate shows BUILD->OPERATE on Run 1 (2026-04-02),
+# but auditor sign-off is pending. Holding at BUILD until certification is complete.
+strikes: 2 # FP-301 (Strike 1, RESOLVED) + FP-302 (Strike 1, RESOLVED) = 2 resolved strikes total
+last_transition_at: "2026-04-28T00:00:00Z"
+last_transition_reason: "UT consolidation — UT v2.7.0 standardization"
+auto_pause_threshold:
+  metric: "captcha_rate"
+  red_value: "0.10"
+ad_active: null # AD reference if Strike 3 is reached
+notes: "Two resolved strikes logged: FP-301 (port burn, RESOLVED) and FP-302 (SQL payload too large, RESOLVED). src/ tree has version sprawl (blog-monitor.py + blog-monitor-v2.py) — canonical script pick needed before OPERATE certification."
