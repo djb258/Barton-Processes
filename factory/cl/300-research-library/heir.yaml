@@ -1,0 +1,41 @@
+# HEIR — 300 Research Library
+process_id: "PROC-RESEARCH-LIBRARY"
+process_number: "300"
+name: "Research Library"
+blueprint_owner: "cl"
+runtime: "cloudflare-workers"
+status: "repair"
+sovereign_ref: "imo-creator-v2"
+governing_engine: "law/doctrine/TIER0_DOCTRINE.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+bar: "BAR-370"
+
+services:
+  - "CF Worker (research-library)"
+  - "D1 (research-library D1 — 01723ff1-e207-4706-9652-51a10512aab2)"
+  - "LBB integration (best-effort logging)"
+  - "Composio (Firecrawl, Supadata, Perplexity — pending)"
+secrets_provider: "doppler"
+
+two_question_intake:
+  what_triggers: "Authenticated caller POSTs /research with query + sources"
+  how_do_we_get_it: "MC_API_KEY validated in Authorization/X-API-Key header (canonical BE auth)"
+
+acceptance_criteria:
+  - "Auth uses canonical MC_API_KEY — no per-worker RESEARCH_API_KEY"
+  - "POST /research routes query to configured sources"
+  - "GET /research/records returns stored canonical records from D1"
+  - "GET /research/subjects returns CTB subject hierarchy"
+  - "POST /research/ingest writes leaf records with SHA-256 dedup"
+  - "GET /health returns 200 with no auth required"
+  - "Errors write to research_records_error (CQRS error table)"
+
+auth_doctrine:
+  pattern: "canonical"
+  key: "MC_API_KEY"
+  note: "Auth pattern is a BE-wide constant per K=C. No per-worker keys. Workers use MC_API_KEY or are public read-only."
+
+depends_on: []
+feeds: ["LBB subject=research"]

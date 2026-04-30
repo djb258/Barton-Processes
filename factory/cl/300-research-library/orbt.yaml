@@ -1,0 +1,12 @@
+# ORBT — 300 Research Library
+process_id: "PROC-300-RESEARCH-LIBRARY"
+process_number: "300"
+state: "REPAIR" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-370 auth realignment — RESEARCH_API_KEY replaced with canonical MC_API_KEY per K=C doctrine"
+auto_pause_threshold:
+  metric: "open_errors"
+  red_value: "3"
+ad_active: null
+notes: "Worker scaffolded with per-worker RESEARCH_API_KEY (doctrine drift). BAR-370 replaces with canonical MC_API_KEY. RESEARCH_API_KEY secret to be removed from Doppler after deploy. Composio provider wiring (Firecrawl/Supadata/Perplexity) pending — POST /research returns pending_composio status. Worker is deployed and operational on canonical auth."
