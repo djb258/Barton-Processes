@@ -1,0 +1,26 @@
+# ORBT — Process 840 Client Record Key
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "CLIENT-RECORD-KEY"
+process_name: "Client Record Key — Canonical Client Record Schema"
+silo: "svg-agency"
+
+state: "BUILD"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "MIGRATE — v1.0.2 doctrine doc from imo-creator-v2/law/doctrine/CLIENT_RECORD_KEY.md decomposed into Barton Process 840 (4-file pattern matching 810)"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+# Current blockers (must clear before BUILD → OPERATE):
+blockers: []
+
+# Note: Content already exists and is complete (migrated from v1.0.2).
+# BUILD → OPERATE gate requires:
+# (1) All 4 schemas verified live against actual DB
+# (2) Canonical field table confirmed against live migrations
+# (3) Auditor sign-off (different engine than builder)

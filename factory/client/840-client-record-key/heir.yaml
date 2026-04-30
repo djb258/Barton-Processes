@@ -1,0 +1,38 @@
+# HEIR — 840 Client Record Key
+process_id: "CLIENT-RECORD-KEY"
+process_number: "840"
+name: "Client Record Key — Canonical Client Record Schema"
+blueprint_owner: "client"
+runtime: "doctrine"
+status: "build"
+hub_id: "DB-CLIENT"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "none (doctrine doc — no infrastructure)"
+secrets_provider: "none"
+
+two_question_intake:
+  what_triggers: "Any system needs to read, write, or JOIN client data across DB boundaries"
+  how_do_we_get_it: "Systems query via sovereign_id; this KEY is the lookup table for field ownership and source-of-truth"
+
+acceptance_criteria:
+  - "sovereign_id declared as the universal join key across all client-touching systems"
+  - "No cross-system JOIN may use any field other than sovereign_id without explicit exception declared here"
+  - "client_id confirmed as MC-internal only — never a cross-system identifier"
+  - "All new systems holding client data must register their field mappings against this KEY before going live"
+  - "All 47 canonical fields inventoried across 4 schemas with source-of-truth declared for each"
+  - "JOIN chain documented: cl_company_identity → clients → client_contacts → client_interactions"
+  - "Ingest checklist present with step-by-step order enforcement"
+
+peer_processes:
+  - 810
+  - 820
+  - 830
+
+feeds:
+  - "All downstream client-touching systems (MC API, LCS Hub, email triage, future outreach/sales pipelines)"
