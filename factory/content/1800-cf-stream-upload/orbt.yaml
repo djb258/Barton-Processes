@@ -1,0 +1,23 @@
+# ORBT — Process 1800 CF Stream Video Upload
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "PROC-1800"
+process_name: "CF Stream Video Upload"
+silo: "barton-enterprises/content"
+
+state: "BUILD"
+strikes: 1
+last_transition_at: "2026-04-01T00:00:00Z"
+last_transition_reason: "BUILD — Strike 1 logged 2026-04-01: all existing CF tokens lack Stream scope; CF_STREAM_API_TOKEN not yet created"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+# Current blockers (must clear before BUILD → OPERATE):
+blockers:
+  - "CF_STREAM_API_TOKEN not created — requires manual creation in CF Dashboard (Turnstile blocks automation)"
+  - "Strike 1 logged: upload auth failed 2026-04-01 — token creation is the fix"
+  - "No video files yet uploaded to CF Stream — process has not run successfully end-to-end"

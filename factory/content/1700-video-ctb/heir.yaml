@@ -1,0 +1,38 @@
+# HEIR — Process 1700 Video CTB
+process_id: "PROC-1700"
+process_number: "1700"
+name: "Video CTB — NotebookLM Video Content Tree"
+blueprint_owner: "content"
+runtime: "manual (NotebookLM Studio + CF Stream + CF Pages)"
+status: "build"
+hub_id: "content-video-ctb"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "branch"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "NotebookLM Studio (Google) — generates video + podcast + slides artifacts"
+  - "CF Stream — video hosting and adaptive bitrate delivery"
+  - "CF Pages — content-pages template deployment"
+secrets_provider: "Doppler (imo-creator → dev) — CF_STREAM_API_TOKEN, GLOBAL_CLOUDFLARE_ACCOUNT_ID"
+
+two_question_intake:
+  what_triggers: "A CTB node needs a video artifact produced and deployed to its content page"
+  how_do_we_get_it: "Add sources to the video folder → upload to NotebookLM → generate artifacts → download → upload to CF Stream → deploy to content-pages"
+
+acceptance_criteria:
+  - "Each of 6 video folders has a NotebookLM notebook ID locked in README"
+  - "Sources present in sources/ subfolder for each video"
+  - "Generated video artifacts uploaded to CF Stream via PROC-018"
+  - "Stream UIDs recorded in notebooks-registry.md and LBB"
+  - "Content pages deployed with video slot populated (streamId)"
+  - "Artifacts (video, podcast, slides, infographic) preserved in content-pages public/content/"
+
+peer_processes:
+  - 1800
+
+feeds:
+  - "PROC-018 (CF Stream upload) — consumes video .mp4 artifacts"
+  - "content-pages template — consumes Stream UID for embed"

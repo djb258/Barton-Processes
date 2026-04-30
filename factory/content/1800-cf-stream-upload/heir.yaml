@@ -1,0 +1,37 @@
+# HEIR — Process 1800 CF Stream Video Upload
+process_id: "PROC-1800"
+process_number: "1800"
+name: "CF Stream Video Upload"
+blueprint_owner: "content"
+runtime: "CLI (curl + CF Stream API)"
+status: "build"
+hub_id: "content-cf-stream"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "CF Stream API — video upload, UID retrieval, processing status"
+  - "CF Pages (content-pages) — destination for embed after upload"
+  - "Doppler — secrets management (CF_STREAM_API_TOKEN, GLOBAL_CLOUDFLARE_ACCOUNT_ID)"
+secrets_provider: "Doppler (imo-creator → dev)"
+
+two_question_intake:
+  what_triggers: "Video artifact downloaded from NotebookLM Studio (PROC-1700) is ready for hosting and embedding"
+  how_do_we_get_it: "Chrome DevTools MCP clicks Download on the video artifact in NotebookLM Studio → file lands in Downloads folder → curl upload to CF Stream API"
+
+acceptance_criteria:
+  - "Video uploaded to CF Stream with status.state === ready"
+  - "Stream UID returned and recorded in notebooks-registry.md"
+  - "Embed URL wired into ContentConfig streamId in content-pages App.tsx"
+  - "content-pages deployed and video player functional on live page"
+  - "Stream UID and metadata ingested to LBB"
+
+peer_processes:
+  - 1700
+
+feeds:
+  - "content-pages App.tsx — consumes streamId for video slot"
+  - "LBB (svg-sales subject) — artifact metadata record"
