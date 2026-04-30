@@ -1,0 +1,34 @@
+# ORBT — BAR-122 Bookkeeping Scaffold
+# State machine: BUILD → OPERATE (after Dave creates accounts + keys land in Doppler)
+
+orbt_state: BUILD
+heir_id: BAR-122_v1.0.0
+updated: "2026-04-30"
+
+# State definitions
+states:
+  BUILD:
+    description: "Scaffold deployed. API stubs in place. Awaiting Dave account creation (Bill.com + Xero) and Doppler secret injection."
+    exit_criteria:
+      - Bill.com account created by Dave
+      - Xero account created by Dave
+      - BILLCOM_API_KEY + BILLCOM_DEV_KEY set via `npx wrangler secret put`
+      - XERO_CLIENT_ID + XERO_CLIENT_SECRET + XERO_REFRESH_TOKEN set via `npx wrangler secret put`
+      - GET /finance/billcom/vendors returns real data (not "not configured")
+      - GET /finance/xero/accounts returns real data (not "not configured")
+  OPERATE:
+    description: "Live. Both APIs connected. Routes returning real data. DMJ joins to sovereign_id active."
+    monitoring:
+      - /finance/billcom/vendors health check
+      - /finance/xero/accounts health check
+  REPAIR:
+    description: "API key expired or OAuth token refresh failed. Requeries Doppler for fresh secrets."
+  TROUBLESHOOT_TRAIN:
+    description: "Strike 3 on same failure mode. Root cause analysis required before re-entering REPAIR."
+
+# Transition log
+transitions:
+  - from: null
+    to: BUILD
+    date: "2026-04-30"
+    reason: "BAR-122 scaffolded by mechanic. Awaiting Dave-action (account creation)."

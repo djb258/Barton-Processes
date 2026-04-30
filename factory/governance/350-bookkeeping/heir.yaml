@@ -1,0 +1,11 @@
+# HEIR — BAR-122 Bookkeeping Scaffold
+# Format: 8 fields. Stamped at build. Never changes.
+
+heir_id: BAR-122_v1.0.0
+sovereign_ref: imo-creator
+hub_id: governance-bookkeeping
+cc_layer: CC-03
+ctb_placement: branch
+ctb_node: barton-enterprises/governance/finance/bookkeeping
+process_name: Bookkeeping — Bill.com + Xero Integration Scaffold
+created: "2026-04-30"
