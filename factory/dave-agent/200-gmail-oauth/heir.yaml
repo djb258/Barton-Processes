@@ -1,0 +1,42 @@
+# HEIR — 200 Gmail OAuth
+process_id: "GMAIL-OAUTH"
+process_number: "200"
+name: "Gmail OAuth — Google Token Provisioning for Dave Agent Identities"
+blueprint_owner: "dave-agent"
+runtime: "cloudflare-worker"
+status: "build"
+hub_id: "MISSION-CONTROL-API"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "cos (mission-control-api) — OAuth start + callback routes"
+  - "gmail.ts spoke — token storage + refresh"
+  - "MC_MAIL D1 — google_oauth_tokens table"
+secrets_provider: "doppler (imo-creator → dev)"
+
+two_question_intake:
+  what_triggers: "Dave needs Google API access (Gmail or Calendar) for a Dave Agent identity"
+  how_do_we_get_it: "Dave navigates to /cos/oauth/google/start?state=<token>, completes Google consent, callback exchanges code for token and stores in MC_MAIL"
+
+acceptance_criteria:
+  - "One row per identity in google_oauth_tokens keyed by email_addr — no shared tokens"
+  - "All four required scopes present: gmail.readonly, gmail.send, gmail.modify, calendar"
+  - "Token refresh handled exclusively in gmail.ts spoke (refreshAccessToken function)"
+  - "No hardcoded email address in any route handler"
+  - "State token validated in callback before token exchange proceeds"
+  - "Tokens stored only in MC_MAIL D1 google_oauth_tokens table"
+  - "/cos/oauth/google/whoami returns ok:true with correct email + scopes after flow"
+
+peer_processes:
+  - 210
+  - 220
+
+feeds:
+  - "inbox-agent (BAR-366) — reads gmail via stored token"
+  - "COS calendar spoke (BAR-335) — reads/writes calendar via stored token"
+  - "COS routines (BAR-331) — scheduled tasks needing Google API"
+  - "Any future spoke requiring authenticated Google API calls"

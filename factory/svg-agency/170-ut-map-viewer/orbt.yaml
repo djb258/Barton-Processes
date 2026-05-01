@@ -1,0 +1,7 @@
+# ORBT — 170 UT Map Viewer
+state: BUILD
+strikes: 0
+last_transition: "2026-04-30"
+transitioned_by: "claude-code (BAR-339_v2.0.0)"
+notes: "Phase 0 manual created. Phase 1 (UTViewer.tsx rewrite) in progress. No certification yet — logbook not created until auditor sign-off."
+next_gate: "Codex FAA audit of UTViewer.tsx rewrite → CERTIFY verdict → ORBT transitions to OPERATE"

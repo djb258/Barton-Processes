@@ -1,0 +1,41 @@
+# HEIR — 181 Sitemap Visualization (MapEngine)
+process_id: "SITEMAP-VISUALIZATION"
+process_number: "181"
+name: "Sitemap Visualization — MapEngine CTB Map (Mission Control)"
+blueprint_owner: "svg-agency"
+runtime: "Mission Control CF Pages (React component)"
+status: "operate"
+hub_id: "SITEMAP-VISUALIZATION-181"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-02"
+imo_topology: "middle"
+
+services:
+  - "Mission Control CF Pages — hosts MapEngine.tsx"
+  - "mission-control-api CF Worker — GET /map/layers, GET /map/points, GET /sitemap"
+  - "Cloudflare Access — Zero Trust gate (Dave-only)"
+
+secrets_provider: "Doppler → imo-creator → dev → VITE_MC_API_KEY (build-time injection)"
+
+two_question_intake:
+  what_triggers: "A Mission Control operator opens the Map page to visualize geographic data layers and/or the sitemap tree"
+  how_do_we_get_it: "MapEngine fetches GET /map/layers (layer registry), GET /map/points (viewport data), GET /sitemap (site tree) from mission-control-api on mount and on viewport change"
+
+acceptance_criteria:
+  - "GET /map/layers returns MapLayer[] with all required fields"
+  - "GET /map/points returns MapPoint[] (max 2000) for the current viewport + active layers"
+  - "GET /sitemap returns SitemapEntry[] matching Process 180 shape"
+  - "CATEGORY_COLORS drives dot color rendering — no category renders outside the palette"
+  - "Viewport fetches are debounced at 500ms minimum"
+  - "ViewportStats displays N/A for null fields (not zero)"
+  - "ctb_node present → CTB attachment rendered; null → orphan warning shown"
+  - "All API calls authenticated with MC_API_KEY"
+
+peer_processes:
+  - 180
+
+feeds:
+  - "Mission Control Map page"
+  - "CTB visualization (Barton Enterprises CTB rendered as interactive map)"

@@ -1,0 +1,31 @@
+# ORBT — Process 200 Gmail OAuth
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "GMAIL-OAUTH"
+process_name: "Gmail OAuth — Google Token Provisioning for Dave Agent Identities"
+silo: "governance/dave-agent"
+
+state: "BUILD"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "INIT — BAR-366 code complete (gmail.ts + cos.ts modified by prior agent); UT manual created; awaiting Dave OAuth click-through to transition to OPERATE"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+# Current blockers (must clear before BUILD → OPERATE):
+blockers:
+  - "Dave must run the OAuth flow for dave@svg.agency (see bar-366-dave-actions.md)"
+  - "/cos/oauth/google/whoami must return ok:true with all 4 scopes confirmed"
+  - "Token row verified in MC_MAIL google_oauth_tokens via D1 query"
+  - "Auditor sign-off (different engine than builder) on gmail.ts + cos.ts changes"
+
+# Note: Code changes are complete per BAR-366.
+# BUILD → OPERATE gate requires:
+# (1) Dave completes OAuth flow at least for dave@svg.agency
+# (2) whoami endpoint confirms scope coverage
+# (3) inbox-agent (BAR-366) can read gmail without 401
+# (4) Auditor sign-off

@@ -1,0 +1,37 @@
+# HEIR — 910 Content Artifacts
+process_id: "CONTENT-ARTIFACTS"
+process_number: "910"
+name: "Content Artifacts — NotebookLM Artifact Registry for Content Pages"
+blueprint_owner: "sales"
+runtime: "CF Pages Function + D1"
+status: "operate"
+hub_id: "CONTENT-ARTIFACTS-910"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "CF Pages Function (insuranceinformatics.com)"
+  - "CF D1: CONTENT_ARTIFACTS"
+
+secrets_provider: "Doppler → imo-creator → dev → ARTIFACT_INGEST_TOKEN"
+
+two_question_intake:
+  what_triggers: "A content page needs to serve NotebookLM artifacts (audio, slides, infographic, etc.) or a new artifact is uploaded"
+  how_do_we_get_it: "Caller POSTs to /api/artifacts/ingest with content_id + slot payloads; GET /api/artifacts/[content_id] serves them to the React page"
+
+acceptance_criteria:
+  - "content_artifacts D1 table exists with (content_id, slot_type) UNIQUE constraint"
+  - "POST /api/artifacts/ingest requires Bearer token and validates slot_type against enum"
+  - "GET /api/artifacts/[content_id] returns all active slots for the given route slug"
+  - "Ingest is idempotent — ON CONFLICT DO UPDATE, no duplicate rows"
+  - "ContentPage React component reads from this endpoint and renders the correct slot UI"
+
+peer_processes:
+  - 850
+
+feeds:
+  - "insuranceinformatics.com content pages (ContentPage.tsx)"
+  - "Mission Control dashboard (content inventory)"

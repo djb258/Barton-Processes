@@ -1,0 +1,22 @@
+# ORBT — Process 280 Problem Source Discovery
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "PROBLEM-SOURCE-DISCOVERY"
+process_name: "Problem Source Discovery — Inbox Agent AI Auto-Reply"
+silo: "outreach"
+
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-315 shipped — inbox-agent live, CLASSES enum + DRAFT_RULES active, problem_source_chain running via OpenRouter claude-sonnet-4-5"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+blockers: []
+
+# Note: UT manual is a governance backfill (BAR-315 code shipped before UT doc existed).
+# OPERATE state reflects code is live and functioning. UT doc does not change runtime state.

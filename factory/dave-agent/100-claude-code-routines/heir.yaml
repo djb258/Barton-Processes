@@ -1,0 +1,40 @@
+# HEIR — 100 Claude Code Routines (dave-agent)
+process_id: "CLAUDE-CODE-ROUTINES"
+process_number: "100"
+name: "Claude Code Routines — Autonomous Agent Scheduler"
+blueprint_owner: "dave-agent"
+runtime: "mission-control-api CF Worker (routines scheduler) + Claude Code agent (invoked per routine)"
+status: "operate"
+hub_id: "CLAUDE-CODE-ROUTINES-DA100"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-02"
+imo_topology: "middle"
+
+services:
+  - "mission-control-api CF Worker — hosts routines scheduler (routines.ts)"
+  - "MC_DB D1 binding — canonical store for routines + routine_runs tables (migration 0020)"
+  - "Claude Code agent — invoked per enabled routine on schedule"
+  - "Doppler imo-creator dev — agent runtime secrets"
+
+secrets_provider: "Doppler → imo-creator → dev (MC_DB binding, CLAUDE_CODE_OAUTH_TOKEN for agent invocation)"
+
+two_question_intake:
+  what_triggers: "A cron schedule fires for an enabled routine in the routines table"
+  how_do_we_get_it: "mission-control-api CF Worker reads enabled routines from MC_DB D1, invokes Claude Code agent with agent_prompt, enforces max_runtime_seconds ceiling, writes routine_runs record on completion/failure/timeout"
+
+acceptance_criteria:
+  - "Every routine_runs record carries routine_id FK, started_at, status, output_summary"
+  - "enabled = false halts scheduling without deleting the routine record"
+  - "max_runtime_seconds is enforced — timeout status written when ceiling hit, agent terminated"
+  - "All state reads/writes use MC_DB binding exclusively"
+  - "No routine record is deleted — only disabled (enabled = false)"
+  - "Agent does not write to routines or routine_runs mid-run (post-run only)"
+  - "No cross-silo agent invocations without routing through the target silo's governance"
+
+peer_processes: []
+
+feeds:
+  - "Mission Control Routines dashboard (schedule status, run history)"
+  - "LBB session ingest (routine output_summary → lbb_records)"

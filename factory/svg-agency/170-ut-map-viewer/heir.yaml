@@ -1,0 +1,40 @@
+# HEIR — 170 UT Map Viewer
+process_id: "UT-MAP-VIEWER"
+process_number: "170"
+name: "UT Map Viewer — Universal Template Doc Renderer"
+blueprint_owner: "svg-agency"
+runtime: "cloudflare-pages"
+status: "build"
+hub_id: "MISSION-CONTROL"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/UNIFIED_TEMPLATE.md + law/UT_CHECKLIST.md"
+ctb_placement: "leaf"
+cc_layer: "CC-02"
+imo_topology: "output"
+
+services:
+  - "workers/mission-control (CF Pages — host)"
+  - "workers/mission-control-api (CF Worker — optional /ut-docs endpoint)"
+  - "Barton-Processes (filesystem — PROCESS-UT.md source)"
+
+secrets_provider: "doppler (imo-creator → dev)"
+
+two_question_intake:
+  what_triggers: "Operator selects a PROCESS-UT.md from the doc picker OR switches to multi-doc compare mode"
+  how_do_we_get_it: "File list served from MC API /ut-docs endpoint (or static manifest); doc content fetched and parsed client-side"
+
+acceptance_criteria:
+  - "3 cluster banners (IDENTITY / CONTRACT / GOVERNANCE) render as toggleable top-level layer buttons"
+  - "14 sections render as sub-layers under their parent cluster — visible when cluster is toggled ON"
+  - "13-item UT Pre-Flight Checklist renders as a status overlay — red/green per item based on checkbox state in the source doc"
+  - "Doc picker lists all factory/**/PROCESS-UT.md paths"
+  - "Multi-doc layer-stack mode: pick 2-3 docs, render side-by-side with diff highlighting on checklist items"
+  - "typecheck PASS on mission-control package"
+  - "13 locked constants in imo-creator CLAUDE.md are untouched"
+
+peer_processes:
+  - 840
+
+feeds:
+  - "mission-control (UI — renders the map viewer)"
+  - "mission-control-api (optional — /ut-docs listing endpoint)"

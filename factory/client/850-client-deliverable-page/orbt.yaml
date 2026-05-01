@@ -1,0 +1,22 @@
+# ORBT — Process 850 Client Deliverable Page
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "CLIENT-DELIVERABLE-PAGE"
+process_name: "Client Deliverable Page — Public-Facing Client Hub"
+silo: "client"
+
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-82 shipped — ClientDeliverablePage.tsx live, public slug endpoint active, LCS beacon firing"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+blockers: []
+
+# Note: UT manual is a governance backfill (BAR-82 code shipped before UT doc existed).
+# OPERATE state reflects code is live and functioning. UT doc does not change runtime state.

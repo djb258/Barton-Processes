@@ -1,0 +1,22 @@
+# ORBT — Process 100 Claude Code Routines (dave-agent)
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "CLAUDE-CODE-ROUTINES"
+process_name: "Claude Code Routines — Autonomous Agent Scheduler"
+silo: "dave-agent"
+
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-331 shipped — routines scheduler live on mission-control-api, routines + routine_runs tables active via MC_DB (migration 0020)"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+blockers: []
+
+# Note: UT manual is a governance backfill (BAR-331 code shipped before UT doc existed).
+# OPERATE state reflects code is live and functioning. UT doc does not change runtime state.

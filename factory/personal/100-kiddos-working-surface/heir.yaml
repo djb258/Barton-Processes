@@ -1,0 +1,42 @@
+# HEIR — 100 Kiddos Working Surface
+process_id: "KIDDOS-WORKING-SURFACE"
+process_number: "100"
+name: "Kiddos Working Surface — Family Tracker API"
+blueprint_owner: "personal"
+runtime: "kiddos-api CF Worker (Hono) + Kiddos CF Pages (React)"
+status: "operate"
+hub_id: "KIDDOS-WORKING-SURFACE-100"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "kiddos-api CF Worker — Hono router, all /auth, /children, /family, /google routes"
+  - "D1 working database — canonical person, academic, sports, health, family records"
+  - "KV cache — derived read cache populated from D1"
+  - "Neon vault — archival layer (Hyperdrive connection)"
+  - "Google OAuth — parent authentication (Drive, Calendar, Gmail service integrations)"
+
+secrets_provider: "Doppler → imo-creator → dev (Google OAuth credentials, D1 binding, KV namespace, Neon connection string)"
+
+two_question_intake:
+  what_triggers: "An authenticated parent opens the Kiddos app to view or update family data (academic records, sports activity, health metrics) for their children"
+  how_do_we_get_it: "kiddos-api CF Worker receives Bearer JWT from Google OAuth exchange; routes-children.ts, routes-family.ts, routes-google.ts serve data from D1 (canonical) via KV cache; Neon vault receives archived records"
+
+acceptance_criteria:
+  - "Google OAuth flow completes and issues a valid parent Bearer JWT"
+  - "/children/:id returns the correct child record for a known person_id"
+  - "/children/:id returns 404 for an unknown person_id (not empty array)"
+  - "Family link (/family/link) validates parent ownership before writing"
+  - "Google service routes (/google/*) use the authenticated parent's OAuth token only"
+  - "D1 is authoritative; KV cache is always derived from D1, never written directly"
+  - "Health data routes require valid parent Bearer token"
+  - "No SVG Agency or Real Estate data is accessible through any Kiddos route"
+
+peer_processes: []
+
+feeds:
+  - "Kiddos CF Pages (React app — family dashboard)"
+  - "BRANCH 3 Personal — correlation surface (sports ↔ health derived view)"

@@ -1,0 +1,40 @@
+# HEIR — 850 Client Deliverable Page
+process_id: "CLIENT-DELIVERABLE-PAGE"
+process_number: "850"
+name: "Client Deliverable Page — Public-Facing Client Hub (insuranceinformatics.com)"
+blueprint_owner: "client"
+runtime: "CF Pages (React component) + mission-control-api CF Worker"
+status: "operate"
+hub_id: "CLIENT-DELIVERABLE-PAGE-850"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "CF Pages (insuranceinformatics.com) — hosts ClientDeliverablePage.tsx"
+  - "mission-control-api CF Worker — GET /public/clients/slug/:slug"
+  - "lcs-hub CF Worker — POST /page-event (beacon)"
+
+secrets_provider: "none on public read path; mission-control-api uses its own D1_CLIENT binding"
+
+two_question_intake:
+  what_triggers: "A client navigates to their slug URL on insuranceinformatics.com (e.g., /clients/acme-corp)"
+  how_do_we_get_it: "Component fetches GET /public/clients/slug/:slug on mount; slug comes from the URL path parameter"
+
+acceptance_criteria:
+  - "GET /public/clients/slug/:slug returns ClientData shape (client_id, company_name, employee_count, vendors[], open_service_requests, pending_invoice_count, branding_color)"
+  - "Component renders loading skeleton while fetching, error state on failure, data state on success"
+  - "LCS beacon fires on every successful data load with correct payload shape"
+  - "branding_color drives header border and stat card accent; default #1a56db when absent"
+  - "open_service_requests > 0 → red accent; pending_invoice_count > 0 → orange accent"
+  - "No state mutation occurs on the public page"
+
+peer_processes:
+  - 840
+  - 910
+
+feeds:
+  - "insuranceinformatics.com /clients/:slug route"
+  - "LCS page-event pipeline (lcs-hub)"

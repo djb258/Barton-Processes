@@ -1,0 +1,44 @@
+# HEIR — 280 Problem Source Discovery
+process_id: "PROBLEM-SOURCE-DISCOVERY"
+process_number: "280"
+name: "Problem Source Discovery — Inbox Agent AI Auto-Reply"
+blueprint_owner: "outreach"
+runtime: "inbox-agent CF Worker (Hono) + OpenRouter claude-sonnet-4-5"
+status: "operate"
+hub_id: "PROBLEM-SOURCE-DISCOVERY-280"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "inbox-agent CF Worker — Hono router, email classification + AI reply drafting"
+  - "OpenRouter API — claude-sonnet-4-5 model (classification + draft generation)"
+  - "D1 database — canonical store for classified messages + problem source records"
+  - "KV namespace — session-level deduplication only (not canonical)"
+  - "Staging table — AI-drafted replies land here before send gate"
+
+secrets_provider: "Doppler → imo-creator → dev (OPENROUTER_API_KEY, D1 binding, KV namespace)"
+
+two_question_intake:
+  what_triggers: "An inbound email arrives in the SVG Agency inbox requiring classification and potential AI-drafted reply"
+  how_do_we_get_it: "inbox-agent CF Worker receives the email payload (via webhook or polling), runs problem_source_chain via OpenRouter claude-sonnet-4-5, classifies against CLASSES enum, stores result in D1, writes draft reply to staging table"
+
+acceptance_criteria:
+  - "Every inbound message resolves to a CLASSES enum value (no silent discard)"
+  - "DRAFT_RULES are applied to every AI-drafted reply without exception"
+  - "OpenRouter claude-sonnet-4-5 is used exclusively (no direct Anthropic API)"
+  - "Full problem_source_chain executes on every classification run (no partial chain)"
+  - "AI-drafted replies write to staging table — no direct send from pipeline"
+  - "Every classification record carries message_id (no orphans)"
+  - "Every problem source record carries sovereign_company_id (non-nullable)"
+  - "people table is read-only from inbox-agent (no direct contact mutations)"
+
+peer_processes:
+  - 200  # people-worker (contact data source — read only)
+  - 700  # campaign-engine (consumes problem source output)
+
+feeds:
+  - "Process 700 Campaign Engine (problem source records → campaign targeting)"
+  - "Mission Control outreach dashboard (classification metrics)"

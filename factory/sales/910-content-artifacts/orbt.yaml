@@ -1,0 +1,22 @@
+# ORBT — Process 910 Content Artifacts
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "CONTENT-ARTIFACTS"
+process_name: "Content Artifacts — NotebookLM Artifact Registry"
+silo: "sales"
+
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-194 shipped — ingest endpoint live, D1 migration deployed, ContentPage consuming artifacts"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+blockers: []
+
+# Note: UT manual is a governance backfill (BAR-194 code shipped before UT doc existed).
+# OPERATE state reflects code is live and functioning. UT doc does not change runtime state.

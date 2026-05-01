@@ -1,0 +1,22 @@
+# ORBT — Process 280 LCS Delivery Hub
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+
+process_id: "LCS-DELIVERY-HUB"
+process_name: "LCS Delivery Hub — Email Send Scheduler + Delivery Status Dashboard"
+silo: "svg-agency"
+
+state: "OPERATE"
+strikes: 0
+last_transition_at: "2026-04-30T00:00:00Z"
+last_transition_reason: "BAR-357 shipped — lcs-hub CF Worker live, /lcs/delivery-status endpoint active, LCSDelivery.tsx rendering SenderDomain + FireDailyRun data"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+blockers: []
+
+# Note: UT manual is a governance backfill (BAR-357 code shipped before UT doc existed).
+# OPERATE state reflects code is live and functioning. UT doc does not change runtime state.

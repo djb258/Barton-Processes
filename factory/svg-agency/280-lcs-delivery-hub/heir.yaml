@@ -1,0 +1,42 @@
+# HEIR — 280 LCS Delivery Hub
+process_id: "LCS-DELIVERY-HUB"
+process_number: "280"
+name: "LCS Delivery Hub — Email Send Scheduler + Delivery Status Dashboard"
+blueprint_owner: "svg-agency"
+runtime: "lcs-hub CF Worker + Mission Control LCSDelivery.tsx (React component)"
+status: "operate"
+hub_id: "LCS-DELIVERY-HUB-280"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "lcs-hub CF Worker — email send scheduler, queue processor, /lcs/delivery-status endpoint"
+  - "Mission Control LCSDelivery.tsx — delivery status dashboard (React component, CF Access gated)"
+  - "D1 database — canonical store for sender_domains, campaign_queue, fire_daily_runs"
+  - "Mailgun / sending provider — actual email delivery (bound to SenderDomain records)"
+
+secrets_provider: "Doppler → imo-creator → dev (Mailgun API key, D1 binding, sending domain credentials)"
+
+two_question_intake:
+  what_triggers: "A daily send run fires (scheduled cron) or an operator opens the LCSDelivery dashboard in Mission Control to view delivery status"
+  how_do_we_get_it: "lcs-hub CF Worker reads CampaignQueueItem records (status=pending), enforces SenderDomain.daily_limit + warmup_phase filters, dispatches sends via Mailgun, writes FireDailyRun record; LCSDelivery.tsx fetches GET /lcs/delivery-status for SenderDomain[] + FireDailyRun[] display"
+
+acceptance_criteria:
+  - "GET /lcs/delivery-status returns SenderDomain[] + FireDailyRun[] in a single response"
+  - "daily_limit enforced — no domain sends over its daily_limit in 24 hours"
+  - "warmup_phase = paused domains receive zero scheduled sends"
+  - "Every CampaignQueueItem status transitions one-directionally (pending → sent/failed/skipped)"
+  - "Every daily run produces a FireDailyRun record with domains_used populated"
+  - "Contacts table is read-only from lcs-hub (no direct writes)"
+  - "No cross-entity sends (SVG Agency only)"
+
+peer_processes:
+  - 200  # people-worker (contact data source — read only)
+  - 700  # campaign-engine (supplies CampaignQueueItem records)
+
+feeds:
+  - "Mission Control LCSDelivery.tsx dashboard (SenderDomain status + FireDailyRun history)"
+  - "Process 700 Campaign Engine (queue consumption — marks items sent/failed/skipped)"

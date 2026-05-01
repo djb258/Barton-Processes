@@ -1,0 +1,38 @@
+# HEIR — 180 Sitemap Publisher
+process_id: "SITEMAP-PUBLISHER"
+process_number: "180"
+name: "Sitemap Publisher — insuranceinformatics.com URL Registry"
+blueprint_owner: "svg-agency"
+runtime: "mission-control-api CF Worker (Hono routes)"
+status: "operate"
+hub_id: "SITEMAP-PUBLISHER-180"
+sovereign_ref: "imo-creator"
+governing_engine: "law/doctrine/KEY.md + law/doctrine/FOUNDATIONAL_BEDROCK.md"
+ctb_placement: "leaf"
+cc_layer: "CC-03"
+imo_topology: "middle"
+
+services:
+  - "mission-control-api CF Worker — GET /sitemap, GET /sitemap/:site"
+
+secrets_provider: "none — public read endpoint, no auth required"
+
+two_question_intake:
+  what_triggers: "A consumer (MapEngine, XML generator, or SEO crawler) needs the URL inventory for insuranceinformatics.com"
+  how_do_we_get_it: "GET /sitemap (all) or GET /sitemap/:site (filtered) on mission-control-api; returns JSON array of SitemapEntry objects"
+
+acceptance_criteria:
+  - "GET /sitemap returns all SitemapEntry records across all registered sites"
+  - "GET /sitemap/:site returns entries filtered to the requested site slug; unknown slugs return empty array (not 404)"
+  - "SitemapEntry shape: site, site_label, path, title, url, parent, depth, priority, changefreq, last_modified"
+  - "depth and parent are derived from pathDepth() and parentPath() helpers"
+  - "priority 0.0-1.0, changefreq is valid XML sitemap enum value"
+  - "url is fully qualified (https://), path is relative (/)"
+
+peer_processes:
+  - 181
+
+feeds:
+  - "MapEngine (BAR-323) — consumes sitemap for visualization"
+  - "XML sitemap generator — consumes for SEO crawl submission"
+  - "Mission Control sitemap tab"
