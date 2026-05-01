@@ -1,0 +1,12 @@
+sovereign_ref: imo-creator
+hub_id: PROC-2301
+ctb_placement: leaf
+imo_topology: middle
+cc_layer: CC-04
+services: [Cloudflare D1 (kiddos), Cloudflare Workers]
+secrets_provider: doppler
+acceptance_criteria:
+  - MatBoss match data scraped and normalized
+  - Wrestling stats validated against schema
+  - Validated records written to D1 sports table with person_id FK
+  - Platform IDs (MatBoss ID) stored for cross-reference
