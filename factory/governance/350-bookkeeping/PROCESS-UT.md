@@ -30,7 +30,7 @@
 | Field | Value |
 |-------|-------|
 | process_id | BOOKKEEPING |
-| heir_id | BAR-122_v1.0.2 |
+| heir_id | BAR-122_v1.0.3 |
 | sovereign_ref | imo-creator |
 | hub_id | governance-bookkeeping |
 | cc_layer | CC-03 |
@@ -446,7 +446,7 @@ cd workers/mission-control-api && npx wrangler deploy
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-30 |
-| Version | 1.0.2 |
+| Version | 1.0.3 |
 | ORBT | BUILD |
 | Template Version | 2.7.0 |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |
@@ -458,3 +458,4 @@ cd workers/mission-control-api && npx wrangler deploy
 |---------|------|--------|--------|
 | 1.0.0 | 2026-04-30 | Claude (mechanic) | Initial BUILD scaffold |
 | 1.0.2 | 2026-04-30 | Claude (Sonnet mechanic) | UT v2.7.0 conformance fix per BAR-122 Strike 2 (FFR-122-002): sequential §1-§14, cluster banners corrected (`# CLUSTER N — X` → `# IDENTITY/CONTRACT/GOVERNANCE`), heir.yaml `process_id` + `runtime` fields added, orbt.yaml `blockers` array added |
+| 1.0.3 | 2026-04-30 | Claude (Sonnet mechanic) | BAR-122 FFR-122-003: section label prefix `A§` → `§` per UT v2.7.0. Audit finding confirmed already-clean — zero `A§` occurrences found; version bump + amendment row added to close the FFR. |
