@@ -7,3 +7,9 @@ blockers:
 last_repair: 2026-04-30
 bar_ref: BAR-365
 recon_date: 2026-04-30
+exit_criteria:
+  - All 3 primary pool domains have SPF=valid + DKIM=valid + CNAME=valid confirmed via Mailgun API GET /v3/domains/{domain}
+  - All 3 primary pool domains have >= 3 SMTP credentials confirmed via GET /v3/domains/{domain}/credentials
+  - SMTP passwords stored in Doppler (imo-creator/dev: MAILGUN_SMTP_PASS_POOL1-3) — Dave-action required
+  - Successful test send via POST /v3/{domain}/messages returns 200 on at least one primary domain
+  - PROCESS-UT.md auditor verdict = PASS (different engine than mechanic, Aviation Model)

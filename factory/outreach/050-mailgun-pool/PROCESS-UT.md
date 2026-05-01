@@ -346,14 +346,57 @@ _Pre-certification — no logbook entries yet. First entry created on initial BU
 
 ---
 
+## 13. FLEET FAILURE REGISTRY
+
+| Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
+|-----------|----------|-----------|-----------|-------------|-------------|--------|
+| FP-050-001 | mailgun_senders / SMTP auth layer | AUTH_FAIL | 2026-04-30 | 1 | 1 | RESOLVED (BAR-365: credentials created) |
+
+**Strike 1:** Repair. **Strike 2:** Scrutiny. **Strike 3:** Troubleshoot/Train → Airworthiness Directive.
+
+---
+
+## 14. MAINTENANCE LOGBOOK (doc's own logbook — FAA-grade)
+
+_Every touch on this doc is a maintenance action. Append-only._
+
+### Action Types
+
+| Type | Meaning |
+|------|---------|
+| RETROFIT | UT structure / template upgrade applied |
+| VERIFY | Claim grounded against live system (§9b row ticked ☑) |
+| AUDIT | FAA Inspector (auditor) pass — PASS / FAIL recorded |
+| EDIT | Content change (new step added, schema changed, etc.) |
+| CERTIFY | Moved ORBT state (e.g., BUILD → OPERATE) |
+| REPAIR | Post-strike fix |
+| STRIKE | Fleet failure recorded (§13) |
+| LBB_INGEST | Session summary written to LBB |
+
+### Logbook (append-only — never edit past rows)
+
+| Date (ISO) | Actor | Action | What Was Done | Evidence | LBB Record |
+|-----------|-------|--------|---------------|----------|------------|
+| 2026-04-30 00:00 UTC | Claude Code (mechanic) | RETROFIT | BAR-365 initial build: PROCESS-UT.md v1.0.0 created. 9 SMTP credentials provisioned across 3 primary pool domains. | BAR-365 dispatch + heir.yaml + orbt.yaml committed | pending |
+| 2026-04-30 00:00 UTC | Claude Code (mechanic) | REPAIR | BAR-365 UT v2.7.0 conformance: added §13 Fleet Failure Registry + §14 Maintenance Logbook; moved Document Control to after §14; bumped version to 1.0.2; added process_id + runtime to heir.yaml; added exit_criteria to orbt.yaml | commit FFR-365-002 | pending |
+
+---
+
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-30 |
-| Version | 1.0.0 |
+| Version | 1.0.2 |
 | Status | REPAIR (BAR-365 in progress) |
 | BAR | BAR-365 |
 | Owner | Dave Barton |
 | Authority | Inherited — imo-creator sovereign |
 | Next Action | Dave-action: add SMTP passwords to Doppler; verify test send; audit this doc |
+
+### Amendment Log
+
+| Version | Date | Changed By | What Changed |
+|---------|------|-----------|-------------|
+| 1.0.0 | 2026-04-30 | Claude Code | Initial build — BAR-365 REPAIR |
+| 1.0.2 | 2026-04-30 | Claude Code | UT v2.7.0 conformance: §13 + §14 added, Document Control moved after §14, heir.yaml + orbt.yaml schema gaps closed |

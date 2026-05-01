@@ -1,7 +1,9 @@
 sovereign_ref: imo-creator
 hub_id: mailgun-pool-050
+process_id: "MAILGUN-POOL"
 ctb_placement: leaf
 imo_topology: middle
+runtime: "cloudflare-worker"
 cc_layer: CC-03
 services:
   - mailgun-api (REST)
