@@ -1,7 +1,9 @@
 # HEIR — BAR-122 Bookkeeping Scaffold
 # Format: 8 fields. Stamped at build. Never changes.
 
-heir_id: BAR-122_v1.0.0
+process_id: "BOOKKEEPING"
+runtime: "cloudflare-worker"
+heir_id: BAR-122_v1.0.2
 sovereign_ref: imo-creator
 hub_id: governance-bookkeeping
 cc_layer: CC-03

@@ -2,13 +2,18 @@
 # State machine: BUILD → OPERATE (after Dave creates accounts + keys land in Doppler)
 
 orbt_state: BUILD
-heir_id: BAR-122_v1.0.0
+heir_id: BAR-122_v1.0.2
 updated: "2026-04-30"
 
 # State definitions
 states:
   BUILD:
     description: "Scaffold deployed. API stubs in place. Awaiting Dave account creation (Bill.com + Xero) and Doppler secret injection."
+    blockers:
+      - "Bill.com account not yet created — Dave-action required"
+      - "Xero account not yet created — Dave-action required"
+      - "BILLCOM_API_KEY + BILLCOM_DEV_KEY not yet set via `npx wrangler secret put`"
+      - "XERO_CLIENT_ID + XERO_CLIENT_SECRET + XERO_REFRESH_TOKEN not yet set via `npx wrangler secret put`"
     exit_criteria:
       - Bill.com account created by Dave
       - Xero account created by Dave
