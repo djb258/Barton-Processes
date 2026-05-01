@@ -1,0 +1,9 @@
+state: REPAIR
+strikes: 0
+blockers:
+  - MX receiving records show "unknown" on non-primary domains — does not block sending but needs DNS propagation check after 24h
+  - No SMTP credentials existed on any domain prior to BAR-365 (root cause of BAR-811)
+  - Credentials created for 3 domains (mg.insuranceinformatics.com, mg.svg.agency, mg.insuranceinformatics.agency); remaining 13 custom domains pending Dave decision on whether to expand pool further
+last_repair: 2026-04-30
+bar_ref: BAR-365
+recon_date: 2026-04-30

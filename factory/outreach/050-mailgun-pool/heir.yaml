@@ -1,0 +1,15 @@
+sovereign_ref: imo-creator
+hub_id: mailgun-pool-050
+ctb_placement: leaf
+imo_topology: middle
+cc_layer: CC-03
+services:
+  - mailgun-api (REST)
+  - cloudflare-dns (DNS hosting)
+  - doppler (secrets: GLOBAL_MAILGUN_API_KEY, GLOBAL_MAILGUN_DOMAIN)
+secrets_provider: doppler
+acceptance_criteria: >
+  All active custom domains have SPF=valid + DKIM=valid + CNAME=valid.
+  Each pool domain has >= 3 SMTP credentials.
+  No domain in state != "active".
+  Sending tests pass (200 from Mailgun API) on primary domain.
