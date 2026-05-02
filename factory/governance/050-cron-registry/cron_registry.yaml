@@ -1,0 +1,340 @@
+# Cron Registry — Single source of truth for every recurring cron across the Barton fleet
+# AI is NEVER the scheduler. Cron is the trigger spine.
+# Authority: factory/governance/050-cron-registry/PROCESS-UT.md
+# Schema: registry.crons[] entries
+#
+# RULES (D-050-XX in DOCTRINE.md):
+# - D-050-01: Every cron in the fleet MUST appear here
+# - D-050-02: PRs touching wrangler.toml [triggers] MUST diff this file in same PR
+# - D-050-03: AI is NEVER the scheduler — Codex grep enforces
+# - D-050-04: Disabled crons cite the BAR that disabled them
+# - D-050-05: Weekly drift check is itself a registered cron (last entry below)
+# - D-050-06: Registry edits require sovereign sign-off
+
+version: "1.0.0-skeleton"
+last_full_audit: "2026-05-02"
+audit_authority: "session 32 inventory (Opus 4.7)"
+mechanic_to_populate_post_dispatch: true
+
+crons:
+  # ===========================================================================
+  # ACTIVE — verified Friday 2026-05-01 audit
+  # ===========================================================================
+
+  - id: imo-creator.briefing
+    process: imo-creator-v2 worker
+    binding: cf-worker-cron
+    repo: imo-creator-v2
+    path: workers/briefing/wrangler.toml
+    schedule: ["0 8 * * 1-5", "0 18 * * 1-5"]
+    timezone: UTC
+    purpose: "Morning + afternoon weekday briefings (4am ET / 2pm ET)"
+    orbt: OPERATE
+    last_verified: "2026-05-01"
+    on_failure: "alert mission-control via squawk"
+    ai_on_spine: false  # confirmed Friday audit
+
+  - id: imo-creator.doc-library.sync
+    process: imo-creator-v2 worker
+    binding: cf-worker-cron
+    repo: imo-creator-v2
+    path: workers/doc-library/wrangler.toml
+    schedule: ["0 6 * * *"]
+    timezone: UTC
+    purpose: "Nightly doc-library sync"
+    orbt: OPERATE
+    last_verified: "2026-05-01"
+    on_failure: "alert mission-control via squawk"
+    ai_on_spine: false
+
+  - id: imo-creator.vault-sync
+    process: imo-creator-v2 worker
+    binding: cf-worker-cron
+    repo: imo-creator-v2
+    path: workers/vault-sync/wrangler.toml
+    schedule: ["0 22 * * 5"]
+    timezone: UTC
+    purpose: "Weekly vault sync (Friday 10pm UTC)"
+    orbt: OPERATE
+    last_verified: "2026-05-01"
+    on_failure: "alert mission-control via squawk"
+    ai_on_spine: false
+
+  - id: bp.100.lcs-pipeline
+    process: bp.100
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/cl/100-lcs-pipeline/wrangler.toml
+    schedule: ["0 7 * * *"]
+    timezone: UTC
+    purpose: "Daily LCS pipeline tick — signal queue scan, CID compilation"
+    orbt: REPAIR  # Strike 2 — quarantine-356 in flight
+    last_verified: "2026-05-01"
+    on_failure: "REPAIR ORBT; HALT on bounce > 5%"
+    ai_on_spine: false
+
+  - id: bp.820.vendor-export
+    process: bp.820
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/client/820-vendor-export/wrangler.toml
+    schedule: ["0 5 * * *"]
+    timezone: UTC
+    purpose: "Daily vendor export — TPAs, PBMs, carriers"
+    orbt: BUILD  # cron exists, ORBT promotion pending Mechanic verification
+    last_verified: "2026-05-01"
+    on_failure: "halt on transmit failure rate > 5%"
+    ai_on_spine: false
+
+  - id: bp.200.people-worker
+    process: bp.200
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/200-people-worker/wrangler.toml
+    schedule: ["0 6 * * *"]
+    timezone: UTC
+    purpose: "Daily People Worker — Pass 0 free, Pass 2 if staging exhausted"
+    orbt: REPAIR  # 50% slot fill leak (Strike 1)
+    last_verified: "2026-05-01"
+    on_failure: "REPAIR ORBT; vendor budget cap enforced"
+    ai_on_spine: false
+
+  # ===========================================================================
+  # DISABLED — cite BAR per D-050-04
+  # ===========================================================================
+
+  - id: imo-creator.mission-control-api.cos
+    process: imo-creator-v2 worker
+    binding: cf-worker-cron
+    repo: imo-creator-v2
+    path: workers/mission-control-api/wrangler.toml
+    schedule_when_active: ["TBD per BAR-812/813 rework spec"]
+    timezone: UTC
+    purpose: "COS briefing + Twilio call dispatches"
+    orbt: DISABLED
+    is_disabled: true
+    disabled_reason: "BAR-812 / BAR-813 — every-5-min cron was the actual culprit; ALL COS crons killed; re-enable after rework spec"
+    last_verified: "2026-05-01"
+    re_enable_after: "BAR-812/813 rework BAR (TBF)"
+    ai_on_spine: false
+
+  # ===========================================================================
+  # PROPOSED (per Decision Sheet Section A) — pending sovereign sign-off
+  # Mechanic adds these to source wrangler.toml AFTER Decision Sheet answered
+  # ===========================================================================
+
+  - id: bp.010.seed-d1
+    process: bp.010
+    binding: cf-worker-cron  # SEED runs from lcs-hub per heir.yaml
+    repo: Barton-Processes
+    path: factory/outreach/010-seed-d1/wrangler.toml  # OR lcs-hub merged
+    schedule: ["0 4 * * *"]  # PROPOSED per Decision Sheet A1
+    timezone: UTC
+    purpose: "Daily SEED — Neon → D1 (32,702 ±20% companies)"
+    orbt: PROPOSED  # awaits sovereign sign-off + Mechanic dispatch
+    last_verified: null
+    on_failure: "HALT on D-010-XX trip"
+    ai_on_spine: false
+
+  - id: bp.201.email-discovery
+    process: bp.201
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/201-email-discovery/wrangler.toml
+    schedule: ["0 7 * * *"]  # PROPOSED Decision Sheet A3
+    timezone: UTC
+    purpose: "Daily email discovery — pattern-derive + MillionVerifier + Hunter waterfall"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on vendor error > 10% or budget exhaustion"
+    ai_on_spine: false
+
+  - id: bp.202.linkedin-discovery
+    process: bp.202
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/202-linkedin-discovery/wrangler.toml
+    schedule: ["0 7 * * *"]  # PROPOSED Decision Sheet A4
+    timezone: UTC
+    purpose: "Daily LinkedIn discovery — 3-gate waterfall recon→Hunter→Startpage"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on rate-limit or gate-3 failure rate > 50%"
+    ai_on_spine: false
+
+  - id: bp.300.blog-worker
+    process: bp.300
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/300-blog-worker/wrangler.toml
+    schedule: ["0 9 1 * *"]  # PROPOSED Decision Sheet A5
+    timezone: UTC
+    purpose: "Monthly blog content scan + signal classification"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on proxy error > 10%"
+    ai_on_spine: false
+
+  - id: bp.301.page-parser
+    process: bp.301
+    binding: cf-worker-cron  # OR event-driven webhook from bp.300
+    repo: Barton-Processes
+    path: factory/outreach/301-page-parser/wrangler.toml
+    schedule: ["0 8 * * *"]  # PROPOSED Decision Sheet A6
+    timezone: UTC
+    purpose: "Daily management page parsing — fills CEO/CFO/HR slots from leadership pages"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on parser confidence avg < 60%"
+    ai_on_spine: false
+
+  - id: bp.400.dol-views.refresh
+    process: bp.400
+    binding: neon-pg-cron  # Neon-side, NOT CF Worker
+    repo: (Neon-side — not in a wrangler.toml)
+    path: "Neon: pg_cron OR scheduled function in dol_views schema"
+    schedule: ["0 5 * * *"]  # PROPOSED Decision Sheet A7
+    timezone: UTC
+    purpose: "Daily materialized view refresh for 6 DOL views"
+    orbt: PROPOSED  # views OPERATE; refresh schedule needs Mechanic confirmation
+    last_verified: null
+    on_failure: "halt on refresh failure"
+    ai_on_spine: false
+
+  - id: bp.500.talent-flow
+    process: bp.500
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/500-talent-flow/wrangler.toml
+    schedule: ["0 8 1 * *"]  # PROPOSED Decision Sheet A8
+    timezone: UTC
+    purpose: "Monthly talent movement detection (snapshot diff on people_slots)"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "alert on zero detections for 2 cycles"
+    ai_on_spine: false
+
+  - id: bp.700.campaign-engine
+    process: bp.700
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/outreach/700-campaign-engine/wrangler.toml
+    schedule: ["0 13 * * 1-5"]  # PROPOSED Decision Sheet A9
+    timezone: UTC
+    purpose: "Weekday cadence sequencing — 9am ET, 1h before bp.100 daily fire"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on Composio error rate > 10%"
+    ai_on_spine: false
+
+  - id: bp.100.lcs-fire-daily
+    process: bp.100
+    binding: cf-worker-cron  # MIGRATED from bash script per Decision Sheet C5
+    repo: Barton-Processes  # OR imo-creator-v2 if hosted there
+    path: factory/cl/100-lcs-pipeline/wrangler.toml  # ADD second cron OR new worker
+    schedule: ["0 14 * * 1-5"]  # PROPOSED Decision Sheet A11
+    timezone: UTC
+    purpose: "Weekday 10am ET — daily MID emission to Mailgun + HeyReach (REPLACES lcs-fire-daily.sh)"
+    orbt: PROPOSED  # Monday-critical; this is the why-no-emails-this-week unblocker
+    last_verified: null
+    on_failure: "HALT on bounce > 5% mid-run"
+    ai_on_spine: false  # critical — Codex audits the migration
+
+  - id: bp.800.client-mint
+    process: bp.800
+    binding: cf-worker-cron + event-driven
+    repo: Barton-Processes
+    path: factory/cl/800-client-mint/wrangler.toml
+    schedule: ["0 4 * * *"]  # PROPOSED Decision Sheet A12 (reconcile)
+    timezone: UTC
+    purpose: "Daily reconcile + per-event on final_outcome=CLIENT flips"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on duplicate client_id detection"
+    ai_on_spine: false
+
+  - id: bp.810.client-intake
+    process: bp.810
+    binding: cf-worker-cron + http
+    repo: Barton-Processes
+    path: factory/client/810-client-intake/wrangler.toml
+    schedule: ["0 5 * * *"]  # PROPOSED Decision Sheet A13 (reconcile)
+    timezone: UTC
+    purpose: "HTTP intake event-driven + daily reconcile for staged-but-not-promoted"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on validation error rate > 5% or vault sync > 1h lag"
+    ai_on_spine: false
+
+  - id: bp.830.client-portal.cache-warm
+    process: bp.830
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/client/830-client-portal/wrangler.toml
+    schedule: ["0 6 * * *"]  # PROPOSED Decision Sheet A15
+    timezone: UTC
+    purpose: "Daily cache-warm + access log rollup"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on 5xx > 2%"
+    ai_on_spine: false
+
+  - id: bp.900.sales-portal.reconcile
+    process: bp.900
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/sales/900-sales-portal/wrangler.toml
+    schedule: ["0 6 * * *"]  # PROPOSED Decision Sheet A16
+    timezone: UTC
+    purpose: "Daily reconcile — promote completed-Fact-Finder, flag stalled, trigger bp.800 on CLIENT flips"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "halt on stage skip"
+    ai_on_spine: false
+
+  # ===========================================================================
+  # META — the registry's own drift cron
+  # ===========================================================================
+
+  - id: governance.cron-registry.drift-check
+    process: bp.050-cron-registry  # SELF
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/governance/050-cron-registry/wrangler.toml  # to be created
+    schedule: ["0 4 * * 0"]  # Sunday 4am UTC weekly
+    timezone: UTC
+    purpose: "Weekly drift check — registry vs live wrangler triggers list + AI-on-spine grep"
+    orbt: PROPOSED  # process itself is BUILD; drift cron registers when Process 050 exits BUILD
+    last_verified: null
+    on_failure: "ORANGE squawk if drift detected; RED if AI-on-spine hit"
+    ai_on_spine: false
+
+  # ===========================================================================
+  # RETIRED
+  # ===========================================================================
+
+  - id: bp.600.bit-scoring
+    process: bp.600
+    binding: (none)
+    repo: Barton-Processes
+    path: factory/outreach/600-bit-scoring/
+    schedule: null
+    timezone: UTC
+    purpose: "Cross-hub signal aggregation → authorization band 0-5"
+    orbt: RETIRED
+    is_disabled: true
+    disabled_reason: "Retired 2026-03-25 — replaced by direct data-completeness checks in LCS compiler (bp.100). See PLAN-BP-600-BIT-SCORING.md."
+    last_verified: "2026-05-02"
+    re_enable_after: "(none — formal retirement; revival requires new BAR per PLAN-BP-600 §9 Q3)"
+    ai_on_spine: false
+
+# Summary (refresh on every Mechanic introspection)
+summary:
+  active_count: 6      # actually firing today (verified Friday)
+  disabled_count: 1    # mission-control-api COS
+  proposed_count: 14   # awaiting Decision Sheet sign-off + Mechanic dispatch
+  retired_count: 1     # bp.600
+  total: 22
+
+  unaddressed_processes: []  # populated by Mechanic on introspection — any process WITHOUT a registry row gets logged here
+  ai_on_spine_violations: 0  # MUST be 0 — Codex audits weekly
