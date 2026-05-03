@@ -1,0 +1,40 @@
+name: bp-200-people-worker
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 200-people-worker, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/200-people-worker, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: REPAIR, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.200
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [cloudflare-worker, cloudflare-d1, vendor-apis, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; people_slots leak diagnosed; 10 BAR-377 gates green"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: REPAIR, strikes: 1, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: fill_rate_repaired_and_codex_10_gate_pass }
+description: "UT-local workflow for bp.200 People Worker. Diagnoses slot-fill leak, verifies deterministic vendor/cached enrichment, audits downstream readiness."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
+schedule: ["0 6 * * *"]
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml]
+  writes: [docs/audit/process-runs/bp-200/inventory-bp-200.md, docs/audit/process-runs/bp-200/live-state-bp-200.md, docs/audit/process-runs/bp-200/diff-bp-200.md, docs/audit/process-runs/bp-200/audit-bp-200.md]
+  forbidden: [llm_on_schedule_spine, downstream_patch_instead_of_root_fix, vendor_budget_unbounded]
+nodes:
+  - { id: inventory, brain: gemini, output: inventory-bp-200.md }
+  - { id: live-introspection, brain: sonnet, output: live-state-bp-200.md }
+  - { id: diff, brain: opus-4.7, output: diff-bp-200.md }
+  - { id: fix, brain: sonnet, mode: repair, output: fix_commits_if_needed }
+  - { id: audit, brain: codex, output: audit-bp-200.md }
+  - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
+gates:
+  cron_exists: "0 6 * * * in wrangler.toml"
+  cron_firing: "recent worker cron fire confirmed"
+  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
+  ut_ops_matches_reality: "daily/monthly cadence and PROCESS-UT claims reconciled"
+  lbb_ingest_each_fire: "bp.200 run rows exist in LBB"
+  orbt_promoted_or_confirmed: "REPAIR to OPERATE only after leak closes"
+  d1_surface_documented: "people_slots read/write checks pass"
+  upstream_healthy: "bp.010 SEED is OPERATE"
+  downstream_wired: "bp.201, bp.202, bp.500, and bp.600 consume people_slots"
+  squawk_live: "fill-rate drop or orphan slots writes squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.200 People", ingest_on_pass: true, ingest_on_fail: true }

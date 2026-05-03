@@ -1,0 +1,34 @@
+name: bp-300-blog-worker
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 300-blog-worker, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/300-blog-worker, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: BUILD, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.300
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [crawler, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; blog source discovery gates green"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: BUILD, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: codex_10_gate_pass }
+description: "UT-local workflow for bp.300 Blog Worker. Discovers company blog/about URLs, verifies crawl determinism, and prepares bp.301 input."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+schedule: []
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
+  writes: [docs/audit/process-runs/bp-300/inventory-bp-300.md, docs/audit/process-runs/bp-300/live-state-bp-300.md, docs/audit/process-runs/bp-300/diff-bp-300.md, docs/audit/process-runs/bp-300/audit-bp-300.md]
+  forbidden: [llm_on_schedule_spine, skip_seed_gate, uncontrolled_crawl]
+nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+gates:
+  cron_exists: "cron or explicit run policy declared"
+  cron_firing: "recent deterministic run evidence exists"
+  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
+  ut_ops_matches_reality: "PROCESS-UT operations match crawler reality"
+  lbb_ingest_each_fire: "bp.300 LBB rows exist"
+  orbt_promoted_or_confirmed: "BUILD to OPERATE only after audit pass"
+  d1_surface_documented: "blog_about_urls surface documented and checked"
+  upstream_healthy: "bp.010 SEED is OPERATE"
+  downstream_wired: "bp.301 consumes blog/about URLs"
+  squawk_live: "crawl or write failure writes squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.300 Blog Worker", ingest_on_pass: true, ingest_on_fail: true }

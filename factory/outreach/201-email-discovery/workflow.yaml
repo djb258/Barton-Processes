@@ -1,0 +1,34 @@
+name: bp-201-email-discovery
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 201-email-discovery, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/201-email-discovery, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: BUILD, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.201
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [vendor-email-api, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; email discovery deterministic; 10 BAR-377 gates green"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: BUILD, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: codex_10_gate_pass }
+description: "UT-local workflow for bp.201 Email Discovery. Builds/validates email enrichment from people_slots with deterministic vendor calls and LBB/MC visibility."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+schedule: []
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
+  writes: [docs/audit/process-runs/bp-201/inventory-bp-201.md, docs/audit/process-runs/bp-201/live-state-bp-201.md, docs/audit/process-runs/bp-201/diff-bp-201.md, docs/audit/process-runs/bp-201/audit-bp-201.md]
+  forbidden: [llm_on_schedule_spine, email_write_without_verification_flag, skip_bp_200_gate]
+nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+gates:
+  cron_exists: "cron or explicit upstream-trigger policy declared"
+  cron_firing: "recent deterministic run evidence exists"
+  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
+  ut_ops_matches_reality: "PROCESS-UT operations match email discovery reality"
+  lbb_ingest_each_fire: "bp.201 LBB rows exist"
+  orbt_promoted_or_confirmed: "BUILD to OPERATE only after audit pass"
+  d1_surface_documented: "people_slots email columns documented and checked"
+  upstream_healthy: "bp.200 people_slots healthy"
+  downstream_wired: "bp.700 can consume verified emails"
+  squawk_live: "vendor or verification failure writes squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.201 Email Discovery", ingest_on_pass: true, ingest_on_fail: true }

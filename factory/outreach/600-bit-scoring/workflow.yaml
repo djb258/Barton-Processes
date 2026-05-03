@@ -1,0 +1,34 @@
+name: bp-600-bit-scoring
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 600-bit-scoring, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: TROUBLESHOOT_TRAIN, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.600
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [scoring-engine, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: TROUBLESHOOT_TRAIN, strikes: 3, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: sovereign_retirement_or_tt_resolution }
+description: "UT-local workflow for bp.600 BIT Scoring. Encodes T/T or formal retirement path; no blind repair after Strike 3."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+schedule: []
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
+  writes: [docs/audit/process-runs/bp-600/inventory-bp-600.md, docs/audit/process-runs/bp-600/live-state-bp-600.md, docs/audit/process-runs/bp-600/diff-bp-600.md, docs/audit/process-runs/bp-600/audit-bp-600.md]
+  forbidden: [llm_on_schedule_spine, fourth_repair_after_strike_3, promote_without_sovereign_resolution]
+nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: retirement-or-tt-plan, brain: opus-4.7 }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+gates:
+  cron_exists: "disabled/retired/T/T schedule state is explicit"
+  cron_firing: "no unintended scoring cron fires"
+  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
+  ut_ops_matches_reality: "PROCESS-UT state matches T/T or retirement reality"
+  lbb_ingest_each_fire: "T/T or retirement events logged"
+  orbt_promoted_or_confirmed: "TROUBLESHOOT_TRAIN remains until sovereign resolution"
+  d1_surface_documented: "bit_scores surface documented or retired"
+  upstream_healthy: "bp.200, bp.300, bp.400, bp.500 status known"
+  downstream_wired: "bp.700 dependency is explicitly handled"
+  squawk_live: "unintended scoring fire writes squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.600 BIT Scoring", ingest_on_pass: true, ingest_on_fail: true }

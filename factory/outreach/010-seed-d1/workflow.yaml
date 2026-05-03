@@ -1,0 +1,40 @@
+name: bp-010-seed-d1
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 010-seed-d1, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach-intelligence/010-seed-d1, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: OPERATE, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.010
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [cloudflare-d1, hyperdrive, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; verify-only OPERATE"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: OPERATE, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: codex_10_gate_pass }
+description: "UT-local workflow for bp.010 SEED D1. Inventory PROCESS-UT, inspect live D1, verify cron/trigger reality, audit 10 gates, and log to LBB/MC."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+schedule: []
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
+  writes: [docs/audit/process-runs/bp-010/inventory-bp-010.md, docs/audit/process-runs/bp-010/live-state-bp-010.md, docs/audit/process-runs/bp-010/diff-bp-010.md, docs/audit/process-runs/bp-010/audit-bp-010.md]
+  forbidden: [llm_on_schedule_spine, reverse_write_to_neon, modify_locked_doctrine]
+nodes:
+  - { id: inventory, brain: gemini, output: inventory-bp-010.md }
+  - { id: live-introspection, brain: sonnet, output: live-state-bp-010.md }
+  - { id: diff, brain: opus-4.7, output: diff-bp-010.md }
+  - { id: fix, brain: sonnet, mode: verify-only, output: no_code_change_unless_gate_fails }
+  - { id: audit, brain: codex, output: audit-bp-010.md }
+  - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
+gates:
+  cron_exists: "declared cycle or registered on-demand trigger is documented"
+  cron_firing: "recent fire or verified operator-trigger record exists"
+  no_ai_on_schedule_spine: "grep scheduled handlers for LLM/API model calls returns zero"
+  ut_ops_matches_reality: "PROCESS-UT operations match live trigger and D1 surface"
+  lbb_ingest_each_fire: "lbb_records contains bp.010 run rows"
+  orbt_promoted_or_confirmed: "orbt.yaml remains OPERATE after Codex audit"
+  d1_surface_documented: "svg-d1-spine and svg-d1-outreach-ops checks pass"
+  upstream_healthy: "Neon and coverage filter are available"
+  downstream_wired: "bp.100, bp.201, bp.202, and bp.300 consume SEED output"
+  squawk_live: "stop-condition trip writes mission-control squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.010 SEED", ingest_on_pass: true, ingest_on_fail: true }

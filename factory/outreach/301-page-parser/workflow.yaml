@@ -1,0 +1,34 @@
+name: bp-301-page-parser
+inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+outside:
+  heir: { sovereign_ref: svg-outreach, hub_id: 301-page-parser, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/301-page-parser, species: Workflow-Body, owner: dave-barton }
+  orbt: { library_state: BUILD, last_indexed_at: "2026-05-03", indexed_by: codex }
+inside:
+  heir:
+    process_id: bp.301
+    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    services: [page-parser, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; parser outputs audited and wired downstream"
+    determinism_gate: ai_on_spine_forbidden
+  orbt: { runtime_state: BUILD, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: codex_10_gate_pass }
+description: "UT-local workflow for bp.301 Page Parser. Parses pages found by bp.300, checks deterministic extraction, and logs audit results."
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+schedule: []
+data:
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
+  writes: [docs/audit/process-runs/bp-301/inventory-bp-301.md, docs/audit/process-runs/bp-301/live-state-bp-301.md, docs/audit/process-runs/bp-301/diff-bp-301.md, docs/audit/process-runs/bp-301/audit-bp-301.md]
+  forbidden: [llm_on_schedule_spine, parse_without_source_url, skip_bp_300_gate]
+nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+gates:
+  cron_exists: "cron or explicit upstream-trigger policy declared"
+  cron_firing: "recent deterministic run evidence exists"
+  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
+  ut_ops_matches_reality: "PROCESS-UT operations match parser reality"
+  lbb_ingest_each_fire: "bp.301 LBB rows exist"
+  orbt_promoted_or_confirmed: "BUILD to OPERATE only after audit pass"
+  d1_surface_documented: "parsed page facts surface documented and checked"
+  upstream_healthy: "bp.300 is OPERATE"
+  downstream_wired: "bp.600 and bp.700 can consume parsed signals"
+  squawk_live: "parser failure writes squawk"
+lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.301 Page Parser", ingest_on_pass: true, ingest_on_fail: true }
