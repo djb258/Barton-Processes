@@ -11,10 +11,10 @@
 # - D-050-05: Weekly drift check is itself a registered cron (last entry below)
 # - D-050-06: Registry edits require sovereign sign-off
 
-version: "1.0.0-skeleton"
-last_full_audit: "2026-05-02"
-audit_authority: "session 32 inventory (Opus 4.7)"
-mechanic_to_populate_post_dispatch: true
+version: "1.0.1-live-index"
+last_full_audit: "2026-05-03"
+audit_authority: "BAR-378 live file introspection (Codex)"
+mechanic_to_populate_post_dispatch: false
 
 crons:
   # ===========================================================================
@@ -57,6 +57,19 @@ crons:
     purpose: "Weekly vault sync (Friday 10pm UTC)"
     orbt: OPERATE
     last_verified: "2026-05-01"
+    on_failure: "alert mission-control via squawk"
+    ai_on_spine: false
+
+  - id: imo-creator.mission-control-api.routines
+    process: imo-creator-v2 worker
+    binding: cf-worker-cron
+    repo: imo-creator-v2
+    path: workers/mission-control-api/wrangler.toml
+    schedule: ["0 13 * * 1-5"]
+    timezone: UTC
+    purpose: "BAR-331 autonomous routines dispatch through mission-control-api"
+    orbt: OPERATE
+    last_verified: "2026-05-03"
     on_failure: "alert mission-control via squawk"
     ai_on_spine: false
 
@@ -330,11 +343,11 @@ crons:
 
 # Summary (refresh on every Mechanic introspection)
 summary:
-  active_count: 6      # actually firing today (verified Friday)
+  active_count: 7      # file-verified 2026-05-03, includes mission-control-api BAR-331 routine cron
   disabled_count: 1    # mission-control-api COS
   proposed_count: 14   # awaiting Decision Sheet sign-off + Mechanic dispatch
   retired_count: 1     # bp.600
-  total: 22
+  total: 23
 
   unaddressed_processes: []  # populated by Mechanic on introspection — any process WITHOUT a registry row gets logged here
   ai_on_spine_violations: 0  # MUST be 0 — Codex audits weekly

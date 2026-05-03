@@ -1,0 +1,52 @@
+name: Cron Registry Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  verify-cron-registry-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require registry diff with trigger changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          REGISTRY="factory/governance/050-cron-registry/cron_registry.yaml"
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            git fetch --no-tags origin main --depth=1 || git fetch --no-tags origin master --depth=1
+            BASE_SHA="$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master)"
+          fi
+
+          mapfile -t CHANGED < <(git diff --name-only "$BASE_SHA" HEAD)
+          TRIGGER_FILES=()
+
+          for path in "${CHANGED[@]}"; do
+            if [[ "$path" == *wrangler.toml ]] && [ -f "$path" ] && grep -Eq '^\[triggers\]' "$path"; then
+              TRIGGER_FILES+=("$path")
+            fi
+          done
+
+          if [ "${#TRIGGER_FILES[@]}" -eq 0 ]; then
+            echo "OK: no wrangler.toml trigger changes detected."
+            exit 0
+          fi
+
+          if printf '%s\n' "${CHANGED[@]}" | grep -qx "$REGISTRY"; then
+            echo "OK: trigger changes include cron registry diff."
+            exit 0
+          fi
+
+          echo "ERROR: wrangler.toml trigger changes require a cron_registry.yaml diff:"
+          printf '  %s\n' "${TRIGGER_FILES[@]}"
+          exit 1
