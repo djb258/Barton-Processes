@@ -1,21 +1,22 @@
 # PROCESS-UT — 060: Run Dyno (End-to-End Operator Runbook)
-## Unified Template v2.7.0 | PROC-060 | v0.1.4 — 2026-05-01
+## Unified Template v2.8.0 | PROC-060 | v0.2.0 — 2026-05-04
 ### Status: PROVISIONAL (ORBT=BUILD)
 ### Medium: process
 ### Business: imo-creator
 
 > **Governance:** Rules enforced by `DOCTRINE.md` (D-060-XX, pending first fill).
-> **Authority:** `law/doctrine/FOUNDATIONAL_BEDROCK.md`, `law/UNIFIED_TEMPLATE.md`
-> **CTB:** `law/BARTON_ENTERPRISES_CTB.md` → imo-creator → lucy → process-run-dyno
+> **Authority:** `atlas/constants/FOUNDATIONAL_BEDROCK.md`, `atlas/constants/UNIFIED_TEMPLATE.md` (in imo-creator-v2 — the canonical doctrine repo)
+> **CTB:** `atlas/constants/BARTON_ENTERPRISES_CTB.md` → imo-creator → lucy → process-run-dyno
+> **Companion YAML:** `atlas/manifests/dyno-vault.yaml` (in imo-creator-v2 — engine wrapper spec, BAR-397)
 >
 > **ARCHITECTURAL CONTEXT — READ BEFORE FILLING:**
 > - `djb258/imo-engine-vault` (private repo) = the sealed engine itself (Coca-Cola recipe, never open)
-> - `law/doctrine/DYNO_VAULT_SPEC.md` (this repo) = WHAT the engine IS (blueprint, Codex audit PASS v0.3.3)
+> - `atlas/DYNO_VAULT_SPEC.md` (in imo-creator-v2) = WHAT the engine IS (blueprint, Codex audit PASS v0.3.3)
 > - **THIS DOC** = HOW an OPERATOR runs the engine end-to-end (submit → monitor → verify → certify)
 
 ---
 
-## UT Checklist (Pre-Flight — per law/UT_CHECKLIST.md v1.2.0)
+## UT Checklist (Pre-Flight — per `atlas/constants/UT_CHECKLIST.md` v1.3.1)
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
@@ -69,7 +70,7 @@
 
 ## §3f. Vocabulary {#sec-3f-vocab}
 
-> **Parent KEY:** `law/doctrine/KEY.md` — all universal terms (HEIR, ORBT, IMO, CTB, C&V, Three Primitives, Tier 0) are defined there and inherited here without repetition. This section declares only local terms specific to PROC-060.
+> **Parent KEY:** `atlas/constants/KEY.md` (in imo-creator-v2) — all universal terms (HEIR, ORBT, IMO, CTB, C&V, Three Primitives, Tier 0) are defined there and inherited here without repetition. This section declares only local terms specific to PROC-060.
 
 | Term | Definition |
 |------|------------|
@@ -103,9 +104,9 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited (sovereign: Dave Barton via imo-creator) |
-| Last Modified | 2026-05-01 (session 32 — v0.1.4 Opus mechanic Strike-3 lesson + final audit-pass fixes) |
-| Version | 0.1.4 |
-| BAR Reference | BAR-LUCY-E (operator runbook — this doc) |
+| Last Modified | 2026-05-04 (BAR-PROC-CLEANUP — atlas-centralization migration: `law/...` citations → `atlas/...`; UT_CHECKLIST v1.2.0 → v1.3.1; UT v2.7.0 → v2.8.0; companion YAML cross-ref added) |
+| Version | 0.2.0 |
+| BAR Reference | BAR-LUCY-E (operator runbook — this doc); BAR-PROC-CLEANUP (atlas-centralization refresh) |
 | Owner | Dave Barton |
 | ctb_node | `barton-enterprises/imo-creator/lucy/process-run-dyno` |
 | Created | 2026-05-01 |
@@ -191,7 +192,7 @@ Without this runbook, operators treat the engine as a black box and skip verific
 
 ### OUT-OF-SCOPE
 
-- **Engine internals** — US/K=C/DMJ/UP prompts, 3-model consensus logic, back-prop algorithm. Sealed Coca-Cola. See `djb258/imo-engine-vault` (sealed) and `law/doctrine/DYNO_VAULT_SPEC.md` v0.3.3 (blueprint).
+- **Engine internals** — US/K=C/DMJ/UP prompts, 3-model consensus logic, back-prop algorithm. Sealed Coca-Cola. See `djb258/imo-engine-vault` (sealed) and `atlas/DYNO_VAULT_SPEC.md` v0.3.3 (blueprint, in imo-creator-v2).
 - **Code-level port (BAR-LUCY-A)** — feature-parity porting of dyno.py into the vault worker. Separate BAR.
 - **MC executor implementation (BAR-LUCY-B)** — the MC API route + executor logic that calls vault. Separate BAR.
 - **BS Law formatter implementation (BAR-LUCY-C)** — the formatter that wraps vault response into conformant Books. Separate BAR.
@@ -318,7 +319,7 @@ Operator-perspective steps only. Engine internals are sealed Coca-Cola and not d
 | 4b | Confirm 3+ BUILD passes completed (Phase 2 gate) | Operator confirms `count_completed_runs() >= 3` — presence of `05-qc.json` in 3 separate run directories | 3 R2 run directories each with a `cycle-{n}-qc.json` | R2 console |
 | 5 | Invoke Phase 2 AUDITOR pass | Operator runs `vault --auditor --run-id {run_id}` (exact invocation TBD by BAR-LUCY-A); vault enforces 3 gates: count_completed_runs, validate_ts_tolerances, ensure_model_separation | Auditor stage runs with UP_AUDIT_MODEL ≠ UP_BUILD_MODEL; `06-audit.json` written; `dyno_run.verdict` populated (non-null) + `completed_at` set | vault CLI / MC API |
 | 6 | Verify Phase 2 completion and emitted Books | Operator checks D1 for `non-null verdict + completed_at`; confirms Artifact Book + FCE Book emitted by BS Law formatter (both Research-Body species) | 2 Books in Library catalog; each carries HEIR coordinates with sovereign_id; ORBT=BUILD until certified | D1 query + Library catalog |
-| 7 | Dispatch Codex audit on emitted Books | Operator runs `codex exec` with emitted Books + `DYNO_VAULT_SPEC.md` v0.3.3 as conformance contract; Codex returns PASS or FAIL + gap report per `law/doctrine/AUDIT_GAP_TAXONOMY.md` | Codex returns verdict (PASS = Books conform to BS Law; FAIL = gap report with `gap_type`, `fault_domain`, `root_cause`) | `codex exec` CLI |
+| 7 | Dispatch Codex audit on emitted Books | Operator runs `codex exec` with emitted Books + `DYNO_VAULT_SPEC.md` v0.3.3 as conformance contract; Codex returns PASS or FAIL + gap report per `atlas/AUDIT_GAP_TAXONOMY.md` | Codex returns verdict (PASS = Books conform to BS Law; FAIL = gap report with `gap_type`, `fault_domain`, `root_cause`) | `codex exec` CLI |
 | 8 | Certify Books (if Codex PASS) | Operator DISPATCHES Codex audit on emitted Books (Artifact Book + FCE Book). Codex auditor (different engine than Mechanic per Aviation Model) returns verdict (certify \| reject). If verdict=certify: ORBT BUILD→OPERATE transition is stamped, `signed_by = Codex (auditor — different engine than Sonnet/Opus mechanic)`. Operator's role: dispatch the audit, observe the verdict, log to LBB. Operator does NOT sign the certify event. | Books carry `orbt=OPERATE`, `signed_by=Codex (auditor — different engine than Sonnet/Opus mechanic)`, `signed_at=timestamp`; Library catalog updated | Library catalog API + `codex exec` |
 | 9 | Confirm LBB ingest | Vault auto-ingest fires at run completion; operator verifies LBB record exists | LBB record in `research` subject with `sovereign_ref=run_id`, domain, constants discovered, verdict | `curl -s -X POST "https://lbb.svg-outreach.workers.dev/records?subject_id=research&limit=5" -H "Authorization: Bearer $LBB_API_KEY"` |
 
@@ -337,7 +338,7 @@ Operator-perspective steps only. Engine internals are sealed Coca-Cola and not d
 
 ### Circle (Bedrock §5)
 
-Operator receives Codex audit verdict (Step 7). If **FAIL**: diagnose gap type per `law/doctrine/AUDIT_GAP_TAXONOMY.md` → determine root cause → if engine-wrapper issue → open BAR → fix → re-run. Strike 3 on same issue → Troubleshoot/Train. If **PASS**: certify (Step 8) → Circle closes. Output (certified Books) feeds back as input to the Library compounding loop — next Dyno run can JOIN against prior FCE Books via HEIR. The auditor's sigma tracking across runs tells whether the engine wrapper is producing tightening or expanding output consistency.
+Operator receives Codex audit verdict (Step 7). If **FAIL**: diagnose gap type per `atlas/AUDIT_GAP_TAXONOMY.md` → determine root cause → if engine-wrapper issue → open BAR → fix → re-run. Strike 3 on same issue → Troubleshoot/Train. If **PASS**: certify (Step 8) → Circle closes. Output (certified Books) feeds back as input to the Library compounding loop — next Dyno run can JOIN against prior FCE Books via HEIR. The auditor's sigma tracking across runs tells whether the engine wrapper is producing tightening or expanding output consistency.
 
 ---
 
@@ -589,7 +590,7 @@ dyno_run (D1) — PK: run_id
 | R2 workbench missing stage artifacts post-Phase 1 | BAR-LUCY-A vault binding may not be deployed. Do not proceed to Phase 2 or certify. |
 | `05-qc.json` shows `status: "blocked"` for any stage | HALT before Phase 2. Investigate QC failure. Do not force Phase 2 invocation with blocked QC output. |
 | Phase 2 gate fails (`count_completed_runs < 3` OR `ts-tolerances.json` missing/malformed OR `ensure_model_separation()` fails) | HALT Phase 2 invocation. Complete the missing gate condition. Never bypass. |
-| Codex audit returns FAIL on emitted Books | Do NOT certify. Open BAR. Diagnose gap type per `law/doctrine/AUDIT_GAP_TAXONOMY.md` (record `gap_type`, `fault_domain`, `root_cause`, `why_not_caught_earlier`, `prevention_control`, `certification_impact`). Fix root cause. Re-run. |
+| Codex audit returns FAIL on emitted Books | Do NOT certify. Open BAR. Diagnose gap type per `atlas/AUDIT_GAP_TAXONOMY.md` (record `gap_type`, `fault_domain`, `root_cause`, `why_not_caught_earlier`, `prevention_control`, `certification_impact`). Fix root cause. Re-run. |
 | Codex audit FAIL 3 times on same issue (Strike 3) | Troubleshoot/Train — not another repair. Escalate to Opus mechanic. Airworthiness Directive if fleet-wide. |
 | LBB ingest not confirmed at Step 9 | Run is unlogged. Force manual LBB ingest before closing the run. Never close a run without LBB record. |
 | Budget cap reached mid-run | Use kill switch (below). D1 partial rows + R2 partial artifacts are evidence trail; do not delete. |
@@ -690,8 +691,8 @@ All rows ☐ — no live system to verify against until BAR-LUCY-A through LUCY-
 | BAR-LUCY-A status (vault port) | §3d | Linear | Linear — search BAR-LUCY-A | ☐ | — | — |
 | BAR-LUCY-B status (MC executor) | §3d | Linear | Linear — search BAR-LUCY-B | ☐ | — | — |
 | BAR-LUCY-C status (BS Law formatter) | §3d | Linear | Linear — search BAR-LUCY-C | ☐ | — | — |
-| ctb_node leaf exists on CTB trunk | §1 | `law/BARTON_ENTERPRISES_CTB.md` | `grep -n "process-run-dyno" "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/law/BARTON_ENTERPRISES_CTB.md"` | ☐ | — | — |
-| DYNO_VAULT_SPEC.md at v0.3.3 with Codex PASS | §2 | `law/doctrine/DYNO_VAULT_SPEC.md` | Read file header for version + audit status | ☐ | — | — |
+| ctb_node leaf exists on CTB trunk | §1 | `atlas/constants/BARTON_ENTERPRISES_CTB.md` | `grep -n "process-run-dyno" "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/atlas/constants/BARTON_ENTERPRISES_CTB.md"` | ☐ | — | — |
+| DYNO_VAULT_SPEC.md at v0.3.3 with Codex PASS | §2 | `atlas/DYNO_VAULT_SPEC.md` | Read file header for version + audit status | ☐ | — | — |
 
 ---
 
@@ -813,6 +814,7 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | 2026-05-01 | Claude Opus 4.7 (Opus Mechanic — Three-Brain Strike 2 escalation, session 32) | REPAIR | Strike 2 escalation per Three-Brain routing. Aviation Model preserved (Codex still audits, different engine). Surgical certification-actor reconciliation across 9 locations: (1) §1b mermaid CERTIFY node — "Codex auditor certifies / signed_by=Codex auditor; operator ≠ certifier"; (2) §1 HEIR acceptance_criteria — "Codex returns verdict and signs ORBT BUILD→OPERATE; operator dispatches+observes+logs, does NOT certify"; (3) §2 PRD WHAT — "Codex (auditor) — NOT the operator — signs the certify event"; (4) §2 Scope — "Dispatching Codex audit and observing the verdict"; (5) §4 step note "`operator certifies`" → "Codex auditor signs the certify event in Step 8; operator dispatches"; (6) §4 CTB Ee node "`operator certifies`" → "operator dispatches Codex audit; Codex signs CERTIFY"; (7) §5 Forbidden Paths — operator/mechanic cannot self-certify; signed_by must be Codex; (8) §5 OSAM WRITE — Codex auditor signs ORBT transition, operator dispatches; (9) §7 Constants — Codex returns verdict AND signs CERTIFY itself. Plus §10c BUILD→OPERATE gate corrected from "9 steps" → "11 steps complete (per §6a/§7 11-step enumeration: 1,2,3,4,4a,4b,5,6,7,8,9)". All certification authority language now consistent across §1/§1b/§2/§4/§5/§7/§10c/§12/§14. Bumped to v0.1.3. References memory `feedback_codex_certifies_not_operator.md` for the Aviation Model rule extension (operator ≠ certifier). | Doctrine repair — no code changes; no locked constants touched; surgical edits only on certification-actor rows + step-count gate. | pending |
 | 2026-05-01 | Codex (Auditor, session 32) | AUDIT | Independent re-audit on v0.1.3. VERDICT: FAIL. Dimensions A/B/E PASS; Dimensions C/D/F FAIL. Operative cert-actor language clean across §1/§2/§4/§5/§7/§10c/§12 — but Strike 3 on this audit cycle. Two failures: (1) §14 historical AUDIT/REPAIR rows quote forbidden `` `operator certifies` `` text describing prior bad state — caught by zero-instance regex even though they're historical references, not live claims; (2) §1 Identity Version field still says 0.1.2 while header + Document Control say 0.1.3 — Version field appears in 3 locations and only 2 were bumped. NC: Document Control had duplicate Last Modified rows. | Strike 3 → Troubleshoot/Train identified two dispatch-template defects; saved as memory `feedback_logbook_historical_phrases_in_backticks.md`. | pending |
 | 2026-05-01 | Claude Opus 4.7 (Opus Mechanic — Strike 3 Troubleshoot/Train output applied, session 32) | REPAIR | Strike 3 lesson applied: (a) wrapped all live `` `operator certifies` `` phrases in §14 historical rows with backticks per new doctrine rule (audit treats backticked tokens as quoted historical references, not live drift); (b) bumped §1 Identity Version 0.1.2 → 0.1.4 to align with header + Document Control (the 3-location Version rule extended from session 32 prior lesson); (c) removed duplicate Last Modified row in Document Control; (d) updated header line to v0.1.4; (e) reordered §14 so logbook rows come before Rules block per UT v2.7.0 structure. Substantive operative content unchanged from v0.1.3. References new memory `feedback_logbook_historical_phrases_in_backticks.md` for the doctrinal lesson on append-only logbook + zero-instance audit reconciliation. | Doctrine repair — no code changes; no locked constants touched; surgical edits only. | pending |
+| 2026-05-04 | Claude Opus 4.7 (Opus Mechanic — BAR-PROC-CLEANUP, sibling repo refresh) | EDIT | Atlas-centralization migration applied: all live-prose `` `law/doctrine/...` `` and `` `law/UNIFIED_TEMPLATE.md` `` and `` `law/BARTON_ENTERPRISES_CTB.md` `` and `` `law/UT_CHECKLIST.md` `` citations migrated to `atlas/...` equivalents (paths resolve against imo-creator-v2 — the canonical doctrine repo). UT_CHECKLIST citation v1.2.0 → v1.3.1. Template version v2.7.0 → v2.8.0. Companion YAML cross-reference added at header (`atlas/manifests/dyno-vault.yaml`, BAR-397). §14 historical rows (lines 807-815) preserved unchanged per append-only rule — historical `law/...` and `imo-creator-v2/law/...` strings left as-is (they describe what was true at that time). Version bumped 0.1.4 → 0.2.0 across all 3 locations (header line 2, §1 Identity, Document Control). Last Modified updated to 2026-05-04. | All `law/*` live-prose citations migrated; phantom directory in imo-creator-v2 deleted in paired commit. | pending |
 
 **Rules:**
 - Append-only. Do NOT edit or delete prior rows. Corrections go in as a new row referencing the prior row.
@@ -830,13 +832,14 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | Field | Value |
 |-------|-------|
 | Created | 2026-05-01 |
-| Last Modified | 2026-05-01 (session 32 — v0.1.4 Opus mechanic Strike-3 lesson + final audit-pass fixes) |
-| Version | 0.1.4 (OPUS MECHANIC STRIKE-3 LESSON + FINAL FIXES — backticked `` `operator certifies` `` historical phrases in §14 logbook rows per new memory `feedback_logbook_historical_phrases_in_backticks.md`; bumped §1 Identity Version 0.1.2→0.1.4 to align with header + Document Control; removed duplicate Last Modified row; preserves all v0.1.3 + v0.1.2 + v0.1.1 fixes) |
-| Template Version | UNIFIED_TEMPLATE.md v2.7.0 |
-| UT Checklist Version | UT_CHECKLIST.md v1.2.0 |
+| Last Modified | 2026-05-04 (BAR-PROC-CLEANUP — atlas-centralization migration: `law/...` → `atlas/...` citations across live prose; UT_CHECKLIST v1.2.0 → v1.3.1; UT v2.7.0 → v2.8.0; companion YAML cross-ref added) |
+| Version | 0.2.0 (ATLAS-CENTRALIZATION REFRESH — minor bump per BAR-PROC-CLEANUP. All live-prose `law/*` citations migrated to `atlas/*` equivalents resolving against imo-creator-v2 (canonical doctrine repo). UT_CHECKLIST citation bumped 1.2.0→1.3.1; UT 2.7.0→2.8.0. Companion YAML cross-ref added at header (`atlas/manifests/dyno-vault.yaml`, BAR-397). §14 append-only logbook history preserved untouched. Preserves all v0.1.4 substantive content.) |
+| Template Version | UNIFIED_TEMPLATE.md v2.8.0 |
+| UT Checklist Version | UT_CHECKLIST.md v1.3.1 |
+| Companion YAML | atlas/manifests/dyno-vault.yaml (in imo-creator-v2 — engine wrapper spec, BAR-397) |
 | Medium | process |
 | US Validated | source-of-truth = DYNO_VAULT_SPEC.md v0.3.3 (Codex audit PASS) |
-| Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |
+| Governing Engine | atlas/constants/FOUNDATIONAL_BEDROCK.md + atlas/constants/DMJ.md (in imo-creator-v2) |
 | Authority | inherited (sovereign: Dave Barton via imo-creator) |
 | BAR Reference | BAR-LUCY-E (operator runbook — this doc) |
-| Source Spec | law/doctrine/DYNO_VAULT_SPEC.md v0.3.3 (blueprint — Codex audit PASS) |
+| Source Spec | atlas/DYNO_VAULT_SPEC.md v0.3.3 (in imo-creator-v2 — blueprint, Codex audit PASS) |

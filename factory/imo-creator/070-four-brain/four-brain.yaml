@@ -1,0 +1,359 @@
+# =============================================================================
+# four-brain.yaml — Workflow-Body companion to PROCESS-UT.md
+# Four-Brain Aviation Model — Library-shelved callable Process Pair
+# ctb_node: barton-enterprises/imo-creator/processes/four-brain
+# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-04
+# BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
+# =============================================================================
+
+# Block 1 — name
+name: four-brain
+version: "1.0.0"
+last_modified: "2026-05-04"
+
+# Block 2 — inherits (doctrine version pins per BOOK_LAW v1.5.0)
+inherits:
+  atlas: v2.2.6
+  ut_schema: UT_v2.8.0
+  ut_checklist: UT_CHECKLIST_v1.3.1
+  bs_law: v1.5.0
+  book_law: v1.5.0
+  aviation_model: v1.2.0
+  process_doctrine: PROC-070
+
+# =============================================================================
+# OUTSIDE ARM — Library-level addressing (BS Law Y-junction arm 1)
+# =============================================================================
+
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: four-brain
+    cc_layer: CC-01
+    subject_id: processes
+    ctb_node: barton-enterprises/imo-creator/processes/four-brain
+    ctb_placement: leaf
+    species: Workflow-Body
+    owner: Dave Barton
+    services:
+      - mission-control D1 (four_brain_run, four_brain_transition, squawks)
+      - LBB worker (lbb.records, lbb.logbook)
+      - scripts/lbb-log.sh
+      - Sonnet (Agent tool, model=sonnet)
+      - Codex (codex-dop exec)
+      - Opus 4.7 (Agent tool, model=opus, escalation only)
+    acceptance_criteria: |-
+      D-070-01: All 10 gates PASS (P=1 on each).
+      D-070-02: No-op BAR run produces exactly 4 LBB rows + 1 Audit Book on PASS.
+      D-070-03: Atlas registry row 9 present in both paired-artifacts.yaml AND atlas/ATLAS.md §7.3a.
+      D-070-04: No locked constants modified except atlas/ATLAS.md (verified by git diff HEAD).
+      D-070-05: BS Law Y-junction conformant on the YAML companion.
+      D-070-06: Mechanic != Auditor confirmed at every transition.
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-04T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE ARM — Per-process runtime identity (BS Law Y-junction arm 2)
+# =============================================================================
+
+inside:
+  heir:
+    process_id: bp.070-four-brain
+    version: "1.0.0"
+    last_modified: "2026-05-04"
+    companion_manifest: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    services:
+      - mission-control D1 (four_brain_run, four_brain_transition, squawks)
+      - LBB worker (lbb.records, lbb.logbook)
+      - scripts/lbb-log.sh
+      - Sonnet (Agent tool, model=sonnet)
+      - Codex (codex-dop exec)
+      - Opus 4.7 (Agent tool, model=opus, escalation only)
+    secrets_provider: doppler
+    acceptance_criteria: |-
+      D-070-01: All 10 gates PASS (P=1 on each).
+      D-070-02: No-op BAR run produces exactly 4 LBB rows + 1 Audit Book on PASS.
+      D-070-03: Atlas registry row 9 present in both paired-artifacts.yaml AND atlas/ATLAS.md §7.3a.
+      D-070-04: No locked constants modified except atlas/ATLAS.md (verified by git diff HEAD).
+      D-070-05: BS Law Y-junction conformant on the YAML companion.
+      D-070-06: Mechanic != Auditor confirmed at every transition.
+    determinism_gate: ai_on_spine_forbidden
+  orbt:
+    runtime_state: BUILD
+    strikes: 0
+    last_transition_at: null
+    last_transition_reason: null
+    flipped_by: null
+    promotion_gate: |-
+      OPERATE: 3-run minimum + Codex CERTIFY on each + sovereign sign-off.
+
+# Block 7 — description
+description: |
+  Four-Brain Aviation Model — Library-shelved as a callable Process.
+  Planner (Opus 4.7) authors Plan Book. Sovereign signs. Foreman (Opus 4.7)
+  dispatches BAR packets. Mechanic (Sonnet) builds UT Books + LBB-logs each
+  role transition. Auditor (Codex) runs gate verdicts independently.
+  PASS: Audit Book shelved to LBB + CERTIFY row + four_brain_run.verdict=PASS.
+  FAIL: squawks row written + Strike ladder applied.
+  NOT-for: ad-hoc fixes outside the BAR pipeline. LLMs are tail, not spine.
+
+# Block 8 — schedule
+schedule:
+  trigger: event-driven
+  events:
+    - on_bar_dispatched: "Foreman dispatches a BAR with sovereign-signed Plan Book"
+  cron: null
+  tune_up_cadences_documented:
+    A_check: weekly
+    B_check: monthly
+    C_check: quarterly
+    D_check: yearly
+    AD: event-driven (sovereign-issued)
+
+# Block 9 — data
+data:
+  read:
+    - source: atlas/constants/FOUR_BRAIN_AVIATION.md
+    - source: atlas/manifests/four-brain-doctrine-gate.yaml
+    - source: atlas/manifests/paired-artifacts.yaml
+    - source: "docs/plans/BAR-*.plan.md (sovereign-signed)"
+    - source: scripts/lbb-log.sh
+  write:
+    - target: mission-control.four_brain_run
+      what: One row per BAR run (run metadata, status, completion timestamps)
+    - target: mission-control.four_brain_transition
+      what: One row per role transition (planner / foreman / mechanic / auditor)
+    - target: mission-control.squawks
+      what: "Errors keyed by process_id='four-brain' + subject_id='processes'"
+    - target: lbb.records
+      what: "4 transition rows per BAR (planner/foreman/mechanic/auditor) via scripts/lbb-log.sh"
+    - target: lbb.records
+      what: "Terminal Audit Book row on Codex PASS (subject_id='processes', species='Audit-Body')"
+    - target: lbb.logbook
+      what: CERTIFY row when BAR achieves P=1 on all 10 gates
+  forbidden:
+    - LLM on the spine of any gate evaluation
+    - Mechanic self-audits (Aviation Model violation)
+    - Foreman flips Auditor verdicts (FOUR_BRAIN_AVIATION v1.2.0 Foreman Lock)
+    - Skip Atlas Step 0 read for any role (FOUR_BRAIN_AVIATION v1.2.0 §X)
+    - Skip LBB Step N write before any role transition (§Y)
+    - Modify any of 17 locked constants except atlas/ATLAS.md
+  d1:
+    binding: D1_MISSION_CONTROL
+    tables:
+      - name: four_brain_run
+        purpose: Run metadata mirror of dyno_run
+        precedent: "atlas/DYNO_VAULT_SPEC.md §11 (dyno_run schema)"
+        columns:
+          - run_id: "TEXT PK, UUIDv4"
+          - bar_id: "TEXT, regex: ^(BAR-\\d+|CI-PR-\\d+|DRIFT-SWEEP-\\d{8})$"
+          - sovereign_ref: TEXT
+          - process_id: "TEXT, default 'four-brain'"
+          - subject_id: "TEXT, default 'processes'"
+          - plan_book_path: TEXT
+          - audit_book_path: "TEXT, nullable until CERTIFY"
+          - runtime_state: "TEXT enum: BUILD|OPERATE|REPAIR|TROUBLESHOOT_TRAIN|RETIRED|DISABLED"
+          - strikes: "INTEGER, default 0"
+          - started_at: TEXT ISO 8601
+          - last_completed_at: "TEXT ISO 8601, nullable"
+          - verdict: "TEXT enum: PASS|FAIL|null"
+      - name: four_brain_transition
+        purpose: Per-role transition row — mirror of dyno_run_cycle
+        precedent: "atlas/DYNO_VAULT_SPEC.md §11 (dyno_run_cycle schema)"
+        columns:
+          - transition_id: "TEXT PK, UUIDv4"
+          - run_id: "TEXT FK -> four_brain_run.run_id"
+          - role: "TEXT enum: planner|foreman|mechanic|auditor"
+          - action: "TEXT enum: dispatch|handoff|edit|audit-verdict"
+          - atlas_sections_consulted: TEXT
+          - evidence_hash: "TEXT, SHA256 hex"
+          - timestamp: TEXT ISO 8601
+          - lbb_record_id: "TEXT, UUIDv4 from lbb-log.sh"
+          - gate_verdicts: "TEXT, JSON, auditor only"
+          - notes: TEXT
+        schema_source: "migrations/0019_four_brain_run.sql (created by future BAR-FOUR-BRAIN-CLI)"
+  pressure_gauge:
+    signals:
+      - id: 1
+        name: cron_firing
+        source: "cron_registry.yaml + live `wrangler cron triggers list`"
+        expectation: "N/A for event-driven BAR-dispatched runs; applies to tune-up cadences"
+      - id: 2
+        name: lbb_log_presence
+        source: "lbb_records WHERE bar_id=? AND subject_id='processes'"
+        expectation: "exactly 4 rows per no-op BAR (planner/foreman/mechanic/auditor)"
+      - id: 3
+        name: d1_anchor_freshness
+        source: four_brain_run.last_completed_at
+        expectation: fresh per active BAR
+      - id: 4
+        name: active_errors
+        source: "mission-control.squawks WHERE process_id='four-brain' AND resolved_at IS NULL"
+        expectation: "0 for OPERATE; any RED auto-elevates gauge"
+    composition_rule: |-
+      ALL 4 GREEN -> OPERATE; any 1 YELLOW -> drift watch; signal 4 RED -> auto-RED.
+      Per FOUR_BRAIN_AVIATION v1.2.0 "Pressure Gauge -- the Operational Read".
+  join_chain: |-
+    Sovereign Plan Book (docs/plans/BAR-X.plan.md)
+      -> Foreman dispatch
+      -> Sonnet builds + lbb-log.sh writes 1 row per role transition
+      -> Codex audit run
+      -> 10 gates evaluated (G01-G10)
+      -> PASS: Audit Book -> lbb.records (subject_id='processes', species='Audit-Body')
+            + lbb.logbook CERTIFY row + four_brain_run.verdict='PASS'
+      -> FAIL: squawks row + Strike count incremented; Strike-ladder applies
+
+# Block 10 — nodes (the DAG: encodes IMO)
+nodes:
+  - id: 01-planner
+    role: planner
+    engine: opus-4.7
+    atlas_step_0: "[§1, §4, §4.5, §6, §7.3, §7.3a]"
+    output: "docs/plans/BAR-{id}.plan.md (Plan-Body species)"
+    lbb_step_n: "scripts/lbb-log.sh --role planner --action dispatch --bar-id BAR-{id}"
+    gate_check: G01
+    next: 02-foreman
+
+  - id: 02-foreman
+    role: foreman
+    engine: opus-4.7
+    atlas_step_0: "[§6, paired-artifacts.yaml]"
+    output: dispatch packets (no Library artifact)
+    lbb_step_n: "scripts/lbb-log.sh --role foreman --action handoff --bar-id BAR-{id}"
+    gate_check: G02
+    next: 03-mechanic
+
+  - id: 03-mechanic
+    role: mechanic
+    engine: "sonnet (Strike-1 default; opus-4.7 on Strike-2 escalation)"
+    atlas_step_0: "[§4.5 (repair) OR §4 (build), plan_book, spoke_frontmatter]"
+    output: UT Book(s) at HEIR-B
+    lbb_step_n: "scripts/lbb-log.sh --role mechanic --action edit --bar-id BAR-{id}"
+    gate_check: G03, G04
+    next: 04-auditor
+
+  - id: 04-auditor
+    role: auditor
+    engine: codex
+    atlas_step_0: "[atlas/manifests/four-brain-doctrine-gate.yaml]"
+    output: Audit Book at HEIR-C (Audit-Body species)
+    lbb_step_n: "scripts/lbb-log.sh --role auditor --action audit-verdict --bar-id BAR-{id}"
+    gate_check: G05, G06
+    next: 05-emit
+
+  - id: 05-emit
+    type: output
+    action: |-
+      If all 10 gates PASS -> emit P=1; write Audit Book to lbb.records + CERTIFY to lbb.logbook;
+      four_brain_run.verdict='PASS'.
+      If any FAIL -> emit P=0; write squawks; Strike ladder applied.
+    gate_check: "G07, G08, G09, G10"
+    next: null
+
+# Block 11 — gates + lbb
+gates:
+  total: 10
+  pass_threshold: 10
+  source_of_truth: "atlas/manifests/paired-artifacts.yaml row 9 + this file"
+  gate_ids:
+    - id: G01
+      predicate: Both files exist at the prescribed paths per Plan §3
+      atlas_source: "Plan §3 + paired-artifact precedent"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G02
+      predicate: |-
+        YAML Y-junction AST-syntactic separation: outside: and inside: are syntactically
+        distinct top-level maps; each contains nested heir: + orbt: sub-maps;
+        dotted keys at root do NOT satisfy.
+      atlas_source: "BS_LAW.md v1.5.0 + BOOK_LAW.md v1.5.0"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G03
+      predicate: |-
+        YAML carries all 11 Workflow-Body mandatory blocks:
+        name, inherits, outside.heir, outside.orbt, inside.heir, inside.orbt,
+        description, schedule, data, nodes, gates+lbb.
+      atlas_source: "BOOK_LAW.md v1.5.0 Mandatory Top-Level Blocks"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G04
+      predicate: |-
+        YAML outside.heir.species == "Workflow-Body" AND
+        inside.heir.aviation_model.mechanic != inside.heir.aviation_model.auditor AND
+        inside.heir.determinism_gate == "ai_on_spine_forbidden".
+      atlas_source: "BOOK_LAW.md v1.5.0 Codex audit conformance block"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G05
+      predicate: |-
+        UT-Body .md carries 13-item UT pre-flight checklist verbatim (UT_CHECKLIST v1.3.1)
+        AND 14 UT sections (UT v2.8.0).
+      atlas_source: "UT_CHECKLIST.md v1.3.1 + UNIFIED_TEMPLATE.md v2.8.0"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G06
+      predicate: |-
+        Parity zone (K=C parsed-value parity): version, last_modified, services,
+        acceptance_criteria match between .md §1 Identity AND .yaml outside.heir/inside.heir.
+        Codex compares parsed values, NOT byte-identity.
+      atlas_source: "Atlas §7.3a + paired-artifact precedent (dyno-vault G06)"
+      tolerance: parsed_value_match
+      failure_impact: BLOCK
+    - id: G07
+      predicate: |-
+        LBB row schema is referenced by _ref:, NOT redefined locally.
+        Source of truth = four-brain-doctrine-gate.yaml#lbb_row_schema.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.2.0 §Y + four-brain-doctrine-gate.yaml G07"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G08
+      predicate: |-
+        YAML gates block specifies total: 10 AND lists 10 gate IDs G01-G10
+        each with predicate + tolerance + failure_impact.
+      atlas_source: "Plan Book §7"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G09
+      predicate: |-
+        No locked constants modified except atlas/ATLAS.md (#13).
+        git diff base..HEAD -- atlas/constants/ atlas/manifests/STRUCTURE_MANIFEST.yaml
+        atlas/skills/ atlas/dyno/us.py atlas/dyno/up.py returns empty.
+      atlas_source: "CLAUDE.md §17 locked constants + memory feedback_never_touch_locked_constants.md"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G10
+      predicate: |-
+        Atlas registry row 9 present in BOTH atlas/manifests/paired-artifacts.yaml AND
+        atlas/ATLAS.md §7.3a; both reference identical paths/species/gate_spec;
+        Atlas version bumped to v2.2.6 in 3 locations + Last Modified updated;
+        §14 logbook row appended.
+      atlas_source: "Atlas §7.3a + memory feedback_pair_version_with_last_modified.md"
+      tolerance: exact_match
+      failure_impact: BLOCK
+
+lbb:
+  subject_id: processes
+  subject_name: Four-Brain BAR Runs
+  ctb_level: leaf
+  parent_subject: processes
+  ingest_on:
+    - role_transition_step_n
+    - audit_run_completion
+    - certify_verdict
+    - gate_failure
+  record_format:
+    orbt_mode: BUILD
+    tags:
+      - four-brain
+      - process-070
+      - bar-aviation-model
+  lbb_row_schema:
+    _ref: "atlas/manifests/four-brain-doctrine-gate.yaml#lbb_row_schema"
