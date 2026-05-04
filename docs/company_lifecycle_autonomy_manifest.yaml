@@ -1,0 +1,250 @@
+version: 1.0.0
+date: "2026-05-04"
+status: BUILD
+purpose: "Tie Barton process UTs, workflow YAMLs, ORBT state, and Company Lifecycle/LCS source documents into one autonomy control plane."
+
+company_lifecycle_sources:
+  doctrine_lock: "../company-lifecycle-cl/docs/doctrine/COMPANY_LIFECYCLE_LOCK.md"
+  downstream_handoff: "../company-lifecycle-cl/docs/handoff/DOWNSTREAM_SUB_HUB_HANDOFF.md"
+  outreach_handoff: "../company-lifecycle-cl/docs/handoff/OUTREACH_HANDOFF.md"
+  cl_doctrine: "../company-lifecycle-cl/docs/doctrine/CL_DOCTRINE.md"
+  schema_index: "../company-lifecycle-cl/docs/schema/CL_SCHEMA_INDEX.md"
+  lcs_prd: "../company-lifecycle-cl/docs/prd/PRD-LCS.md"
+  insurance_informatics_ctb: "../company-lifecycle-cl/docs/INSURANCE-INFORMATICS-CTB.md"
+
+autonomy_gate:
+  required:
+    - process_ut_exists
+    - heir_yaml_exists
+    - orbt_yaml_exists
+    - workflow_yaml_exists_or_documentation_only
+    - orbt_operate
+    - company_lifecycle_source_resolved
+    - no_red_audit_block
+    - secrets_and_bindings_present
+  allowed_states:
+    auto_eligible: "May be run by Mission Control or cron without a human prompt."
+    manual_gate: "Human or Foreman must approve before run."
+    repair_required: "Do not run except targeted repair/audit commands."
+    build_required: "Do not run as production automation."
+    retired_or_tt: "Do not run; requires retirement or Troubleshoot/Train path."
+
+processes:
+  - id: bp.010
+    name: SEED D1
+    silo: outreach
+    folder: factory/outreach/010-seed-d1
+    process_ut: factory/outreach/010-seed-d1/PROCESS-UT.md
+    workflow_yaml: factory/outreach/010-seed-d1/workflow.yaml
+    heir_yaml: factory/outreach/010-seed-d1/heir.yaml
+    orbt_yaml: factory/outreach/010-seed-d1/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.200, bp.400, bp.700, bp.100]
+    orbt: OPERATE
+    autonomy_state: auto_eligible
+
+  - id: bp.100
+    name: LCS Pipeline
+    silo: cl
+    folder: factory/cl/100-lcs-pipeline
+    process_ut: factory/cl/100-lcs-pipeline/PROCESS-UT.md
+    workflow_yaml: factory/cl/100-lcs-pipeline/workflow.yaml
+    heir_yaml: factory/cl/100-lcs-pipeline/heir.yaml
+    orbt_yaml: factory/cl/100-lcs-pipeline/orbt.yaml
+    cl_sources: [lcs_prd, downstream_handoff, outreach_handoff]
+    depends_on: [bp.200, bp.201, bp.202, bp.300, bp.301, bp.400, bp.500, bp.700]
+    orbt: REPAIR
+    autonomy_state: repair_required
+    blocker: "Daily send path must clear BAR-375 schedule-spine interpretation and bp.100 repair gates."
+
+  - id: bp.200
+    name: People Worker
+    silo: outreach
+    folder: factory/outreach/200-people-worker
+    process_ut: factory/outreach/200-people-worker/PROCESS-UT.md
+    workflow_yaml: factory/outreach/200-people-worker/workflow.yaml
+    heir_yaml: factory/outreach/200-people-worker/heir.yaml
+    orbt_yaml: factory/outreach/200-people-worker/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.201, bp.202, bp.100]
+    orbt: REPAIR
+    autonomy_state: repair_required
+
+  - id: bp.201
+    name: Email Discovery
+    silo: outreach
+    folder: factory/outreach/201-email-discovery
+    process_ut: factory/outreach/201-email-discovery/PROCESS-UT.md
+    workflow_yaml: factory/outreach/201-email-discovery/workflow.yaml
+    heir_yaml: factory/outreach/201-email-discovery/heir.yaml
+    orbt_yaml: factory/outreach/201-email-discovery/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.202
+    name: LinkedIn Discovery
+    silo: outreach
+    folder: factory/outreach/202-linkedin-discovery
+    process_ut: factory/outreach/202-linkedin-discovery/PROCESS-UT.md
+    workflow_yaml: factory/outreach/202-linkedin-discovery/workflow.yaml
+    heir_yaml: factory/outreach/202-linkedin-discovery/heir.yaml
+    orbt_yaml: factory/outreach/202-linkedin-discovery/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.300
+    name: Blog Worker
+    silo: outreach
+    folder: factory/outreach/300-blog-worker
+    process_ut: factory/outreach/300-blog-worker/PROCESS-UT.md
+    workflow_yaml: factory/outreach/300-blog-worker/workflow.yaml
+    heir_yaml: factory/outreach/300-blog-worker/heir.yaml
+    orbt_yaml: factory/outreach/300-blog-worker/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.301, bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.301
+    name: Page Parser
+    silo: outreach
+    folder: factory/outreach/301-page-parser
+    process_ut: factory/outreach/301-page-parser/PROCESS-UT.md
+    workflow_yaml: factory/outreach/301-page-parser/workflow.yaml
+    heir_yaml: factory/outreach/301-page-parser/heir.yaml
+    orbt_yaml: factory/outreach/301-page-parser/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.400
+    name: DOL Views
+    silo: outreach
+    folder: factory/outreach/400-dol-views
+    process_ut: factory/outreach/400-dol-views/PROCESS-UT.md
+    workflow_yaml: factory/outreach/400-dol-views/workflow.yaml
+    heir_yaml: factory/outreach/400-dol-views/heir.yaml
+    orbt_yaml: factory/outreach/400-dol-views/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: OPERATE
+    autonomy_state: auto_eligible
+
+  - id: bp.500
+    name: Talent Flow
+    silo: outreach
+    folder: factory/outreach/500-talent-flow
+    process_ut: factory/outreach/500-talent-flow/PROCESS-UT.md
+    workflow_yaml: factory/outreach/500-talent-flow/workflow.yaml
+    heir_yaml: factory/outreach/500-talent-flow/heir.yaml
+    orbt_yaml: factory/outreach/500-talent-flow/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.600
+    name: BIT Scoring
+    silo: outreach
+    folder: factory/outreach/600-bit-scoring
+    process_ut: factory/outreach/600-bit-scoring/PROCESS-UT.md
+    workflow_yaml: factory/outreach/600-bit-scoring/workflow.yaml
+    heir_yaml: factory/outreach/600-bit-scoring/heir.yaml
+    orbt_yaml: factory/outreach/600-bit-scoring/orbt.yaml
+    cl_sources: [downstream_handoff, outreach_handoff]
+    orbt: TROUBLESHOOT_TRAIN
+    autonomy_state: retired_or_tt
+    blocker: "Retirement/replacement path required before any production automation."
+
+  - id: bp.700
+    name: Campaign Engine
+    silo: outreach
+    folder: factory/outreach/700-campaign-engine
+    process_ut: factory/outreach/700-campaign-engine/PROCESS-UT.md
+    workflow_yaml: factory/outreach/700-campaign-engine/workflow.yaml
+    heir_yaml: factory/outreach/700-campaign-engine/heir.yaml
+    orbt_yaml: factory/outreach/700-campaign-engine/orbt.yaml
+    cl_sources: [lcs_prd, downstream_handoff, outreach_handoff]
+    feeds: [bp.100]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.800
+    name: Client Mint
+    silo: cl
+    folder: factory/cl/800-client-mint
+    process_ut: factory/cl/800-client-mint/PROCESS-UT.md
+    workflow_yaml: factory/cl/800-client-mint/workflow.yaml
+    heir_yaml: factory/cl/800-client-mint/heir.yaml
+    orbt_yaml: factory/cl/800-client-mint/orbt.yaml
+    cl_sources: [doctrine_lock, downstream_handoff]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.810
+    name: Client Intake
+    silo: client
+    folder: factory/client/810-client-intake
+    process_ut: factory/client/810-client-intake/PROCESS-UT.md
+    workflow_yaml: factory/client/810-client-intake/workflow.yaml
+    heir_yaml: factory/client/810-client-intake/heir.yaml
+    orbt_yaml: factory/client/810-client-intake/orbt.yaml
+    cl_sources: [doctrine_lock, downstream_handoff]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.820
+    name: Vendor Export
+    silo: client
+    folder: factory/client/820-vendor-export
+    process_ut: factory/client/820-vendor-export/PROCESS-UT.md
+    workflow_yaml: factory/client/820-vendor-export/workflow.yaml
+    heir_yaml: factory/client/820-vendor-export/heir.yaml
+    orbt_yaml: factory/client/820-vendor-export/orbt.yaml
+    cl_sources: [downstream_handoff]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.830
+    name: Client Portal
+    silo: client
+    folder: factory/client/830-client-portal
+    process_ut: factory/client/830-client-portal/PROCESS-UT.md
+    workflow_yaml: factory/client/830-client-portal/workflow.yaml
+    heir_yaml: factory/client/830-client-portal/heir.yaml
+    orbt_yaml: factory/client/830-client-portal/orbt.yaml
+    cl_sources: [downstream_handoff]
+    orbt: BUILD
+    autonomy_state: build_required
+
+  - id: bp.900
+    name: Sales Portal
+    silo: sales
+    folder: factory/sales/900-sales-portal
+    process_ut: factory/sales/900-sales-portal/PROCESS-UT.md
+    workflow_yaml: factory/sales/900-sales-portal/workflow.yaml
+    heir_yaml: factory/sales/900-sales-portal/heir.yaml
+    orbt_yaml: factory/sales/900-sales-portal/orbt.yaml
+    cl_sources: [downstream_handoff]
+    orbt: BUILD
+    autonomy_state: build_required
+
+mission_control_contract:
+  read_manifest: docs/company_lifecycle_autonomy_manifest.yaml
+  show_layers:
+    - process_ut
+    - workflow_yaml
+    - heir_yaml
+    - orbt_yaml
+    - cl_sources
+    - autonomy_state
+  allow_run_when: "autonomy_state == auto_eligible"
+  deny_run_when:
+    - repair_required
+    - build_required
+    - retired_or_tt
