@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
     "d1:migrate:local": "wrangler d1 execute lcs-hub --local --file=src/migrations/001_lcs_tables.sql",
     "d1:migrate:remote": "wrangler d1 execute lcs-hub --remote --file=src/migrations/001_lcs_tables.sql"
   },

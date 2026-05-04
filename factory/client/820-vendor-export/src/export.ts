@@ -35,31 +35,47 @@ export async function generateExport(env: Env, clientId: string, vendorId: strin
     return { export_id: exportId, client_id: clientId, vendor_id: vendorId, record_count: 0, errors: 1, output: '', format: '' };
   }
 
-  // Read canonical data: person + election + plan joined
+  // Read canonical data from the live client D1 schema.
   const records = await env.D1.prepare(`
     SELECT
-      p.person_id, p.first_name, p.last_name, p.status as person_status,
-      e.election_id, e.coverage_tier, e.effective_date as election_effective_date,
-      pl.plan_id, pl.benefit_type, pl.carrier_id, pl.rate_ee, pl.rate_es, pl.rate_ec, pl.rate_fam,
-      v.vendor_id as v_vendor_id, v.vendor_name
-    FROM person p
-    JOIN election e ON e.person_id = p.person_id AND e.client_id = p.client_id
-    JOIN plan pl ON pl.plan_id = e.plan_id AND pl.client_id = p.client_id
-    LEFT JOIN vendor v ON v.client_id = p.client_id AND v.vendor_id = ?
-    WHERE p.client_id = ? AND p.status = 'active'
+      e.employee_id,
+      e.employee_id as person_id,
+      e.client_id,
+      e.first_name,
+      e.last_name,
+      e.hire_date,
+      e.employment_status,
+      e.orbt_mode,
+      v.vendor_id,
+      v.vendor_name,
+      v.vendor_type,
+      v.group_number,
+      v.integration_type
+    FROM client_employees e
+    LEFT JOIN client_vendors v ON v.client_id = e.client_id AND v.vendor_id = ?
+    WHERE e.client_id = ?
+      AND COALESCE(e.employment_status, 'active') = 'active'
   `).bind(vendorId, clientId).all();
 
   if (!records.results || records.results.length === 0) {
-    await logExport(env.D1, exportId, clientId, vendorId, blueprint.vendor_name, 0, 'no_data');
+    await logExport(env.D1, exportId, clientId, vendorId, blueprint.vendor_name, 0, blueprint.file_format, 'no_data');
     return { export_id: exportId, client_id: clientId, vendor_id: vendorId, record_count: 0, errors: 0, output: '', format: blueprint.file_format };
   }
 
   // Load external ID mappings for this vendor
   const idMappings = await env.D1.prepare(`
     SELECT internal_id, external_id_value, entity_type
-    FROM external_identity_map
-    WHERE client_id = ? AND vendor_id = ? AND status = 'active'
-  `).bind(clientId, vendorId).all<{
+    FROM (
+      SELECT
+        employee_id as internal_id,
+        vendor_employee_id as external_id_value,
+        'employee' as entity_type,
+        status
+      FROM client_employee_vendor_ids
+      WHERE vendor_id = ?
+    )
+    WHERE status = 'active'
+  `).bind(vendorId).all<{
     internal_id: string;
     external_id_value: string;
     entity_type: string;
@@ -108,7 +124,7 @@ export async function generateExport(env: Env, clientId: string, vendorId: strin
   const recordCount = outputRows.length - (blueprint.include_header ? 1 : 0);
 
   // Log export
-  await logExport(env.D1, exportId, clientId, vendorId, blueprint.vendor_name, recordCount, 'completed');
+  await logExport(env.D1, exportId, clientId, vendorId, blueprint.vendor_name, recordCount, blueprint.file_format, 'completed');
 
   console.log(`[820] EXPORT: client=${clientId} vendor=${vendorId} records=${recordCount} errors=${errors}`);
 
@@ -123,11 +139,11 @@ export async function generateExport(env: Env, clientId: string, vendorId: strin
   };
 }
 
-async function logExport(d1: D1Database, exportId: string, clientId: string, vendorId: string, blueprintId: string, recordCount: number, status: string): Promise<void> {
+async function logExport(d1: D1Database, exportId: string, clientId: string, vendorId: string, blueprintId: string, recordCount: number, fileFormat: string, status: string): Promise<void> {
   await d1.prepare(`
-    INSERT INTO export_log (export_id, client_id, vendor_id, blueprint_id, record_count, status)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(exportId, clientId, vendorId, blueprintId, recordCount, status).run();
+    INSERT INTO export_log (export_id, client_id, vendor_id, blueprint_id, record_count, file_format, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(exportId, clientId, vendorId, blueprintId, recordCount, fileFormat, status).run();
 }
 
 async function logError(d1: D1Database, clientId: string, vendorId: string, exportId: string, errorCode: string, errorMessage: string): Promise<void> {

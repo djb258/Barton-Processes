@@ -34,7 +34,7 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-04 |
 | BAR Reference | BAR-38, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/820-vendor-export |
@@ -114,10 +114,10 @@ Required doctrine references for every process UT:
 
 | Component | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Light | State |
 |-----------|----------------------------------|------|-------|-------|
-| CF Worker (vendor-export-820) | vendor-export-820 · leaf · CC-04 | BUILD | yellow | Worker code exists; D1/KV bindings not yet provisioned (database_id and KV id are empty stubs) |
-| D1 (vendor-export-820) | vendor-export-820 · leaf · CC-04 | BUILD | red | Not created yet; run `wrangler d1 create vendor-export-820` |
-| KV (vendor-export-820) | vendor-export-820 · leaf · CC-04 | BUILD | red | Not created yet; run `wrangler kv namespace create vendor-export-820` |
-| D1 canonical (810 client-intake) | client-intake-810 · leaf · CC-04 | BUILD | yellow | 810 is BUILD; shared D1 binding not formalized |
+| CF Worker (vendor-export-820) | vendor-export-820 · leaf · CC-04 | BUILD | yellow | Worker code exists; dry-run passes with live D1/KV bindings |
+| D1 (svg-d1-client) | vendor-export-820 · leaf · CC-04 | BUILD | yellow | Bound to live `svg-d1-client`; export tracking tables created 2026-05-04 |
+| KV (EGRESS_KV) | vendor-export-820 · leaf · CC-04 | BUILD | yellow | Bound to live `EGRESS_KV`; blueprint population still required |
+| D1 canonical (810 client-intake) | client-intake-810 · leaf · CC-04 | BUILD | yellow | Shared client D1 formalized through `svg-d1-client` |
 | CF Cron Trigger | vendor-export-820 · leaf · CC-04 | BUILD | yellow | Configured in wrangler.toml (`0 5 * * *`) but not deployed |
 
 ### Live Dashboard
@@ -147,8 +147,8 @@ Required doctrine references for every process UT:
 
 | Item | Type | Cost Tier | Credentials | What It Does |
 |------|------|-----------|-------------|-------------|
-| Cloudflare D1 (vendor-export-820) | database | Free | D1 binding | Audit writes: export_log, export_error, export_schedule |
-| Cloudflare D1 (810 canonical) | database | Free | D1 binding (shared/cross-DB) | All canonical reads: person, election, plan, vendor, external_identity_map |
+| Cloudflare D1 (svg-d1-client) | database | Free | D1 binding | Canonical client reads plus audit writes: export_log, export_error, export_schedule |
+| Cloudflare D1 (810 canonical) | database | Free | D1 binding (shared client DB) | Canonical reads: clients, client_employees, client_vendors, client_employee_vendor_ids |
 | Cloudflare Workers KV | cache layer | Free | KV binding | Vendor blueprint JSON storage (`blueprint:{vendor_id}`) |
 | CF Cron Triggers | scheduling | Free | none | Daily 5 AM UTC export trigger |
 
@@ -371,7 +371,7 @@ To suspend without deleting: disable the cron trigger in Cloudflare dashboard �
 ```
 
 ### Three Primitives Check (Bedrock §1)
-1. Thing — D1 vendor-export-820 exists? KV namespace exists? Blueprints loaded? 810 canonical tables populated?
+1. Thing — D1 svg-d1-client exists? EGRESS_KV namespace exists? Blueprints loaded? 810 canonical tables populated?
 2. Flow — Cron fires → worker runs → reads 810 D1 → reads KV blueprint → generates output → writes export_log?
 3. Change — Internal UUIDs correctly translated to vendor external IDs? Field mappings applied correctly? CSV/JSON formatted per blueprint spec?
 
@@ -380,13 +380,13 @@ To suspend without deleting: disable the cron trigger in Cloudflare dashboard �
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
 | Worker responds to /health | §1 | CF Worker runtime | `curl https://vendor-export-820.svg-outreach.workers.dev/health` | [ ] | TBV | TBV |
-| D1 vendor-export-820 exists | §3 | Cloudflare D1 dashboard | `wrangler d1 list` | [ ] | TBV | TBV |
-| KV vendor-export-820 exists | §3 | Cloudflare KV dashboard | `wrangler kv namespace list` | [ ] | TBV | TBV |
+| D1 svg-d1-client exists | §3 | Cloudflare D1 dashboard | `wrangler d1 list` | [x] | 2026-05-04 | `svg-d1-client` / `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` |
+| KV EGRESS_KV exists | §3 | Cloudflare KV dashboard | `wrangler kv namespace list` | [x] | 2026-05-04 | `EGRESS_KV` / `66e6c7bec8c1479ba708c0bcbb6a0e23` |
 | Cron registered at 0 5 * * * | §4 | wrangler.toml + CF dashboard | `wrangler triggers list` (post-deploy) | [ ] | TBV | TBV |
-| export_log table exists | §5 | D1 migration | `wrangler d1 execute vendor-export-820 --command "SELECT COUNT(*) FROM export_log"` | [ ] | TBV | TBV |
-| export_error table exists | §5 | D1 migration | `wrangler d1 execute vendor-export-820 --command "SELECT COUNT(*) FROM export_error"` | [ ] | TBV | TBV |
+| export_log table exists | §5 | D1 migration | `wrangler d1 execute svg-d1-client --remote --command "SELECT COUNT(*) FROM export_log"` | [x] | 2026-05-04 | table present |
+| export_error table exists | §5 | D1 migration | `wrangler d1 execute svg-d1-client --remote --command "SELECT COUNT(*) FROM export_error"` | [x] | 2026-05-04 | table present |
 | At least one blueprint in KV | §3 | KV list | `wrangler kv key list --namespace-id <KV_ID> --prefix blueprint:` | [ ] | TBV | TBV |
-| 810 canonical tables readable | §4 | D1 shared binding | `wrangler d1 execute client-intake-810 --command "SELECT COUNT(*) FROM person"` | [ ] | TBV | TBV |
+| 810 canonical tables readable | §4 | D1 shared binding | `wrangler d1 execute svg-d1-client --remote --command "SELECT name FROM sqlite_master"` | [x] | 2026-05-04 | clients, client_employees, client_vendors, client_employee_vendor_ids present |
 
 Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 
@@ -482,15 +482,16 @@ No logbook during BUILD.
 |------|-------|--------|---------------|----------|------------|
 | 2026-03-29 | Dave Barton | BUILD | PROCESS.md created from template — all infrastructure TODO | PROCESS.md logbook entry | none |
 | 2026-04-29 | Claude Sonnet (Runner) | BUILD | UT consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | UT v2.7.0 consolidation run | pending |
+| 2026-05-04 | Codex | REPAIR | Bound wrangler to live svg-d1-client and EGRESS_KV; aligned source queries to live client schema; applied additive export tracking migration | BAR-377 bp.820 repair | pending |
 
 ## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
-| FP-820-01 | wrangler.toml | database_id empty | 2026-03-29 | 1 | 0 | OPEN |
-| FP-820-02 | wrangler.toml | KV id empty | 2026-03-29 | 1 | 0 | OPEN |
+| FP-820-01 | wrangler.toml | database_id empty | 2026-03-29 | 1 | 0 | CLOSED 2026-05-04 |
+| FP-820-02 | wrangler.toml | KV id empty | 2026-03-29 | 1 | 0 | CLOSED 2026-05-04 |
 | FP-820-03 | src/index.ts | Export output not shipped (TODO: R2/email/SFTP) | 2026-03-29 | 1 | 0 | OPEN |
-| FP-820-04 | src/index.ts + wrangler.toml | Shared D1 access with 810 not formalized | 2026-03-29 | 1 | 0 | OPEN |
+| FP-820-04 | src/index.ts + wrangler.toml | Shared D1 access with 810 not formalized | 2026-03-29 | 1 | 0 | CLOSED 2026-05-04 |
 | FP-820-05 | src/index.ts | No authentication on HTTP endpoints | 2026-03-29 | 1 | 0 | OPEN |
 
 ## 14. SESSION LOG {#sec-14-session-log}
@@ -499,13 +500,14 @@ No logbook during BUILD.
 |------|---------------|-----------|
 | 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0 — all infra TODO | none |
 | 2026-04-29 | UT v2.7.0 consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending |
+| 2026-05-04 | BAR-377 repair: live Cloudflare bindings wired, source schema aligned, export tables created, Codex repair audit P=1 | pending |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-29 |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-04 |
 | Version | 1.0.0 |
 | Template Version | 2.7.0 |
 | Medium | process |

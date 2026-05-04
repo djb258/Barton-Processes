@@ -29,6 +29,7 @@ import sys
 import os
 import subprocess
 import random
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -39,10 +40,9 @@ from curl_cffi import requests as creq
 # ===================================================================
 
 DB_NAME = "svg-d1-outreach-ops"
-WRANGLER_CWD = os.environ.get(
-    "WRANGLER_CWD",
-    os.path.expanduser("~/Documents/imo-creator-v2-20260317/workers/lcs-hub"),
-)
+REPO_ROOT = Path(__file__).resolve().parents[4]
+WRANGLER_CWD = os.environ.get("WRANGLER_CWD", str(REPO_ROOT))
+NPX_CMD = os.environ.get("NPX_CMD") or shutil.which("npx.cmd") or shutil.which("npx") or "npx"
 
 PROXY_USER = os.environ.get("PROXY_USER", "")
 PROXY_PASS = os.environ.get("PROXY_PASS", "")
@@ -94,9 +94,10 @@ while i < len(args):
 
 def d1_query(sql):
     """Execute a D1 query and return rows."""
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", DB_NAME, "--remote", "--command", sql, "--json"],
-        capture_output=True, text=True, cwd=WRANGLER_CWD, timeout=120,
+        [NPX_CMD, "wrangler", "d1", "execute", DB_NAME, "--remote", "--command", sql, "--json"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD, timeout=120,
     )
     if result.returncode != 0:
         return []
@@ -122,9 +123,10 @@ def d1_execute(sql):
     if DRY_RUN:
         print(f"  [DRY-RUN] {sql[:120]}...")
         return True
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", DB_NAME, "--remote", "--command", sql],
-        capture_output=True, text=True, cwd=WRANGLER_CWD, timeout=120,
+        [NPX_CMD, "wrangler", "d1", "execute", DB_NAME, "--remote", "--command", sql],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD, timeout=120,
     )
     return result.returncode == 0
 

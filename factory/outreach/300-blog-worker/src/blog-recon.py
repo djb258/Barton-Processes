@@ -28,6 +28,7 @@ import sys
 import os
 import random
 import subprocess
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -39,12 +40,14 @@ from curl_cffi import requests as creq
 
 LIMIT = 0
 PHASE = "1"
+DRY_RUN = False
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+REPO_ROOT = Path(__file__).resolve().parents[4]
 D1_DB = os.environ.get("D1_DB", "svg-d1-outreach-ops")
-WRANGLER_CWD = os.environ.get("WRANGLER_CWD",
-    os.path.expanduser("~/Documents/imo-creator-v2-20260317/workers/lcs-hub"))
+WRANGLER_CWD = os.environ.get("WRANGLER_CWD", str(REPO_ROOT))
+NPX_CMD = os.environ.get("NPX_CMD") or shutil.which("npx.cmd") or shutil.which("npx") or "npx"
 
 # DataImpulse proxy config (Phase 3b)
 PROXY_USER = os.environ.get("PROXY_USER", "")
@@ -75,6 +78,9 @@ while i < len(args):
     elif args[i] == "--resume":
         resume = True
         i += 1
+    elif args[i] == "--dry-run":
+        DRY_RUN = True
+        i += 1
     else:
         i += 1
 
@@ -82,9 +88,10 @@ while i < len(args):
 # ── D1 Access ────────────────────────────────────────────────
 
 def d1_query(sql: str) -> list:
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", D1_DB, "--remote", "--command", sql, "--json"],
-        capture_output=True, text=True, cwd=WRANGLER_CWD
+        [NPX_CMD, "wrangler", "d1", "execute", D1_DB, "--remote", "--command", sql, "--json"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD
     )
     if result.returncode != 0:
         return []
@@ -106,9 +113,13 @@ def d1_query(sql: str) -> list:
 
 
 def d1_execute(sql: str) -> bool:
+    if DRY_RUN:
+        print(f"[DRY-RUN] {sql[:120]}...")
+        return True
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", D1_DB, "--remote", "--command", sql],
-        capture_output=True, text=True, cwd=WRANGLER_CWD
+        [NPX_CMD, "wrangler", "d1", "execute", D1_DB, "--remote", "--command", sql],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD
     )
     return result.returncode == 0
 

@@ -29,6 +29,7 @@ import sys
 import os
 import subprocess
 import random
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,9 +44,10 @@ GATE = "all"  # a, b, c, all
 OUTPUT_DIR = Path(__file__).parent / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+REPO_ROOT = Path(__file__).resolve().parents[4]
 D1_DB = os.environ.get("D1_DB", "svg-d1-outreach-ops")
-WRANGLER_CWD = os.environ.get("WRANGLER_CWD",
-    os.path.expanduser("~/Documents/imo-creator-v2-20260317/workers/lcs-hub"))
+WRANGLER_CWD = os.environ.get("WRANGLER_CWD", str(REPO_ROOT))
+NPX_CMD = os.environ.get("NPX_CMD") or shutil.which("npx.cmd") or shutil.which("npx") or "npx"
 
 PROXY_USER = os.environ.get("PROXY_USER", "")
 PROXY_PASS = os.environ.get("PROXY_PASS", "")
@@ -114,9 +116,10 @@ while i < len(args):
 def d1_query(sql, db=None):
     """Query D1 via wrangler CLI, return list of row dicts."""
     db = db or D1_DB
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", db, "--remote", "--command", sql, "--json"],
-        capture_output=True, text=True, cwd=WRANGLER_CWD
+        [NPX_CMD, "wrangler", "d1", "execute", db, "--remote", "--command", sql, "--json"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD
     )
     if result.returncode != 0:
         return []
@@ -142,9 +145,10 @@ def d1_execute(sql, db=None):
     db = db or D1_DB
     if DRY_RUN:
         return True
+    sql = re.sub(r"[\r\n\t]+", " ", sql).strip()
     result = subprocess.run(
-        ["npx", "wrangler", "d1", "execute", db, "--remote", "--command", sql],
-        capture_output=True, text=True, cwd=WRANGLER_CWD
+        [NPX_CMD, "wrangler", "d1", "execute", db, "--remote", "--command", sql],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WRANGLER_CWD
     )
     return result.returncode == 0
 

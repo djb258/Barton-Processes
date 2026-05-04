@@ -28,10 +28,9 @@ export default {
       return;
     }
 
-    // Get all active clients from D1
-    // NOTE: 820 reads from 810's D1 or shared D1. For now, read client list.
+    // Get active clients from the live client D1 schema.
     const clients = await env.D1.prepare(
-      "SELECT client_id FROM client WHERE status = 'active'"
+      "SELECT client_id FROM clients WHERE COALESCE(orbt_mode, 'OPERATE') NOT IN ('ARCHIVE', 'RETIRED')"
     ).all<{ client_id: string }>();
 
     if (!clients.results || clients.results.length === 0) {

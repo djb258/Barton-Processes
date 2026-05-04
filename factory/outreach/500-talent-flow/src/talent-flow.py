@@ -20,11 +20,11 @@ import json
 import sys
 import os
 import subprocess
+import shutil
 from datetime import datetime
-from pathlib import Path
 
-DB_URL = os.environ.get("DATABASE_URL",
-    "postgresql://Marketing%20DB_owner:npg_OsE4Z2oPCpiT@ep-ancient-waterfall-a42vy0du-pooler.us-east-1.aws.neon.tech/Marketing%20DB?sslmode=require")
+DB_URL = os.environ.get("DATABASE_URL")
+PSQL_CMD = os.environ.get("PSQL_CMD", "psql")
 
 # ── Signal Constants ─────────────────────────────────────────
 
@@ -66,9 +66,11 @@ while i < len(args):
 def query_neon(sql: str) -> list:
     """Run a SQL query against Neon and return JSON results."""
     result = subprocess.run(
-        ["psql", DB_URL, "-t", "-A", "-c", f"SELECT json_agg(row_to_json(t)) FROM ({sql}) t"],
-        capture_output=True, text=True
+        [PSQL_CMD, DB_URL, "-t", "-A", "-c", f"SELECT json_agg(row_to_json(t)) FROM ({sql}) t"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"psql query failed: {result.stderr.strip()[:500]}")
     if result.stdout.strip() and result.stdout.strip() != '':
         return json.loads(result.stdout.strip()) or []
     return []
@@ -77,15 +79,24 @@ def query_neon(sql: str) -> list:
 def execute_neon(sql: str) -> str:
     """Execute a SQL statement against Neon."""
     result = subprocess.run(
-        ["psql", DB_URL, "-c", sql],
-        capture_output=True, text=True
+        [PSQL_CMD, DB_URL, "-c", sql],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"psql execute failed: {result.stderr.strip()[:500]}")
     return result.stdout
 
 
 # ── Main ─────────────────────────────────────────────────────
 
 def main():
+    if not DB_URL:
+        print("ERROR: DATABASE_URL is required. Load it from Doppler; no hardcoded database fallback is allowed.")
+        sys.exit(1)
+    if not shutil.which(PSQL_CMD):
+        print(f"ERROR: psql executable not found: {PSQL_CMD}. Install PostgreSQL client tools or set PSQL_CMD.")
+        sys.exit(1)
+
     run_date = f"{run_month}-01"
 
     print(f"Process 500 — Talent Flow")

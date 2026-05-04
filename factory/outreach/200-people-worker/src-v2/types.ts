@@ -94,6 +94,8 @@ export interface PassResult {
   processed: number;
   filled: number;
   skipped: number;
+  from_blog_data?: number;
+  from_fetch?: number;
   errors: number;
   error_details: string[];
 }
