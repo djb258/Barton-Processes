@@ -72,6 +72,14 @@ Stage 2 initially used the 2026-05-03 BAR-379 D1 live baseline plus 2026-05-04 s
 
 Stage 5 audit was run for no-op candidates bp.010 and bp.400 before the token correction; bp.400 is now refreshed to P=1 and bp.010 remains P=0 due real live drift. bp.200, bp.201, bp.202, bp.300, bp.301, and bp.820 local repairs are now audit-certified. Next knockout is bp.500 or bp.830 triage, while bp.100 remains blocked by source drift and bp.600 remains a decision blocker.
 
+## Outreach Cadence
+
+[OUTREACH_OPERATING_CADENCE.md](OUTREACH_OPERATING_CADENCE.md) records the current operating split:
+
+- Daily: Chrome outbound email job, pushing as many compliant emails as possible and logging delivery evidence back to Mission Control/LCS.
+- Monthly: SP/social platform and People refreshes, including controlled enrichment backlogs.
+- Static/reference: DOL check only unless source or dictionary drift requires refresh.
+
 ## Controls
 
 - Process YAMLs stay in each process UT folder.
