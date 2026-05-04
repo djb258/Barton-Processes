@@ -322,6 +322,19 @@ crons:
     on_failure: "ORANGE squawk if drift detected; RED if AI-on-spine hit"
     ai_on_spine: false
 
+  - id: governance.d1-audit.weekly
+    process: bp.060-d1-audit
+    binding: cf-worker-cron
+    repo: Barton-Processes
+    path: factory/governance/060-d1-audit/wrangler.toml  # to be created when audit worker exits BUILD
+    schedule: ["0 5 * * 0"]  # Sunday 5am UTC
+    timezone: UTC
+    purpose: "Weekly read-only D1 schema drift, stale-table, orphan, and index-health audit"
+    orbt: PROPOSED
+    last_verified: null
+    on_failure: "RED squawk if any D1 unreachable; ORANGE squawk on drift > 10%"
+    ai_on_spine: false
+
   # ===========================================================================
   # RETIRED
   # ===========================================================================
@@ -345,9 +358,9 @@ crons:
 summary:
   active_count: 7      # file-verified 2026-05-03, includes mission-control-api BAR-331 routine cron
   disabled_count: 1    # mission-control-api COS
-  proposed_count: 14   # awaiting Decision Sheet sign-off + Mechanic dispatch
+  proposed_count: 15   # awaiting Decision Sheet sign-off + Mechanic dispatch
   retired_count: 1     # bp.600
-  total: 23
+  total: 24
 
   unaddressed_processes: []  # populated by Mechanic on introspection — any process WITHOUT a registry row gets logged here
   ai_on_spine_violations: 0  # MUST be 0 — Codex audits weekly

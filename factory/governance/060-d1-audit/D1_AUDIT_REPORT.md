@@ -107,3 +107,51 @@ npx wrangler d1 execute <db> --remote --json --command "SELECT name FROM sqlite_
 ## Closeout
 
 This report does not mutate D1, does not recommend drops, and does not promote any database to drift-clean. It only certifies that the first live introspection sweep ran successfully and produced a grounded baseline for the deeper BAR-379 audit cycle.
+
+---
+
+## Stage 2 Schema Fingerprint Sweep
+
+Date: 2026-05-04
+Mode: read-only Cloudflare D1 introspection
+Result: `changed_db: false` on all six databases
+
+This pass captured live object fingerprints from `sqlite_master` using:
+
+```bash
+npx wrangler d1 execute <db> --remote --json --command "SELECT type, COUNT(*) AS count FROM sqlite_master WHERE type IN ('table','index','view') AND name NOT LIKE 'sqlite_%' GROUP BY type ORDER BY type;"
+npx wrangler d1 execute <db> --remote --json --command "SELECT name, type, COALESCE(sql,'') AS sql FROM sqlite_master WHERE type IN ('table','index','view') AND name NOT LIKE 'sqlite_%' ORDER BY type, name;"
+```
+
+### Live Object Counts
+
+| Database | User tables | User indexes | Views | Size after query | Dictionary claimed tables | Drift signal |
+|----------|-------------|--------------|-------|------------------|---------------------------|--------------|
+| `svg-d1-spine` | 54 | 30 | 0 | 70,078,464 bytes | 38 | +16 tables vs dictionary |
+| `svg-d1-outreach-ops` | 68 | 34 | 17 | 995,667,968 bytes | 33 | +35 tables vs dictionary |
+| `imo-d1-global` | 2 | 0 | 0 | 4,882,432 bytes | 1 | +1 table vs dictionary |
+| `svg-d1-storage` | 100 | 3 | 0 | 50,835,456 bytes | 92 | +8 tables vs dictionary |
+| `lbb` | 5 | 10 | 0 | 1,572,864 bytes | 4 | +1 table vs dictionary |
+| `mission-control` | 52 | 91 | 0 | 2,080,768 bytes | variable | dictionary needs concrete baseline |
+
+### Stage 2 Findings
+
+| ID | Severity | Finding | Evidence | Required BAR Route |
+|----|----------|---------|----------|--------------------|
+| BAR379-F5 | ORANGE | `D1_DATA_DICTIONARY.md` is materially stale for the two outreach-critical databases. | `svg-d1-spine` live 54 user tables vs 38 claimed; `svg-d1-outreach-ops` live 68 user tables vs 33 claimed. | Refresh dictionary from live schema fingerprints; do not hand-edit counts. |
+| BAR379-F6 | ORANGE | `svg-d1-storage` has 100 user tables but only 3 user-defined indexes in the live `sqlite_master` count. | Stage 2 query returned `table=100`, `index=3`. | Dedicated index-health pass with `EXPLAIN QUERY PLAN` before performance certification. |
+| BAR379-F7 | YELLOW | `mission-control` now needs a concrete dictionary baseline. | Live count is 52 user tables after BAR-381 squawks migration. | Add mission-control section to dictionary instead of leaving table count variable. |
+| BAR379-F8 | YELLOW | `imo-d1-global` and `lbb` both drifted above dictionary inventory. | `imo-d1-global` live 2 vs claimed 1; `lbb` live 5 vs claimed 4. | Include both in dictionary refresh. |
+
+### Certification Status
+
+P=1 for live schema fingerprint capture.
+
+P=0 for BAR-379 full acceptance. The dictionary is stale, stale-table timestamps are not yet table-by-table complete, orphan ownership is not mapped, and hot-query index plans are not yet attached.
+
+### Next Pass
+
+1. Generate a machine-readable schema fingerprint artifact per database.
+2. Refresh `D1_DATA_DICTIONARY.md` from live fingerprints after sovereign sign-off.
+3. Add per-table stale timestamp checks for tables containing `updated_at`, `created_at`, `attempted_at`, `processed_at`, or domain-specific write timestamps.
+4. Run index-health checks on `svg-d1-outreach-ops`, `svg-d1-storage`, `svg-d1-spine.lcs_*`, and Mission Control hot routes.
