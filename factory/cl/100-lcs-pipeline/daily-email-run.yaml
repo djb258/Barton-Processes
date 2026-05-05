@@ -1,0 +1,226 @@
+name: bp-100-daily-email-run
+version: 1.0.0
+date: "2026-05-05"
+status: REPAIR
+purpose: "Executable run contract for Process 100 daily email firing: signal intake, voice-gated copy, verified-recipient send, webhook feedback, LBB/Mission Control evidence."
+
+identity:
+  process_id: bp.100
+  process_number: "100"
+  process_name: LCS Pipeline
+  ctb_node: barton-enterprises/svg-agency/outreach/lcs-pipeline
+  owner: dave-barton
+  source_ut: PROCESS-UT.md
+  doctrine: DOCTRINE.md
+  existing_workflow: workflow.yaml
+  orbt_file: orbt.yaml
+  runtime_state: REPAIR
+
+authority:
+  source_documents:
+    - PROCESS-UT.md
+    - DOCTRINE.md
+    - workflow.yaml
+    - orbt.yaml
+    - "../../../archive/orphans-2026-04-29/svg-agency-lcs-send-process/PROCESS.md"
+    - "../../../docs/company_lifecycle_autonomy_manifest.yaml"
+  locked_doctrine:
+    - D-100-01: "SID construction gates only on has_verified_email = 1."
+    - D-100-02: "Every Mailgun send must include Reply-To: dave@svg.agency."
+    - D-100-03: "Pipeline stages run CID -> SID -> MID only, with lcs_event append between stages."
+    - D-100-05: "Domain rotation uses LRU where sent_today < daily_cap and is_paused = 0."
+    - D-100-10: "Bounce rate above 2 percent in 24 hours auto-pauses the domain."
+  voice_source:
+    validator: workers/lcs-hub/src/voice-spec.ts
+    canonical_calendar_link: "https://calendar.app.google/VT41mpEgTWDexFET8"
+    canonical_brand_phrase: "Insurance Informatics"
+
+schedule:
+  intended_fire:
+    id: bp.100.lcs-fire-daily
+    cadence: "0 14 * * 1-5"
+    timezone: America/New_York
+    local_time: "10:00 weekday"
+    state: proposed_until_live_verified
+  existing_compiler_cron:
+    id: bp.100.lcs-pipeline
+    cadence: "0 7 * * *"
+    timezone: UTC
+    state: active_per_prior_audit
+  rule: "No unrestricted email fire while runtime_state is REPAIR. Manual fire may run only through this contract and must write evidence."
+
+inputs:
+  required_upstream_processes:
+    - { id: bp.010, name: SEED D1, required_state: OPERATE, reason: "company seed/reference data" }
+    - { id: bp.200, name: People Worker, required_state: REPAIR_OR_OPERATE, reason: "people slots and verified emails" }
+    - { id: bp.400, name: DOL Views, required_state: OPERATE, reason: "DOL reference signals" }
+    - { id: bp.700, name: Campaign Engine, required_state: BUILD_OR_OPERATE, reason: "campaign candidate selection" }
+  required_tables:
+    spine_d1:
+      - lcs_signal_queue
+      - lcs_signal_registry
+      - lcs_frame_registry
+      - lcs_domain_rotation
+      - lcs_cid
+      - lcs_sid_output
+      - lcs_mid_sequence_state
+      - lcs_event
+      - lcs_err0
+    outreach_d1_readonly:
+      - outreach_company_target
+      - outreach_dol
+      - people_company_slot
+      - people_people_master
+      - slot_workbench
+  required_secrets:
+    - MAILGUN_API_KEY
+    - LBB_API_KEY
+    - MC_API_KEY
+  optional_secrets:
+    - HEYREACH_API_KEY
+
+preflight_gates:
+  hard_stop:
+    - id: verified_email_only
+      check: "Recipient source has has_verified_email = 1."
+      fail_action: halt_batch
+    - id: suppression_check
+      check: "Recipient is not suppressed, bounced, unsubscribed, or marked complaint."
+      fail_action: halt_recipient
+    - id: domain_not_paused
+      check: "Selected Mailgun domain has is_paused = 0 and sent_today < daily_cap."
+      fail_action: rotate_domain_or_halt
+    - id: voice_spec_pass
+      check: "Compiled body passes validateOutboundEmailCopy() and role-frame required phrases."
+      fail_action: halt_message
+    - id: single_calendar_link
+      check: "Exactly one https link exists and it equals canonical_calendar_link."
+      fail_action: halt_message
+    - id: can_spam_footer_once
+      check: "CAN-SPAM footer is present exactly once after delivery assembly."
+      fail_action: halt_message
+    - id: reply_to_dave
+      check: "Reply-To header is dave@svg.agency."
+      fail_action: halt_message
+    - id: no_ai_on_schedule_spine
+      check: "Scheduled handler does not call an LLM."
+      fail_action: halt_deploy
+  warning_gate:
+    - id: bp_200_repair_state
+      check: "People Worker is still REPAIR; only verified filled slots may be consumed."
+      action: allow_manual_fire_with_evidence
+    - id: bp_700_build_state
+      check: "Campaign Engine is BUILD; candidate selection may need manual queue seeding."
+      action: require_operator_note
+
+voice_contract:
+  opening: "Dave Barton. I do insurance informatics."
+  brand_phrase: "Insurance Informatics"
+  required_universal_rules:
+    - "One factual anchor: insurance informatics, zero commission, 25 years, 90 percent, 100,000, or 15K/month."
+    - "One insight phrase: The math is simple, Premiums don't equal cost, or You can't stop claims."
+    - "One ask phrase: 15 minutes, want to see it, worth a conversation, or compete it."
+    - "Exactly one calendar link."
+    - "No exclamation marks."
+    - "No emoji."
+    - "No forbidden phrases."
+  role_frames:
+    CEO:
+      frame_id: OUT-HAMMER-01
+      must_include: ["Here's how it works.", "Insurance Informatics"]
+      must_not_pitch: ["HR automation", "vendor workflow"]
+    CFO:
+      frame_id: OUT-HAMMER-02
+      must_include: ["The math is simple.", "Premiums don't equal cost."]
+      must_not_pitch: ["HR automation", "vendor workflow"]
+    HR:
+      frame_id: OUT-HAMMER-03
+      must_include: ["You can't stop claims.", "Insurance Informatics"]
+      must_not_pitch: ["20 to 55% savings as the lead hook", "premium math as primary hook"]
+
+run_steps:
+  - id: intake
+    name: "Select eligible signal queue rows"
+    reads: [lcs_signal_queue, lcs_signal_registry]
+    writes: [lcs_event]
+    output: eligible_signal_batch
+    gates: [suppression_check]
+  - id: cid_compile
+    name: "Compile CID"
+    reads: [outreach_company_target, outreach_dol, people_company_slot, people_people_master, slot_workbench]
+    writes: [lcs_cid, lcs_event]
+    output: compiled_cid
+    gates: [verified_email_only]
+  - id: sid_construct
+    name: "Construct SID"
+    reads: [lcs_cid, lcs_frame_registry, lbb]
+    writes: [lcs_sid_output, lcs_event]
+    output: voice_checked_message
+    gates: [voice_spec_pass, single_calendar_link, can_spam_footer_once]
+  - id: mid_deliver
+    name: "Deliver MID"
+    reads: [lcs_sid_output, lcs_domain_rotation]
+    writes: [lcs_mid_sequence_state, lcs_event]
+    output: mailgun_message
+    gates: [domain_not_paused, reply_to_dave]
+  - id: feedback
+    name: "Record delivery feedback"
+    reads: [mailgun_webhook]
+    writes: [lcs_mid_sequence_state, lcs_event, lcs_err0]
+    output: delivery_status
+    gates: [bounce_pause_gate]
+  - id: evidence
+    name: "Write operational evidence"
+    reads: [lcs_event, lcs_mid_sequence_state, lcs_err0]
+    writes: [lbb, mission_control]
+    output: bp100_daily_fire_evidence
+
+limits:
+  daily_target:
+    repair_mode: "small_batch_only"
+    operate_mode: "up to domain caps after three clean fires"
+  mailgun_domains:
+    count: 14
+    warmup_week_1_daily_cap_each: 80
+    theoretical_week_1_cap_total: 1120
+  repair_mode_batch:
+    max_messages: 25
+    reason: "Process is still REPAIR; prove gates before full 1120/day run."
+  bounce_thresholds:
+    per_domain_24h_pause: ">= 2%"
+    fleet_red: "> 2%"
+    complaint_red: "> 0"
+
+observability:
+  required_lbb_subject: svg-outreach-proc
+  mission_control_surface: Outreach Ops
+  evidence_rows:
+    - batch_id
+    - run_started_at
+    - run_finished_at
+    - selected_count
+    - sent_count
+    - skipped_count
+    - voice_fail_count
+    - suppression_skip_count
+    - bounce_count
+    - complaint_count
+    - paused_domain_count
+    - lcs_event_count
+  squawk_conditions:
+    - voice_spec_fail
+    - missing_verified_email_gate
+    - domain_pause
+    - webhook_silent_over_15_minutes
+    - mailgun_failure
+    - lbb_write_failure
+
+promotion_to_operate:
+  required:
+    - "D-100-01 verified-email gate deployed and proven."
+    - "Three clean daily fires with LBB and Mission Control evidence."
+    - "Bounce rate stays below 2 percent across active domains."
+    - "Voice-spec pass rate is 100 percent."
+    - "No AI call exists on the scheduled send spine."
+    - "Auditor returns P=1 against PROCESS-UT.md, DOCTRINE.md, workflow.yaml, daily-email-run.yaml, and live evidence."
+  current_verdict: "Not full-autonomy ready; manual gated repair fire only."

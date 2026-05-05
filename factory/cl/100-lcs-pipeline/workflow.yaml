@@ -13,10 +13,10 @@ inside:
     determinism_gate: ai_on_spine_forbidden
   orbt: { runtime_state: REPAIR, strikes: 2, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: three_clean_fires_and_codex_10_gate_pass }
 description: "UT-local workflow for bp.100 LCS Pipeline. Verifies compiler cron, migrates/validates lcs-fire-daily scheduling, audits delivery loop, and closes LBB/MC."
-inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml, daily_email_run: daily-email-run.yaml }
 schedule: ["0 7 * * *"]
 data:
-  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml]
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, daily-email-run.yaml]
   writes: [docs/audit/process-runs/bp-100/inventory-bp-100.md, docs/audit/process-runs/bp-100/live-state-bp-100.md, docs/audit/process-runs/bp-100/diff-bp-100.md, docs/audit/process-runs/bp-100/audit-bp-100.md]
   forbidden: [llm_on_schedule_spine, send_without_suppression_check, mission_control_green_before_all_pass]
 nodes:
