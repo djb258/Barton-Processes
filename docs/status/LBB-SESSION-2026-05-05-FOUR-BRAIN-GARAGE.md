@@ -6,6 +6,8 @@ Process 070 Four-Brain garage and related Atlas doctrine were updated to make Fo
 
 LB&B record: `175449dd-ab65-4a14-9cff-7a8a33c310af`
 
+LB&B logger install verification record: `080b14db-712d-4fa3-9bff-12c2553b1c69`
+
 ## Doctrine Updates
 
 Repo: `C:\Users\CUSTOM PC\Desktop\Cursor Builds\imo-creator-v2`
@@ -63,4 +65,4 @@ A post-commit cleanup removed the leftover `--planner-cli` option from the runne
 
 ## Open Operational Note
 
-`Barton-Processes` does not currently contain `scripts/lbb-log.sh`. The live logger is present at `C:\Users\CUSTOM PC\Desktop\Cursor Builds\imo-creator-v2\scripts\lbb-log.sh`. Process 070 runner points to the local Barton-Processes script path for production enforcement, so either copy/install the logger into `Barton-Processes\scripts\lbb-log.sh` or update the runner to a shared logger path before removing `--defer-lbb` in production.
+`Barton-Processes` now contains `scripts/lbb-log.sh`, matching the Process 070 runner's compact transition flags. The script posts the standard LBB `/ingest` record shape accepted by the live worker. On this Windows/WSL setup, WSL does not inherit Windows environment variables by default; production runs need `LBB_API_KEY` present inside the bash environment, Doppler installed inside bash, or `WSLENV=LBB_API_KEY/u` set by the launching shell.
