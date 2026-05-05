@@ -18,7 +18,7 @@ Usage:
   forebrain-garage.sh new BAR-123
   forebrain-garage.sh ready
   forebrain-garage.sh claim BAR-123 [planner-name]
-  forebrain-garage.sh run-once [--execute] [--defer-lbb] [--planner-cli claude|codex] [--planner-model opus]
+  forebrain-garage.sh run-once [--execute] [--defer-lbb] [--planner-model opus]
   forebrain-garage.sh foreman BAR-123 [--execute] [--defer-lbb] [--foreman-model sonnet]
   forebrain-garage.sh mechanic BAR-123 [--execute] [--defer-lbb] [--mechanic-model sonnet]
   forebrain-garage.sh auditor BAR-123 [--execute] [--defer-lbb] [--auditor-model gpt-5.3-codex]
@@ -432,24 +432,11 @@ EOF
 }
 
 run_planner_cli() {
-  local cli="$1"
-  local model="$2"
-  local prompt="$3"
-  local run_dir="$4"
+  local model="$1"
+  local prompt="$2"
+  local run_dir="$3"
   local output="$run_dir/planner-output.md"
-  case "$cli" in
-    claude)
-      run_claude_cli "$model" "$prompt" "$output"
-      ;;
-    codex)
-      echo "Codex is not a Planner CLI in Process 070. Use Claude Opus for Planner and Codex for Auditor." >&2
-      return 2
-      ;;
-    *)
-      echo "Unsupported planner CLI: $cli" >&2
-      return 2
-      ;;
-  esac
+  run_claude_cli "$model" "$prompt" "$output"
   echo "$output"
 }
 
@@ -471,7 +458,6 @@ run_once() {
   local execute="false"
   local auto_continue="false"
   local defer_lbb="false"
-  local planner_cli="claude"
   local planner_model="opus"
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -486,10 +472,6 @@ run_once() {
       --defer-lbb)
         defer_lbb="true"
         shift
-        ;;
-      --planner-cli)
-        planner_cli="${2:-claude}"
-        shift 2
         ;;
       --planner-model)
         planner_model="${2:-opus}"
@@ -521,7 +503,7 @@ run_once() {
     echo "bar_id: $bar_id"
     echo "run_dir: $run_dir"
     echo "prompt: $prompt"
-    echo "planner_cli: $planner_cli"
+    echo "planner_cli: claude"
     echo "planner_model: $planner_model"
     echo "execute: $execute"
     echo "defer_lbb: $defer_lbb"
@@ -534,7 +516,7 @@ run_once() {
     return 0
   fi
 
-  if run_planner_cli "$planner_cli" "$planner_model" "$prompt" "$run_dir" > "$run_dir/planner-output-path.txt"; then
+  if run_planner_cli "$planner_model" "$prompt" "$run_dir" > "$run_dir/planner-output-path.txt"; then
     if [[ -f "$plan_path" ]]; then
       if ! write_lbb_transition "$bar_id" "planner" "dispatch" "$run_dir" "$defer_lbb" > "$run_dir/lbb-planner-path.txt"; then
         update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
