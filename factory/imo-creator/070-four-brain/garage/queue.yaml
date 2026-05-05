@@ -1,5 +1,5 @@
 name: process-070-garage-queue
-version: "1.0.0"
+version: "1.1.0"
 status: BUILD
 owner_process: bp.070-four-brain
 purpose: >
@@ -20,7 +20,16 @@ status_values:
   - READY_FOR_PLANNER
   - PLANNER_RUNNING
   - PLAN_BOOK_READY
+  - REVIEW_PLAN_BOOK
+  - PLAN_BOOK_SIGNED
+  - FOREMAN_RUNNING
+  - REVIEW_FOREMAN_DISPATCH
   - FOREMAN_DISPATCHED
+  - MECHANIC_RUNNING
+  - REVIEW_MECHANIC_OUTPUT
+  - MECHANIC_DONE
+  - AUDITOR_RUNNING
+  - REVIEW_AUDIT_VERDICT
   - CLOSED
   - BLOCKED
 
@@ -35,7 +44,8 @@ pickup_rule:
 handoff:
   model_routing:
     planner: "ForeBrain / Claude Opus"
-    foreman_mechanic: "Sonnet"
+    foreman: "Sonnet/default routing model; Opus escalation only"
+    mechanic: "Sonnet"
     auditor: "Codex"
     gemini: "specialty_only_explicit_bar_not_normal_pickup"
   planner_input:
@@ -50,9 +60,28 @@ handoff:
   foreman_output:
     - "Mechanic dispatch packets"
   evidence:
-    - "LB&B role transition rows when available"
+    - "LB&B role transition rows required before role transition; --defer-lbb is local dry-test only"
     - "Mission Control run/transition rows when available"
     - "Git commit or pushed SHA for repo changes"
+
+review_gates:
+  default_rule: "Pause at REVIEW_* unless --auto-continue is passed."
+  approval_transitions:
+    REVIEW_PLAN_BOOK: "PLAN_BOOK_SIGNED"
+    REVIEW_FOREMAN_DISPATCH: "FOREMAN_DISPATCHED"
+    REVIEW_MECHANIC_OUTPUT: "MECHANIC_DONE"
+    REVIEW_AUDIT_VERDICT: "CLOSED"
+
+foreman_delegation_gate:
+  doctrine: "atlas/constants/FOUR_BRAIN_AVIATION.md v1.3.0"
+  default_model: "sonnet"
+  escalation_model: "opus"
+  requires:
+    - "signed Plan Book before Foreman dispatch"
+    - "dispatch packet only; no code edits"
+    - "Atlas Step 0 citations in dispatch output"
+    - "LB&B handoff row before Mechanic transition"
+    - "Auditor review of Foreman dispatch against Plan Book"
 
 final_product_contract:
   pointer_file: "factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
