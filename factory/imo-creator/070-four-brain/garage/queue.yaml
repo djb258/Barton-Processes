@@ -47,7 +47,6 @@ handoff:
     foreman: "Sonnet/default routing model; Opus escalation only"
     mechanic: "Sonnet"
     auditor: "Codex"
-    gemini: "specialty_only_explicit_bar_not_normal_pickup"
   planner_input:
     - "PLANNER-INTAKE.md"
     - "planner-intake.yaml"

@@ -18,7 +18,7 @@ Usage:
   forebrain-garage.sh new BAR-123
   forebrain-garage.sh ready
   forebrain-garage.sh claim BAR-123 [planner-name]
-  forebrain-garage.sh run-once [--execute] [--defer-lbb] [--planner-cli claude|codex|gemini] [--planner-model opus]
+  forebrain-garage.sh run-once [--execute] [--defer-lbb] [--planner-cli claude|codex] [--planner-model opus]
   forebrain-garage.sh foreman BAR-123 [--execute] [--defer-lbb] [--foreman-model sonnet]
   forebrain-garage.sh mechanic BAR-123 [--execute] [--defer-lbb] [--mechanic-model sonnet]
   forebrain-garage.sh auditor BAR-123 [--execute] [--defer-lbb] [--auditor-model gpt-5.3-codex]
@@ -443,10 +443,6 @@ run_planner_cli() {
       ;;
     codex)
       echo "Codex is not a Planner CLI in Process 070. Use Claude Opus for Planner and Codex for Auditor." >&2
-      return 2
-      ;;
-    gemini)
-      echo "Gemini is specialty-only and cannot run the normal Planner lane. Create an explicit specialist BAR instead." >&2
       return 2
       ;;
     *)
