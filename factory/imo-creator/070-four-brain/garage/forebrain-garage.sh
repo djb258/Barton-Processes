@@ -432,11 +432,28 @@ EOF
 }
 
 run_planner_cli() {
-  local model="$1"
-  local prompt="$2"
-  local run_dir="$3"
+  local cli="$1"
+  local model="$2"
+  local prompt="$3"
+  local run_dir="$4"
   local output="$run_dir/planner-output.md"
-  claude --print --model "$model" --permission-mode acceptEdits --add-dir "$ROOT" < "$prompt" > "$output"
+  case "$cli" in
+    claude)
+      run_claude_cli "$model" "$prompt" "$output"
+      ;;
+    codex)
+      echo "Codex is not a Planner CLI in Process 070. Use Claude Opus for Planner and Codex for Auditor." >&2
+      return 2
+      ;;
+    gemini)
+      echo "Gemini is specialty-only and cannot run the normal Planner lane. Create an explicit specialist BAR instead." >&2
+      return 2
+      ;;
+    *)
+      echo "Unsupported planner CLI: $cli" >&2
+      return 2
+      ;;
+  esac
   echo "$output"
 }
 
@@ -458,6 +475,7 @@ run_once() {
   local execute="false"
   local auto_continue="false"
   local defer_lbb="false"
+  local planner_cli="claude"
   local planner_model="opus"
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -472,6 +490,10 @@ run_once() {
       --defer-lbb)
         defer_lbb="true"
         shift
+        ;;
+      --planner-cli)
+        planner_cli="${2:-claude}"
+        shift 2
         ;;
       --planner-model)
         planner_model="${2:-opus}"
@@ -503,7 +525,7 @@ run_once() {
     echo "bar_id: $bar_id"
     echo "run_dir: $run_dir"
     echo "prompt: $prompt"
-    echo "planner_cli: claude"
+    echo "planner_cli: $planner_cli"
     echo "planner_model: $planner_model"
     echo "execute: $execute"
     echo "defer_lbb: $defer_lbb"
@@ -516,7 +538,7 @@ run_once() {
     return 0
   fi
 
-  if run_planner_cli "$planner_model" "$prompt" "$run_dir" > "$run_dir/planner-output-path.txt"; then
+  if run_planner_cli "$planner_cli" "$planner_model" "$prompt" "$run_dir" > "$run_dir/planner-output-path.txt"; then
     if [[ -f "$plan_path" ]]; then
       if ! write_lbb_transition "$bar_id" "planner" "dispatch" "$run_dir" "$defer_lbb" > "$run_dir/lbb-planner-path.txt"; then
         update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
