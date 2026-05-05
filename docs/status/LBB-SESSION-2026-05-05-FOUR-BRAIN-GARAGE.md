@@ -4,6 +4,8 @@
 
 Process 070 Four-Brain garage and related Atlas doctrine were updated to make Foreman delegation explicit, auditable, and non-black-box. The Planner remains the high-cognition role. The Foreman is allowed to run on Sonnet/default routing model only after a signed Plan Book and only as routing-only dispatch. Gemini was removed from the Process 070 garage path entirely.
 
+LB&B record: `175449dd-ab65-4a14-9cff-7a8a33c310af`
+
 ## Doctrine Updates
 
 Repo: `C:\Users\CUSTOM PC\Desktop\Cursor Builds\imo-creator-v2`
