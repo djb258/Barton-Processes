@@ -1,0 +1,76 @@
+name: process-070-garage-queue
+version: "1.0.0"
+status: BUILD
+owner_process: bp.070-four-brain
+purpose: >
+  Path-based intake queue for Process 070 Planner work. Agents deposit filled
+  Planner Intake packets under garage/inbox. Planner claims packets marked
+  READY_FOR_PLANNER and produces Plan Books for Foreman dispatch.
+
+paths:
+  inbox: "factory/imo-creator/070-four-brain/garage/inbox"
+  outbox: "factory/imo-creator/070-four-brain/garage/outbox"
+  template_md: "factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md"
+  template_yaml: "factory/imo-creator/070-four-brain/planner-intake-template.yaml"
+  plan_book_shelf: "docs/plans"
+  final_product_pointer: "factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
+
+status_values:
+  - DRAFT
+  - READY_FOR_PLANNER
+  - PLANNER_RUNNING
+  - PLAN_BOOK_READY
+  - FOREMAN_DISPATCHED
+  - CLOSED
+  - BLOCKED
+
+pickup_rule:
+  required_file: "planner-intake.yaml"
+  required_status: "READY_FOR_PLANNER"
+  claim_update: "garage_status: PLANNER_RUNNING"
+  claim_fields:
+    - planner_claimed_by
+    - planner_claimed_at
+
+handoff:
+  model_routing:
+    planner: "ForeBrain / Claude Opus"
+    foreman_mechanic: "Sonnet"
+    auditor: "Codex"
+    gemini: "specialty_only_explicit_bar_not_normal_pickup"
+  planner_input:
+    - "PLANNER-INTAKE.md"
+    - "planner-intake.yaml"
+    - "Atlas references named in the packet"
+    - "Process 070 PROCESS-UT.md"
+    - "Process 070 four-brain.yaml"
+  planner_output:
+    - "docs/plans/BAR-{id}/PLAN-BOOK.md"
+    - "factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
+  foreman_output:
+    - "Mechanic dispatch packets"
+  evidence:
+    - "LB&B role transition rows when available"
+    - "Mission Control run/transition rows when available"
+    - "Git commit or pushed SHA for repo changes"
+
+final_product_contract:
+  pointer_file: "factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
+  rule: >
+    The outbox pointer is the pickup ticket. It does not replace the durable
+    artifact; it tells the next agent or operator where the artifact lives,
+    what status it reached, and what evidence exists.
+  required_fields:
+    - bar_id
+    - final_status
+    - primary_artifact
+    - intake_path
+    - run_dir
+    - evidence
+    - next_owner
+    - updated_at
+
+runtime_note: >
+  This queue is the near-automation contract before BAR-FOUR-BRAIN-CLI exists.
+  Do not claim a fully automated 070 run unless a real runner or endpoint writes
+  the expected LB&B and Mission Control evidence.

@@ -1,0 +1,51 @@
+# HEIR — Process 1710 HeyGen Avatar/Cinematic Video
+# 8-field identity per law/HEIR_SCHEMA.md + atlas/constants/FOUNDATIONAL_BEDROCK.md §8 Aviation Model
+# Stamped at BUILD. Never changes without human-sovereign amendment.
+
+process_id: "PROC-1710"
+process_number: "1710"
+name: "HeyGen Avatar/Cinematic Video"
+blueprint_owner: "content"
+runtime: "api-first (heygen-dop / HeyGen REST API) + browser-automation (Chrome MCP for UI-only features)"
+status: "build"
+
+# HEIR 8 fields
+sovereign_ref: "imo-creator"
+hub_id: "content-heygen-avatar"
+ctb_placement: "branch"
+imo_topology: "middle"
+cc_layer: "CC-03"
+services:
+  - "HeyGen API — /v2/video/generate, /v1/video_status.get, /v2/avatars"
+  - "heygen-dop CLI — ~/bin/heygen-dop-impl.sh"
+  - "Chrome MCP — browser automation for Avatar Shots, Video Agent, AI Video Generator, Enhance"
+  - "Doppler (imo-creator → dev) — HEYGEN_API_KEY"
+  - "LBB (lbb.svg-outreach.workers.dev) — render session ingest"
+secrets_provider: "Doppler (imo-creator → dev → HEYGEN_API_KEY)"
+acceptance_criteria:
+  - "Avatar identity verified: cf8be1f92db345458a24fbbdfc368faa (black shirt) and f2f245dd75514a78a96feec067f0dd9b (blue shirt) confirmed active in HeyGen account"
+  - "HEYGEN_API_KEY available from Doppler and accepted by API"
+  - "Render dispatched via heygen-dop CLI or Chrome MCP with job_id returned"
+  - "MP4 output downloaded/captured with non-zero file size"
+  - "Constants packet (avatar ID, voice ID, aspect ratio, orientation) recorded per render"
+  - "LBB ingest record exists in processes subject for each render"
+  - "No avatar identity HALT events"
+  - "No real human face reference violations"
+
+# CTB coordinates
+ctb_node: "barton-enterprises/content/1710-heygen-avatar"
+
+# Two-question intake
+two_question_intake:
+  what_triggers: "A video job with path_id=heygen_avatar is dispatched (by PROC-1750 picker or directly by Dave) with a script and optional cinematic scene slots"
+  how_do_we_get_it: "Script from hand-written sources or Claude Project AI Brain (Phase 2); avatar/voice IDs are constants from this UT; API key from Doppler; cinematic prompts follow the 4-slot formula"
+
+# Process relationships
+peer_processes:
+  - "PROC-1750 (video picker) — upstream router"
+  - "PROC-1800 (CF Stream upload) — downstream consumer"
+
+feeds:
+  - "PROC-1800 — consumes MP4 file path or download URL"
+  - "LBB processes subject — consumes render session metadata"
+  - "content-pages — consumes CF Stream UID (via PROC-1800)"

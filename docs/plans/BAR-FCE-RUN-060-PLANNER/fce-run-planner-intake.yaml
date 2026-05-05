@@ -1,0 +1,427 @@
+name: fce-run-planner-intake
+version: "1.0.0"
+status: READY-FOR-PLANNER
+last_modified: "2026-05-05"
+paired_md: FCE-RUN-PLANNER-INTAKE.md
+purpose: >
+  Process 070 Planner intake packet for building the canonical PROC-060 FCE
+  run process pair. This file mirrors the MD destination, source-of-truth
+  split, evidence contract, doctrine locks, P=1 definition, and no-drift gates.
+
+planner_request:
+  bar_or_work_id: BAR-FCE-RUN-060-PLANNER
+  target_process: "PROC-060 / FCE run process"
+  desired_outcome: >
+    Produce the Plan Book for the canonical FCE run process pair: PROCESS-UT.md
+    plus companion workflow YAML under PROC-060, with Mission Control evidence
+    wiring for R2/OpenRouter cycles, D1 vault, FCE library status, and downstream
+    DMJ readiness.
+  operating_mode: BUILD
+  sovereign_decision_needed: "yes: whether downstream DMJ gets a separate process number"
+
+source_of_truth_split:
+  blueprint_architecture:
+    owner: dyno-engine
+    paths:
+      - dyno-engine/engine/us.py
+      - dyno-engine/engine/up.py
+    owns: "Locked blueprint engine behavior."
+  execution_operations:
+    owner: Barton-Processes
+    paths:
+      - Barton-Processes/factory/imo-creator/060-run-dyno/
+    owns: "Canonical operational process home for running FCEs."
+  runtime_deployment:
+    owner: Mission Control
+    paths:
+      - imo-creator-v2/workers/mission-control
+      - imo-creator-v2/workers/mission-control-api
+      - imo-creator-v2/atlas/dyno/run_fce.py
+    owns: "Operator surface, intake, cycle/vault endpoints, and runner execution."
+  evidence_observability:
+    owner: "R2, D1, LBB, FCE library"
+    paths:
+      - r2://svg-files/dyno-runs/{run_id}/
+      - mission-control.dyno_run
+      - mission-control.dyno_run_cycle
+      - imo-creator-v2/atlas/fce-library
+    owns: "Workbench artifacts, all cycle/model rows, completed-run vault, logbook memory, certified shelf."
+
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: fce-run-060-planner-intake
+    ctb_placement: branch
+    imo_topology: input
+    cc_layer: CC-03
+    services:
+      - Barton-Processes
+      - dyno-engine
+      - imo-creator-v2 atlas
+      - run_fce.py
+      - us.py
+      - up.py
+      - Codex audit
+    secrets_provider: doppler
+    acceptance_criteria: >
+      Planner can build a Plan Book for one canonical PROC-060 FCE run
+      process pair with matching MD and YAML, zero drift between US P=1,
+      K=C lock, UP tolerance, R2-first intake, D1 vaulting, OpenRouter
+      expensive-model routing, four-column output, DMJ deferral, and locked
+      engine boundaries.
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+
+inside:
+  doctrine_locks:
+    - id: INV-01
+      rule: proc_060_is_only_fce_run_process
+    - id: INV-02
+      rule: proc_070_is_four_brain_build_pipeline_not_fce_runtime
+    - id: INV-03
+      rule: proc_080_is_absorbed_reference_fill_logic
+    - id: INV-04
+      rule: proc_090_is_fce_artifact_not_run_process
+    - id: INV-05
+      rule: us_solves_for_m
+    - id: INV-06
+      rule: us_p1_fixed_all_four_columns_covered_all_leaves_primitive
+    - id: INV-07
+      rule: kc_locks_m
+    - id: INV-08
+      rule: up_consumes_i_using_locked_m
+    - id: INV-09
+      rule: up_tolerance_tells_when_to_stop
+    - id: INV-10
+      rule: us_py_and_up_py_locked_read_only
+    - id: INV-11
+      rule: initial_domain_description_intake_goes_to_r2_first
+    - id: INV-12
+      rule: r2_is_active_workbench_for_cycles_backprop_corrections_and_intermediate_outputs
+    - id: INV-13
+      rule: d1_is_completed_run_vault_after_run_done_and_checked
+    - id: INV-14
+      rule: all_fce_runs_use_openrouter_expensive_three_model_set
+    - id: INV-15
+      rule: r2_cleaned_for_next_fce_only_after_successful_d1_vault_write
+    - id: INV-16
+      rule: fce_library_registration_only_after_codex_audit_check_passes
+    - id: INV-17
+      rule: d1_vault_stores_every_cycle_from_all_three_openrouter_model_tests_under_sovereign_id
+    - id: INV-18
+      rule: dmj_deferred_until_multiple_locked_fces_exist_in_same_family_for_convergence
+
+  sources:
+    - path: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+      role: current_operator_checklist
+    - path: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.yaml
+      role: agent_readable_current_checklist
+    - path: imo-creator-v2/atlas/FCE_LIFECYCLE_RUNBOOK.md
+      role: narrative_full_pipeline
+    - path: imo-creator-v2/atlas/FCE_BUILD_STEPS.md
+      role: structural_us_loop_doctrine
+    - path: imo-creator-v2/.barton/workflows/dyno-run-fce.yaml
+      role: older_workflow_reference_for_sealed_engine_and_audit_gates
+    - path: Barton-Processes/factory/imo-creator/060-run-dyno/PROCESS-UT.md
+      role: canonical_process_home
+    - path: Barton-Processes/factory/imo-creator/080-fce-fill/PROCESS-UT.md
+      role: absorb_reference_only
+    - path: Barton-Processes/factory/imo-creator/090-fce-computer-programming/PROCESS-UT.md
+      role: artifact_library_example
+    - path: dyno-engine/engine/us.py
+      role: locked_us_blueprint
+    - path: dyno-engine/engine/up.py
+      role: locked_up_blueprint
+    - path: imo-creator-v2/factory/agents/up/runs/discover-fce-007a-valuation-technical-seo-health-/engine-final.json
+      role: example_output_valuation
+    - path: imo-creator-v2/factory/agents/up/runs/discover-fce-007b-concentration-traffic-concentra/engine-final.json
+      role: example_output_concentration
+    - path: imo-creator-v2/factory/agents/up/runs/discover-fce-007c-trend-domain-authority-growth-t/engine-final.json
+      role: example_output_trend
+    - path: imo-creator-v2/factory/agents/up/runs/discover-fce-007d-liquidity-conversion-plumbing-f/engine-final.json
+      role: example_output_liquidity
+
+  documentation_anchors:
+    - claim: domain_string_is_topic_description_one_input
+      source: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+    - claim: r2_first_d1_second_artifacts_persist_before_indexing
+      source: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+    - claim: r2_holds_artifacts_during_cycles_d1_takes_post_completion_index
+      source: imo-creator-v2/atlas/FCE_LIFECYCLE_RUNBOOK.md
+    - claim: r2_first_intake_precedes_d1_indexing
+      source: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+    - claim: r2_is_workbench
+      source: Barton-Processes/factory/imo-creator/060-run-dyno/PROCESS-UT.md
+    - claim: d1_cycle_rows_hold_metadata_full_artifacts_live_in_r2
+      source: imo-creator-v2/workers/mission-control-api/migrations/0018_dyno_run.schema-doc.yaml
+    - claim: dmj_deferred_at_n1_queued_when_n_ge_2_same_family
+      source: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+    - claim: r2_active_workbench_d1_post_completion_vault_doctrine_record_exists
+      source: Barton-Processes/factory/imo-creator/090-fce-computer-programming/PROCESS-UT.md
+    - claim: openrouter_expensive_models_only
+      source: imo-creator-v2/atlas/FCE_RUN_CHECKLIST.md
+    - claim: fce_007_is_recent_four_column_output_example
+      source: imo-creator-v2/factory/agents/up/runs/discover-fce-007a-valuation-technical-seo-health-/engine-final.json
+
+  input_contract:
+    required:
+      - topic
+      - description
+      - domain_string
+      - fce_id
+      - family
+      - up_tolerance
+      - model_set
+    domain_string_format: "<topic> — <description in detail>"
+    model_set:
+      provider: OpenRouter
+      tier: expensive
+      count: 3
+    notes:
+      - "domain_string is one argument, not two"
+      - "up_tolerance is not US P=1"
+      - "fce_id must be unique against registry before firing"
+      - "all runs use the expensive OpenRouter model set"
+
+  process_equation:
+    canonical: "Domain declaration + description -> R2 intake/workbench + OpenRouter expensive three-model loop -> US solves M -> K=C locks M -> UP consumes I using M until tolerance -> O = completed FCE package in R2 -> Codex audit/check -> D1 vault with sovereign ID + all cycles + all three model-test outputs -> clean R2 -> FCE library registration -> DMJ queued only when multiple locked FCEs exist in family"
+    r2_initial:
+      trigger: domain_plus_description_intake
+      creates:
+        - run_id
+        - working_folder
+        - intake_artifact
+      role: first_landing_zone
+      rule: "Everything lands in R2 first; D1 does not precede the R2 workbench."
+    d1_initial:
+      trigger: disabled_until_cycle_completion
+      creates:
+        - nothing_mid_run
+      role: none_during_active_workbench_loop
+      rule: "D1 is not created or updated as the live workbench. D1 is the vault after the run is done and checked."
+    model_routing:
+      provider: OpenRouter
+      tier: expensive
+      model_count: 3
+      role: active_model_loop_bound_to_r2_workbench
+      rule: "Use the most expensive configured three-model set for every FCE run. Model outputs, comparisons, corrections, consensus, and back-propagation cycle through R2."
+    r2_workbench:
+      path_template: "r2://svg-files/dyno-runs/{run_id}/"
+      role: active_workbench_and_model_exchange_surface
+      holds:
+        - us_cycle_outputs
+        - openrouter_model_outputs
+        - model_comparisons
+        - consensus_outputs
+        - kc_audit_outputs
+        - corrections
+        - backpropagation_artifacts
+        - up_solve_outputs
+        - recipe_synthesis_outputs
+      rule: "R2 plus OpenRouter is where work starts and where work happens; D1 is not the first landing zone, live workbench, or scratchpad."
+    us:
+      solves_for: M
+      p1_constant:
+        all_four_columns_covered: true
+        all_leaves_at_primitive: true
+        primitives:
+          - Thing
+          - Flow
+          - Change
+    kc:
+      action: lock_m
+      output: locked_constants_variables_domesticated_variables
+    up:
+      works_through: I
+      uses: locked_M
+      stop_condition: declared_up_tolerance
+    output:
+      emits: completed_FCE
+      columns:
+        - Valuation
+        - Concentration
+        - Trend
+        - Liquidity
+    d1_final:
+      trigger: codex_audit_check_passed
+      role: completed_run_vault_of_record
+      writes:
+        - sovereign_id
+        - run_index_row
+        - family
+        - every_cycle
+        - all_three_openrouter_model_test_outputs
+        - us_cycle_outputs
+        - kc_evidence
+        - up_evidence
+        - final_status
+        - verdict
+        - artifact_locations
+        - cost
+        - cycle_count
+        - completed_fce_package
+      rule: "D1 receives everything from R2 after completion/check. D1 is the vault of record and must expose every cycle from all three model tests under the sovereign ID."
+    r2_cleanup:
+      trigger: d1_vault_write_success
+      action: clean_reset_workbench_for_next_fce
+      rule: "Do not clean R2 until the completed package is safely stored in D1."
+    fce_library:
+      trigger: codex_audit_check_passed_and_d1_vault_write_success
+      action: register_certified_fce_artifact
+      rule: "The library receives only audited/checked artifacts that have been vaulted."
+    dmj:
+      scope: downstream_process_not_single_fce_runtime
+      trigger: multiple_locked_fces_in_same_family
+      n1_rule: defer
+      n_ge_2_rule: queue_convergence_analysis
+      input_from_d1:
+        - sovereign_id
+        - family
+        - locked_fce_outputs
+        - cycle_history
+        - all_three_model_test_outputs
+      output_to_d1:
+        - family_convergence_result
+        - dmj_define_map_join_output
+        - cross_fce_constants
+        - cross_fce_variables
+        - convergence_evidence
+      rule: "PROC-060 preserves DMJ-ready evidence but does not run DMJ for a single FCE."
+    lbb:
+      trigger: final_index_ready
+      role: master_index_session_memory
+
+  steps:
+    - id: FCE-00
+      name: Pre-flight
+      rule: Load env/secrets and verify CLI surfaces.
+      gate: mandatory
+    - id: FCE-01
+      name: Name domain
+      rule: Lock topic, description, domain_string, fce_id, and family.
+      gate: mandatory
+    - id: FCE-02
+      name: Open R2 intake record
+      rule: Initial domain + description intake lands in R2 first and creates the working run folder/record.
+      gate: mandatory
+    - id: FCE-03
+      name: Name UP tolerance
+      rule: Declare the domain-specific UP stop/proof condition. This is not US P=1.
+      gate: mandatory
+    - id: FCE-04
+      name: Lock model set
+      rule: Use OpenRouter expensive three-model set for the run.
+      gate: mandatory
+    - id: FCE-05
+      name: Start R2/OpenRouter workbench loop
+      rule: R2 holds the working artifacts while OpenRouter returns the three-model outputs, comparisons, corrections, and back-propagation cycles.
+      gate: mandatory
+    - id: FCE-06
+      name: Run US
+      rule: US discovers M for the named domain through the R2/OpenRouter loop; intermediate outputs land in R2.
+      gate: mandatory
+    - id: FCE-07
+      name: Check US P=1
+      rule: "Fixed gate: all four FCE columns covered and every leaf at primitive."
+      gate: mandatory
+    - id: FCE-08
+      name: K=C lock
+      rule: Lock discovered M into constants, variables, and domesticated variables; corrections/back-prop happen in R2.
+      gate: mandatory
+    - id: FCE-09
+      name: Run UP
+      rule: UP consumes I using locked M through the R2/OpenRouter loop until the declared tolerance says stop; outputs land in R2.
+      gate: mandatory
+    - id: FCE-10
+      name: Emit O
+      rule: Output the completed FCE structure and recipe artifacts.
+      gate: mandatory
+    - id: FCE-11
+      name: Verify R2 package
+      rule: "Verify the completed R2 package before vaulting: outputs, four columns, tolerance result, K=C lock, model evidence, and artifact manifest."
+      gate: mandatory
+    - id: FCE-12
+      name: Audit
+      rule: Codex audits/checks the completed R2 package.
+      gate: mandatory
+    - id: FCE-13
+      name: Vault to D1 and clean R2
+      rule: On Codex PASS, move/copy the completed package from R2 into D1 as the vault of record, including sovereign ID, every cycle, all three model-test outputs, K=C evidence, UP evidence, final output, and manifest. Then clean/reset the R2 workbench for the next FCE.
+      gate: mandatory
+    - id: FCE-14
+      name: Certify or repair
+      rule: On D1 vault success, register/shelf the FCE into the library and mark whether its family now qualifies for downstream DMJ. On FAIL, keep R2 evidence, record squawk, and repair through Four-Brain.
+      gate: mandatory
+
+  example_outputs:
+    - id: FCE-007a
+      column: Valuation
+      run_id: a2d1c58f
+      domain: "Technical SEO health for insuranceinformatics.com"
+      path: imo-creator-v2/factory/agents/up/runs/discover-fce-007a-valuation-technical-seo-health-/engine-final.json
+    - id: FCE-007b
+      column: Concentration
+      run_id: 7b3d7e0d
+      domain: "Traffic concentration and backlink topology for insuranceinformatics.com"
+      path: imo-creator-v2/factory/agents/up/runs/discover-fce-007b-concentration-traffic-concentra/engine-final.json
+    - id: FCE-007c
+      column: Trend
+      run_id: 2c60ad62
+      domain: "Domain authority growth trajectory for insuranceinformatics.com"
+      path: imo-creator-v2/factory/agents/up/runs/discover-fce-007c-trend-domain-authority-growth-t/engine-final.json
+    - id: FCE-007d
+      column: Liquidity
+      run_id: 388357bb
+      domain: "Conversion plumbing for insuranceinformatics.com form to calendar to call"
+      path: imo-creator-v2/factory/agents/up/runs/discover-fce-007d-liquidity-conversion-plumbing-f/engine-final.json
+
+  no_drift_gates:
+    - id: G01
+      predicate: MD and YAML list identical step IDs FCE-00 through FCE-14.
+      tolerance: exact_match
+    - id: G02
+      predicate: US P=1 is fixed and never domain-specific.
+      tolerance: exact_match
+    - id: G03
+      predicate: UP tolerance is domain-specific and separate from US P=1.
+      tolerance: exact_match
+    - id: G04
+      predicate: Four columns are Valuation, Concentration, Trend, Liquidity in that order.
+      tolerance: exact_match
+    - id: G05
+      predicate: us.py and up.py are read-only locked files.
+      tolerance: exact_match
+    - id: G06
+      predicate: 080 is reference-only and 090 is artifact-only.
+      tolerance: exact_match
+    - id: G07
+      predicate: Initial domain and description intake lands in R2 before D1 indexing.
+      tolerance: exact_match
+    - id: G08
+      predicate: R2 plus OpenRouter is the active workbench loop for model outputs, comparison, correction, back-propagation, and intermediate artifacts.
+      tolerance: exact_match
+    - id: G09
+      predicate: D1 receives the completed package only after Codex audit/check passes.
+      tolerance: exact_match
+    - id: G10
+      predicate: R2 is cleaned/reset only after successful D1 vault write.
+      tolerance: exact_match
+    - id: G11
+      predicate: FCE library registration happens only after Codex audit/check and D1 vault success.
+      tolerance: exact_match
+    - id: G12
+      predicate: OpenRouter expensive three-model set is locked for every FCE run.
+      tolerance: exact_match
+    - id: G13
+      predicate: D1 vault exposes every cycle from all three OpenRouter model tests under the sovereign ID.
+      tolerance: exact_match
+    - id: G14
+      predicate: DMJ is deferred for N=1 and only queued when multiple locked FCEs exist in the same family.
+      tolerance: exact_match
+    - id: G15
+      predicate: DMJ output, when produced by the downstream process, is stored back into D1 as family-level convergence evidence.
+      tolerance: exact_match
+    - id: G16
+      predicate: FCE-007 is cited as output example only, not as the process definition.
+      tolerance: exact_match

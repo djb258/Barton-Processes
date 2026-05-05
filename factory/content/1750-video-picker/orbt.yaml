@@ -1,0 +1,37 @@
+process_id: "PROC-1750"
+process_number: "1750"
+name: "Video Picker"
+bar_reference: "BAR-392"
+ctb_node: "barton-enterprises/content/1750-video-picker"
+orbt_state: "BUILD"
+strikes: 0
+owner: "Dave Barton"
+last_modified: "2026-05-05"
+
+promotion_gates:
+  - id: "GATE-1750-01"
+    name: "UT conformance"
+    status: "pass-local"
+  - id: "GATE-1750-02"
+    name: "All lane contracts available"
+    status: "pass-local"
+  - id: "GATE-1750-03"
+    name: "Four sample routing tests"
+    status: "pass-local"
+  - id: "GATE-1750-04"
+    name: "Ambiguity halt test"
+    status: "pass-local"
+  - id: "GATE-1750-05"
+    name: "Independent audit"
+    status: "pending"
+
+known_blockers:
+  - "Executable routing harness exists at workers/video-pipeline/scripts/route-video-job.ps1, but it has not been wired into Mission Control or LBB ingest."
+  - "Independent audit still pending."
+
+stop_conditions:
+  - "No script and no source_packet."
+  - "More than one lane matches equally."
+  - "No lane can satisfy constraints."
+  - "Selected lane required fields missing."
+  - "Picker attempts provider generation."

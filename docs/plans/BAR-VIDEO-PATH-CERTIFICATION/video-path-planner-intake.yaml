@@ -1,0 +1,144 @@
+name: video-path-planner-intake
+version: "0.1.0"
+status: DRAFT
+last_modified: "2026-05-05"
+paired_md: VIDEO-PATH-PLANNER-INTAKE.md
+purpose: >
+  Planner source packet for Process 070 to build and certify the two-layer
+  video path system: IMO-Creator v2 parent Blueprint UTs plus Barton-Processes
+  child executable Process UTs.
+
+outside:
+  bs_law_arm: outside_dewey
+  book_law_species: Workflow-Body
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: video-path-planner-intake
+    ctb_placement: barton-enterprises/imo-creator/processes/four-brain/video-path-certification
+    imo_topology: input
+    cc_layer: CC-02
+    services:
+      - Process 070 Four-Brain
+      - IMO-Creator v2 blueprint docs
+      - Barton-Processes executable UTs
+      - LBB
+      - Linear
+      - Mission Control
+    secrets_provider: none
+    acceptance_criteria: >
+      Planner can produce a Plan Book, mechanic work orders, auditor packets,
+      smoke-test sequence, and P=1 definition for linked video Blueprint UTs
+      and executable Process UTs.
+    species: Workflow-Body
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+
+inside:
+  bs_law_arm: inside_fractal
+  heir:
+    process_id: bp.video-path-planner-intake
+    parent_process: bp.070-four-brain
+    output_type: planner_intake_packet
+    target_processes:
+      - PROC-1710
+      - PROC-1720
+      - PROC-1730
+      - PROC-1740
+      - PROC-1750
+      - PROC-1800
+    aviation_model:
+      planner: four-brain-planner
+      foreman: sonnet
+      mechanic: sonnet
+      auditor: codex
+      rule: "mechanic != auditor"
+    determinism_gate: "intake_sets_destination_planner_sets_route"
+  orbt:
+    runtime_state: BUILD
+    promotion_gate: "Planner packet accepted by Process 070 and used to produce a certified Plan Book."
+
+source_of_truth_split:
+  blueprint_architecture:
+    owner: "IMO-Creator v2"
+    paths:
+      - "imo-creator-v2/docs/processes"
+      - "imo-creator-v2/workers/video-pipeline"
+      - "imo-creator-v2/fleet/content/videos"
+      - "imo-creator-v2/docs/plans"
+    owns: "Parent Blueprint UT / V-layer documentation, provider research, route contracts, examples, scripts, reusable tooling."
+  execution_operations:
+    owner: "Barton-Processes"
+    paths:
+      - "Barton-Processes/factory/content/1710-1750"
+      - "Barton-Processes/factory/content/1800-cf-stream-upload"
+    owns: "Child executable Process UTs, DOCTRINE, HEIR, ORBT, stop conditions, smoke gates."
+  runtime_deployment:
+    owner: "provider/local"
+    surfaces:
+      - HeyGen
+      - NotebookLM Chrome MCP
+      - ElevenLabs
+      - local scripts
+      - CF Stream
+      - R2
+      - YouTube
+  evidence_observability:
+    owner: "LBB / Linear / Mission Control / manifests"
+    targets:
+      - "LBB processes"
+      - "Linear BAR-388..392"
+      - "workers/video-pipeline/output/video-output-manifest.json"
+      - "provider job IDs/output paths"
+
+non_drift_invariants:
+  - "IMO-Creator v2 Blueprint is a UT, not scratch documentation."
+  - "IMO-Creator v2 owns parent Blueprint UT / V-layer documentation."
+  - "Barton-Processes owns child executable Process UTs."
+  - "Blueprint explains. Execution runs. Runtime implements. Evidence proves."
+  - "Process 070 orchestrates work; it is not the physical home of video UTs."
+  - "Mechanic cannot audit its own work."
+  - "The video system is cross-domain."
+  - "PROC-1750 routes exactly one lane or returns REPAIR/HALT."
+  - "No secrets may be printed or stored."
+  - "OPERATE requires smoke proof and evidence."
+
+read_set:
+  process_070:
+    - "Barton-Processes/factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md"
+    - "Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md"
+    - "Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml"
+  blueprint:
+    - "imo-creator-v2/docs/processes/VIDEO-GARAGE-TOOLKIT.md"
+    - "imo-creator-v2/docs/plans/VIDEO-PATHS-OPERATE-PUNCHLIST.md"
+    - "imo-creator-v2/docs/plans/BAR-VIDEO-LANE-UTS.plan.md"
+    - "imo-creator-v2/docs/plans/PLAN-MASTER-VIDEO.md"
+    - "imo-creator-v2/workers/video-pipeline/MANUAL.md"
+    - "imo-creator-v2/fleet/content/videos/VIDEO-MARKETING-CV-RESEARCH.md"
+  execution:
+    - "Barton-Processes/factory/content/1710-heygen-avatar/PROCESS-UT.md"
+    - "Barton-Processes/factory/content/1720-notebooklm-source-video/PROCESS-UT.md"
+    - "Barton-Processes/factory/content/1730-elevenlabs-cinematic/PROCESS-UT.md"
+    - "Barton-Processes/factory/content/1740-claude-code-sovereign/PROCESS-UT.md"
+    - "Barton-Processes/factory/content/1750-video-picker/PROCESS-UT.md"
+    - "Barton-Processes/factory/content/1800-cf-stream-upload/PROCESS-UT.md"
+
+p1_definition:
+  - "IMO-Creator v2 contains parent Blueprint UT documentation for the reusable video capability and lanes."
+  - "Barton-Processes contains executable child UTs for required video processes."
+  - "Each executable UT links back to the relevant IMO-Creator v2 blueprint source."
+  - "Each blueprint source links forward to the executable Barton-Processes UT."
+  - "PROC-1750 picker can route clear packets and reject ambiguous packets."
+  - "Each lane has a defined smoke test and evidence requirement."
+  - "No secrets are printed or stored."
+  - "Linear BAR-388 through BAR-392 are updated."
+  - "LBB evidence is logged or explicitly marked blocked/deferred."
+  - "Auditor certifies."
+
+open_questions:
+  - question: "Does PROC-1740 sovereign mean provider-assisted flow with manifest, or fully local deterministic rendering?"
+    blocks: "Determines whether PROC-1740 can audit now or needs renderer build."
+  - question: "Should first official intake surface be CLI or Mission Control UI/API?"
+    blocks: "Determines PROC-1750 OPERATE evidence."
+  - question: "Should Blueprint UTs be separate per lane or one parent Video Blueprint UT with lane sections?"
+    blocks: "Determines IMO-Creator v2 artifact shape."

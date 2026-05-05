@@ -1,0 +1,38 @@
+process_id: "PROC-1740"
+process_number: "1740"
+name: "Claude Code Sovereign Video"
+bar_reference: "BAR-391"
+ctb_node: "barton-enterprises/content/1740-claude-code-sovereign"
+orbt_state: "BUILD"
+strikes: 0
+owner: "Dave Barton"
+last_modified: "2026-05-05"
+
+promotion_gates:
+  - id: "GATE-1740-01"
+    name: "UT conformance"
+    status: "pass-local"
+  - id: "GATE-1740-02"
+    name: "Template selected"
+    status: "pass-local"
+  - id: "GATE-1740-03"
+    name: "Render command defined"
+    status: "partial-documented"
+  - id: "GATE-1740-04"
+    name: "Sample render output"
+    status: "pass-historical"
+  - id: "GATE-1740-05"
+    name: "Independent audit"
+    status: "pending"
+
+known_blockers:
+  - "Existing gate-video template set and MP4 outputs are verified, but a fully deterministic local code renderer is not selected."
+  - "PROC-1800 handoff from the manifest has not been tested."
+  - "Independent audit still pending."
+
+stop_conditions:
+  - "No template for template_id."
+  - "No deterministic render command."
+  - "Render command fails."
+  - "Output file missing or zero bytes."
+  - "Output manifest missing."

@@ -1,0 +1,10 @@
+# Live garage work orders and run outputs are operational state.
+# Track the garage machinery, not transient queue contents.
+/inbox/*
+!/inbox/.gitkeep
+
+/runs/*
+!/runs/.gitkeep
+
+/outbox/*
+!/outbox/.gitkeep

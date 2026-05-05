@@ -1,0 +1,30 @@
+# HEIR — PROC-1720 NotebookLM Source Video
+# 8 canonical HEIR fields per atlas/constants/KEY.md §HEIR
+# Plus process_number, name, and ctb_node for process-folder identity
+# BAR: BAR-388 | Status: BUILD
+
+heir:
+  sovereign_ref: "imo-creator"
+  hub_id: "content-notebooklm-source-video"
+  ctb_placement: "branch"
+  imo_topology: "middle"
+  cc_layer: "CC-03"
+  services: "NotebookLM Studio (web), Chrome DevTools MCP, local filesystem (Downloads)"
+  secrets_provider: "none"
+  acceptance_criteria: >
+    source packet loaded into notebook;
+    video artifact generated and downloaded to disk;
+    handoff file present and non-zero bytes;
+    CF Stream metadata passed to PROC-1800;
+    LBB run record with artifact lineage ingested
+
+process:
+  process_number: "PROC-1720"
+  name: "NotebookLM Source Video — Chrome MCP Lane"
+  ctb_node: "barton-enterprises/content/1720-notebooklm-source-video"
+  bar_reference: "BAR-388"
+  version: "0.1.0"
+  created: "2026-05-04"
+  last_modified: "2026-05-04"
+  status: "BUILD"
+  owner: "Dave Barton"

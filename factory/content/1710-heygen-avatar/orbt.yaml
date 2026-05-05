@@ -1,0 +1,54 @@
+# ORBT — Process 1710 HeyGen Avatar/Cinematic Video
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot_Train
+# Per atlas/constants/FOUNDATIONAL_BEDROCK.md §8 Aviation Model
+
+process_id: "PROC-1710"
+process_name: "HeyGen Avatar/Cinematic Video"
+silo: "barton-enterprises/content"
+ctb_node: "barton-enterprises/content/1710-heygen-avatar"
+
+state: "BUILD"
+strikes: 0
+last_transition_at: "2026-05-04T00:00:00Z"
+last_transition_reason: "INITIAL BUILD — BAR-389 dispatch, 4-file process folder scaffolded"
+
+# ORBT state definitions:
+# BUILD           — scaffolded, not yet deployed or not all gates clear
+# OPERATE         — running clean, all gates green, metrics within tolerance
+# REPAIR          — active fix in flight; known break being resolved
+# TROUBLESHOOT_TRAIN — Strike 3 reached; fleet-wide fix required; Airworthiness Directive pending
+
+# BUILD → OPERATE promotion gate (all must be cleared):
+promotion_gate:
+  - "≥ 3 successful render runs (A-roll or cinematic B-roll) with job_id + MP4 output confirmed"
+  - "Default avatar IDs (cf8be1f9 + f2f245dd) re-verified active in HeyGen account"
+  - "HEYGEN_API_KEY confirmed available from Doppler"
+  - "Prompt formula compliance confirmed: 100% of cinematic renders used all 4 slots"
+  - "LBB ingest confirmed: 1 record per render in processes subject"
+  - "No unresolved HALT events (avatar identity, reference media, or API key)"
+  - "Auditor sign-off (Codex audit PASS on PROCESS-UT.md)"
+
+# Current blockers (must clear before BUILD → OPERATE):
+blockers:
+  - "No render runs completed yet — process scaffolded but not exercised"
+  - "First new render dispatch/job ID smoke test not run in this session"
+  - "Chrome MCP browser path for Avatar Shots / Video Agent / AI Video Generator not smoke-tested"
+  - "Auditor (Codex) PASS not yet obtained"
+
+# Stop conditions summary (full definitions in DOCTRINE.md + PROCESS-UT.md §8):
+stop_conditions:
+  halt:
+    - "D-1710-01: Avatar identity not verified → HALT"
+    - "D-1710-04: Real human face used as cinematic reference media → HALT"
+    - "D-1710-07: UI-only cinematic feature with no declared browser automation path → HALT"
+    - "D-1710-09: HEYGEN_API_KEY unavailable from Doppler → HALT"
+    - "Script not provided (intake incomplete) → HALT"
+  repair:
+    - "D-1710-02: Prompt missing one of four required slots (setting/mood, avatar action, camera movement, audio) → REPAIR before render"
+    - "D-1710-06: Voice provider/voice ID treated as architecture rather than variable fill → REPAIR before render"
+    - "Render job returns error status → REPAIR (log to LBB, inspect constants packet, re-dispatch)"
+  escalate:
+    - "Strike 3 on same failure pattern → TROUBLESHOOT/TRAIN → Airworthiness Directive"
+
+# Strike log (append-only):
+strike_log: []

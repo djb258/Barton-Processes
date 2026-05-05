@@ -1,0 +1,38 @@
+process_id: "PROC-1730"
+process_number: "1730"
+name: "ElevenLabs Cinematic Model Picker"
+bar_reference: "BAR-390"
+ctb_node: "barton-enterprises/content/1730-elevenlabs-cinematic"
+orbt_state: "BUILD"
+strikes: 0
+owner: "Dave Barton"
+last_modified: "2026-05-05"
+
+promotion_gates:
+  - id: "GATE-1730-01"
+    name: "UT conformance"
+    status: "pass-local"
+  - id: "GATE-1730-02"
+    name: "Doppler API key visibility"
+    status: "pass-name-only"
+  - id: "GATE-1730-03"
+    name: "ElevenLabs Image & Video access"
+    status: "pending-live-run"
+  - id: "GATE-1730-04"
+    name: "First artifact generated or validated"
+    status: "pending-live-run"
+  - id: "GATE-1730-05"
+    name: "Independent audit"
+    status: "pending"
+
+known_blockers:
+  - "No live ElevenLabs Image & Video smoke test has been run."
+  - "No first output artifact has been generated under this process."
+
+stop_conditions:
+  - "ELEVENLABS_API_KEY unavailable when API path is selected."
+  - "Current plan blocks requested video generation."
+  - "Cost/credit impact unknown before generation."
+  - "Selected model incompatible with requested mode/settings."
+  - "UI-only feature requested without Chrome MCP path."
+  - "Output not downloadable/importable."

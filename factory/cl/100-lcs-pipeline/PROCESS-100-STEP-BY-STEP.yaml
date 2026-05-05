@@ -1,0 +1,446 @@
+version: "1.0.0"
+effective_date: "2026-05-05"
+artifact_id: PROC-100-STEP-BY-STEP
+paired_md: PROCESS-100-STEP-BY-STEP.md
+
+outside:
+  bs_law_arm: outside_dewey
+  book_law_species: Workflow-Body
+  spine_content: "Library-facing HEIR/ORBT coordinates for finding and governing this artifact."
+  heir:
+    sovereign_ref: company-lifecycle
+    hub_id: outreach
+    ctb_placement: barton-enterprises/company-lifecycle/outreach/process-100
+    imo_topology: middle
+    cc_layer: CC-02
+    services:
+      - Cloudflare Workers
+      - Cloudflare D1
+      - Mailgun
+      - Composio
+      - LBB
+      - Mission Control
+    secrets_provider: Doppler
+    acceptance_criteria: "Process 100 can be run from Atlas law load through LBB/Mission Control evidence without undocumented jumps."
+    species: Workflow-Body
+  orbt:
+    library_state: REPAIR
+    last_indexed_at: "2026-05-05T00:00:00-04:00"
+    indexed_by: codex
+
+inside:
+  bs_law_arm: inside_fractal
+  book_law_species: Workflow-Body
+  spine_content: "Runtime-facing HEIR/ORBT coordinates for navigating and auditing Process 100."
+  heir:
+    process_id: bp.100
+    process_number: "100"
+    process_name: LCS Pipeline
+    source_ut: PROCESS-UT.md
+    companion_manifest: PROCESS-100-STEP-BY-STEP.md
+    aviation_model:
+      planner: four-brain-planner
+      foreman: sonnet
+      mechanic: sonnet
+      auditor: codex
+      rule: "builder != auditor"
+    doctrine_gate:
+      key: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/atlas/constants/KEY.md"
+      bs_law: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/atlas/constants/BS_LAW.md"
+      structure_manifest: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/atlas/manifests/STRUCTURE_MANIFEST.yaml"
+  orbt:
+    runtime_state: REPAIR
+    promotion_target: OPERATE
+    p_equals_1_when:
+      - "Domain maintenance gate passes."
+      - "Servicing-agent coverage gate passes."
+      - "Verified-recipient gate passes."
+      - "Three controlled fires complete with LBB and Mission Control evidence."
+      - "Auditor returns P=1."
+
+bs_law_conformance:
+  law: "Book and Spine together, always."
+  source: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/imo-creator-v2/atlas/constants/BS_LAW.md"
+  syntactic_separation:
+    outside_construct: outside
+    inside_construct: inside
+    rule: "outside and inside are distinct top-level YAML constructs."
+  book_arm:
+    species: Workflow-Body
+    durable_artifact: true
+    paired_markdown: PROCESS-100-STEP-BY-STEP.md
+  spine_arm:
+    heir_present: true
+    orbt_present: true
+    ctb_present: true
+    imo_present: true
+    execution_trace_present: true
+  audit_result_required: "P=1 before promotion to OPERATE"
+
+constants:
+  runtime_worker: lcs-hub
+  process_ut_folder: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/Barton-Processes/factory/cl/100-lcs-pipeline"
+  runtime_source: "C:/Users/CUSTOM PC/Desktop/Cursor Builds/Barton-Processes/factory/cl/100-lcs-pipeline"
+  runtime_reference:
+    wrangler: wrangler.toml
+    worker_name: lcs-hub
+    main: src/index.ts
+    compiler: src/compiler.ts
+    delivery_spoke: src/spokes/delivery.ts
+    signal_intake_spoke: src/spokes/signal-intake.ts
+    cron:
+      - "0 7 * * *"
+    d1_binding: D1
+    d1_database_name: lcs-hub
+    queue: lcs-pipeline
+    endpoints:
+      health: "GET /health"
+      status: "GET /status"
+      signal: "POST /signal"
+      signals: "POST /signals"
+      run: "POST /run"
+      mailgun_webhook: "POST /webhook/mailgun"
+      heyreach_webhook: "POST /webhook/heyreach"
+  protected_domains:
+    - svg.agency
+    - svgwv.com
+  current_outreach_rotation_domain_count: 14
+  current_mailgun_custom_domain_count: 16
+  current_cloudflare_zone_count: 18
+  mailgun_delivery_path: "src/spokes/delivery.ts"
+  composio_mailgun_connected_accounts_observed: 0
+
+inputs:
+  atlas:
+    - KEY.md
+    - BS_LAW.md
+    - STRUCTURE_MANIFEST.yaml
+  process_docs:
+    - PROCESS-UT.md
+    - daily-email-run.yaml
+    - workflow.yaml
+    - DOMAIN-MAINTENANCE.md
+    - PROCESS-100-RUN-WALKTHROUGH.md
+  endpoints:
+    health: "https://lcs-hub.svg-outreach.workers.dev/health"
+    status: "https://lcs-hub.svg-outreach.workers.dev/status"
+    run_batch: "https://lcs-hub.svg-outreach.workers.dev/run-batch"
+    mailgun_webhook: "https://lcs-hub.svg-outreach.workers.dev/webhook/mailgun"
+  d1_tables:
+    spine:
+      - lcs_signal_queue
+      - lcs_cid
+      - lcs_sid_output
+      - lcs_mid_sequence_state
+      - lcs_event
+      - lcs_err0
+      - lcs_domain_rotation
+    outreach:
+      - outreach_company_target
+      - outreach_dol
+      - people_company_slot
+      - people_people_master
+      - slot_workbench
+
+hard_stop_gates:
+  - id: bs_law_loaded
+    condition: "Atlas KEY and BS Law are referenced before run decisions."
+    fail_action: halt
+  - id: protected_domain_excluded
+    condition: "svg.agency and svgwv.com are not selected for cold outreach rotation."
+    fail_action: halt
+  - id: domain_rotation_safe
+    condition: "Selected domain is active, not paused, under daily cap, and not protected."
+    fail_action: rotate_or_halt
+  - id: servicing_agent_covered
+    condition: "Company is assigned to an active servicing agent coverage radius."
+    fail_action: halt_company
+  - id: verified_email_only
+    condition: "Recipient email is verified."
+    fail_action: halt_recipient
+  - id: suppression_clean
+    condition: "Recipient is not suppressed, bounced, unsubscribed, or complaint-marked."
+    fail_action: halt_recipient
+  - id: voice_spec_pass
+    condition: "Message passes Process 100 voice validator."
+    fail_action: halt_message
+  - id: evidence_written
+    condition: "LBB and Mission Control evidence is written for the run."
+    fail_action: fail_closeout
+
+run_steps:
+  - step: 0
+    id: load_law
+    action: "Read Atlas KEY, BS Law, and structure manifest."
+    reads:
+      - atlas/constants/KEY.md
+      - atlas/constants/BS_LAW.md
+      - atlas/manifests/STRUCTURE_MANIFEST.yaml
+    writes: []
+    output: governed_context
+    gates:
+      - bs_law_loaded
+
+  - step: 1
+    id: confirm_runtime_source
+    action: "Confirm Barton-Processes Process 100 folder is the runtime/process source of truth."
+    reads:
+      - wrangler.toml
+      - src/index.ts
+      - src/compiler.ts
+      - PROCESS-UT.md
+    writes: []
+    output: barton_runtime_selected
+    gates: []
+
+  - step: 2
+    id: domain_maintenance
+    action: "Reconcile Cloudflare zones, Mailgun domains, Composio connected accounts, and D1 rotation."
+    reads:
+      - Cloudflare zones
+      - Cloudflare DNS records
+      - Mailgun domains
+      - Composio connected accounts
+      - lcs_domain_rotation
+      - DOMAIN-MAINTENANCE.md
+    writes:
+      - lcs_domain_rotation
+      - LBB
+      - Mission Control
+    output: domain_health_report
+    gates:
+      - protected_domain_excluded
+      - domain_rotation_safe
+
+  - step: 3
+    id: live_health
+    action: "Read Process 100 live health and status."
+    reads:
+      - "/health"
+      - "/status"
+    writes: []
+    output: live_health_snapshot
+    gates: []
+
+  - step: 4
+    id: upstream_readiness
+    action: "Check Process 200, 201, 202, 300, DOL, and Process 700 readiness for signals and content."
+    reads:
+      - outreach_company_target
+      - outreach_dol
+      - people_company_slot
+      - people_people_master
+      - slot_workbench
+      - lcs_signal_queue
+    writes: []
+    output: upstream_readiness_report
+    gates: []
+
+  - step: 5
+    id: select_pending_signals
+    action: "Select pending signal rows for a capped repair fire or daily operate fire."
+    reads:
+      - lcs_signal_queue
+    writes:
+      - lcs_event
+    output: eligible_signal_batch
+    gates: []
+
+  - step: 6
+    id: servicing_agent_gate
+    action: "Filter companies to active servicing-agent ZIP/radius coverage."
+    reads:
+      - outreach_company_target
+      - coverage.service_agent
+      - coverage.v_service_agent_coverage_zips
+    writes:
+      - lcs_event
+      - lcs_err0
+    output: covered_company_batch
+    gates:
+      - servicing_agent_covered
+
+  - step: 7
+    id: verified_recipient_gate
+    action: "Filter recipient slots to verified, non-suppressed contacts."
+    reads:
+      - people_company_slot
+      - people_people_master
+      - suppression
+    writes:
+      - lcs_event
+      - lcs_err0
+    output: verified_recipient_batch
+    gates:
+      - verified_email_only
+      - suppression_clean
+
+  - step: 8
+    id: cid_compile
+    action: "Compile CID from company, DOL, people, and signal context."
+    reads:
+      - lcs_signal_queue
+      - outreach_company_target
+      - outreach_dol
+      - people_company_slot
+      - people_people_master
+      - slot_workbench
+    writes:
+      - lcs_cid
+      - lcs_event
+      - lcs_err0
+    output: compiled_cid
+    gates: []
+
+  - step: 9
+    id: sid_construct
+    action: "Construct SID and validate message voice."
+    reads:
+      - lcs_cid
+      - lcs_frame_registry
+      - voice-spec.ts
+    writes:
+      - lcs_sid_output
+      - lcs_event
+      - lcs_err0
+    output: voice_checked_sid
+    gates:
+      - voice_spec_pass
+
+  - step: 10
+    id: select_sending_domain
+    action: "Select a safe outreach domain from D1 rotation."
+    reads:
+      - lcs_domain_rotation
+    writes: []
+    output: sending_domain
+    gates:
+      - protected_domain_excluded
+      - domain_rotation_safe
+
+  - step: 11
+    id: mid_deliver
+    action: "Deliver message through Mailgun direct API and write MID state."
+    reads:
+      - lcs_sid_output
+      - lcs_domain_rotation
+      - MAILGUN_API_KEY
+    writes:
+      - lcs_mid_sequence_state
+      - lcs_event
+      - lcs_err0
+      - lcs_domain_rotation
+    output: mailgun_delivery_result
+    gates: []
+
+  - step: 12
+    id: feedback_loop
+    action: "Process Mailgun webhook feedback and update delivery state."
+    reads:
+      - mailgun_webhook
+      - lcs_mid_sequence_state
+    writes:
+      - lcs_mid_sequence_state
+      - lcs_event
+      - lcs_err0
+      - lcs_signal_queue
+    output: feedback_state
+    gates: []
+
+  - step: 13
+    id: reputation_pause
+    action: "Pause domains that breach bounce or complaint policy."
+    reads:
+      - lcs_domain_rotation
+      - lcs_mid_sequence_state
+      - lcs_event
+    writes:
+      - lcs_domain_rotation
+      - lcs_event
+      - LBB
+      - Mission Control
+    output: reputation_action
+    gates: []
+
+  - step: 14
+    id: lbb_closeout
+    action: "Write compliance and run evidence to LBB."
+    reads:
+      - lcs_event
+      - lcs_mid_sequence_state
+      - lcs_err0
+    writes:
+      - LBB
+    output: lbb_record
+    gates:
+      - evidence_written
+
+  - step: 15
+    id: mission_control_update
+    action: "Update Mission Control process/map layer."
+    reads:
+      - live_health_snapshot
+      - domain_health_report
+      - lbb_record
+    writes:
+      - Mission Control
+    output: mission_control_process_card
+    gates:
+      - evidence_written
+
+  - step: 16
+    id: audit
+    action: "Auditor checks UT, MD, YAML, live evidence, and logs."
+    reads:
+      - PROCESS-UT.md
+      - PROCESS-100-STEP-BY-STEP.md
+      - PROCESS-100-STEP-BY-STEP.yaml
+      - daily-email-run.yaml
+      - DOMAIN-MAINTENANCE.md
+      - LBB
+      - Mission Control
+    writes:
+      - audit_report
+    output: p_verdict
+    gates: []
+
+  - step: 17
+    id: promote_or_repair
+    action: "Promote to OPERATE after three clean fires or generate repair work order."
+    reads:
+      - p_verdict
+      - audit_report
+    writes:
+      - orbt.yaml
+      - LBB
+    output: operate_or_repair_state
+    gates: []
+
+observability:
+  lbb_required_fields:
+    - batch_id
+    - run_started_at
+    - run_finished_at
+    - selected_count
+    - sent_count
+    - skipped_count
+    - voice_fail_count
+    - suppression_skip_count
+    - bounce_count
+    - paused_domain_count
+    - lcs_event_count
+    - mission_control_ref
+    - signed_by
+  mission_control_surfaces:
+    - map_layer
+    - outreach_ops
+    - process_card
+
+promotion_to_operate:
+  required_clean_fires: 3
+  required_verdict: P=1
+  blocked_until:
+    - "pending signals are produced by upstream feeder"
+    - "verified-recipient gate is proven"
+    - "domain maintenance gate is proven"
+    - "LBB and Mission Control evidence close cleanly"

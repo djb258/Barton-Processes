@@ -1,0 +1,77 @@
+# ORBT - PROC-1720 NotebookLM Source Video
+# Runtime governance state for the Chrome MCP browser-automation lane.
+
+process_id: "PROC-1720"
+process_number: "1720"
+name: "NotebookLM Source Video - Chrome MCP Lane"
+bar_reference: "BAR-388"
+ctb_node: "barton-enterprises/content/1720-notebooklm-source-video"
+orbt_state: "BUILD"
+strikes: 0
+owner: "Dave Barton"
+last_modified: "2026-05-04"
+
+promotion_gates:
+  - id: "GATE-1720-01"
+    name: "UT conformance"
+    requirement: "PROCESS-UT.md has all required Atlas process anchors and filled sections."
+    status: "pass-local"
+  - id: "GATE-1720-02"
+    name: "Browser access"
+    requirement: "Chrome MCP can reach a logged-in NotebookLM session."
+    status: "pending-live-run"
+  - id: "GATE-1720-03"
+    name: "Artifact generation"
+    requirement: "NotebookLM produces a downloadable video artifact for a known source_packet_id."
+    status: "pending-live-run"
+  - id: "GATE-1720-04"
+    name: "Artifact verification"
+    requirement: "artifact_download_path exists and file size is greater than 0 bytes."
+    status: "pending-live-run"
+  - id: "GATE-1720-05"
+    name: "Downstream handoff"
+    requirement: "Handoff metadata is complete for PROC-1800 CF Stream upload."
+    status: "pending-live-run"
+  - id: "GATE-1720-06"
+    name: "Independent audit"
+    requirement: "Auditor certifies builder output; builder does not self-certify."
+    status: "pending"
+
+known_blockers:
+  - "No live NotebookLM browser session smoke test has been run for this process yet."
+  - "No new generated video artifact has been downloaded under PROC-1720 yet."
+  - "PROC-1800 downstream CF Stream upload remains separate and must verify its own Cloudflare path."
+
+stop_conditions:
+  - id: "STOP-1720-01"
+    condition: "No active Chrome / NotebookLM browser session."
+    action: "HALT. Operator must authenticate in Chrome and re-dispatch."
+  - id: "STOP-1720-02"
+    condition: "Source upload or paste fails, or source count does not match source_packet."
+    action: "HALT. Do not trigger generation with partial sources."
+  - id: "STOP-1720-03"
+    condition: "NotebookLM generation times out or never signals completion."
+    action: "HALT. Mark run FAILED and do not write handoff metadata."
+  - id: "STOP-1720-04"
+    condition: "Downloaded artifact is missing or zero bytes."
+    action: "HALT. Do not call PROC-1800."
+  - id: "STOP-1720-05"
+    condition: "Artifact has no source_packet_id lineage."
+    action: "HALT. Repair lineage before any downstream handoff."
+  - id: "STOP-1720-06"
+    condition: "Any raw Google credential is written to process files."
+    action: "HALT. Remove credential, rotate if exposed, log incident."
+
+rollback:
+  safe_action: "Delete only failed run artifacts and handoff files for the current source_packet_id; do not modify notebook history unless Dave approves."
+  preserve:
+    - "PROCESS-UT.md"
+    - "DOCTRINE.md"
+    - "heir.yaml"
+    - "orbt.yaml"
+    - "LBB run records"
+
+next_required_actions:
+  - "Run independent audit of PROC-1720 deliverables."
+  - "Run a live Chrome MCP NotebookLM smoke test with a small approved source packet."
+  - "Update BAR-388 after audit/live-run status is known."
