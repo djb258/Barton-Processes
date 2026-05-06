@@ -1,0 +1,462 @@
+name: bar-four-brain-cli-planner-intake
+version: "1.0.0"
+status: READY_FOR_PLANNER
+last_modified: "2026-05-05"
+paired_md: PLANNER-INTAKE.md
+purpose: >
+  Process 070 Planner intake packet for BAR-FOUR-BRAIN-CLI. Builds the
+  four-brain pipeline runtime per PROC-070 §11 OUT OF SCOPE spec —
+  D1 migration 0019_four_brain_run.sql, mission-control-api four-brain
+  routes, forebrain-garage.sh refactor, and end-to-end smoke test.
+  PROC-070 doctrine is the source of truth; this BAR builds runtime that
+  conforms.
+
+planner_request:
+  bar_or_work_id: BAR-FOUR-BRAIN-CLI
+  target_process: "PROC-070 / bp.070-four-brain / four-brain pipeline runtime"
+  desired_outcome: >
+    Refactor the four-brain runner so each agent (planner, foreman, mechanic,
+    auditor) has its own inbox/outbox queue backed by D1 in mission-control-api.
+    Hand-offs become automatic — when one agent finishes, the next agent's
+    inbox row appears and that agent claims it. Replaces the current shared
+    garage/runs/{BAR}/{ts}/ filesystem state machine for queue/state telemetry
+    while retaining the run dir for durable artifacts (Plan Books, UT Books,
+    Audit Books).
+  operating_mode: BUILD
+  due_or_timing: "no deadline, sovereign-paced"
+  sovereign_decision_needed: "yes — see §19 (3 open questions)"
+
+source_of_truth_split:
+  blueprint_architecture:
+    owner: "imo-creator-v2 atlas + Barton-Processes 070 doctrine"
+    paths:
+      - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
+      - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+      - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+    owns: "Pipeline doctrine — role separation, gate spec, table column specs, migration filename. Locked; this BAR does not change."
+  execution_operations:
+    owner: "Barton-Processes 070 runner"
+    paths:
+      - Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh
+    owns: "Runner state machine. Refactored to call new API routes instead of writing local YAML status."
+  runtime_deployment:
+    owner: "imo-creator-v2 mission-control-api"
+    paths:
+      - imo-creator-v2/workers/mission-control-api/
+      - imo-creator-v2/workers/mission-control-api/migrations/0019_four_brain_run.sql
+    owns: "Worker that hosts the D1-backed queue. Adds four-brain-specific routes alongside generic /inbox."
+  evidence_observability:
+    owner: "mission-control D1 + LBB"
+    paths:
+      - "mission-control.four_brain_run"
+      - "mission-control.four_brain_transition"
+      - "mission-control.squawks"
+      - "lbb.records"
+      - "lbb.logbook"
+    owns: "Queue state, role transitions, gate verdicts, Audit Books, CERTIFY rows."
+
+outside:
+  bs_law_arm: outside_dewey
+  book_law_species: Workflow-Body
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: bar-four-brain-cli-planner-intake
+    ctb_placement: barton-enterprises/imo-creator/processes/four-brain/bar-four-brain-cli
+    imo_topology: input
+    cc_layer: CC-02
+    services:
+      - Barton-Processes
+      - imo-creator-v2 atlas
+      - Process 070 Four-Brain
+      - mission-control-api worker
+      - mission-control D1
+      - LBB
+    secrets_provider: doppler
+    acceptance_criteria: >
+      Planner can build a Plan Book that produces (1) migration
+      0019_four_brain_run.sql applied locally + remote, (2) mission-control-api
+      four-brain routes, (3) forebrain-garage.sh refactored to use the new
+      routes, (4) smoke-test BAR producing exactly 4 LBB rows + 1 Audit Book
+      + CERTIFY row + 0 unresolved squawks, (5) Codex VERDICT P=1 on all 10
+      gates from four-brain.yaml Block 11.
+    species: Workflow-Body
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+
+inside:
+  bs_law_arm: inside_fractal
+  heir:
+    process_id: bp.070-four-brain.bar-four-brain-cli-intake
+    parent_process: bp.070-four-brain
+    output_type: planner_intake_packet
+    aviation_model:
+      planner: opus-4.7
+      foreman: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: "mechanic != auditor"
+    determinism_gate: "ai_on_spine_forbidden"
+  orbt:
+    runtime_state: BUILD
+    promotion_gate: "sovereign signs Plan Book; smoke test PASSES on Codex audit"
+    strikes: 0
+
+bs_law_conformance:
+  law: "Book and Spine together, always."
+  source: "imo-creator-v2/atlas/constants/BS_LAW.md"
+  syntactic_separation:
+    outside_construct: outside
+    inside_construct: inside
+    rule: "outside and inside are distinct top-level YAML constructs."
+  book_arm:
+    species: Workflow-Body
+    durable_artifact: true
+    paired_markdown: PLANNER-INTAKE.md
+  spine_arm:
+    heir_present: true
+    orbt_present: true
+    ctb_present: true
+    imo_present: true
+
+doctrine_anchors:
+  migration_filename: "imo-creator-v2/workers/mission-control-api/migrations/0019_four_brain_run.sql"
+  migration_filename_source: "four-brain.yaml Block 9 data.d1.tables[1].schema_source"
+  d1_binding: "D1_MISSION_CONTROL"
+  d1_binding_source: "four-brain.yaml Block 9 data.d1.binding"
+  tables:
+    four_brain_run:
+      source: "four-brain.yaml Block 9 data.d1.tables[0]"
+      purpose: "Run metadata mirror of dyno_run"
+    four_brain_transition:
+      source: "four-brain.yaml Block 9 data.d1.tables[1]"
+      purpose: "Per-role transition row mirror of dyno_run_cycle"
+  errors_table: "mission-control.squawks"
+  errors_keying:
+    process_id: "four-brain"
+    subject_id: "processes"
+  lbb_row_schema_ref: "atlas/manifests/four-brain-doctrine-gate.yaml#lbb_row_schema"
+  gates_source: "four-brain.yaml Block 11 gates.gate_ids[]"
+  gates_count: 10
+  gates_pass_threshold: 10
+  gates_tolerance: exact_match
+  gates_failure_impact: BLOCK
+  generic_dispatch_pattern_ref: "imo-creator-v2/workers/mission-control-api/MANUAL.md"
+  generic_dispatch_memory_ref: "memory:reference_dispatch_system.md"
+  work_order_protocol: "imo-creator-v2/atlas/WORK_ORDER.md (4 gates: Dispatch -> Build -> Audit -> Close)"
+  locked_constants_count: 17
+  mechanic_eligible_locked_constants:
+    - "atlas/ATLAS.md (only with sovereign-signed Plan Book pre-authorization per G09)"
+
+read_set:
+  atlas:
+    - imo-creator-v2/atlas/constants/KEY.md
+    - imo-creator-v2/CLAUDE.md
+    - imo-creator-v2/atlas/WORK_ORDER.md
+    - imo-creator-v2/atlas/constants/BS_LAW.md
+    - imo-creator-v2/atlas/constants/BOOK_LAW.md
+    - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
+    - imo-creator-v2/atlas/constants/UNIFIED_TEMPLATE.md
+    - imo-creator-v2/atlas/constants/UT_CHECKLIST.md
+    - imo-creator-v2/atlas/manifests/four-brain-doctrine-gate.yaml
+    - imo-creator-v2/atlas/manifests/paired-artifacts.yaml
+  process_070:
+    - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+    - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+    - Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh
+    - Barton-Processes/factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md
+    - Barton-Processes/factory/imo-creator/070-four-brain/planner-intake-template.yaml
+  target_specific:
+    - imo-creator-v2/workers/mission-control-api/MANUAL.md
+    - imo-creator-v2/workers/mission-control-api/wrangler.toml
+    - imo-creator-v2/workers/mission-control-api/migrations/
+
+documentation_anchors:
+  - claim: "Migration filename is 0019_four_brain_run.sql"
+    source: "four-brain.yaml Block 9 data.d1.tables[1].schema_source"
+  - claim: "D1 binding is D1_MISSION_CONTROL"
+    source: "four-brain.yaml Block 9 data.d1.binding"
+  - claim: "Foreman produces no Library artifact"
+    source: "PROC-070 §4 Step 3 + four-brain.yaml nodes 02-foreman"
+  - claim: "Mechanic != Auditor"
+    source: "PROC-070 §1 + memory feedback_codex_certifies_not_operator.md"
+  - claim: "Generic dispatch pattern already exists"
+    source: "memory reference_dispatch_system.md + mission-control-api/MANUAL.md"
+  - claim: "10 gates G01-G10 all exact_match BLOCK"
+    source: "four-brain.yaml Block 11"
+  - claim: "17 locked constants; only atlas/ATLAS.md mechanic-eligible"
+    source: "CLAUDE.md Seventeen Constants + memory feedback_never_touch_locked_constants.md"
+  - claim: "4-gate sequence Dispatch -> Build -> Audit -> Close"
+    source: "atlas/WORK_ORDER.md"
+
+research_brainstorming_packet:
+  sovereign_decisions_locked:
+    - decision: "Option C selected: extend mission-control-api worker (don't fork into a new worker, don't reuse generic /inbox)"
+      timestamp: "2026-05-05"
+      source: "this session — sovereign reply 'Can you do option C?'"
+  prior_dispatch_precedent: "memory:reference_dispatch_system.md — generic /inbox + /inbox/claim + PATCH already running and trusted"
+  prior_four_brain_bar:
+    bar_id: BAR-FCE-RUN-060-PLANNER
+    state: "REVIEW_MECHANIC_OUTPUT under the OLD runner"
+    impact: "Refactor must not orphan this BAR. Planner decides: finish on old runner first, OR migrate state into new system."
+  fact_handling_rule: >
+    Brainstorming is input, not certification. Sovereign Option C decision is locked.
+    Open questions in §19 are blockers until sovereign resolves.
+
+lbb_pull_contract:
+  work_ids_or_bar_ids:
+    - BAR-FOUR-BRAIN-CLI
+    - BAR-PROC-070
+    - BAR-FCE-RUN-060-PLANNER
+  search_terms:
+    - "four-brain"
+    - "four_brain_run"
+    - "inbox outbox"
+    - "BAR-FOUR-BRAIN-CLI"
+    - "0019_four_brain_run"
+    - "mission-control-api four-brain"
+  time_window: all_history
+  required_records:
+    - planner_notes
+    - foreman_dispatches
+    - mechanic_outputs
+    - auditor_verdicts
+    - closeout_logs
+    - certify_rows
+  evidence_needed_for_p1:
+    - "4 lbb.records transition rows for BAR-FOUR-BRAIN-CLI smoke test"
+    - "1 lbb.records Audit Book row (subject_id='processes', species='Audit-Body')"
+    - "1 lbb.logbook CERTIFY row"
+  rule: >
+    LBB worker is live; auth via Doppler imo-creator/dev:LBB_API_KEY.
+    Sandbox D1 proxy fallback does NOT have lbb binding (out of scope to fix in this BAR).
+
+connector_run_binding:
+  lbb:
+    required: true
+    purpose: "Pull prior memory; write 4 role transitions + Audit Book + CERTIFY"
+    credential_or_access_source: "Doppler LBB_API_KEY (project=imo-creator, config=dev)"
+    evidence_expected:
+      - query_results
+      - transition_rows
+      - audit_book_row
+      - certify_row
+  atlas:
+    required: true
+    purpose: "Resolve KEY, BS Law, Book Law, FOUR_BRAIN_AVIATION, paired-artifacts row 9"
+    credential_or_access_source: "Local repo path"
+    evidence_expected:
+      - cited_file_paths
+      - cited_sections
+  github:
+    required: true
+    purpose: "Push migration + worker code + runner refactor + UT Books + Audit Book"
+    credential_or_access_source: "GitHub CLI / git push"
+    evidence_expected:
+      - branch
+      - commit_sha
+      - push_confirmation
+  cloudflare_d1:
+    required: true
+    purpose: "Apply migration 0019_four_brain_run.sql to mission-control D1 (local + remote); read/write rows during smoke test"
+    credential_or_access_source: "wrangler + Doppler/wrangler.toml"
+    evidence_expected:
+      - "wrangler d1 migrations list output"
+      - "rows written and read during smoke test"
+  cloudflare_workers:
+    required: true
+    purpose: "Deploy extended mission-control-api worker"
+    credential_or_access_source: "wrangler + Doppler"
+    evidence_expected:
+      - deployment_url
+      - version_id
+  mission_control_dashboard:
+    required: true
+    purpose: "Surface four-brain BARs alongside generic dispatches"
+    credential_or_access_source: "Existing MC dashboard URL"
+    evidence_expected:
+      - dashboard_query_returning_smoke_test_bar
+  linear:
+    required: false
+    purpose: "Track BAR-FOUR-BRAIN-CLI status if a Linear issue exists"
+    credential_or_access_source: "Linear connector"
+    evidence_expected:
+      - bar_url_or_id
+      - status_snapshot
+  rule: "No silent omissions. Connector either used (with proof) or marked blocked/deferred."
+
+non_drift_invariants:
+  - id: INV-FB-CLI-01
+    rule: "PROC-070 doctrine (PROCESS-UT.md, four-brain.yaml, FOUR_BRAIN_AVIATION.md) does not change. This BAR builds runtime that conforms."
+  - id: INV-FB-CLI-02
+    rule: "D1 binding name is exactly D1_MISSION_CONTROL per four-brain.yaml Block 9."
+  - id: INV-FB-CLI-03
+    rule: "Migration filename is exactly 0019_four_brain_run.sql per four-brain.yaml Block 9."
+  - id: INV-FB-CLI-04
+    rule: "Tables four_brain_run and four_brain_transition carry the columns specified in four-brain.yaml Block 9. Codex audit uses parsed-value parity (G06), not byte identity."
+  - id: INV-FB-CLI-05
+    rule: "LBB row schema is referenced by _ref: to atlas/manifests/four-brain-doctrine-gate.yaml#lbb_row_schema — NOT redefined locally (G07)."
+  - id: INV-FB-CLI-06
+    rule: "Filesystem garage/runs/{BAR}/{ts}/ is RETAINED as durable artifact store. D1 holds queue state + telemetry, not full artifact bodies."
+  - id: INV-FB-CLI-07
+    rule: "Mechanic != Auditor at every transition. Sonnet builds; Codex audits."
+  - id: INV-FB-CLI-08
+    rule: "Foreman produces no Library artifact. Foreman dispatches and routes only."
+  - id: INV-FB-CLI-09
+    rule: "LLM is never on the spine of any gate evaluation. determinism_gate: ai_on_spine_forbidden per FOUR_BRAIN_AVIATION v1.2.0."
+  - id: INV-FB-CLI-10
+    rule: "Sixteen of seventeen locked constants are read-only for the Mechanic. Only atlas/ATLAS.md is mechanic-eligible (G09); requires sovereign-signed Plan Book pre-authorization."
+  - id: INV-FB-CLI-11
+    rule: "Atlas registry row 9 (four-brain-doctrine-gate) is gate spec source of truth."
+  - id: INV-FB-CLI-12
+    rule: "Mid-flight BAR-FCE-RUN-060-PLANNER must either complete on old runner OR have its state migrated into the new system. No orphans."
+  - id: INV-FB-CLI-13
+    rule: "All commits pair code + UT doc together (WORK_ORDER.md gate 2). No code-only or doc-only commits."
+  - id: INV-FB-CLI-14
+    rule: "BS Law Y-junction syntactic separation on every paired YAML the Mechanic produces."
+
+input_contract:
+  target_process: "PROC-070 / four-brain pipeline runtime"
+  desired_outcome: "see planner_request.desired_outcome"
+  blueprint_home: "see source_of_truth_split.blueprint_architecture"
+  execution_home: "see source_of_truth_split.execution_operations"
+  runtime_surface: "imo-creator-v2/workers/mission-control-api"
+  evidence_target: "mission-control D1 + LBB worker + Mission Control dashboard"
+  brainstorming_packet: "see research_brainstorming_packet"
+  lbb_search_contract: "see lbb_pull_contract"
+  connector_run_binding: "see connector_run_binding"
+  protected_constraints: "see non_drift_invariants (14 items)"
+  p1_definition: "see p1_definition"
+
+storage_evidence_contract:
+  github:
+    role: "versioned source for migration, worker code, runner refactor, UT Books, Plan Book, Audit Book"
+    timing: "after audited file changes; commits pair code + UT"
+  d1:
+    role: "registry + queue state + telemetry. Tables four_brain_run, four_brain_transition, squawks."
+    timing: "after migration applied; rows written during smoke test"
+  lbb:
+    role: "compliance logbook + durable memory. Subject 'processes'."
+    timing: "at each role transition + on Audit Book + on CERTIFY"
+  mission_control_dashboard:
+    role: "operator visibility for four-brain BARs"
+    timing: "during smoke test + ongoing"
+  filesystem_runs:
+    role: "durable artifact bodies (Plan Book MD, UT Books, Audit Book MD)"
+    timing: "throughout BAR lifecycle"
+    note: "NOT replaced by D1; INV-FB-CLI-06 protects this"
+  r2:
+    role: "not used for this BAR"
+    timing: "n/a"
+
+planner_deliverables:
+  required:
+    - plan_book_path: "Barton-Processes/docs/plans/BAR-FOUR-BRAIN-CLI/PLAN-BOOK.md"
+    - read_set
+    - source_of_truth_split
+    - required_artifacts: ["migration SQL", "extended worker code", "refactored runner", "UT Books per new Library artifact", "Audit Book on PASS"]
+    - mechanic_work_orders_format: "literal file:line | old_string | new_string triples"
+    - auditor_packet_referencing_gates: "G01-G10 from four-brain.yaml Block 11 + any BAR-specific gates"
+    - p1_definition
+    - stop_conditions: ["Strike-1 Sonnet repair + re-audit", "Strike-2 escalate to Opus 4.7 mechanic", "Strike-3 Troubleshoot/Train (no fourth repair)"]
+    - open_blockers: "see open_questions §19"
+    - evidence_requirements: "see storage_evidence_contract"
+    - lbb_records_used_or_required: "queries used; 4 transitions + Audit Book + CERTIFY required"
+    - connectors_used_or_blocked: "see connector_run_binding"
+    - process_070_start_or_handoff_path: "garage/inbox/BAR-FOUR-BRAIN-CLI/ -> Planner -> docs/plans/BAR-FOUR-BRAIN-CLI/PLAN-BOOK.md -> sovereign sign -> Foreman dispatch"
+    - brainstorming_claims_promoted_to_facts: "Option C is locked; migration filename + table names + binding from doctrine"
+    - brainstorming_claims_left_as_assumptions: "mid-flight BAR-FCE-RUN-060-PLANNER handling (Planner proposes)"
+
+mechanic_dispatch_hints:
+  allowed_write_scope:
+    - "imo-creator-v2/workers/mission-control-api/migrations/0019_four_brain_run.sql (new)"
+    - "imo-creator-v2/workers/mission-control-api/src/ (new four-brain routes)"
+    - "imo-creator-v2/workers/mission-control-api/wrangler.toml (binding edits if needed)"
+    - "imo-creator-v2/workers/mission-control-api/MANUAL.md (doc the new routes)"
+    - "Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh (refactor to call API)"
+    - "Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md (mark §11 OUT OF SCOPE item completed; bump version + Last Modified together)"
+    - "Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml (mirror §11 status update if applicable; preserve all locked specs)"
+    - "Barton-Processes/docs/plans/BAR-FOUR-BRAIN-CLI/ (Plan Book + Audit Book)"
+    - "imo-creator-v2/atlas/manifests/paired-artifacts.yaml (registry row for any new UT Book; Atlas-touch decision deferred to Planner)"
+  forbidden:
+    - "Editing any of the 17 locked constants except atlas/ATLAS.md (sovereign Plan Book pre-authorization required, G09)"
+    - "Byte changes to PROC-070 doctrine column specs / binding name / migration filename in four-brain.yaml Block 9 (parsed-value parity enforced; INV-FB-CLI-04)"
+    - "Mechanic auditing its own work"
+    - "Code-only or doc-only commits"
+    - "LLM in the spine of any gate evaluation"
+    - "Editing dyno-engine/engine/us.py or up.py (read-only locked)"
+
+auditor_packet:
+  audit_areas:
+    - bs_law_y_junction
+    - ut_conformance
+    - source_of_truth_split
+    - scope
+    - runtime_safety
+    - evidence
+    - connector_evidence
+    - aviation_role_separation
+    - doctrine_parity
+    - ten_gates_pass
+    - locked_constant_purity
+  verdict_format:
+    pass: "VERDICT: P=1"
+    fail: "VERDICT: P=0"
+  gate_source: "atlas/manifests/four-brain-doctrine-gate.yaml + four-brain.yaml Block 11"
+
+p1_definition:
+  - id: 1
+    rule: "Migration 0019_four_brain_run.sql exists, applied to local AND remote mission-control D1, creates exactly the columns specified in four-brain.yaml Block 9 for both four_brain_run and four_brain_transition."
+  - id: 2
+    rule: "mission-control-api worker exposes new four-brain routes (Planner names final paths; suggested: POST /four-brain/dispatch, POST /four-brain/claim/:role, POST /four-brain/transition, GET /four-brain/state/:bar). Authed via existing MC_API_KEY X-API-Key per existing dispatch convention."
+  - id: 3
+    rule: "forebrain-garage.sh refactored: state transitions go through new API routes; filesystem runs/{BAR}/{ts}/ preserved for artifact bodies but no longer queue source of truth."
+  - id: 4
+    rule: "End-to-end smoke test (no-op BAR) produces: 1 four_brain_run row PASS + 4 four_brain_transition rows + 4 lbb.records rows (one per role) + 1 lbb.records Audit Book row + 1 lbb.logbook CERTIFY row + 0 unresolved squawks."
+  - id: 5
+    rule: "PROC-070 PROCESS-UT.md §11 OUT OF SCOPE row for BAR-FOUR-BRAIN-CLI flipped to completed; version + Last Modified bumped together."
+  - id: 6
+    rule: "Mid-flight BAR-FCE-RUN-060-PLANNER either completed on old runner before this BAR commits OR migrated cleanly into new system with no data loss."
+  - id: 7
+    rule: "Codex Auditor returns VERDICT: P=1 with all 10 gates from four-brain.yaml Block 11 PASS."
+  - id: 8
+    rule: "All commits pair code + UT doc together (WORK_ORDER.md gate 2)."
+  - id: 9
+    rule: "git diff base..HEAD against 16 read-only locked constants returns empty (G09). Only atlas/ATLAS.md may change with Plan Book pre-authorization."
+  - id: 10
+    rule: "Mission Control dashboard surfaces the smoke-test BAR's run row."
+
+sovereign_resolutions:
+  signed_at: "2026-05-05"
+  signer: "Dave Barton"
+  resolutions:
+    - id: Q1
+      question: "Mid-flight BAR-FCE-RUN-060-PLANNER: finish under OLD runner first, OR roll its state into the new system?"
+      resolution: "Leave 060 alone. This BAR is greenfield. BAR-FCE-RUN-060-PLANNER continues on the old runner. The new runtime does not touch its state."
+      cite: "Sovereign 2026-05-05"
+    - id: Q2
+      question: "Atlas amendment scope: is this BAR allowed to amend atlas/ATLAS.md?"
+      resolution: "NO. This BAR may not touch atlas/ATLAS.md. Any registry updates are a follow-up BAR. G09 stays at 16 read-only locked constants for this BAR specifically — atlas/ATLAS.md is added to the no-modify set just for BAR-FOUR-BRAIN-CLI."
+      cite: "Sovereign 2026-05-05"
+    - id: Q3
+      question: "Strike-ladder routing logic — where does it live?"
+      resolution: "Foreman role owns the routing decision; runner is the invocation host. Foreman reads strike-count from D1 and decides which mechanic to invoke (Sonnet → Opus 4.7 → Troubleshoot/Train). The runner hosts Foreman invocation and provides strike-count from the four_brain_run D1 row. Worker does not make the decision; it stores data only."
+      cite: "Sovereign 2026-05-05; doctrine: FOUR_BRAIN_AVIATION.md §STRIKE SYSTEM lines 196-204 + PROC-070 §4 Step 6 + memory feedback_auditor_decides_pass_fail.md"
+
+garage:
+  garage_status: REVIEW_PLAN_BOOK
+  bar_id: BAR-FOUR-BRAIN-CLI
+  intake_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-FOUR-BRAIN-CLI/PLANNER-INTAKE.md
+  intake_yaml_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-FOUR-BRAIN-CLI/planner-intake.yaml
+  requested_by: "Dave Barton (sovereign)"
+  ready_at: "2026-05-05T23:05:00Z"
+  planner_claimed_by: forebrain-planner
+  planner_claimed_at: 2026-05-05T23:19:27Z
+  next_artifact: docs/plans/BAR-FOUR-BRAIN-CLI/PLAN-BOOK.md
+
+document_control:
+  created: "2026-05-05"
+  last_modified: "2026-05-05"
+  version: "1.0.0"
+  authority: "Dave Barton (sovereign) — signed 2026-05-05"
+  status: "READY_FOR_PLANNER"
