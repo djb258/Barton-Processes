@@ -1399,6 +1399,14 @@ run_mechanic() {
   log_transition "$bar_id" "$run_dir" "mechanic" "start" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING" "$prompt" "" "done" "Mechanic stage started."
   local cli_rc=0
   run_claude_cli "$mechanic_model" "$prompt" "$run_dir/mechanic-output.raw.md" || cli_rc=$?
+  # Fallback per Atlas §4.5: if Sonnet returned the completion report as stdout
+  # (captured to mechanic-output.raw.md) but didn't use the Write tool to create
+  # MECHANIC-OUTPUT.md at the canonical path, promote raw.md. Without this, the
+  # script saw "no output" → BLOCKED even when Mechanic actually completed work.
+  # Surfaced on BAR-MC-FOUR-BRAIN-WIRE first run 2026-05-06.
+  if [[ ! -f "$run_dir/MECHANIC-OUTPUT.md" && -s "$run_dir/mechanic-output.raw.md" ]]; then
+    cp "$run_dir/mechanic-output.raw.md" "$run_dir/MECHANIC-OUTPUT.md"
+  fi
   if [[ -f "$run_dir/MECHANIC-OUTPUT.md" ]]; then
     if [[ "$cli_rc" -ne 0 ]]; then
       log_transition "$bar_id" "$run_dir" "mechanic" "cli-soft-fail" "MECHANIC_RUNNING" "MECHANIC_RUNNING" "$run_dir/mechanic-output.raw.md" "" "done" "CLI rc=$cli_rc but mechanic output artifact exists; proceeding."
