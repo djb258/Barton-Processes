@@ -1191,7 +1191,11 @@ run_codex_cli() {
   local prompt="$2"
   local output="$3"
   local rc=0
-  codex exec --cd "$ROOT" --sandbox danger-full-access --ask-for-approval never --model "$model" "$(cat "$prompt")" > "$output" || rc=$?
+  # Codex CLI updated 2026-05-06: --ask-for-approval renamed; --sandbox + bypass
+  # combined into single flag --dangerously-bypass-approvals-and-sandbox per
+  # `codex exec --help`. Auditor needs read across Atlas + run dir + working
+  # tree + write of AUDIT-VERDICT.md. Sovereign-authorized dispatch.
+  codex exec --cd "$ROOT" --dangerously-bypass-approvals-and-sandbox --model "$model" "$(cat "$prompt")" > "$output" || rc=$?
   return "$rc"
 }
 
