@@ -42,7 +42,7 @@ TEMPLATE_YAML="$ROOT/factory/imo-creator/070-four-brain/planner-intake-template.
 PROCESS_UT="$ROOT/factory/imo-creator/070-four-brain/PROCESS-UT.md"
 FOUR_BRAIN_YAML="$ROOT/factory/imo-creator/070-four-brain/four-brain.yaml"
 LBB_SCRIPT="$ROOT/scripts/lbb-log.sh"
-MC_API_ROOT="${MC_API_ROOT:-$(cd "$ROOT/../imo-creator-v2/workers/mission-control-api" 2>/dev/null && pwd || true)}"
+MC_API_ROOT="${MC_API_ROOT:-$(cd "$ROOT/../imo-creator-v2/workers/mc-proxy" 2>/dev/null && pwd || true)}"
 FOUR_BRAIN_D1_WRITE="${FOUR_BRAIN_D1_WRITE:-local}"
 FOUR_BRAIN_D1_REQUIRED="${FOUR_BRAIN_D1_REQUIRED:-false}"
 FOUR_BRAIN_D1_DATABASE="${FOUR_BRAIN_D1_DATABASE:-mission-control}"
@@ -580,44 +580,103 @@ write_planner_prompt() {
   local intake_dir="$INBOX/$bar_id"
   local plan_dir="$ROOT/docs/plans/$bar_id"
   local prompt="$run_dir/PLANNER-PROMPT.md"
+  local v2_atlas="$ROOT/../imo-creator-v2/atlas"
   mkdir -p "$run_dir" "$plan_dir"
   cat > "$prompt" <<PROMPT
 ROLE: PLANNER
 PROCESS: 070 Four-Brain
 BAR: $bar_id
+ENGINE: Opus 4.7 (collaborative). Determinism-first gate: reject any design that puts an LLM on the spine.
 
-You are the Planner underneath ForeBrain for Process 070.
+You are the Planner. Produce the Plan Book. Do not act as Mechanic. Do not audit.
 
-Your job:
-Create the Plan Book for this intake. Do not act as Mechanic. Do not audit.
-
-Required read set:
+==============================================================================
+REQUIRED READ SET (Atlas Step 0 — non-negotiable)
+==============================================================================
+Intake:
 - $intake_dir/PLANNER-INTAKE.md
 - $intake_dir/planner-intake.yaml
+
+Process 070:
 - $PROCESS_UT
 - $FOUR_BRAIN_YAML
-- Atlas Step 0 sources named by the intake and Process 070
 
-Required output:
-- Write the Plan Book to: $plan_dir/PLAN-BOOK.md
-- Cite Atlas Step 0 sections consulted in the Plan Book.
+Atlas (imo-creator-v2):
+- $v2_atlas/constants/KEY.md                              (vocabulary)
+- $v2_atlas/ATLAS.md §1 Legend, §4 Map-Building SOP, §4.5 Repair SOP, §6 Governance, §7.3, §7.3a
+- $v2_atlas/constants/BS_LAW.md                           (Y-junction; outside.heir/orbt + inside.heir/orbt syntactically distinct)
+- $v2_atlas/constants/BOOK_LAW.md                         (eleven body species; Plan-Body shape spec)
+- $v2_atlas/constants/FOUR_BRAIN_AVIATION.md              (role locks; determinism gate)
+- $v2_atlas/constants/PLANNER_ROLE.md §6b                 (Mission Control Wiring Authority — your responsibility)
+- $v2_atlas/constants/MISSION_CONTROL.md §10              (artifact wiring protocol; 3 dispositions)
+- $v2_atlas/constants/mission-control.yaml#slots          (slot registry — pick target HEIR ID for WIRE)
+- $v2_atlas/constants/UI_STYLE_GUIDE.md                   (render-mode catalog for NEW_SLOT_NEEDED proposals)
+- $v2_atlas/manifests/four-brain-doctrine-gate.yaml       (G01-G12 + W-1..W-7 the Auditor will run against your Plan Book)
+- $v2_atlas/manifests/paired-artifacts.yaml               (existing pairing registry)
 
-Planning rules:
-- Tell Foreman what needs to be built and audited.
-- Do not over-prescribe Mechanic implementation details unless a source file or sovereign constraint locks them.
+==============================================================================
+REQUIRED OUTPUT
+==============================================================================
+Write the Plan Book to: $plan_dir/PLAN-BOOK.md
+
+Plan Book MUST include (Plan-Body species per Book Law #15):
+1. Atlas sections consulted (cite §-numbers)
+2. Source-of-truth split (preserved from intake)
+3. P=1 definition (explicit conditions, not implied)
+4. Stop conditions
+5. Mechanic dispatch requirements (literal work orders, allowed write scope, forbidden paths)
+6. Auditor packet requirements (which gates apply: G01-G12 + W-1..W-7)
+7. **mission_control_wiring section (mandatory — see below)**
+8. LBB row schema fields the Mechanic + Auditor must write
+9. Open blockers (only if they block dispatch — otherwise leave them for runtime)
+
+==============================================================================
+MISSION CONTROL WIRING SECTION (your structural authority — W-2 + W-7 verify)
+==============================================================================
+For EVERY artifact this BAR will produce or modify, declare ONE of three dispositions:
+
+  WIRE             — slot already exists in mission-control.yaml#slots covering this artifact's CTB position
+                     → specify: target_slot_heir_id
+
+  NEW_SLOT_NEEDED  — no existing slot fits, but artifact warrants Mission Control surfacing
+                     → specify: proposed_slot { heir_id, ctb_position, render_mode (from UI_STYLE_GUIDE.md), data_source }
+
+  EXEMPT           — pure doctrine, internal config, or implementation detail with no operator-visible state
+                     → specify: rationale (one sentence min)
+
+Format (must appear under heading "Mission Control Wiring"):
+  mission_control_wiring:
+    - artifact: <relative path>
+      disposition: WIRE | NEW_SLOT_NEEDED | EXEMPT
+      target_slot_heir_id: <heir id>           # WIRE only
+      proposed_slot:                            # NEW_SLOT_NEEDED only
+        heir_id: <heir id>
+        ctb_position: <ctb path>
+        render_mode: <mode from UI_STYLE_GUIDE.md>
+        data_source: <path | glob | query>
+      rationale: <text>                         # required for EXEMPT, recommended for all
+
+DEFAULT DISPOSITION: none. Silence is not a disposition.
+If the slot registry has no fitting slot, NEW_SLOT_NEEDED is correct — do not force a WIRE.
+
+==============================================================================
+PLANNING RULES
+==============================================================================
+- Determinism first: if your design puts an LLM on the spine of any required path, REJECT and redesign with deterministic primitives.
+- Inventory before you design: existing automation > new automation > new code > AI (last resort).
 - Preserve source-of-truth split from the intake.
 - Preserve connector/run binding from the intake.
-- Include LB&B and Mission Control evidence requirements where applicable.
-- Include P=1 definition.
-- Include stop conditions.
-- Include Mechanic dispatch requirements.
-- Include Auditor packet requirements.
-- Use UT / BS Law requirements when applicable.
+- BS Law: any structured-text artifact this BAR produces (.md or .yaml) ships with both arms (outside.heir/orbt + inside.heir/orbt as syntactically distinct top-level constructs).
+- Book Law: name the species for every artifact (UT-Body, Plan-Body, Audit-Body, Workflow-Body, Code-Body, Config-Body, Schema-Body, UI-Body, Data-Body, Catalog-Body, Research-Body).
+- Aviation Model: Mechanic ≠ Auditor. Build engine ≠ audit engine.
 
+==============================================================================
+HANDOFF
+==============================================================================
 After writing the Plan Book:
 - Do not run Mechanic work.
 - Do not run Auditor work.
-- Return the Plan Book path and any blockers.
+- Return the Plan Book path and any TRUE blockers (open questions that block dispatch only — runtime-resolvable items go in the Plan Book itself, not as blockers).
 PROMPT
   echo "$prompt"
 }
@@ -632,37 +691,55 @@ write_foreman_prompt() {
   four_brain_ref="$(agent_path "$FOUR_BRAIN_YAML")"
   plan_ref="$(agent_path "$plan_path")"
   dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
+  local v2_atlas="$ROOT/../imo-creator-v2/atlas"
   cat > "$prompt" <<PROMPT
 ROLE: FOREMAN
 PROCESS: 070 Four-Brain
 BAR: $bar_id
+ENGINE: Sonnet (default routing). Foreman is NOT Opus. Opus belongs to the Planner.
 
-You are the Foreman. Your job is routing only.
-Role lock: Foreman = Sonnet/default routing. Do not identify the Foreman as Opus. Opus belongs to Planner only.
+You are the Foreman. Routing only — do not build, do not audit, do not re-design.
 
-Required read set:
+==============================================================================
+REQUIRED READ SET
+==============================================================================
 - $process_ut_ref
 - $four_brain_ref
-- $plan_ref
-- Atlas Â§6
-- atlas/manifests/paired-artifacts.yaml
-- Plan Book frontispiece
+- $plan_ref                                              (the signed Plan Book — your input)
+- $v2_atlas/ATLAS.md section 6 Governance
+- $v2_atlas/constants/MISSION_CONTROL.md section 10      (artifact wiring protocol — pass dispositions to Mechanic verbatim)
+- $v2_atlas/constants/MECHANIC_ROLE.md section 5b        (Mechanic execution rules — quote them in the dispatch)
+- $v2_atlas/manifests/paired-artifacts.yaml              (pairing registry — Mechanic must register new pairs)
+- $v2_atlas/manifests/four-brain-doctrine-gate.yaml      (gates the Auditor will run; Mechanic should know what to expect)
 
-Required output:
-- Write dispatch packet to: $dispatch_ref
-- Cite Atlas Step 0 sources consulted in the dispatch packet.
-- Dispatch packet must explicitly state: Foreman role: Sonnet/default routing.
+==============================================================================
+REQUIRED OUTPUT
+==============================================================================
+Write dispatch packet to: $dispatch_ref
 
-Rules:
-- Do not build.
-- Do not audit.
-- Do not dispatch unless the Plan Book is signed and the BAR status is PLAN_BOOK_SIGNED.
-- Sonnet/default routing model is allowed only for routing. Escalate ambiguity to Planner/Opus, but do not claim Foreman is Opus.
-- Convert the Plan Book into literal, scoped Mechanic work orders.
-- Include allowed write scope, forbidden paths, acceptance criteria, and tests/evidence required.
-- Preserve Mechanic != Auditor.
-- Include LB&B and Mission Control evidence requirements when applicable.
-- If the Plan Book is not dispatchable, write blockers to the dispatch packet and mark clearly.
+The dispatch packet MUST contain:
+1. Plan Book reference (path + signed status)
+2. Atlas Step 0 citations (carry forward from the Plan Book)
+3. Literal scoped work orders (one per Mechanic action — file path, exact change, acceptance criterion)
+4. Allowed write scope (explicit file paths the Mechanic may touch)
+5. Forbidden paths (any locked constants in the 17-list, sovereign-only files, no-touch zones)
+6. **Mission Control wiring orders** — pass through the Plan Book's mission_control_wiring section verbatim. For each artifact:
+     - WIRE -> instruct Mechanic to update target slot's data_source field
+     - NEW_SLOT_NEEDED -> instruct Mechanic to emit proposal in MECHANIC-OUTPUT.md proposed_slots: block (DO NOT modify mission-control.yaml — sovereign-only)
+     - EXEMPT -> instruct Mechanic to stamp mission_control_exempt: true + mission_control_exempt_reason in artifact frontmatter
+7. Acceptance criteria (per work order — what proves it's done)
+8. LBB row requirements (Mechanic must write one row before transitioning)
+9. Aviation Model lock: Mechanic != Auditor; Mechanic does NOT self-audit
+10. Foreman role declaration: "Foreman role: Sonnet/default routing"
+
+==============================================================================
+RULES
+==============================================================================
+- Do not build. Do not audit. Do not re-architect the Plan Book.
+- Convert the Plan Book into LITERAL Mechanic work orders. No interpretation, no creative additions.
+- If the Plan Book is missing the mission_control_wiring section, mark BLOCKED and return — this is a Planner-side defect (W-2). Do NOT improvise dispositions.
+- If the Plan Book is missing required sections (P=1, work orders, allowed write scope), mark BLOCKED and return — Planner re-runs.
+- Escalate ambiguity to the Planner; do not let it become a Mechanic problem.
 PROMPT
   echo "$prompt"
 }
@@ -676,38 +753,89 @@ write_mechanic_prompt() {
   four_brain_ref="$(agent_path "$FOUR_BRAIN_YAML")"
   dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
   output_ref="$(agent_path "$run_dir/MECHANIC-OUTPUT.md")"
+  local v2_atlas="$ROOT/../imo-creator-v2/atlas"
   cat > "$prompt" <<PROMPT
 ROLE: MECHANIC
 PROCESS: 070 Four-Brain
 BAR: $bar_id
+ENGINE: Sonnet (Strike-1 retry escalates to Opus). Build only what the Foreman dispatch says.
 
-You are the Mechanic. Build only what the Foreman dispatch says.
+You are the Mechanic. Construction crew. Do NOT audit your own work.
 
-Required read set:
+==============================================================================
+REQUIRED READ SET
+==============================================================================
+- $dispatch_ref                                          (Foreman dispatch — your authority)
 - $process_ut_ref
 - $four_brain_ref
-- $dispatch_ref
-- Atlas Â§4 or Â§4.5 as applicable
-- Plan Book
-- Spoke frontmatter for every file to be edited
+- Plan Book (referenced in dispatch)
+- Spoke frontmatter for every file you will edit
+- $v2_atlas/ATLAS.md section 4 (build) or section 4.5 (repair) as applicable
+- $v2_atlas/constants/MECHANIC_ROLE.md section 5b        (Mission Control execution rules — your contract)
+- $v2_atlas/constants/MISSION_CONTROL.md section 10      (artifact wiring protocol)
 
-Required output:
-- Write mechanic completion report to: $output_ref
-- Cite Atlas Step 0 sources consulted in the mechanic completion report.
+==============================================================================
+HARD HALT RULE — PLAN_BOOK_INCOMPLETE
+==============================================================================
+If the Foreman dispatch is missing the Mission Control wiring orders, OR if any
+artifact's disposition is ambiguous (no WIRE/NEW_SLOT_NEEDED/EXEMPT clearly stated):
+  -> STOP. Write MECHANIC-OUTPUT.md with status=PLAN_BOOK_INCOMPLETE.
+  -> Cite the missing field.
+  -> DO NOT improvise dispositions. DO NOT pick "EXEMPT" to skip the wiring step.
+  -> This is a Planner-side defect (W-2 strike). Plan Book gets corrected and re-run.
 
-Rules:
-- Do not audit your own work.
-- Do not expand scope beyond Foreman dispatch.
-- Make file edits only inside the allowed write scope.
-- Run the requested checks if available.
-- Report files changed, tests/checks run, evidence produced, and blockers.
-- Idempotency: BEFORE editing, inspect target files in the allowed write scope.
-  If they ALREADY exist and conform to the dispatch's acceptance criteria
-  (header banner, version, step IDs, structural sections), do NOT redo the
-  work. Verify conformance, then write MECHANIC-OUTPUT.md citing the
-  existing files and the verification you performed, and exit cleanly.
-- Final action MUST be writing the MECHANIC-OUTPUT.md completion report.
-  The runner keys completion on this file's existence.
+The Mechanic makes ZERO disposition decisions. Architect (Planner) calls; construction (you) executes.
+
+==============================================================================
+MISSION CONTROL WIRING EXECUTION (per disposition declared in dispatch)
+==============================================================================
+WIRE:
+  -> Update the named slot's data_source field in atlas/constants/mission-control.yaml
+    to reference this artifact's path/glob/query.
+  -> Verify the slot HEIR ID exists in mission-control.yaml#slots before editing.
+  -> Do NOT add new slots. Sovereign-only.
+
+NEW_SLOT_NEEDED:
+  -> DO NOT modify mission-control.yaml. Sovereign-only amendment.
+  -> Emit the proposal in MECHANIC-OUTPUT.md under proposed_slots: block:
+      proposed_slots:
+        - heir_id: <as proposed in dispatch>
+          ctb_position: <as proposed>
+          render_mode: <as proposed>
+          data_source: <as proposed>
+          artifact: <relative path>
+  -> Sovereign reads the proposals at Auditor verdict and amends skeleton in a follow-up sovereign BAR.
+
+EXEMPT:
+  -> Stamp the artifact's frontmatter:
+      mission_control_exempt: true
+      mission_control_exempt_reason: <rationale from dispatch>
+  -> No mission-control.yaml change.
+
+==============================================================================
+RULES
+==============================================================================
+- Edit only inside the allowed write scope. Out-of-scope edits = Strike-1.
+- Do NOT touch any of the 17 sovereign-locked constants. Verify on each edit.
+- Idempotency: BEFORE editing, check if the file already conforms to acceptance criteria.
+  If yes, write MECHANIC-OUTPUT.md citing existing conformance and exit cleanly.
+- Run the checks the dispatch requests. Report what you ran, not what you wish you ran.
+- Pair version bumps: every Version change must update Last Modified in the same edit.
+  Version field appears in 3 locations (frontmatter, section 1 Identity, Document Control) — bump all 3.
+- Final action MUST be writing MECHANIC-OUTPUT.md. The runner keys completion on this file.
+
+==============================================================================
+REQUIRED OUTPUT — MECHANIC-OUTPUT.md must contain
+==============================================================================
+- status: completed | PLAN_BOOK_INCOMPLETE | BLOCKED
+- Atlas Step 0 sections cited
+- Plan Book reference
+- Files changed (full paths)
+- Tests/checks run + result
+- proposed_slots: block (if any artifact had NEW_SLOT_NEEDED disposition)
+- Evidence (log paths, command output, hashes)
+- Blockers (if any)
+- Final line: "Mechanic complete. Auditor handoff ready. Mechanic does not self-audit."
 PROMPT
   echo "$prompt"
 }
@@ -723,27 +851,77 @@ write_auditor_prompt() {
   dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
   mechanic_ref="$(agent_path "$run_dir/MECHANIC-OUTPUT.md")"
   verdict_ref="$(agent_path "$run_dir/AUDIT-VERDICT.md")"
+  local v2_atlas="$ROOT/../imo-creator-v2/atlas"
   cat > "$prompt" <<PROMPT
 ROLE: AUDITOR
 PROCESS: 070 Four-Brain
 BAR: $bar_id
+ENGINE: Codex (DIFFERENT inference engine than Mechanic — Aviation Model: mechanic ≠ auditor).
 
-You are the Auditor. Inspect work you did not build.
+You are the Auditor. Inspect work you did not build. Certify or reject.
 
-Required read set:
+==============================================================================
+REQUIRED READ SET
+==============================================================================
+Inputs to audit:
+- $plan_ref                                              (Plan Book — Planner output)
+- $dispatch_ref                                          (Foreman dispatch)
+- $mechanic_ref                                          (Mechanic completion report)
+
+Doctrine + gate spec (source of truth — predicates live HERE, not in this prompt):
+- $v2_atlas/manifests/four-brain-doctrine-gate.yaml      (G01-G12 + W-1..W-7 — your gate definitions)
+- $v2_atlas/constants/AUDITOR_ROLE.md §7b                (your role contract; W-1..W-7 detail)
+- $v2_atlas/constants/BS_LAW.md                          (Y-junction predicate)
+- $v2_atlas/constants/BOOK_LAW.md                        (species shape predicates)
+- $v2_atlas/constants/MISSION_CONTROL.md §10             (wiring authority chain — verify Planner declared, Mechanic executed)
+- $v2_atlas/ATLAS.md §6 Governance, §4.5 Repair SOP
+
+Process context:
 - $process_ut_ref
 - $four_brain_ref
-- $plan_ref
-- $dispatch_ref
-- $mechanic_ref
-- atlas/manifests/four-brain-doctrine-gate.yaml
 
-Required output:
-- Write audit verdict to: $verdict_ref
-- Cite the gate spec consulted.
+==============================================================================
+REQUIRED OUTPUT — AUDIT-VERDICT.md
+==============================================================================
+First line MUST be exactly:
+  VERDICT: P=1
+OR
+  VERDICT: P=0
 
-Rules:
-- First line of the audit file must be exactly VERDICT: P=1 or VERDICT: P=0.
+Body must include:
+- Per-gate evaluation table — every gate G01-G12 and W-1..W-7 with PASS/FAIL + evidence pointer
+- Strike target on each FAIL (Mechanic vs Planner — see below)
+- Diagnostic vector for any FAIL: which predicate broke, by how much, where
+- Atlas sections cited
+- Mission Control wiring sanity check (W-7 — see below)
+
+==============================================================================
+GATE LIST (run every one — predicates are in four-brain-doctrine-gate.yaml)
+==============================================================================
+G01-G12 — BS Law / Book Law / paired-artifact / LBB row schema / CI-gate / drift-sweep gates
+  Source: four-brain-doctrine-gate.yaml#gates
+  Strike target: Mechanic (these are execution gates)
+
+W-1  — Every produced/modified artifact has HEIR ID present in spoke frontmatter   [strike: Mechanic]
+W-2  — Plan Book contains mission_control_wiring section with disposition for every artifact   [strike: PLANNER]
+W-3  — WIRE: matched slot's data_source references the artifact's path/glob/query   [strike: Mechanic]
+W-4  — Paired Books (.md + .yaml) registered in paired-artifacts.yaml   [strike: Mechanic]
+W-5  — LBB contains row tagged 'mission-control-wiring' for each produced/modified artifact   [strike: Mechanic]
+W-6  — Mechanic did NOT modify Mission Control skeleton without sovereign amendment   [strike: Mechanic]
+W-7  — DISPOSITION SANITY CHECK: did the Planner make a defensible call per artifact?   [strike: PLANNER]
+       (e.g., is something marked EXEMPT that a sovereign would reasonably want surfaced?
+        Is a NEW_SLOT_NEEDED proposal structurally coherent: heir_id + ctb_position + render_mode + data_source?
+        Is a WIRE pointing at a slot whose render_mode actually fits the artifact's nature?)
+
+==============================================================================
+RULES
+==============================================================================
+- Do NOT build. Do NOT modify any artifact. Audit-only.
+- You are a different inference engine than the Mechanic. Inspector ≠ construction crew.
+- A FAIL on any single gate = P=0. P=1 requires every gate PASS.
+- Strike-1 (first FAIL) → Mechanic re-runs against corrected dispatch (or Planner re-drafts if W-2/W-7).
+- Strike-2 (second FAIL on same BAR) → escalate to Opus mechanic.
+- Strike-3 (third FAIL) → Troubleshoot/Train, NOT another repair. Plan Book is wrong; rewrite the blueprint.
 - Do not fix findings.
 - Check against the Plan Book, Foreman dispatch, evidence requirements, and Aviation Model.
 - P=1 only if acceptance criteria and required evidence are satisfied.
