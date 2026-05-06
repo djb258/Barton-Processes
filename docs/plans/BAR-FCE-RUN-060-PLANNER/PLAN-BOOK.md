@@ -6,7 +6,7 @@
 **Operating Mode:** BUILD
 **Authored:** 2026-05-05
 **Author:** Planner (Opus, ForeBrain)
-**Status:** READY-FOR-FOREMAN
+**Status:** PLAN_BOOK_SIGNED
 
 ---
 
@@ -284,7 +284,7 @@ Halt the BAR (do **not** declare P=1) if any of the following:
 
 | ID | Item | Status | Default |
 |---|---|---|---|
-| Q-01 | Should downstream DMJ receive a new process number separate from PROC-060? | open | **YES** — Planner recommends new PROC number for DMJ; PROC-060 emits DMJ-ready evidence but the convergence engine lives in its own process. Sovereign confirms before Mechanic encodes the cross-reference text. |
+| Q-01 | Should downstream DMJ receive a new process number separate from PROC-060? | confirmed | **YES** - Downstream DMJ gets a separate process number; PROC-060 emits DMJ-ready evidence but the convergence engine lives in its own process. |
 | Q-02 | Exact filename of PROC-060 companion YAML (`run-dyno.yaml` vs other) | open | Mechanic confirms against existing `factory/imo-creator/060-run-dyno/` convention; if absent, create `run-dyno.yaml`. |
 | Q-03 | Is Mission Control runtime wiring (MC API + UI changes) in scope of this BAR or a follow-on? | open | **Follow-on BAR.** This BAR ships the doc pair only; both artifacts state runtime wiring as deferred and reference the follow-on BAR id (TBD by Foreman). |
 
@@ -300,8 +300,8 @@ Halt the BAR (do **not** declare P=1) if any of the following:
 | `us.py` / `up.py` locked | **FACT** | AGENTS locked constants + file headers |
 | FCE-007 is output example only | **FACT** | Cited: engine-final.json paths |
 | DMJ deferred at N=1 | **FACT** | Cited: FCE_RUN_CHECKLIST.md + LIFECYCLE_RUNBOOK.md |
-| Downstream DMJ should get its own PROC number | **ASSUMPTION** | Sovereign confirmation pending (Q-01) |
-| Runtime wiring belongs to follow-on BAR | **ASSUMPTION** | Sovereign confirmation pending (Q-03) |
+| Downstream DMJ should get its own PROC number | **FACT** | Sovereign confirmed by PLAN_BOOK_SIGNED approval checklist. |
+| Runtime wiring belongs to follow-on BAR | **ASSUMPTION** | Foreman may preserve follow-on BAR placeholder unless sovereign assigns BAR id. |
 | YAML filename `run-dyno.yaml` | **OPEN QUESTION** | Mechanic confirms (Q-02) |
 
 ---
@@ -337,8 +337,9 @@ Halt the BAR (do **not** declare P=1) if any of the following:
 | Field | Value |
 |---|---|
 | Version | 1.0.0 |
-| Status | READY-FOR-FOREMAN |
-| Authority | Dave Barton (sovereign — signs at BAR open) |
+| Status | PLAN_BOOK_SIGNED |
+| Authority | Dave Barton (sovereign - signed at BAR open) |
+| Signed By | Dave Barton - 2026-05-05 |
 | Created | 2026-05-05 |
 | BAR | BAR-FCE-RUN-060-PLANNER |
 | Conformance | Plan-Body · BS Law v1.5.0 (Y-junction by reference to companion intake YAML) · PROC-070 v1.0.0 |

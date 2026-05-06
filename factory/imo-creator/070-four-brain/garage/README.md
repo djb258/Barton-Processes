@@ -30,6 +30,9 @@ The Planner watches this folder, claims the next ready packet, and turns it into
 | PLANNER_RUNNING | Planner has claimed the work order. |
 | PLAN_BOOK_READY | Planner produced the Plan Book. |
 | FOREMAN_DISPATCHED | Foreman has dispatched Mechanic work packets. |
+| REVIEW_FOREMAN_DISPATCH | Human/operator must inspect Foreman dispatch checklist before Mechanic. |
+| REVIEW_MECHANIC_OUTPUT | Human/operator must inspect Mechanic output checklist before Auditor. |
+| REVIEW_AUDIT_VERDICT | Human/operator must inspect Auditor verdict before close. |
 | CLOSED | Auditor certified P=1 and closeout evidence exists. |
 | BLOCKED | Missing input, connector, permission, source doc, or sovereign decision. |
 
@@ -54,6 +57,20 @@ Until `BAR-FOUR-BRAIN-CLI` exists, this is the automation contract:
 8. Auditor certifies or rejects.
 9. LB&B and Mission Control evidence close the loop where applicable.
 10. Outbox receives `FINAL-PRODUCT.yaml` pointing to the final artifact, evidence, and current status.
+
+## Review Checklists
+
+The `approve` command is not a rubber stamp. Each handoff writes and enforces
+a checklist in the BAR run directory:
+
+| Handoff | Approval | Checklist |
+| --- | --- | --- |
+| Planner -> Foreman | `REVIEW_PLAN_BOOK -> PLAN_BOOK_SIGNED` | `APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md` |
+| Foreman -> Mechanic | `REVIEW_FOREMAN_DISPATCH -> FOREMAN_DISPATCHED` | `APPROVAL-CHECKLIST-FOREMAN_DISPATCHED.md` |
+| Mechanic -> Auditor | `REVIEW_MECHANIC_OUTPUT -> MECHANIC_DONE` | `APPROVAL-CHECKLIST-MECHANIC_DONE.md` |
+
+If any checkbox fails, `approve` exits non-zero and leaves the BAR at the
+review status. Fix the source artifact, then rerun `approve`.
 
 ## Helper
 

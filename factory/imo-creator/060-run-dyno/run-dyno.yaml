@@ -1,0 +1,677 @@
+# =============================================================================
+# run-dyno.yaml — Run Dyno Workflow Spec (PROC-060)
+# =============================================================================
+# Workflow-Body species per Book Law (atlas/constants/BOOK_LAW.md v1.5.0)
+# BS Law Y-junction conformant (atlas/constants/BS_LAW.md v1.5.0)
+# outside: and inside: are syntactically distinct top-level keys (AST-separated)
+# A parser cannot return both arms from one branch of the AST.
+# Companion UT-Body: factory/imo-creator/060-run-dyno/PROCESS-UT.md
+# BAR: BAR-FCE-RUN-060-PLANNER
+# =============================================================================
+
+name: run-dyno
+version: "1.0.0"
+last_modified: "2026-05-05"
+
+# =============================================================================
+# INHERITS — atlas + schema version pins
+# =============================================================================
+
+inherits:
+  atlas: v2.2.7
+  ut_schema: UT_v2.8.0
+  ut_checklist: UT_CHECKLIST_v1.3.1
+  bs_law: v1.5.0
+  book_law: v1.5.0
+  process_doctrine: PROC-060
+
+# =============================================================================
+# OUTSIDE — this artifact's identity as seen from the Library / CTB / Atlas
+# BS Law Y-junction arm 1: outside.heir and outside.orbt are syntactically
+# distinct top-level maps per BS Law v1.5.0 AST-separation mandate.
+# =============================================================================
+
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: run-dyno
+    cc_layer: CC-01
+    subject_id: processes
+    ctb_node: barton-enterprises/imo-creator/processes/060-run-dyno
+    ctb_placement: leaf
+    species: Workflow-Body
+    owner: Dave Barton
+    services:
+      - fce-run
+      - r2-workbench
+      - openrouter-model-loop
+      - d1-vault
+      - lbb-memory
+      - fce-library
+    acceptance_criteria: |
+      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.0.0 + run-dyno.yaml v1.0.0)
+      pass Codex G01-G16 audit. All 15 FCE steps FCE-00...FCE-14 present and
+      identical in both. All 18 invariants encoded. us.py + up.py untouched.
+      D1 vault-only confirmed. R2 workbench-only confirmed.
+    last_modified: "2026-05-05"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-05T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE — this artifact's internal runtime identity
+# BS Law Y-junction arm 2: inside.heir and inside.orbt are syntactically
+# distinct top-level maps per BS Law v1.5.0 AST-separation mandate.
+# =============================================================================
+
+inside:
+  heir:
+    process_id: PROC-060
+    version: "1.0.0"
+    last_modified: "2026-05-05"
+    companion_manifest: Barton-Processes/factory/imo-creator/060-run-dyno/PROCESS-UT.md
+    services:
+      - fce-run
+      - r2-workbench
+      - openrouter-model-loop
+      - d1-vault
+      - lbb-memory
+      - fce-library
+    secrets_provider: doppler
+    acceptance_criteria: |
+      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.0.0 + run-dyno.yaml v1.0.0)
+      pass Codex G01-G16 audit. All 15 FCE steps FCE-00...FCE-14 present and
+      identical in both. All 18 invariants encoded. us.py + up.py untouched.
+      D1 vault-only confirmed. R2 workbench-only confirmed.
+    aviation_model:
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    determinism_gate: ai_on_spine_forbidden
+    us_py_sealed: true
+    up_py_sealed: true
+  orbt:
+    runtime_state: BUILD
+    strikes: 0
+    last_transition_at: null
+    last_transition_reason: null
+    flipped_by: null
+    promotion_gate: |
+      OPERATE: 3-run minimum + Codex CERTIFY on each + sovereign sign-off.
+
+# =============================================================================
+# DESCRIPTION
+# =============================================================================
+
+description: |
+  PROC-060 — Run Dyno: End-to-End FCE Operator Runbook.
+  15 mandatory steps FCE-00...FCE-14.
+  R2 + OpenRouter is the live workbench (FCE-02 through FCE-12).
+  D1 is the completed-run vault only (FCE-13 after Codex PASS).
+  us.py (locked constant #7) and up.py (locked constant #8) are read-only sealed engines.
+  DMJ is deferred at N=1; queued only at N>=2 same family under separate process number.
+  Mission Control wiring deferred to follow-on BAR (TBD) per Plan Book §15 Q-03.
+
+# =============================================================================
+# SCHEDULE
+# =============================================================================
+
+schedule:
+  trigger: operator-initiated
+  events:
+    - on_fce_run_requested: "Operator initiates a single FCE end-to-end run"
+  cron: null
+
+# =============================================================================
+# DATA — read / write / forbidden / D1 schema
+# =============================================================================
+
+data:
+  read:
+    - source: atlas/dyno/us.py
+      note: Sealed locked constant #7 — READ-ONLY. Zero bytes written. Ever.
+    - source: atlas/dyno/up.py
+      note: Sealed locked constant #8 — READ-ONLY. Zero bytes written. Ever.
+    - source: atlas/dyno/dyno_engine.py
+      note: Runner — FCE-05, FCE-06, FCE-09
+    - source: atlas/dyno/run_fce.py
+      note: Full orchestrator — all FCE steps
+    - source: atlas/manifests/fce-registry.yaml
+      note: FCE-01 uniqueness check + FCE-14 append hint
+    - source: openrouter-api
+      note: Model responses (expensive tier x3) — FCE-05, FCE-06, FCE-09, FCE-10
+    - source: cloudflare-r2://svg-files/dyno-runs/
+      note: Artifact reads/writes during workbench phase FCE-02 through FCE-12
+    - source: d1://mission-control
+      note: dyno_run + dyno_run_cycle — FCE-13 write only, after Codex PASS
+    - source: lbb-api
+      note: Role-transition + CERTIFY rows — all transitions + FCE-14
+  write:
+    - destination: r2://svg-files/dyno-runs/{sovereign_id}/
+      what: All run artifacts (US outputs, K=C audit, UP outputs, six recipes)
+      when: FCE-02 through FCE-12 (workbench only)
+      guard: R2 is workbench only; cleaned ONLY after D1 INSERT confirmed (INV-10)
+    - destination: d1://mission-control/dyno_run
+      what: One completed-run row per FCE run
+      when: FCE-13 ONLY
+      guard: Codex PASS required; no provisional inserts; NOT a scratchpad (INV-09)
+    - destination: d1://mission-control/dyno_run_cycle
+      what: Three rows per cycle (one per model) — all models, all cycles
+      when: FCE-13 ONLY
+      guard: Co-inserted with dyno_run; every cycle from all three OpenRouter models stored under sovereign ID
+    - destination: lbb
+      what: Role-transition rows + CERTIFY row
+      when: Every role transition + FCE-14 CERTIFY
+      guard: Append-only; subject = processes
+    - destination: atlas/manifests/fce-registry.yaml
+      what: FCE entry append hint
+      when: FCE-14 manual (PASS path only)
+      guard: Operator-owned; auditor does not touch registry
+  forbidden:
+    - action: write_to_us_py
+      target: atlas/dyno/us.py
+      reason: Locked constant #7 — sealed. INV-18 (this entire process's read-only contract).
+    - action: write_to_up_py
+      target: atlas/dyno/up.py
+      reason: Locked constant #8 — sealed. INV-18.
+    - action: d1_insert_before_codex_pass
+      target: d1://mission-control/dyno_run
+      reason: D1 is vault not scratchpad. INV-09.
+    - action: describe_d1_as_scratchpad
+      reason: D1 is vault-only. Workbench is R2. INV-09.
+    - action: r2_cleanup_before_d1_confirmed
+      target: r2://svg-files/dyno-runs/
+      reason: R2 is fallback if D1 fails. INV-10.
+    - action: self_audit
+      reason: Mechanic cannot be Auditor. Aviation model. INV-13.
+    - action: dmj_in_single_run_path
+      reason: DMJ deferred at N=1. INV-18.
+    - action: cheap_tier_models
+      reason: Expensive tier only — locked. INV-03.
+    - action: conflate_us_p1_with_up_tolerance
+      reason: Two separate gates. INV-04, INV-07.
+    - action: fce_registry_before_codex_and_d1
+      reason: Library must contain only certified runs. INV-16.
+    - action: second_fce_run_process_outside_proc_060
+      reason: PROC-060 is the single FCE run process. PROC-080 is reference fill logic. INV-01.
+  d1:
+    binding: D1_MISSION_CONTROL
+    tables:
+      - name: dyno_run
+        insert_at: FCE-13
+        gate: codex_pass_required
+        rows_per_run: 1
+        schema_source: mission-control-api/migrations/0018_dyno_run.sql
+      - name: dyno_run_cycle
+        insert_at: FCE-13
+        gate: codex_pass_required
+        rows_per_cycle: 3
+        schema_source: mission-control-api/migrations/0018_dyno_run.sql
+
+# =============================================================================
+# NODES — 15-node DAG: FCE-00 through FCE-14
+# Step IDs are locked and must be identical to PROCESS-UT.md §4.
+# DMJ is NOT in this path (deferred at N=1; separate process number at N>=2).
+# =============================================================================
+
+nodes:
+
+  - id: FCE-00
+    step_name: Pre-flight (env/secrets/CLI)
+    owner: operator
+    action: >
+      Verify env vars, secrets, CLI shape, and input structure before any run artifact is created.
+    inputs:
+      - shell session
+    outputs:
+      - PYTHONUTF8=1 confirmed
+      - OPENROUTER_API_KEY confirmed
+      - CLOUDFLARE_API_TOKEN confirmed
+      - LBB_API_KEY confirmed
+      - domain string written (em-dash format)
+      - p1_definition written
+    stop_conditions:
+      - any env var missing
+      - domain string malformed (no em-dash separator)
+      - p1_definition undefined
+
+  - id: FCE-01
+    step_name: Name domain (topic, description, domain_string, fce_id, family)
+    owner: operator
+    action: >
+      Declare topic, description, domain_string (em-dash format), fce_id (unique),
+      and family. Check fce-registry.yaml for uniqueness before proceeding.
+    inputs:
+      - domain knowledge
+      - atlas/manifests/fce-registry.yaml (uniqueness check)
+    outputs:
+      - locked input manifest (domain_string, fce_id, family)
+    stop_conditions:
+      - fce-id not unique in registry
+      - domain string not single em-dash-separated string
+
+  - id: FCE-02
+    step_name: Open R2 intake record (first landing)
+    owner: run_fce.py
+    action: >
+      Initialize R2 workbench path. Create the first artifact landing zone.
+      DO NOT write to D1 at this step.
+    inputs:
+      - locked inputs from FCE-01
+    outputs:
+      - R2 path r2://svg-files/dyno-runs/{sovereign_id}/ initialized
+    guard_rails:
+      - R2 is the live workbench — not the vault
+      - D1 writes are FORBIDDEN at this step
+      - This is the first artifact landing zone
+
+  - id: FCE-03
+    step_name: Name UP tolerance (domain-specific; != US P=1)
+    owner: operator
+    action: >
+      Operator declares the domain-specific UP stop condition explicitly.
+      UP tolerance must be written — never inferred. It is NOT the same as US P=1.
+    inputs:
+      - domain knowledge
+      - p1_definition from FCE-01
+    outputs:
+      - UP tolerance declared (written, not inferred)
+    guard_rails:
+      - UP tolerance is domain-specific and human-declared
+      - UP tolerance is NOT the same as US P=1 (INV-07)
+      - Must be declared explicitly before the US loop starts
+
+  - id: FCE-04
+    step_name: Lock model set (OpenRouter expensive x3)
+    owner: operator / run_fce.py
+    action: >
+      Confirm exactly three OpenRouter expensive-tier models. Log to R2 manifest.
+    inputs:
+      - OpenRouter API
+      - Doppler OPENROUTER_API_KEY
+    outputs:
+      - three model IDs confirmed
+      - logged to R2 manifest
+    guard_rails:
+      - expensive models only; no cheap-tier rotation (INV-03)
+      - exactly three per cycle
+
+  - id: FCE-05
+    step_name: Start R2/OpenRouter workbench loop
+    owner: run_fce.py
+    action: >
+      Fire three OpenRouter models in parallel for US discovery. Sigma tracking begins.
+      R2 is live workbench during all loop iterations. D1 write forbidden here.
+    inputs:
+      - locked inputs from FCE-01
+      - model set from FCE-04
+    outputs:
+      - runs/discover-{slug}/ artifacts in R2
+      - US raw outputs per model
+    guard_rails:
+      - R2 = live workbench during all loop iterations
+      - D1 write is FORBIDDEN at this step (INV-09)
+      - sigma tracking begins at first cycle
+
+  - id: FCE-06
+    step_name: Run US (discover M)
+    owner: run_fce.py + models
+    action: >
+      Apply C&V across three model outputs. Classify constants vs variables per cycle.
+      Back-propagate on every new constant lock. Track sigma.
+    inputs:
+      - US raw outputs from FCE-05
+    outputs:
+      - 3/3 locked = constant
+      - 2/3 high-confidence = locked
+      - 1/3 = investigate (variable)
+    guard_rails:
+      - 2/3 majority = locked; do NOT chase 3/3 unanimity (INV-06)
+      - back-propagate on every new lock (INV-15)
+      - sigma tracking required (tightening=real, flat=phantom, expanding=broken upstream) (INV-14)
+
+  - id: FCE-07
+    step_name: Check US P=1 (4 columns + leaves primitive)
+    owner: run_fce.py + operator
+    action: >
+      Verify all four FCE columns have primitive leaves AND Three Primitives at leaf level.
+      US P=1 is a distinct gate from UP tolerance — do not conflate.
+    inputs:
+      - US classified candidates from FCE-06
+    outputs:
+      - kc-audit*.json (MATCH / MISMATCH / SPLIT per candidate)
+      - operator GO / STOP
+    stop_conditions:
+      - any FCE column missing primitive leaves
+      - Three Primitives not satisfied at leaf level
+    guard_rails:
+      - US P=1 = all four columns (Valuation -> Concentration -> Trend -> Liquidity) at primitive (INV-04)
+      - US P=1 is NOT the same as UP tolerance (INV-04, INV-07)
+      - STOP if any column missing leaves; re-run US loop
+
+  - id: FCE-08
+    step_name: K=C lock (constants / variables / domesticated)
+    owner: apply_kc_corrections_and_refire.py + operator
+    action: >
+      Resolve mismatches. Lock constants into M. Variables remain in I. Remove domesticated.
+      K=C lock happens AFTER US P=1 and BEFORE UP runs (INV-05).
+    inputs:
+      - kc-audit*.json from FCE-07
+    outputs:
+      - engine-final-locked.json (locked M)
+    guard_rails:
+      - K=C lock AFTER US P=1; BEFORE UP runs (INV-05)
+      - constants -> M; variables -> stay in I; domesticated -> removed
+      - re-run US if MISMATCH found
+      - back-propagate on every new lock (INV-15)
+
+  - id: FCE-09
+    step_name: Run UP (consume I via locked M until tolerance)
+    owner: dyno_engine.py solve + models
+    action: >
+      Apply locked M to P=1 definition using three expensive-tier models.
+      UP tolerance (from FCE-03) governs stop — NOT US P=1.
+      UP does not self-certify. HALT for TS rather than guess.
+    inputs:
+      - locked M from FCE-08
+      - p1_definition from FCE-01
+      - UP tolerance from FCE-03
+    outputs:
+      - runs/solve-{slug}/engine-final.json
+      - UP P=1 confirmation
+    guard_rails:
+      - UP tolerance governs stop (NOT US P=1) (INV-07)
+      - UP does NOT self-certify
+      - HALT for TS rather than guess
+      - K=C lock must be complete before UP runs (INV-05)
+      - expensive models only; three per cycle (INV-03)
+
+  - id: FCE-10
+    step_name: Emit O (completed FCE; 4 columns)
+    owner: run_recipe_synthesis.py + run_recipe_synthesis_bs_law.py
+    action: >
+      Synthesize FCE output. Produce four-column result in locked order:
+      Valuation -> Concentration -> Trend -> Liquidity.
+      Produce three raw .md recipes + three BS Law .yaml recipes.
+    inputs:
+      - UP P=1 output from FCE-09
+    outputs:
+      - three raw .md recipes (human-readable)
+      - three BS Law .yaml recipes (Y-junction compliant)
+    guard_rails:
+      - BS Law Y-junction required on all YAML outputs (INV-12)
+      - outside: and inside: must be syntactically distinct top-level keys
+      - no merged arms; no same-name siblings in AST
+      - four columns in locked order throughout
+
+  - id: FCE-11
+    step_name: Verify R2 package (manifest, evidence, model rows)
+    owner: operator
+    action: >
+      Human gate. Inspect all R2 artifacts. Confirm completeness before Codex dispatch.
+      Cannot be skipped or delegated to LLM.
+    inputs:
+      - all run artifacts in R2
+    outputs:
+      - operator GO / STOP
+    guard_rails:
+      - human gate — cannot be skipped or delegated to LLM
+      - confirm all artifacts present before Codex dispatch
+
+  - id: FCE-12
+    step_name: Codex audit/check on R2 package
+    owner: operator
+    action: >
+      Dispatch complete run package to Auditor (Codex). Auditor must be a different
+      inference engine than the three run models and different from the Mechanic.
+      No self-auditing under any circumstance.
+    inputs:
+      - R2 artifacts + run evidence
+    outputs:
+      - Codex verdict (PASS / FAIL / DEFER)
+    guard_rails:
+      - auditor must be a different inference engine than the three run models (INV-13)
+      - auditor must be different from the Mechanic (INV-13)
+      - no self-auditing under any circumstance (INV-13)
+
+  - id: FCE-13
+    step_name: Vault to D1 + clean R2
+    owner: run_fce.py
+    action: >
+      On Codex PASS: INSERT dyno_run + dyno_run_cycle rows to D1.
+      THEN clean R2 workbench — ONLY after D1 INSERT confirmed.
+      If D1 fails, R2 stays intact (only fallback).
+    inputs:
+      - Codex PASS verdict from FCE-12
+      - run data (costs, cycles, models, sovereign_id)
+    outputs:
+      - dyno_run row (status=completed, verdict set)
+      - dyno_run_cycle rows (one per model per cycle — three per cycle)
+    guard_rails:
+      - D1 INSERT ONLY on Codex PASS (INV-09)
+      - D1 is NOT a scratchpad — no provisional inserts (INV-09)
+      - R2 cleanup ONLY after D1 INSERT confirmed (INV-10)
+      - if D1 fails, R2 stays intact
+      - one dyno_run row per FCE run
+      - three dyno_run_cycle rows per cycle; every cycle from all three OpenRouter model tests stored under sovereign ID
+
+  - id: FCE-14
+    step_name: Certify or repair (FCE library on PASS; squawk + Four-Brain repair on FAIL)
+    owner: operator
+    action: >
+      PASS path: write LBB CERTIFY row; append hint to fce-registry.yaml.
+      Both Codex PASS AND D1 INSERT must be confirmed before library registration.
+      FAIL path: squawk filed; Four-Brain repair initiated (separate BAR).
+      DMJ deferred at N=1. Mission Control wiring deferred to follow-on BAR (TBD).
+    inputs:
+      - D1 INSERT confirmed from FCE-13
+      - Codex verdict (PASS or FAIL)
+    outputs:
+      - PASS: LBB CERTIFY row (append-only, subject=processes)
+      - PASS: atlas/manifests/fce-registry.yaml append hint
+      - FAIL: squawk filed; Four-Brain repair BAR initiated
+    guard_rails:
+      - FCE library registration only after BOTH Codex PASS AND D1 INSERT confirmed (INV-16)
+      - LBB CERTIFY row is append-only (INV-17)
+      - registry append is manual (operator-owned)
+      - DMJ deferred at N=1; queued only at N>=2 same family under separate process number (INV-18)
+      - MC wiring deferred to follow-on BAR (TBD) per Plan Book Q-03
+
+# =============================================================================
+# NON-DRIFT INVARIANTS (INV-01 through INV-18)
+# Canonical numbering matches PROCESS-UT.md §5a.
+# Any violation = STOP condition.
+# =============================================================================
+
+invariants:
+
+  - id: INV-01
+    text: >
+      PROC-060 is the single FCE run process. No second FCE run process outside
+      PROC-060 may exist. PROC-080 is reference fill logic (absorbed, not a second
+      runtime). PROC-090 is artifact/library evidence only.
+    enforced_at: [all-steps]
+
+  - id: INV-02
+    text: >
+      Domain string format is "<topic> — <description>" using em-dash separator —
+      single string, topic + description joined. Never two CLI args.
+    enforced_at: [FCE-00, FCE-01]
+
+  - id: INV-03
+    text: >
+      Exactly three OpenRouter models (expensive tier only) run per cycle.
+      No cheap-tier rotation.
+    enforced_at: [FCE-04, FCE-05, FCE-09]
+
+  - id: INV-04
+    text: >
+      US P=1 = all four FCE columns (Valuation -> Concentration -> Trend -> Liquidity)
+      have primitive leaves AND Three Primitives satisfied at leaf level.
+      This is a distinct gate from UP tolerance. US P=1 must not be conflated with
+      UP tolerance under any circumstance.
+    enforced_at: [FCE-07]
+
+  - id: INV-05
+    text: >
+      K=C lock happens AFTER US P=1 and BEFORE UP runs.
+      No UP call before K=C lock is complete.
+    enforced_at: [FCE-08, FCE-09]
+
+  - id: INV-06
+    text: >
+      K=C consensus threshold: 2/3 majority = locked.
+      Do NOT chase 3/3 unanimity.
+    enforced_at: [FCE-06, FCE-07]
+
+  - id: INV-07
+    text: >
+      UP tolerance is domain-specific and human-declared. UP does not self-certify.
+      HALT for TS rather than guess. UP tolerance is NOT the same as US P=1.
+    enforced_at: [FCE-03, FCE-09]
+
+  - id: INV-08
+    text: >
+      P=1 definition is declared before the run fires. Never inferred mid-run.
+    enforced_at: [FCE-01]
+
+  - id: INV-09
+    text: >
+      D1 INSERT (dyno_run + dyno_run_cycle) occurs ONLY at FCE-13, ONLY after Codex
+      PASS. No provisional D1 writes. D1 is the completed-run vault — NOT a scratchpad,
+      NOT a workbench.
+    enforced_at: [FCE-13]
+
+  - id: INV-10
+    text: >
+      R2 cleanup occurs ONLY after D1 INSERT is confirmed. If D1 fails, R2 stays
+      intact (only fallback).
+    enforced_at: [FCE-13]
+
+  - id: INV-11
+    text: >
+      R2 + OpenRouter is the live workbench during the active model loop
+      (FCE-02 through FCE-12). D1 receives data only at FCE-13 after Codex PASS.
+    enforced_at: [FCE-02, FCE-03, FCE-04, FCE-05, FCE-06, FCE-07, FCE-08, FCE-09, FCE-10, FCE-11, FCE-12]
+
+  - id: INV-12
+    text: >
+      BS Law Y-junction: every YAML recipe artifact and companion YAML must have
+      outside: and inside: as syntactically distinct top-level keys.
+      No merged arms. No same-name siblings in AST.
+    enforced_at: [FCE-10]
+
+  - id: INV-13
+    text: >
+      Auditor (Codex) must be a different inference engine than the three run models
+      and different from the Mechanic. No self-auditing under any circumstance.
+      Aviation Model invariant.
+    enforced_at: [FCE-12]
+
+  - id: INV-14
+    text: >
+      Sigma tracking required across cycles:
+      tightening = real constant (lock it),
+      flat = phantom (investigate),
+      expanding = broken upstream (go back).
+    enforced_at: [FCE-06, FCE-09]
+
+  - id: INV-15
+    text: >
+      Back-propagation required on every new constant:
+      new lock triggers revalidation of ALL prior constants with updated theta.
+    enforced_at: [FCE-06, FCE-08]
+
+  - id: INV-16
+    text: >
+      FCE library registration occurs ONLY after BOTH Codex PASS AND D1 INSERT
+      are confirmed. Not before. Both conditions required simultaneously.
+    enforced_at: [FCE-14]
+
+  - id: INV-17
+    text: >
+      LBB row is written at every role transition (planner, foreman, mechanic, auditor)
+      and at FCE-14 CERTIFY on Codex PASS. Append-only. Subject = processes.
+    enforced_at: [all-transitions, FCE-14]
+
+  - id: INV-18
+    text: >
+      DMJ does NOT appear inside the single-run path (FCE-00 through FCE-14).
+      DMJ is deferred at N=1. DMJ is queued and runs only at N>=2 same family.
+      DMJ gets its own separate process number (confirmed Plan Book Q-01).
+      DMJ output returns to D1.
+    enforced_at: [FCE-14]
+
+# =============================================================================
+# GATES — Codex audit gate set (G01 through G16)
+# Source: Plan Book BAR-FCE-RUN-060-PLANNER §10 Auditor Packet
+# All 16 gates must PASS before Auditor certifies.
+# =============================================================================
+
+gates:
+  total: 16
+  pass_threshold: 16
+  gate_ids: [G01, G02, G03, G04, G05, G06, G07, G08, G09, G10, G11, G12, G13, G14, G15, G16]
+  source_doc: docs/plans/BAR-FCE-RUN-060-PLANNER/PLAN-BOOK.md
+  note: >
+    All gate predicates, tolerances, and failure impacts are defined in the Plan Book §10
+    Auditor Packet. Codex evaluates G01-G16 against both artifacts simultaneously.
+
+# =============================================================================
+# LBB — Logbook Backbone wiring
+# =============================================================================
+
+lbb:
+  subject_id: processes
+  bar_id: BAR-FCE-RUN-060-PLANNER
+  record_format:
+    orbt_mode: BUILD
+    tags:
+      - run-dyno
+      - process-060
+      - fce-pipeline
+  transitions:
+    - role: planner
+      action: plan
+      written_at: plan-book-signed
+    - role: foreman
+      action: dispatch
+      written_at: foreman-dispatch-issued
+    - role: mechanic
+      action: edit
+      written_at: build-time
+    - role: auditor
+      action: certify
+      written_at: FCE-14-on-codex-pass
+
+# =============================================================================
+# MISSION CONTROL WIRING
+# =============================================================================
+
+mission_control:
+  status: deferred
+  reason: MC wiring deferred to follow-on BAR per Plan Book Q-03
+  when_wired_must_surface:
+    - run list with domain / verdict / status
+    - sovereign_id per run with R2 workbench status panel
+    - dyno_run_cycle rows per model per cycle (three-model visibility)
+    - audit/vault/library state badges (R2 -> audit -> D1 -> library)
+    - cost totals (run-level and cycle-level)
+    - R2 artifact links per run
+    - operator notes / Codex verdict per run
+    - DMJ readiness flag per family (N count)
+
+# =============================================================================
+# DMJ BOUNDARY NOTE
+# =============================================================================
+
+dmj:
+  status: deferred-at-n1
+  rule: >
+    DMJ (Define/Map/Join) does NOT run inside the single-run path (FCE-00 through FCE-14).
+    At N=1 (single domain run), DMJ is deferred.
+    At N>=2 same family, DMJ is queued.
+    DMJ gets its own separate process number (confirmed Plan Book Q-01).
+    DMJ output returns to D1.
+  action_when_queued: operator registers DMJ job in follow-on process under new process number

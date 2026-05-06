@@ -11,6 +11,12 @@ TEMPLATE_YAML="$ROOT/factory/imo-creator/070-four-brain/planner-intake-template.
 PROCESS_UT="$ROOT/factory/imo-creator/070-four-brain/PROCESS-UT.md"
 FOUR_BRAIN_YAML="$ROOT/factory/imo-creator/070-four-brain/four-brain.yaml"
 LBB_SCRIPT="$ROOT/scripts/lbb-log.sh"
+MC_API_ROOT="${MC_API_ROOT:-$(cd "$ROOT/../imo-creator-v2/workers/mission-control-api" 2>/dev/null && pwd || true)}"
+FOUR_BRAIN_D1_WRITE="${FOUR_BRAIN_D1_WRITE:-local}"
+FOUR_BRAIN_D1_REQUIRED="${FOUR_BRAIN_D1_REQUIRED:-false}"
+FOUR_BRAIN_D1_DATABASE="${FOUR_BRAIN_D1_DATABASE:-mission-control}"
+MC_API_URL="${MC_API_URL:-}"
+CLAUDE_CODE_PS1="${CLAUDE_CODE_PS1:-C:\\Users\\CUSTOM PC\\AppData\\Roaming\\npm\\claude.ps1}"
 
 usage() {
   cat <<'USAGE'
@@ -22,6 +28,8 @@ Usage:
   forebrain-garage.sh foreman BAR-123 [--execute] [--defer-lbb] [--foreman-model sonnet]
   forebrain-garage.sh mechanic BAR-123 [--execute] [--defer-lbb] [--mechanic-model sonnet]
   forebrain-garage.sh auditor BAR-123 [--execute] [--defer-lbb] [--auditor-model gpt-5.3-codex]
+  forebrain-garage.sh reconcile BAR-123 [--defer-lbb]
+  forebrain-garage.sh recover BAR-123 [--force] [--defer-lbb]
   forebrain-garage.sh review BAR-123
   forebrain-garage.sh approve BAR-123 NEXT_STATUS
   forebrain-garage.sh run-pipeline [--execute] [--auto-continue] [--defer-lbb] [--planner-model opus] [--foreman-model sonnet] [--mechanic-model sonnet] [--auditor-model gpt-5.3-codex]
@@ -37,6 +45,11 @@ Contract:
   foreman Converts a PLAN_BOOK_SIGNED BAR into Foreman dispatch.
   mechanic Runs Sonnet Mechanic from Foreman dispatch.
   auditor Runs Codex Auditor from Mechanic output and closes or blocks the BAR.
+  reconcile Recovers an interrupted running stage when its expected artifact exists.
+  recover  Rolls back a stuck *_RUNNING status when its expected artifact does NOT
+           exist. Requires --force. Use only after confirming no live agent is
+           writing to the run dir. Resets to the previous done status so the
+           stage can be re-run.
   review Prints the handoff packet paths for human inspection.
   approve Moves a REVIEW_* status to the next executable status.
   run-pipeline Runs the next eligible handoff stage. By default it pauses at review gates.
@@ -112,6 +125,9 @@ claim_intake() {
   perl -0pi -e 's/(^garage:\n(?:  .*\n)*?  garage_status: )READY_FOR_PLANNER/${1}PLANNER_RUNNING/m' "$file"
   perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_by: )null/\${1}$planner/m" "$file"
   perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_at: )null/\${1}$ts/m" "$file"
+  local run_dir
+  run_dir="$(latest_run_dir "$bar_id")"
+  dispatch_bar_run "$bar_id" "$run_dir"
   echo "$file"
 }
 
@@ -149,6 +165,289 @@ latest_run_dir() {
   fi
 }
 
+json_escape() {
+  local value="$1"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$value"
+  elif command -v python >/dev/null 2>&1; then
+    python -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$value"
+  else
+    printf '"%s"' "$(printf '%s' "$value" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+  fi
+}
+
+sha256_file() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    echo ""
+    return 0
+  fi
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$file" | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$file" | awk '{print $1}'
+  else
+    echo ""
+  fi
+}
+
+archive_stale_artifact() {
+  local file="$1"
+  if [[ -f "$file" ]]; then
+    mv "$file" "$file.stale-$(date -u +"%Y%m%dT%H%M%SZ")"
+  fi
+}
+
+agent_path() {
+  local path="$1"
+  if command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "$path"
+  else
+    echo "$path"
+  fi
+}
+
+sql_escape() {
+  local value="$1"
+  printf "%s" "$value" | sed "s/'/''/g"
+}
+
+new_uuid() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import uuid; print(uuid.uuid4())'
+  elif command -v python >/dev/null 2>&1; then
+    python -c 'import uuid; print(uuid.uuid4())'
+  else
+    printf "%s-%s" "$(date -u +%Y%m%dT%H%M%SZ)" "$RANDOM"
+  fi
+}
+
+ps_escape() {
+  local value="$1"
+  printf "%s" "$value" | sed "s/'/''/g"
+}
+
+# ---------------------------------------------------------------------------
+# BAR-FOUR-BRAIN-CLI: API-based mission-control helpers (replaces wrangler SQL)
+# ---------------------------------------------------------------------------
+
+dispatch_bar_run() {
+  local bar_id="$1"
+  local run_dir="${2:-}"
+  [[ "$FOUR_BRAIN_D1_WRITE" == "off" ]] && return 0
+  if [[ -z "$MC_API_URL" ]]; then
+    echo "[four-brain] MC_API_URL not set; skipping dispatch_bar_run." >&2
+    [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  fi
+  local plan_book_path=""
+  if [[ -n "$run_dir" && -f "$run_dir/PLAN-BOOK.md" ]]; then
+    plan_book_path="$run_dir/PLAN-BOOK.md"
+  elif [[ -f "$ROOT/docs/plans/$bar_id/PLAN-BOOK.md" ]]; then
+    plan_book_path="$ROOT/docs/plans/$bar_id/PLAN-BOOK.md"
+  fi
+  local json_body
+  local escaped_bar escaped_plan
+  escaped_bar="$(json_escape "$bar_id")"
+  if [[ -n "$plan_book_path" ]]; then
+    escaped_plan="$(json_escape "$plan_book_path")"
+    json_body="{\"bar_id\":$escaped_bar,\"plan_book_path\":$escaped_plan}"
+  else
+    json_body="{\"bar_id\":$escaped_bar}"
+  fi
+  local tmp_body http_code
+  tmp_body="$(mktemp)"
+  http_code="$(curl -s -o "$tmp_body" -w "%{http_code}" \
+    -X POST "${MC_API_URL}/four-brain/dispatch" \
+    -H "X-API-Key: ${MC_API_KEY:-}" \
+    -H "Content-Type: application/json" \
+    -d "$json_body")"
+  if [[ "$http_code" =~ ^2 ]]; then
+    local run_id
+    run_id="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("run_id",""))' < "$tmp_body" 2>/dev/null || true)"
+    if [[ -n "$run_id" && -n "$run_dir" ]]; then
+      mkdir -p "$run_dir"
+      printf "%s" "$run_id" > "$run_dir/.four_brain_run_id"
+    fi
+    rm -f "$tmp_body"
+    return 0
+  fi
+  echo "[four-brain] dispatch_bar_run failed (HTTP $http_code): $(cat "$tmp_body")" >&2
+  rm -f "$tmp_body"
+  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+}
+
+claim_role_api() {
+  local bar_id="$1"
+  local role="$2"
+  [[ "$FOUR_BRAIN_D1_WRITE" == "off" ]] && return 0
+  if [[ -z "$MC_API_URL" ]]; then
+    echo "[four-brain] MC_API_URL not set; skipping claim_role_api ($role)." >&2
+    [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  fi
+  local run_dir
+  run_dir="$(latest_run_dir "$bar_id" 2>/dev/null || true)"
+  local run_id=""
+  if [[ -n "$run_dir" && -f "$run_dir/.four_brain_run_id" ]]; then
+    run_id="$(cat "$run_dir/.four_brain_run_id")"
+  fi
+  local escaped_bar json_body
+  escaped_bar="$(json_escape "$bar_id")"
+  if [[ -n "$run_id" ]]; then
+    local escaped_run
+    escaped_run="$(json_escape "$run_id")"
+    json_body="{\"bar_id\":$escaped_bar,\"run_id\":$escaped_run}"
+  else
+    json_body="{\"bar_id\":$escaped_bar}"
+  fi
+  local tmp_body http_code
+  tmp_body="$(mktemp)"
+  http_code="$(curl -s -o "$tmp_body" -w "%{http_code}" \
+    -X POST "${MC_API_URL}/four-brain/claim/${role}" \
+    -H "X-API-Key: ${MC_API_KEY:-}" \
+    -H "Content-Type: application/json" \
+    -d "$json_body")"
+  rm -f "$tmp_body"
+  if [[ "$http_code" =~ ^2 ]]; then
+    return 0
+  fi
+  echo "[four-brain] claim_role_api ($role) failed (HTTP $http_code)." >&2
+  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+}
+
+get_run_state() {
+  local bar_id="$1"
+  if [[ -z "$MC_API_URL" ]]; then
+    echo "{}"
+    return 0
+  fi
+  curl -s \
+    -H "X-API-Key: ${MC_API_KEY:-}" \
+    "${MC_API_URL}/four-brain/state/${bar_id}"
+}
+
+write_d1_transition() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local role="$3"
+  local action="$4"
+  local from_status="$5"
+  local to_status="$6"
+  local artifact="${7:-}"
+  local checklist="${8:-}"
+  local status="${9:-done}"
+  local notes="${10:-}"
+  [[ "$FOUR_BRAIN_D1_WRITE" == "off" ]] && return 0
+  if [[ -z "$MC_API_URL" ]]; then
+    echo "[four-brain] MC_API_URL not set; skipping D1 transition write." >&2
+    [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  fi
+  # Map bash action strings to schema-valid enum values
+  local api_action verdict=""
+  case "$action" in
+    start)              api_action="dispatch" ;;
+    approval-check)     api_action="handoff" ;;
+    cli-soft-fail)      api_action="edit" ;;
+    reconcile-pass)     api_action="audit-verdict"; verdict="PASS" ;;
+    reconcile-fail)     api_action="audit-verdict"; verdict="FAIL" ;;
+    handoff|edit|audit-verdict) api_action="$action" ;;
+    *)                  api_action="edit" ;;
+  esac
+  # Auto-detect verdict for audit-verdict if not yet set
+  if [[ "$api_action" == "audit-verdict" && -z "$verdict" ]]; then
+    local verdict_file="$run_dir/AUDIT-VERDICT.md"
+    if [[ -f "$verdict_file" ]]; then
+      local first_line
+      first_line="$(head -n 1 "$verdict_file")"
+      if [[ "$first_line" == *"P=1"* ]]; then
+        verdict="PASS"
+      else
+        verdict="FAIL"
+      fi
+    else
+      verdict="FAIL"
+    fi
+  fi
+  # Read run_id written by dispatch_bar_run; fall back to bar_id
+  local run_id="$bar_id"
+  if [[ -f "$run_dir/.four_brain_run_id" ]]; then
+    run_id="$(cat "$run_dir/.four_brain_run_id")"
+  fi
+  # Compute evidence hash if artifact file exists
+  local evidence_hash=""
+  evidence_hash="$(sha256_file "$artifact")"
+  # Build JSON body using json_escape for all string values
+  local eb er ea enotes eevidence erun
+  eb="$(json_escape "$bar_id")"
+  erun="$(json_escape "$run_id")"
+  ea="$(json_escape "$api_action")"
+  local escaped_role
+  escaped_role="$(json_escape "$role")"
+  enotes="$(json_escape "${notes:-}")"
+  eevidence="$(json_escape "${evidence_hash:-}")"
+  local json_body
+  json_body="{\"bar_id\":$eb,\"run_id\":$erun,\"role\":$escaped_role,\"action\":$ea"
+  json_body="${json_body},\"atlas_sections_consulted\":\"FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070\""
+  if [[ -n "$evidence_hash" ]]; then
+    json_body="${json_body},\"evidence_hash\":$eevidence"
+  fi
+  if [[ -n "$notes" ]]; then
+    json_body="${json_body},\"notes\":$enotes"
+  fi
+  if [[ -n "$verdict" ]]; then
+    json_body="${json_body},\"verdict\":\"$verdict\""
+  fi
+  json_body="${json_body}}"
+  local tmp_body http_code
+  tmp_body="$(mktemp)"
+  http_code="$(curl -s -o "$tmp_body" -w "%{http_code}" \
+    -X POST "${MC_API_URL}/four-brain/transition" \
+    -H "X-API-Key: ${MC_API_KEY:-}" \
+    -H "Content-Type: application/json" \
+    -d "$json_body")"
+  rm -f "$tmp_body"
+  if [[ "$http_code" =~ ^2 ]]; then
+    return 0
+  fi
+  echo "[four-brain] write_d1_transition failed (HTTP $http_code) for $bar_id $role $action." >&2
+  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+}
+
+log_transition() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local role="$3"
+  local action="$4"
+  local from_status="$5"
+  local to_status="$6"
+  local artifact="${7:-}"
+  local checklist="${8:-}"
+  local status="${9:-done}"
+  local notes="${10:-}"
+  local ts hash
+  ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  hash="$(sha256_file "$artifact")"
+  mkdir -p "$run_dir"
+  {
+    printf '{'
+    printf '"timestamp":%s,' "$(json_escape "$ts")"
+    printf '"bar_id":%s,' "$(json_escape "$bar_id")"
+    printf '"run_id":%s,' "$(json_escape "$(basename "$run_dir")")"
+    printf '"process_id":"four-brain",'
+    printf '"subject_id":"processes",'
+    printf '"role":%s,' "$(json_escape "$role")"
+    printf '"action":%s,' "$(json_escape "$action")"
+    printf '"from_status":%s,' "$(json_escape "$from_status")"
+    printf '"to_status":%s,' "$(json_escape "$to_status")"
+    printf '"artifact_path":%s,' "$(json_escape "$artifact")"
+    printf '"checklist_path":%s,' "$(json_escape "$checklist")"
+    printf '"evidence_hash":%s,' "$(json_escape "$hash")"
+    printf '"status":%s,' "$(json_escape "$status")"
+    printf '"notes":%s' "$(json_escape "$notes")"
+    printf '}\n'
+  } >> "$run_dir/TRANSITIONS.jsonl"
+  write_d1_transition "$bar_id" "$run_dir" "$role" "$action" "$from_status" "$to_status" "$artifact" "$checklist" "$status" "$notes"
+}
+
 write_stage_report() {
   local bar_id="$1"
   local status="$2"
@@ -177,6 +476,7 @@ Current status: $status
 | Auditor Prompt | $run_dir/AUDITOR-PROMPT.md |
 | Auditor Raw Output | $run_dir/auditor-output.raw.md |
 | Audit Verdict | $run_dir/AUDIT-VERDICT.md |
+| Transition Log | $run_dir/TRANSITIONS.jsonl |
 | Final Pointer | $OUTBOX/$bar_id/FINAL-PRODUCT.yaml |
 
 ## Review Rule
@@ -235,7 +535,7 @@ Action: $action
 Timestamp: $ts
 
 Process 070 cannot transition this role because live LB&B logging is required
-by FOUR_BRAIN_AVIATION §Y and $LBB_SCRIPT is not executable.
+by FOUR_BRAIN_AVIATION Â§Y and $LBB_SCRIPT is not executable.
 
 For local dry testing only, rerun with --defer-lbb.
 EOF
@@ -296,30 +596,37 @@ write_foreman_prompt() {
   local run_dir="$2"
   local plan_path="$ROOT/docs/plans/$bar_id/PLAN-BOOK.md"
   local prompt="$run_dir/FOREMAN-PROMPT.md"
+  local process_ut_ref four_brain_ref plan_ref dispatch_ref
+  process_ut_ref="$(agent_path "$PROCESS_UT")"
+  four_brain_ref="$(agent_path "$FOUR_BRAIN_YAML")"
+  plan_ref="$(agent_path "$plan_path")"
+  dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
   cat > "$prompt" <<PROMPT
 ROLE: FOREMAN
 PROCESS: 070 Four-Brain
 BAR: $bar_id
 
 You are the Foreman. Your job is routing only.
+Role lock: Foreman = Sonnet/default routing. Do not identify the Foreman as Opus. Opus belongs to Planner only.
 
 Required read set:
-- $PROCESS_UT
-- $FOUR_BRAIN_YAML
-- $plan_path
-- Atlas §6
+- $process_ut_ref
+- $four_brain_ref
+- $plan_ref
+- Atlas Â§6
 - atlas/manifests/paired-artifacts.yaml
 - Plan Book frontispiece
 
 Required output:
-- Write dispatch packet to: $run_dir/FOREMAN-DISPATCH.md
+- Write dispatch packet to: $dispatch_ref
 - Cite Atlas Step 0 sources consulted in the dispatch packet.
+- Dispatch packet must explicitly state: Foreman role: Sonnet/default routing.
 
 Rules:
 - Do not build.
 - Do not audit.
 - Do not dispatch unless the Plan Book is signed and the BAR status is PLAN_BOOK_SIGNED.
-- Sonnet/default routing model is allowed only for routing. Escalate ambiguity to Planner or Opus.
+- Sonnet/default routing model is allowed only for routing. Escalate ambiguity to Planner/Opus, but do not claim Foreman is Opus.
 - Convert the Plan Book into literal, scoped Mechanic work orders.
 - Include allowed write scope, forbidden paths, acceptance criteria, and tests/evidence required.
 - Preserve Mechanic != Auditor.
@@ -333,6 +640,11 @@ write_mechanic_prompt() {
   local bar_id="$1"
   local run_dir="$2"
   local prompt="$run_dir/MECHANIC-PROMPT.md"
+  local process_ut_ref four_brain_ref dispatch_ref output_ref
+  process_ut_ref="$(agent_path "$PROCESS_UT")"
+  four_brain_ref="$(agent_path "$FOUR_BRAIN_YAML")"
+  dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
+  output_ref="$(agent_path "$run_dir/MECHANIC-OUTPUT.md")"
   cat > "$prompt" <<PROMPT
 ROLE: MECHANIC
 PROCESS: 070 Four-Brain
@@ -341,15 +653,15 @@ BAR: $bar_id
 You are the Mechanic. Build only what the Foreman dispatch says.
 
 Required read set:
-- $PROCESS_UT
-- $FOUR_BRAIN_YAML
-- $run_dir/FOREMAN-DISPATCH.md
-- Atlas §4 or §4.5 as applicable
+- $process_ut_ref
+- $four_brain_ref
+- $dispatch_ref
+- Atlas Â§4 or Â§4.5 as applicable
 - Plan Book
 - Spoke frontmatter for every file to be edited
 
 Required output:
-- Write mechanic completion report to: $run_dir/MECHANIC-OUTPUT.md
+- Write mechanic completion report to: $output_ref
 - Cite Atlas Step 0 sources consulted in the mechanic completion report.
 
 Rules:
@@ -358,6 +670,13 @@ Rules:
 - Make file edits only inside the allowed write scope.
 - Run the requested checks if available.
 - Report files changed, tests/checks run, evidence produced, and blockers.
+- Idempotency: BEFORE editing, inspect target files in the allowed write scope.
+  If they ALREADY exist and conform to the dispatch's acceptance criteria
+  (header banner, version, step IDs, structural sections), do NOT redo the
+  work. Verify conformance, then write MECHANIC-OUTPUT.md citing the
+  existing files and the verification you performed, and exit cleanly.
+- Final action MUST be writing the MECHANIC-OUTPUT.md completion report.
+  The runner keys completion on this file's existence.
 PROMPT
   echo "$prompt"
 }
@@ -366,6 +685,13 @@ write_auditor_prompt() {
   local bar_id="$1"
   local run_dir="$2"
   local prompt="$run_dir/AUDITOR-PROMPT.md"
+  local process_ut_ref four_brain_ref plan_ref dispatch_ref mechanic_ref verdict_ref
+  process_ut_ref="$(agent_path "$PROCESS_UT")"
+  four_brain_ref="$(agent_path "$FOUR_BRAIN_YAML")"
+  plan_ref="$(agent_path "$ROOT/docs/plans/$bar_id/PLAN-BOOK.md")"
+  dispatch_ref="$(agent_path "$run_dir/FOREMAN-DISPATCH.md")"
+  mechanic_ref="$(agent_path "$run_dir/MECHANIC-OUTPUT.md")"
+  verdict_ref="$(agent_path "$run_dir/AUDIT-VERDICT.md")"
   cat > "$prompt" <<PROMPT
 ROLE: AUDITOR
 PROCESS: 070 Four-Brain
@@ -374,15 +700,15 @@ BAR: $bar_id
 You are the Auditor. Inspect work you did not build.
 
 Required read set:
-- $PROCESS_UT
-- $FOUR_BRAIN_YAML
-- $ROOT/docs/plans/$bar_id/PLAN-BOOK.md
-- $run_dir/FOREMAN-DISPATCH.md
-- $run_dir/MECHANIC-OUTPUT.md
+- $process_ut_ref
+- $four_brain_ref
+- $plan_ref
+- $dispatch_ref
+- $mechanic_ref
 - atlas/manifests/four-brain-doctrine-gate.yaml
 
 Required output:
-- Write audit verdict to: $run_dir/AUDIT-VERDICT.md
+- Write audit verdict to: $verdict_ref
 - Cite the gate spec consulted.
 
 Rules:
@@ -405,6 +731,283 @@ update_status() {
     echo "Expected status $from in $file" >&2
     return 1
   fi
+}
+
+check_line() {
+  local ok="$1"
+  local text="$2"
+  if [[ "$ok" == "true" ]]; then
+    echo "- [x] $text"
+  else
+    echo "- [ ] $text"
+  fi
+}
+
+sign_plan_book_gate() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local plan="$ROOT/docs/plans/$bar_id/PLAN-BOOK.md"
+  local signer="${FOUR_BRAIN_SIGNER:-Dave Barton}"
+  local signed_at="${FOUR_BRAIN_SIGNED_AT:-$(date -u +"%Y-%m-%d")}"
+  local checklist="$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md"
+  local failed="false"
+
+  mkdir -p "$run_dir"
+
+  local exists="false"
+  local top_status_ready="false"
+  local dc_status_ready="false"
+  local has_handoff="false"
+  local has_mechanic_dispatch="false"
+  local has_auditor_packet="false"
+  local has_p1="false"
+  local has_stop_conditions="false"
+  local has_open_blockers="false"
+  local has_dmj_default_yes="false"
+
+  [[ -f "$plan" ]] && exists="true"
+  if [[ "$exists" == "true" ]]; then
+    grep -q '^\*\*Status:\*\* READY-FOR-FOREMAN' "$plan" && top_status_ready="true"
+    grep -q '| Status | READY-FOR-FOREMAN |' "$plan" && dc_status_ready="true"
+    grep -q '## .*HANDOFF' "$plan" && has_handoff="true"
+    grep -q 'MECHANIC DISPATCH REQUIREMENTS' "$plan" && has_mechanic_dispatch="true"
+    grep -q 'AUDITOR PACKET' "$plan" && has_auditor_packet="true"
+    grep -q 'P=1 DEFINITION' "$plan" && has_p1="true"
+    grep -q 'STOP CONDITIONS' "$plan" && has_stop_conditions="true"
+    grep -q 'OPEN BLOCKERS / SOVEREIGN DECISIONS' "$plan" && has_open_blockers="true"
+    grep -q 'Q-01.*DMJ.*new process number.*YES' "$plan" && has_dmj_default_yes="true"
+  fi
+
+  for ok in "$exists" "$top_status_ready" "$dc_status_ready" "$has_handoff" "$has_mechanic_dispatch" "$has_auditor_packet" "$has_p1" "$has_stop_conditions" "$has_open_blockers" "$has_dmj_default_yes"; do
+    [[ "$ok" == "true" ]] || failed="true"
+  done
+
+  cat > "$checklist" <<EOF
+# Approval Checklist: PLAN_BOOK_SIGNED
+
+BAR: $bar_id
+Reviewer: $signer
+Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Plan Book: $plan
+
+## Dispatchability Checks
+
+$(check_line "$exists" "Plan Book artifact exists.")
+$(check_line "$top_status_ready" "Plan Book front-matter status is READY-FOR-FOREMAN before signing.")
+$(check_line "$dc_status_ready" "Document Control status is READY-FOR-FOREMAN before signing.")
+$(check_line "$has_handoff" "Plan Book has a Handoff section.")
+$(check_line "$has_mechanic_dispatch" "Plan Book contains Mechanic dispatch requirements.")
+$(check_line "$has_auditor_packet" "Plan Book contains Auditor packet requirements.")
+$(check_line "$has_p1" "Plan Book contains P=1 definition.")
+$(check_line "$has_stop_conditions" "Plan Book contains stop conditions.")
+$(check_line "$has_open_blockers" "Plan Book exposes open blockers / sovereign decisions.")
+$(check_line "$has_dmj_default_yes" "DMJ separate-process default is present for sovereign approval.")
+
+## Sovereign Approval Checks
+
+- [x] Approval command explicitly requested transition REVIEW_PLAN_BOOK -> PLAN_BOOK_SIGNED.
+- [x] Q-01 accepted at approval time: downstream DMJ gets a separate process number; PROC-060 emits DMJ-ready evidence only.
+- [x] Runtime wiring remains follow-on BAR unless separately assigned.
+
+EOF
+
+  if [[ "$failed" == "true" ]]; then
+    {
+      echo "## Verdict"
+      echo
+      echo "BLOCKED: one or more required checkboxes failed. Plan Book was not signed."
+    } >> "$checklist"
+    echo "Plan Book approval checklist failed: $checklist" >&2
+    return 1
+  fi
+
+  {
+    echo "## Verdict"
+    echo
+    echo "PASS: all required checkboxes passed. Signing Plan Book artifact."
+  } >> "$checklist"
+
+  perl -0pi -e 's/^\*\*Status:\*\* READY-FOR-FOREMAN/**Status:** PLAN_BOOK_SIGNED/m' "$plan"
+  perl -0pi -e 's/\| Q-01 \| Should downstream DMJ receive a new process number separate from PROC-060\? \| open \| \*\*YES\*\* .+?\|/| Q-01 | Should downstream DMJ receive a new process number separate from PROC-060? | confirmed | **YES** - Downstream DMJ gets a separate process number; PROC-060 emits DMJ-ready evidence but the convergence engine lives in its own process. |/s' "$plan"
+  perl -0pi -e 's/\| Downstream DMJ should get its own PROC number \| \*\*ASSUMPTION\*\* \| Sovereign confirmation pending \(Q-01\) \|/| Downstream DMJ should get its own PROC number | **FACT** | Sovereign confirmed by PLAN_BOOK_SIGNED approval checklist. |/' "$plan"
+  perl -0pi -e 's/\| Runtime wiring belongs to follow-on BAR \| \*\*ASSUMPTION\*\* \| Sovereign confirmation pending \(Q-03\) \|/| Runtime wiring belongs to follow-on BAR | **ASSUMPTION** | Foreman may preserve follow-on BAR placeholder unless sovereign assigns BAR id. |/' "$plan"
+  perl -0pi -e 's/\| Status \| READY-FOR-FOREMAN \|/| Status | PLAN_BOOK_SIGNED |/' "$plan"
+  perl -0pi -e 's/\| Authority \| Dave Barton \(sovereign .+? signs at BAR open\) \|/| Authority | Dave Barton (sovereign - signed at BAR open) |/' "$plan"
+  if ! grep -q '| Signed By |' "$plan"; then
+    perl -0pi -e "s/\\| Authority \\| Dave Barton \\(sovereign - signed at BAR open\\) \\|/| Authority | Dave Barton (sovereign - signed at BAR open) |\\n| Signed By | $signer - $signed_at |/" "$plan"
+  fi
+
+  echo "$checklist"
+}
+
+approve_foreman_dispatch_gate() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local dispatch="$run_dir/FOREMAN-DISPATCH.md"
+  local checklist="$run_dir/APPROVAL-CHECKLIST-FOREMAN_DISPATCHED.md"
+  local failed="false"
+
+  local exists="false"
+  local not_blocked="false"
+  local has_atlas="false"
+  local has_mechanic="false"
+  local has_write_scope="false"
+  local has_forbidden="false"
+  local has_work_orders="false"
+  local has_acceptance="false"
+  local preserves_aviation="false"
+  local no_foreman_build="false"
+  local foreman_role_sonnet="false"
+  local foreman_role_not_opus="false"
+
+  [[ -f "$dispatch" ]] && exists="true"
+  if [[ "$exists" == "true" ]]; then
+    ! grep -q 'DISPATCH STATUS: BLOCKED' "$dispatch" && not_blocked="true"
+    grep -qi 'ATLAS STEP 0\|atlas' "$dispatch" && has_atlas="true"
+    grep -qi 'Mechanic' "$dispatch" && has_mechanic="true"
+    grep -qi 'WRITE SCOPE\|Allowed.*scope' "$dispatch" && has_write_scope="true"
+    grep -qi 'FORBIDDEN\|Do not modify\|No other file' "$dispatch" && has_forbidden="true"
+    grep -qi 'WORK ORDERS\|WO-0' "$dispatch" && has_work_orders="true"
+    grep -qi 'ACCEPTANCE\|P=1\|evidence' "$dispatch" && has_acceptance="true"
+    grep -qi 'Mechanic.*Auditor\|Auditor.*Mechanic\|different engine' "$dispatch" && preserves_aviation="true"
+    ! grep -qiE 'Foreman (must |should |will )?(build|edit|fix code)|Foreman.*using the Write tool' "$dispatch" && no_foreman_build="true"
+    grep -qiE '^\*\*Foreman role:\*\*.*Sonnet|Foreman role.*Sonnet/default routing' "$dispatch" && foreman_role_sonnet="true"
+    ! grep -qiE '^\*\*Foreman role:\*\*.*Opus' "$dispatch" && foreman_role_not_opus="true"
+  fi
+
+  for ok in "$exists" "$not_blocked" "$has_atlas" "$has_mechanic" "$has_write_scope" "$has_forbidden" "$has_work_orders" "$has_acceptance" "$preserves_aviation" "$no_foreman_build" "$foreman_role_sonnet" "$foreman_role_not_opus"; do
+    [[ "$ok" == "true" ]] || failed="true"
+  done
+
+  cat > "$checklist" <<EOF
+# Approval Checklist: FOREMAN_DISPATCHED
+
+BAR: $bar_id
+Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Foreman Dispatch: $dispatch
+
+## Foreman -> Mechanic Gate
+
+$(check_line "$exists" "Foreman dispatch artifact exists.")
+$(check_line "$not_blocked" "Foreman dispatch is not marked BLOCKED.")
+$(check_line "$has_atlas" "Dispatch cites Atlas / Step 0 sources.")
+$(check_line "$has_mechanic" "Dispatch is addressed to Mechanic.")
+$(check_line "$has_write_scope" "Dispatch states allowed write scope.")
+$(check_line "$has_forbidden" "Dispatch states forbidden paths / constraints.")
+$(check_line "$has_work_orders" "Dispatch contains literal work orders.")
+$(check_line "$has_acceptance" "Dispatch contains acceptance criteria or evidence gates.")
+$(check_line "$preserves_aviation" "Dispatch preserves Mechanic != Auditor separation.")
+$(check_line "$no_foreman_build" "Dispatch does not make Foreman the builder.")
+$(check_line "$foreman_role_sonnet" "Dispatch states Foreman role is Sonnet/default routing.")
+$(check_line "$foreman_role_not_opus" "Dispatch does not identify Foreman as Opus.")
+
+EOF
+
+  if [[ "$failed" == "true" ]]; then
+    {
+      echo "## Verdict"
+      echo
+      echo "BLOCKED: Foreman dispatch is not approved for Mechanic."
+    } >> "$checklist"
+    echo "Foreman dispatch approval checklist failed: $checklist" >&2
+    return 1
+  fi
+
+  {
+    echo "## Verdict"
+    echo
+    echo "PASS: Foreman dispatch is approved for Mechanic."
+  } >> "$checklist"
+
+  echo "$checklist"
+}
+
+approve_mechanic_output_gate() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local output="$run_dir/MECHANIC-OUTPUT.md"
+  local dispatch="$run_dir/FOREMAN-DISPATCH.md"
+  local process_ut="$ROOT/factory/imo-creator/060-run-dyno/PROCESS-UT.md"
+  local workflow="$ROOT/factory/imo-creator/060-run-dyno/run-dyno.yaml"
+  local checklist="$run_dir/APPROVAL-CHECKLIST-MECHANIC_DONE.md"
+  local failed="false"
+
+  local output_exists="false"
+  local dispatch_exists="false"
+  local process_exists="false"
+  local workflow_exists="false"
+  local has_files_changed="false"
+  local has_tests="false"
+  local has_no_self_audit="false"
+  local has_plan_ref="false"
+  local has_step_spine="false"
+  local locked_engine_clean="true"
+
+  [[ -f "$output" ]] && output_exists="true"
+  [[ -f "$dispatch" ]] && dispatch_exists="true"
+  [[ -f "$process_ut" ]] && process_exists="true"
+  [[ -f "$workflow" ]] && workflow_exists="true"
+  if [[ "$output_exists" == "true" ]]; then
+    grep -qi 'Files changed\|Changed files\|PROCESS-UT.md\|run-dyno.yaml' "$output" && has_files_changed="true"
+    grep -qi 'Tests run\|Validation\|Verified\|syntax' "$output" && has_tests="true"
+    grep -qi 'Do not audit\|not audit\|Auditor\|hand.*Codex' "$output" && has_no_self_audit="true"
+    grep -qi 'Plan Book\|PLAN-BOOK.md' "$output" && has_plan_ref="true"
+  fi
+  if [[ "$process_exists" == "true" && "$workflow_exists" == "true" ]]; then
+    grep -q 'FCE-00' "$process_ut" && grep -q 'FCE-14' "$process_ut" && grep -q 'FCE-00' "$workflow" && grep -q 'FCE-14' "$workflow" && has_step_spine="true"
+  fi
+
+  # If sibling blueprint repo is present, verify locked engine files were not changed.
+  if [[ -d "$ROOT/../dyno-engine" ]]; then
+    if ! git -C "$ROOT/../dyno-engine" diff --quiet -- engine/us.py engine/up.py 2>/dev/null; then
+      locked_engine_clean="false"
+    fi
+  fi
+
+  for ok in "$output_exists" "$dispatch_exists" "$process_exists" "$workflow_exists" "$has_files_changed" "$has_tests" "$has_no_self_audit" "$has_plan_ref" "$has_step_spine" "$locked_engine_clean"; do
+    [[ "$ok" == "true" ]] || failed="true"
+  done
+
+  cat > "$checklist" <<EOF
+# Approval Checklist: MECHANIC_DONE
+
+BAR: $bar_id
+Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Mechanic Output: $output
+Foreman Dispatch: $dispatch
+
+## Mechanic -> Auditor Gate
+
+$(check_line "$output_exists" "Mechanic output artifact exists.")
+$(check_line "$dispatch_exists" "Foreman dispatch artifact exists for comparison.")
+$(check_line "$process_exists" "PROC-060 PROCESS-UT.md exists.")
+$(check_line "$workflow_exists" "PROC-060 companion workflow YAML exists.")
+$(check_line "$has_files_changed" "Mechanic output lists changed files.")
+$(check_line "$has_tests" "Mechanic output reports tests or validation.")
+$(check_line "$has_no_self_audit" "Mechanic output preserves Auditor handoff / no self-audit.")
+$(check_line "$has_plan_ref" "Mechanic output references the Plan Book.")
+$(check_line "$has_step_spine" "Both PROC-060 artifacts contain FCE-00 through FCE-14 spine endpoints.")
+$(check_line "$locked_engine_clean" "Locked us.py/up.py files are clean when blueprint repo is present.")
+
+EOF
+
+  if [[ "$failed" == "true" ]]; then
+    {
+      echo "## Verdict"
+      echo
+      echo "BLOCKED: Mechanic output is not approved for Auditor."
+    } >> "$checklist"
+    echo "Mechanic output approval checklist failed: $checklist" >&2
+    return 1
+  fi
+
+  {
+    echo "## Verdict"
+    echo
+    echo "PASS: Mechanic output is approved for Auditor."
+  } >> "$checklist"
+
+  echo "$checklist"
 }
 
 write_final_pointer() {
@@ -444,14 +1047,33 @@ run_claude_cli() {
   local model="$1"
   local prompt="$2"
   local output="$3"
-  claude --print --model "$model" --permission-mode acceptEdits --add-dir "$ROOT" < "$prompt" > "$output"
+  if command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+    local prompt_win root_win output_win
+    prompt_win="$(cygpath -w "$prompt")"
+    root_win="$(cygpath -w "$ROOT")"
+    output_win="$(cygpath -w "$output")"
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "\
+\$ErrorActionPreference = 'Stop'; \
+Remove-Item Env:\ANTHROPIC_API_KEY -ErrorAction SilentlyContinue; \
+Remove-Item Env:\ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue; \
+\$env:CLAUDE_CODE_GIT_BASH_PATH = 'C:\Program Files\Git\bin\bash.exe'; \
+\$promptText = Get-Content -Raw -LiteralPath '$(ps_escape "$prompt_win")'; \
+\$result = \$promptText | & '$(ps_escape "$CLAUDE_CODE_PS1")' --print --model '$(ps_escape "$model")' --permission-mode acceptEdits --add-dir '$(ps_escape "$root_win")'; \
+\$code = \$LASTEXITCODE; \
+if (\$null -ne \$result) { \$result | Set-Content -LiteralPath '$(ps_escape "$output_win")' -NoNewline; } \
+exit \$code"
+  else
+    claude --print --model "$model" --permission-mode acceptEdits --add-dir "$ROOT" < "$prompt" > "$output"
+  fi
 }
 
 run_codex_cli() {
   local model="$1"
   local prompt="$2"
   local output="$3"
-  codex exec --cd "$ROOT" --sandbox danger-full-access --ask-for-approval never --model "$model" "$(cat "$prompt")" > "$output"
+  local rc=0
+  codex exec --cd "$ROOT" --sandbox danger-full-access --ask-for-approval never --model "$model" "$(cat "$prompt")" > "$output" || rc=$?
+  return "$rc"
 }
 
 run_once() {
@@ -523,9 +1145,16 @@ run_once() {
         return 1
       fi
       if [[ "$auto_continue" == "true" ]]; then
+        if ! sign_plan_book_gate "$bar_id" "$run_dir" > "$run_dir/approval-checklist-plan-book-path.txt"; then
+          log_transition "$bar_id" "$run_dir" "planner" "approval-check" "PLANNER_RUNNING" "BLOCKED" "$plan_path" "$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md" "blocked" "Plan Book approval checklist failed."
+          update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
+          return 1
+        fi
         update_status "$intake_yaml" "PLANNER_RUNNING" "PLAN_BOOK_SIGNED"
+        log_transition "$bar_id" "$run_dir" "planner" "approval-check" "PLANNER_RUNNING" "PLAN_BOOK_SIGNED" "$plan_path" "$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md" "done" "Auto-continue signed Plan Book after checklist pass."
       else
         update_status "$intake_yaml" "PLANNER_RUNNING" "REVIEW_PLAN_BOOK"
+        log_transition "$bar_id" "$run_dir" "planner" "dispatch" "PLANNER_RUNNING" "REVIEW_PLAN_BOOK" "$plan_path" "" "done" "Planner produced Plan Book; review required."
       fi
       write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
       write_final_pointer "$bar_id" "$(current_status "$bar_id")" "$plan_path" "$run_dir" > "$run_dir/final-product-pointer.txt"
@@ -572,27 +1201,39 @@ run_foreman() {
     echo "$prompt"
     return 0
   fi
+  local cur_status
+  cur_status="$(current_status "$bar_id")"
+  if [[ "$cur_status" == "FOREMAN_RUNNING" ]]; then
+    echo "BAR is already FOREMAN_RUNNING. Use 'reconcile $bar_id' to recover, or wait." >&2
+    return 2
+  fi
+  archive_stale_artifact "$run_dir/FOREMAN-DISPATCH.md"
   update_status "$intake_yaml" "PLAN_BOOK_SIGNED" "FOREMAN_RUNNING"
-  if run_claude_cli "$foreman_model" "$prompt" "$run_dir/foreman-output.md"; then
-    if [[ -f "$run_dir/FOREMAN-DISPATCH.md" ]]; then
-      if ! write_lbb_transition "$bar_id" "foreman" "handoff" "$run_dir" "$defer_lbb" > "$run_dir/lbb-foreman-path.txt"; then
-        update_status "$intake_yaml" "FOREMAN_RUNNING" "BLOCKED"
-        return 1
-      fi
-      if [[ "$auto_continue" == "true" ]]; then
-        update_status "$intake_yaml" "FOREMAN_RUNNING" "FOREMAN_DISPATCHED"
-      else
-        update_status "$intake_yaml" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH"
-      fi
-      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
-      echo "$run_dir/FOREMAN-DISPATCH.md"
-    else
+  claim_role_api "$bar_id" "foreman"
+  log_transition "$bar_id" "$run_dir" "foreman" "start" "PLAN_BOOK_SIGNED" "FOREMAN_RUNNING" "$prompt" "" "done" "Foreman stage started."
+  local cli_rc=0
+  run_claude_cli "$foreman_model" "$prompt" "$run_dir/foreman-output.md" || cli_rc=$?
+  if [[ -f "$run_dir/FOREMAN-DISPATCH.md" ]]; then
+    if [[ "$cli_rc" -ne 0 ]]; then
+      log_transition "$bar_id" "$run_dir" "foreman" "cli-soft-fail" "FOREMAN_RUNNING" "FOREMAN_RUNNING" "$run_dir/foreman-output.md" "" "done" "CLI rc=$cli_rc but dispatch artifact exists; proceeding."
+    fi
+    if ! write_lbb_transition "$bar_id" "foreman" "handoff" "$run_dir" "$defer_lbb" > "$run_dir/lbb-foreman-path.txt"; then
       update_status "$intake_yaml" "FOREMAN_RUNNING" "BLOCKED"
-      echo "Foreman completed but did not create dispatch: $run_dir/FOREMAN-DISPATCH.md" >&2
       return 1
     fi
+    if [[ "$auto_continue" == "true" ]]; then
+      update_status "$intake_yaml" "FOREMAN_RUNNING" "FOREMAN_DISPATCHED"
+      log_transition "$bar_id" "$run_dir" "foreman" "handoff" "FOREMAN_RUNNING" "FOREMAN_DISPATCHED" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Foreman dispatch produced; auto-continue."
+    else
+      update_status "$intake_yaml" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH"
+      log_transition "$bar_id" "$run_dir" "foreman" "handoff" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Foreman dispatch produced; review required."
+    fi
+    write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+    echo "$run_dir/FOREMAN-DISPATCH.md"
   else
     update_status "$intake_yaml" "FOREMAN_RUNNING" "BLOCKED"
+    log_transition "$bar_id" "$run_dir" "foreman" "handoff" "FOREMAN_RUNNING" "BLOCKED" "$run_dir/foreman-output.md" "" "failed" "Foreman produced no FOREMAN-DISPATCH.md (cli rc=$cli_rc)."
+    echo "Foreman produced no dispatch: $run_dir/FOREMAN-DISPATCH.md (cli rc=$cli_rc)" >&2
     return 1
   fi
 }
@@ -627,27 +1268,39 @@ run_mechanic() {
     echo "$prompt"
     return 0
   fi
+  local cur_status
+  cur_status="$(current_status "$bar_id")"
+  if [[ "$cur_status" == "MECHANIC_RUNNING" ]]; then
+    echo "BAR is already MECHANIC_RUNNING. Use 'reconcile $bar_id' to recover, or wait." >&2
+    return 2
+  fi
+  archive_stale_artifact "$run_dir/MECHANIC-OUTPUT.md"
   update_status "$intake_yaml" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING"
-  if run_claude_cli "$mechanic_model" "$prompt" "$run_dir/mechanic-output.raw.md"; then
-    if [[ -f "$run_dir/MECHANIC-OUTPUT.md" ]]; then
-      if ! write_lbb_transition "$bar_id" "mechanic" "edit" "$run_dir" "$defer_lbb" > "$run_dir/lbb-mechanic-path.txt"; then
-        update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
-        return 1
-      fi
-      if [[ "$auto_continue" == "true" ]]; then
-        update_status "$intake_yaml" "MECHANIC_RUNNING" "MECHANIC_DONE"
-      else
-        update_status "$intake_yaml" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT"
-      fi
-      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
-      echo "$run_dir/MECHANIC-OUTPUT.md"
-    else
+  claim_role_api "$bar_id" "mechanic"
+  log_transition "$bar_id" "$run_dir" "mechanic" "start" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING" "$prompt" "" "done" "Mechanic stage started."
+  local cli_rc=0
+  run_claude_cli "$mechanic_model" "$prompt" "$run_dir/mechanic-output.raw.md" || cli_rc=$?
+  if [[ -f "$run_dir/MECHANIC-OUTPUT.md" ]]; then
+    if [[ "$cli_rc" -ne 0 ]]; then
+      log_transition "$bar_id" "$run_dir" "mechanic" "cli-soft-fail" "MECHANIC_RUNNING" "MECHANIC_RUNNING" "$run_dir/mechanic-output.raw.md" "" "done" "CLI rc=$cli_rc but mechanic output artifact exists; proceeding."
+    fi
+    if ! write_lbb_transition "$bar_id" "mechanic" "edit" "$run_dir" "$defer_lbb" > "$run_dir/lbb-mechanic-path.txt"; then
       update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
-      echo "Mechanic completed but did not create output: $run_dir/MECHANIC-OUTPUT.md" >&2
       return 1
     fi
+    if [[ "$auto_continue" == "true" ]]; then
+      update_status "$intake_yaml" "MECHANIC_RUNNING" "MECHANIC_DONE"
+      log_transition "$bar_id" "$run_dir" "mechanic" "edit" "MECHANIC_RUNNING" "MECHANIC_DONE" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Mechanic output produced; auto-continue."
+    else
+      update_status "$intake_yaml" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT"
+      log_transition "$bar_id" "$run_dir" "mechanic" "edit" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Mechanic output produced; review required."
+    fi
+    write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+    echo "$run_dir/MECHANIC-OUTPUT.md"
   else
     update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
+    log_transition "$bar_id" "$run_dir" "mechanic" "edit" "MECHANIC_RUNNING" "BLOCKED" "$run_dir/mechanic-output.raw.md" "" "failed" "Mechanic produced no MECHANIC-OUTPUT.md (cli rc=$cli_rc)."
+    echo "Mechanic produced no output: $run_dir/MECHANIC-OUTPUT.md (cli rc=$cli_rc)" >&2
     return 1
   fi
 }
@@ -680,30 +1333,185 @@ run_auditor() {
     echo "$prompt"
     return 0
   fi
+  local cur_status
+  cur_status="$(current_status "$bar_id")"
+  if [[ "$cur_status" == "AUDITOR_RUNNING" ]]; then
+    echo "BAR is already AUDITOR_RUNNING. Use 'reconcile $bar_id' to recover when AUDIT-VERDICT.md exists, or 'recover $bar_id --force' if no live agent is writing." >&2
+    return 2
+  fi
+  archive_stale_artifact "$run_dir/AUDIT-VERDICT.md"
   update_status "$intake_yaml" "MECHANIC_DONE" "AUDITOR_RUNNING"
-  if run_codex_cli "$auditor_model" "$prompt" "$run_dir/auditor-output.raw.md"; then
-    if [[ -f "$run_dir/AUDIT-VERDICT.md" ]] && head -n 1 "$run_dir/AUDIT-VERDICT.md" | grep -q "VERDICT: P=1"; then
+  claim_role_api "$bar_id" "auditor"
+  log_transition "$bar_id" "$run_dir" "auditor" "start" "MECHANIC_DONE" "AUDITOR_RUNNING" "$prompt" "" "done" "Auditor stage started."
+  local cli_rc=0
+  run_codex_cli "$auditor_model" "$prompt" "$run_dir/auditor-output.raw.md" || cli_rc=$?
+  if [[ -f "$run_dir/AUDIT-VERDICT.md" ]]; then
+    if [[ "$cli_rc" -ne 0 ]]; then
+      log_transition "$bar_id" "$run_dir" "auditor" "cli-soft-fail" "AUDITOR_RUNNING" "AUDITOR_RUNNING" "$run_dir/auditor-output.raw.md" "" "done" "Codex rc=$cli_rc but AUDIT-VERDICT.md exists; proceeding."
+    fi
+    if head -n 1 "$run_dir/AUDIT-VERDICT.md" | grep -q "VERDICT: P=1"; then
       if ! write_lbb_transition "$bar_id" "auditor" "audit-verdict" "$run_dir" "$defer_lbb" > "$run_dir/lbb-auditor-path.txt"; then
         update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
         return 1
       fi
       update_status "$intake_yaml" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT"
+      log_transition "$bar_id" "$run_dir" "auditor" "audit-verdict" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT" "$run_dir/AUDIT-VERDICT.md" "" "done" "Auditor returned P=1; review required."
       write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
       write_final_pointer "$bar_id" "$(current_status "$bar_id")" "$run_dir/AUDIT-VERDICT.md" "$run_dir" > "$run_dir/final-product-pointer.txt"
       echo "$run_dir/AUDIT-VERDICT.md"
-    elif [[ -f "$run_dir/AUDIT-VERDICT.md" ]]; then
-      update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
-      echo "$run_dir/AUDIT-VERDICT.md"
-      return 1
     else
       update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
-      echo "Auditor completed but did not create verdict: $run_dir/AUDIT-VERDICT.md" >&2
+      log_transition "$bar_id" "$run_dir" "auditor" "audit-verdict" "AUDITOR_RUNNING" "BLOCKED" "$run_dir/AUDIT-VERDICT.md" "" "blocked" "Auditor returned non-P=1 verdict."
+      echo "$run_dir/AUDIT-VERDICT.md"
       return 1
     fi
   else
     update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
+    log_transition "$bar_id" "$run_dir" "auditor" "audit-verdict" "AUDITOR_RUNNING" "BLOCKED" "$run_dir/auditor-output.raw.md" "" "failed" "Auditor produced no AUDIT-VERDICT.md (codex rc=$cli_rc)."
+    echo "Auditor produced no verdict: $run_dir/AUDIT-VERDICT.md (codex rc=$cli_rc)" >&2
     return 1
   fi
+}
+
+reconcile_bar() {
+  local bar_id="$1"
+  local defer_lbb="false"
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --defer-lbb) defer_lbb="true"; shift ;;
+      *) echo "Unknown reconcile option: $1" >&2; exit 2 ;;
+    esac
+  done
+  require_bar_id "$bar_id"
+  local intake_yaml="$INBOX/$bar_id/planner-intake.yaml"
+  local run_dir
+  run_dir="$(latest_run_dir "$bar_id")"
+  if [[ -z "$run_dir" ]]; then
+    echo "No run dir found for $bar_id" >&2
+    return 1
+  fi
+  local status
+  status="$(current_status "$bar_id")"
+  case "$status" in
+    FOREMAN_RUNNING)
+      if [[ ! -f "$run_dir/FOREMAN-DISPATCH.md" ]]; then
+        echo "No FOREMAN-DISPATCH.md to reconcile for $bar_id" >&2
+        return 1
+      fi
+      if ! write_lbb_transition "$bar_id" "foreman" "handoff" "$run_dir" "$defer_lbb" > "$run_dir/lbb-foreman-path.txt"; then
+        update_status "$intake_yaml" "FOREMAN_RUNNING" "BLOCKED"
+        return 1
+      fi
+      update_status "$intake_yaml" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH"
+      log_transition "$bar_id" "$run_dir" "foreman" "reconcile" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Reconciled from interrupted Foreman run."
+      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+      ;;
+    MECHANIC_RUNNING)
+      if [[ ! -f "$run_dir/MECHANIC-OUTPUT.md" ]]; then
+        echo "No MECHANIC-OUTPUT.md to reconcile for $bar_id" >&2
+        return 1
+      fi
+      if ! write_lbb_transition "$bar_id" "mechanic" "edit" "$run_dir" "$defer_lbb" > "$run_dir/lbb-mechanic-path.txt"; then
+        update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
+        return 1
+      fi
+      update_status "$intake_yaml" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT"
+      log_transition "$bar_id" "$run_dir" "mechanic" "reconcile" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Reconciled from interrupted Mechanic run."
+      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+      ;;
+    AUDITOR_RUNNING)
+      if [[ ! -f "$run_dir/AUDIT-VERDICT.md" ]]; then
+        echo "No AUDIT-VERDICT.md to reconcile for $bar_id" >&2
+        return 1
+      fi
+      if head -n 1 "$run_dir/AUDIT-VERDICT.md" | grep -q "VERDICT: P=1"; then
+        if ! write_lbb_transition "$bar_id" "auditor" "audit-verdict" "$run_dir" "$defer_lbb" > "$run_dir/lbb-auditor-path.txt"; then
+          update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
+          return 1
+        fi
+        update_status "$intake_yaml" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT"
+        log_transition "$bar_id" "$run_dir" "auditor" "reconcile" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT" "$run_dir/AUDIT-VERDICT.md" "" "done" "Reconciled from interrupted Auditor run."
+      else
+        update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
+        log_transition "$bar_id" "$run_dir" "auditor" "reconcile" "AUDITOR_RUNNING" "BLOCKED" "$run_dir/AUDIT-VERDICT.md" "" "blocked" "Reconciled Auditor run with non-P=1 verdict."
+        return 1
+      fi
+      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+      ;;
+    *)
+      echo "Nothing to reconcile for $bar_id (status=$status)"
+      return 0
+      ;;
+  esac
+  review_bar "$bar_id"
+}
+
+recover_bar() {
+  local bar_id="$1"
+  local force="false"
+  local defer_lbb="false"
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --force) force="true"; shift ;;
+      --defer-lbb) defer_lbb="true"; shift ;;
+      *) echo "Unknown recover option: $1" >&2; exit 2 ;;
+    esac
+  done
+  require_bar_id "$bar_id"
+  local intake_yaml="$INBOX/$bar_id/planner-intake.yaml"
+  local run_dir
+  run_dir="$(latest_run_dir "$bar_id")"
+  if [[ -z "$run_dir" ]]; then
+    echo "No run dir found for $bar_id" >&2
+    return 1
+  fi
+  local status
+  status="$(current_status "$bar_id")"
+  local artifact prev_status role
+  case "$status" in
+    FOREMAN_RUNNING)
+      artifact="$run_dir/FOREMAN-DISPATCH.md"
+      prev_status="PLAN_BOOK_SIGNED"
+      role="foreman"
+      ;;
+    MECHANIC_RUNNING)
+      artifact="$run_dir/MECHANIC-OUTPUT.md"
+      prev_status="FOREMAN_DISPATCHED"
+      role="mechanic"
+      ;;
+    AUDITOR_RUNNING)
+      artifact="$run_dir/AUDIT-VERDICT.md"
+      prev_status="MECHANIC_DONE"
+      role="auditor"
+      ;;
+    *)
+      echo "recover only acts on *_RUNNING statuses; current=$status" >&2
+      echo "If status is REVIEW_*, run approve. If artifact exists for a *_RUNNING status, run reconcile instead." >&2
+      return 0
+      ;;
+  esac
+  if [[ -f "$artifact" ]]; then
+    echo "Artifact exists: $artifact" >&2
+    echo "Run 'reconcile $bar_id' instead of recover. recover is for the missing-artifact case only." >&2
+    return 1
+  fi
+  if [[ "$force" != "true" ]]; then
+    echo "BAR is $status with no $artifact." >&2
+    echo "Before forcing rollback, confirm no live agent is writing to:" >&2
+    echo "  $run_dir" >&2
+    echo "If you have confirmed, rerun: forebrain-garage.sh recover $bar_id --force" >&2
+    return 2
+  fi
+  archive_stale_artifact "$artifact"
+  update_status "$intake_yaml" "$status" "$prev_status"
+  log_transition "$bar_id" "$run_dir" "$role" "recover" "$status" "$prev_status" "" "" "done" "Forced rollback: $status -> $prev_status (no $artifact present)."
+  if ! write_lbb_transition "$bar_id" "$role" "recover" "$run_dir" "$defer_lbb" > "$run_dir/lbb-$role-recover-path.txt" 2>/dev/null; then
+    echo "LBB transition write skipped or unavailable; continuing." >&2
+  fi
+  write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+  echo "Recovered $bar_id: $status -> $prev_status. You may now re-run the $role stage."
 }
 
 run_pipeline() {
@@ -772,10 +1580,32 @@ approve_bar() {
   fi
   local intake_yaml="$INBOX/$bar_id/planner-intake.yaml"
   local status
+  local run_dir
   status="$(current_status "$bar_id")"
+  run_dir="$(latest_run_dir "$bar_id")"
+  if [[ -z "$run_dir" ]]; then
+    run_dir="$RUNS/$bar_id/$(date -u +"%Y%m%dT%H%M%SZ")"
+    mkdir -p "$run_dir"
+  fi
   case "$status:$next_status" in
-    REVIEW_PLAN_BOOK:PLAN_BOOK_SIGNED|REVIEW_FOREMAN_DISPATCH:FOREMAN_DISPATCHED|REVIEW_MECHANIC_OUTPUT:MECHANIC_DONE|REVIEW_AUDIT_VERDICT:CLOSED)
+    REVIEW_PLAN_BOOK:PLAN_BOOK_SIGNED)
+      sign_plan_book_gate "$bar_id" "$run_dir" > "$run_dir/approval-checklist-plan-book-path.txt"
       update_status "$intake_yaml" "$status" "$next_status"
+      log_transition "$bar_id" "$run_dir" "planner" "approval-check" "$status" "$next_status" "$ROOT/docs/plans/$bar_id/PLAN-BOOK.md" "$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md" "done" "Planner-to-Foreman checklist passed."
+      ;;
+    REVIEW_FOREMAN_DISPATCH:FOREMAN_DISPATCHED)
+      approve_foreman_dispatch_gate "$bar_id" "$run_dir" > "$run_dir/approval-checklist-foreman-dispatch-path.txt"
+      update_status "$intake_yaml" "$status" "$next_status"
+      log_transition "$bar_id" "$run_dir" "foreman" "approval-check" "$status" "$next_status" "$run_dir/FOREMAN-DISPATCH.md" "$run_dir/APPROVAL-CHECKLIST-FOREMAN_DISPATCHED.md" "done" "Foreman-to-Mechanic checklist passed."
+      ;;
+    REVIEW_MECHANIC_OUTPUT:MECHANIC_DONE)
+      approve_mechanic_output_gate "$bar_id" "$run_dir" > "$run_dir/approval-checklist-mechanic-output-path.txt"
+      update_status "$intake_yaml" "$status" "$next_status"
+      log_transition "$bar_id" "$run_dir" "mechanic" "approval-check" "$status" "$next_status" "$run_dir/MECHANIC-OUTPUT.md" "$run_dir/APPROVAL-CHECKLIST-MECHANIC_DONE.md" "done" "Mechanic-to-Auditor checklist passed."
+      ;;
+    REVIEW_AUDIT_VERDICT:CLOSED)
+      update_status "$intake_yaml" "$status" "$next_status"
+      log_transition "$bar_id" "$run_dir" "auditor" "approval-check" "$status" "$next_status" "$run_dir/AUDIT-VERDICT.md" "" "done" "Audit verdict approved; BAR closed."
       ;;
     *)
       echo "Invalid approval transition: $status -> $next_status" >&2
@@ -851,6 +1681,16 @@ case "$cmd" in
     bar_id="${2:-}"
     shift 2 || true
     run_auditor "$bar_id" "$@"
+    ;;
+  reconcile)
+    bar_id="${2:-}"
+    shift 2 || true
+    reconcile_bar "$bar_id" "$@"
+    ;;
+  recover)
+    bar_id="${2:-}"
+    shift 2 || true
+    recover_bar "$bar_id" "$@"
     ;;
   run-once)
     shift

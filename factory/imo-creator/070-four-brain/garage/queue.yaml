@@ -70,6 +70,24 @@ review_gates:
     REVIEW_FOREMAN_DISPATCH: "FOREMAN_DISPATCHED"
     REVIEW_MECHANIC_OUTPUT: "MECHANIC_DONE"
     REVIEW_AUDIT_VERDICT: "CLOSED"
+  checklist_artifacts:
+    planner_to_foreman: "APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md"
+    foreman_to_mechanic: "APPROVAL-CHECKLIST-FOREMAN_DISPATCHED.md"
+    mechanic_to_auditor: "APPROVAL-CHECKLIST-MECHANIC_DONE.md"
+  gate_rules:
+    planner_to_foreman:
+      - "Plan Book exists and is READY-FOR-FOREMAN before signing."
+      - "Plan Book contains handoff, Mechanic dispatch requirements, Auditor packet requirements, P=1 definition, stop conditions, and sovereign decision table."
+      - "Approval command signs the Plan Book artifact and garage YAML together."
+    foreman_to_mechanic:
+      - "Foreman dispatch exists and is not BLOCKED."
+      - "Dispatch cites Atlas/Step 0, addresses Mechanic, includes write scope, forbidden paths, work orders, acceptance/evidence gates, and preserves Mechanic != Auditor."
+      - "Dispatch does not make Foreman the builder."
+    mechanic_to_auditor:
+      - "Mechanic output exists with changed files, tests/validation, Plan Book reference, and Auditor handoff."
+      - "PROC-060 PROCESS-UT.md and companion workflow YAML exist."
+      - "Both artifacts contain FCE-00 through FCE-14 spine endpoints."
+      - "Locked us.py/up.py files remain clean when the blueprint repo is present."
 
 foreman_delegation_gate:
   doctrine: "atlas/constants/FOUR_BRAIN_AVIATION.md v1.3.0"
