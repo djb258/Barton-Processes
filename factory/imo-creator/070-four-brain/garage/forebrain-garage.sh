@@ -328,6 +328,7 @@ dispatch_bar_run() {
   local run_dir="${2:-}"
   [[ "$FOUR_BRAIN_D1_WRITE" == "off" ]] && return 0
   if [[ -z "$MC_API_URL" ]]; then
+    # URL unset: silent skip — correct defensive behavior for local-only runs
     echo "[four-brain] MC_API_URL not set; skipping dispatch_bar_run." >&2
     [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
   fi
@@ -365,7 +366,13 @@ dispatch_bar_run() {
   fi
   echo "[four-brain] dispatch_bar_run failed (HTTP $http_code): $(cat "$tmp_body")" >&2
   rm -f "$tmp_body"
-  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
+  # FOUR_BRAIN_LOCAL_DEV=true keeps the legacy soft-continue behavior for local dry testing.
+  if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
+    echo "[four-brain] dispatch_bar_run: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
+    return 0
+  fi
+  return 1
 }
 
 claim_role_api() {
@@ -403,7 +410,13 @@ claim_role_api() {
     return 0
   fi
   echo "[four-brain] claim_role_api ($role) failed (HTTP $http_code)." >&2
-  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
+  # FOUR_BRAIN_LOCAL_DEV=true keeps legacy soft-continue for local dry testing.
+  if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
+    echo "[four-brain] claim_role_api ($role): non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
+    return 0
+  fi
+  return 1
 }
 
 get_run_state() {
@@ -501,7 +514,13 @@ write_d1_transition() {
     return 0
   fi
   echo "[four-brain] write_d1_transition failed (HTTP $http_code) for $bar_id $role $action." >&2
-  [[ "$FOUR_BRAIN_D1_REQUIRED" == "true" ]] && return 1 || return 0
+  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
+  # FOUR_BRAIN_LOCAL_DEV=true keeps legacy soft-continue for local dry testing.
+  if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
+    echo "[four-brain] write_d1_transition: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
+    return 0
+  fi
+  return 1
 }
 
 log_transition() {
@@ -1857,11 +1876,47 @@ approve_bar() {
   review_bar "$bar_id"
 }
 
-# F-002: run_strike1 — Strike-1 repair-and-re-audit loop
-# Resets BAR to MECHANIC_RUNNING, re-runs Mechanic, re-runs Auditor.
+# F-003 (Finding 3): write_strike_context — build STRIKE-CONTEXT.md from latest AUDIT-VERDICT.md
+# Called by run_strike1 BEFORE re-firing Planner or Mechanic so the context is in place
+# when the prompt is written. The prompt writers (write_mechanic_prompt, write_planner_prompt)
+# check for this file and append it to the required read set.
+write_strike_context() {
+  local bar_id="$1"
+  local run_dir="$2"
+  local strike_count="$3"
+  local verdict_file="$run_dir/AUDIT-VERDICT.md"
+  local context_file="$run_dir/STRIKE-CONTEXT.md"
+  local commit_sha
+  commit_sha="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+  {
+    echo "# STRIKE-$strike_count CONTEXT — $bar_id"
+    echo ""
+    echo "Strike count: $strike_count"
+    echo "Verdict source: $verdict_file"
+    echo "Commit being repaired against: $commit_sha"
+    echo ""
+    echo "## FAIL findings to address (repair these specifically — do NOT redesign scope)"
+    echo ""
+    if [[ -f "$verdict_file" ]]; then
+      # Extract FAIL finding blocks — lines between ### N) and the next ### or end
+      awk '/^### [0-9]+\)/{found=1} found && /FAIL|Strike target/{print}' "$verdict_file" || true
+      echo ""
+      echo "## Strike target table"
+      grep -i "strike target:" "$verdict_file" || echo "(no strike-target lines found)"
+    else
+      echo "(AUDIT-VERDICT.md not found at $verdict_file)"
+    fi
+  } > "$context_file"
+  echo "$context_file"
+}
+
+# F-001 (Finding 1) + F-002 (Finding 2): run_strike1 — Strike-1 repair-and-re-audit loop
+# Reads latest AUDIT-VERDICT.md, parses strike targets (Planner vs Mechanic),
+# writes STRIKE-CONTEXT.md, routes Planner-targeted failures to Planner re-draft,
+# routes Mechanic-targeted failures to Mechanic rerun with failure context injected.
 # Increments strike_count in planner-intake.yaml.
 # At Strike-3, sets status to TROUBLESHOOT_TRAIN and halts (no further auto-run).
-# FOUR_BRAIN_AVIATION v1.1.0 §Strike system.
+# FOUR_BRAIN_AVIATION v1.3.0 §Strike system.
 run_strike1() {
   local bar_id="${1:-}"
   local defer_lbb="false"
@@ -1900,7 +1955,30 @@ run_strike1() {
     echo "[four-brain] Strike-3 on $bar_id: status set to TROUBLESHOOT_TRAIN. No further auto-repair. Sovereign intervention required." >&2
     return 1
   fi
-  # Strike-1 or Strike-2: reset to MECHANIC_RUNNING, re-run Mechanic, re-run Auditor
+
+  # F-001: Parse latest AUDIT-VERDICT.md to determine Planner vs Mechanic strike targets
+  local verdict_file="$run_dir/AUDIT-VERDICT.md"
+  local has_planner_target=false
+  local has_mechanic_target=false
+  if [[ -f "$verdict_file" ]]; then
+    if grep -qi "strike target:.*planner" "$verdict_file"; then
+      has_planner_target=true
+    fi
+    if grep -qi "strike target:.*mechanic" "$verdict_file"; then
+      has_mechanic_target=true
+    fi
+  else
+    echo "[four-brain] WARNING: AUDIT-VERDICT.md not found at $verdict_file; defaulting to Mechanic rerun." >&2
+    has_mechanic_target=true
+  fi
+  echo "[four-brain] Strike $strike_count target parse: planner=$has_planner_target mechanic=$has_mechanic_target" >&2
+
+  # F-003: Write STRIKE-CONTEXT.md BEFORE re-firing any role so prompts have the context
+  local strike_context_file
+  strike_context_file="$(write_strike_context "$bar_id" "$run_dir" "$strike_count")"
+  echo "[four-brain] Strike context written: $strike_context_file" >&2
+
+  # Strike-1 or Strike-2: route based on parsed targets
   local mechanic_model="sonnet"
   local auditor_model="gpt-5.3-codex"
   if [[ "$strike_count" -ge 2 ]]; then
@@ -1908,15 +1986,52 @@ run_strike1() {
     mechanic_model="opus"
     echo "[four-brain] Strike-2: escalating Mechanic to $mechanic_model." >&2
   fi
-  update_status "$intake_yaml" "$(current_status "$bar_id")" "MECHANIC_RUNNING"
-  log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "BLOCKED" "MECHANIC_RUNNING" "$intake_yaml" "" "done" "Strike-$strike_count repair: resetting to MECHANIC_RUNNING with model=$mechanic_model."
-  echo "[four-brain] Re-running Mechanic ($mechanic_model) for $bar_id (Strike $strike_count)..." >&2
-  if ! run_mechanic "$bar_id" --execute --mechanic-model "$mechanic_model" ${defer_lbb:+--defer-lbb}; then
-    echo "[four-brain] Mechanic re-run failed for $bar_id." >&2
-    return 1
+
+  if [[ "$has_planner_target" == "true" ]]; then
+    # F-001: Planner-targeted failures — route to Planner re-draft
+    echo "[four-brain] Planner-targeted failures detected (W-2/W-7). Routing to Planner re-draft." >&2
+    update_status "$intake_yaml" "$(current_status "$bar_id")" "PLANNER_RUNNING"
+    log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "BLOCKED" "PLANNER_RUNNING" "$intake_yaml" "" "done" "Strike-$strike_count: Planner-targeted failures; routing to Planner re-draft."
+    # write_planner_prompt checks for STRIKE-CONTEXT.md and appends to read set
+    local planner_rerun_args=("$bar_id" --execute)
+    if [[ "$defer_lbb" == "true" ]]; then planner_rerun_args+=(--defer-lbb); fi
+    if ! run_once "${planner_rerun_args[@]}"; then
+      echo "[four-brain] Planner re-draft failed for $bar_id." >&2
+      return 1
+    fi
+    # G-19: after Planner re-draft, auto-advance Foreman → Mechanic → Auditor
+    echo "[four-brain] Planner re-draft complete. Auto-advancing Foreman..." >&2
+    local foreman_args=("$bar_id" --execute --auto-continue)
+    if [[ "$defer_lbb" == "true" ]]; then foreman_args+=(--defer-lbb); fi
+    if ! run_foreman "${foreman_args[@]}"; then
+      echo "[four-brain] Foreman auto-advance failed for $bar_id after Planner re-draft." >&2
+      return 1
+    fi
+    echo "[four-brain] Re-running Mechanic ($mechanic_model) after Planner re-draft..." >&2
+    local mechanic_rerun_args=("$bar_id" --execute --mechanic-model "$mechanic_model")
+    if [[ "$defer_lbb" == "true" ]]; then mechanic_rerun_args+=(--defer-lbb); fi
+    if ! run_mechanic "${mechanic_rerun_args[@]}"; then
+      echo "[four-brain] Mechanic re-run failed for $bar_id after Planner re-draft." >&2
+      return 1
+    fi
+  else
+    # F-001: Mechanic-targeted failures only — reset to MECHANIC_RUNNING with context
+    update_status "$intake_yaml" "$(current_status "$bar_id")" "MECHANIC_RUNNING"
+    log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "BLOCKED" "MECHANIC_RUNNING" "$intake_yaml" "" "done" "Strike-$strike_count repair: resetting to MECHANIC_RUNNING with model=$mechanic_model."
+    echo "[four-brain] Re-running Mechanic ($mechanic_model) for $bar_id (Strike $strike_count)..." >&2
+    # write_mechanic_prompt checks for STRIKE-CONTEXT.md and appends it to the read set
+    local mechanic_rerun_args=("$bar_id" --execute --mechanic-model "$mechanic_model")
+    if [[ "$defer_lbb" == "true" ]]; then mechanic_rerun_args+=(--defer-lbb); fi
+    if ! run_mechanic "${mechanic_rerun_args[@]}"; then
+      echo "[four-brain] Mechanic re-run failed for $bar_id." >&2
+      return 1
+    fi
   fi
+
   echo "[four-brain] Re-running Auditor ($auditor_model) for $bar_id (Strike $strike_count)..." >&2
-  if ! run_auditor "$bar_id" --execute --auditor-model "$auditor_model" ${defer_lbb:+--defer-lbb}; then
+  local auditor_rerun_args=("$bar_id" --execute --auditor-model "$auditor_model")
+  if [[ "$defer_lbb" == "true" ]]; then auditor_rerun_args+=(--defer-lbb); fi
+  if ! run_auditor "${auditor_rerun_args[@]}"; then
     echo "[four-brain] Auditor re-run failed for $bar_id." >&2
     return 1
   fi
