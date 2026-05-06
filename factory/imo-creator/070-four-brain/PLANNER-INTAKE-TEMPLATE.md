@@ -141,7 +141,7 @@ Operator sets `garage_status` in the paired YAML, not here. The MD is for human 
 | `DRAFT` | Parked. Not ready. |
 | `READY_FOR_PLANNER` | In the bay with a work order on the windshield. Planner picks it up. |
 | `PLANNER_RUNNING` | Planner has claimed it. |
-| `PLAN_BOOK_READY` | Plan Book produced. Foreman can dispatch. |
+| `PLAN_BOOK_SIGNED` | Plan Book produced and sovereign-signed. Foreman can dispatch. |
 | `BLOCKED` | Question back to operator (Planner can't proceed). |
 | `CLOSED` | BAR finished. |
 
@@ -172,6 +172,24 @@ The Planner reads this packet, then:
 | "Delete Z" | Fix (removing a defect) |
 | "Audit / review" | Maintenance (C-check or AD) |
 | "Investigate" | Fix (diagnostic before repair) |
+
+---
+
+## Parity Zone (BS Law v1.5.0)
+
+Paired artifact: `planner-intake-template.yaml`. Fields that must stay synchronized between this file and the YAML companion:
+
+| MD Field | YAML Field | Sync Rule |
+| --- | --- | --- |
+| Version (header + §Document Control) | `version` + `document_control.version` | Bump together |
+| Last Modified (header + §Document Control) | `last_modified` + `document_control.last_modified` | Update together |
+| Status (header + §Document Control) | `status` + `document_control.status` | Match always |
+| Garage status table | `garage_status.enum` | Every status in MD table must appear in YAML enum |
+| Planner responsibility order | `planner_responsibilities.discipline_order` | Steps must match |
+| Changelog | `document_control.changelog` | Major entries mirrored |
+| Authority | `document_control.authority` | Identical prose |
+
+**Enforcement:** Codex G06 (`parsed_value_match`) verifies parity on every audit. Drift = BLOCK.
 
 ---
 

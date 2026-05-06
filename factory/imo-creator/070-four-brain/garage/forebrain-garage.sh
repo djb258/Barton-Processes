@@ -59,8 +59,9 @@ Usage:
   forebrain-garage.sh foreman BAR-123 [--execute] [--defer-lbb] [--foreman-model sonnet]
   forebrain-garage.sh mechanic BAR-123 [--execute] [--defer-lbb] [--mechanic-model sonnet]
   forebrain-garage.sh auditor BAR-123 [--execute] [--defer-lbb] [--auditor-model gpt-5.3-codex]
-  forebrain-garage.sh reconcile BAR-123 [--defer-lbb]
+  forebrain-garage.sh reconcile BAR-123 [--defer-lbb] [--auto-continue]
   forebrain-garage.sh recover BAR-123 [--force] [--defer-lbb]
+  forebrain-garage.sh strike1 BAR-123 [--defer-lbb]
   forebrain-garage.sh review BAR-123
   forebrain-garage.sh approve BAR-123 NEXT_STATUS
   forebrain-garage.sh run-pipeline [--execute] [--auto-continue] [--defer-lbb] [--planner-model opus] [--foreman-model sonnet] [--mechanic-model sonnet] [--auditor-model gpt-5.3-codex]
@@ -77,10 +78,15 @@ Contract:
   mechanic Runs Sonnet Mechanic from Foreman dispatch.
   auditor Runs Codex Auditor from Mechanic output and closes or blocks the BAR.
   reconcile Recovers an interrupted running stage when its expected artifact exists.
+           --auto-continue: advance to FOREMAN_DISPATCHED or MECHANIC_DONE instead
+           of pausing at REVIEW_* (AUDITOR_RUNNING always lands at REVIEW_AUDIT_VERDICT).
   recover  Rolls back a stuck *_RUNNING status when its expected artifact does NOT
            exist. Requires --force. Use only after confirming no live agent is
            writing to the run dir. Resets to the previous done status so the
            stage can be re-run.
+  strike1  Repair-and-re-audit loop for Strike-1 failures. Resets BAR to
+           MECHANIC_RUNNING, re-runs Mechanic (Sonnet), re-runs Auditor (Codex).
+           Three consecutive Strike-1 failures on the same BAR → TROUBLESHOOT_TRAIN.
   review Prints the handoff packet paths for human inspection.
   approve Moves a REVIEW_* status to the next executable status.
   run-pipeline Runs the next eligible handoff stage. By default it pauses at review gates.
@@ -262,6 +268,55 @@ new_uuid() {
 ps_escape() {
   local value="$1"
   printf "%s" "$value" | sed "s/'/''/g"
+}
+
+# F-003: assert_no_locked_constants_touched
+# Called after every mechanic CLI invocation. Checks git diff against the 17
+# sovereign-locked constants + mission-control.yaml. Any diff → BLOCK pipeline.
+assert_no_locked_constants_touched() {
+  local run_dir="${1:-}"
+  local v2_root="$ROOT/../imo-creator-v2"
+  local forbidden_paths=(
+    "$v2_root/atlas/constants/FOUNDATIONAL_BEDROCK.md"
+    "$v2_root/atlas/constants/DMJ.md"
+    "$v2_root/atlas/constants/FCE.md"
+    "$v2_root/atlas/skills/skill-creator/SKILL.md"
+    "$v2_root/atlas/manifests/STRUCTURE_MANIFEST.yaml"
+    "$v2_root/atlas/constants/UNIFIED_TEMPLATE.md"
+    "$v2_root/atlas/dyno/us.py"
+    "$v2_root/atlas/dyno/up.py"
+    "$v2_root/atlas/constants/HOW_TO_BUILD_ANYTHING.md"
+    "$v2_root/atlas/constants/KEY.md"
+    "$v2_root/atlas/constants/UT_CHECKLIST.md"
+    "$v2_root/atlas/constants/BARTON_ENTERPRISES_CTB.md"
+    "$v2_root/atlas/ATLAS.md"
+    "$v2_root/atlas/constants/THREE_LAYERS_SPINE.md"
+    "$v2_root/atlas/constants/BOOK_LAW.md"
+    "$v2_root/atlas/constants/FOUR_BRAIN_AVIATION.md"
+    "$v2_root/atlas/constants/BS_LAW.md"
+    "$v2_root/atlas/constants/mission-control.yaml"
+  )
+  local violations=()
+  for path in "${forbidden_paths[@]}"; do
+    if [[ -f "$path" ]]; then
+      local rel_path
+      rel_path="$(git -C "$v2_root" ls-files --error-unmatch "$(realpath --relative-to="$v2_root" "$path" 2>/dev/null || echo "$path")" 2>/dev/null || true)"
+      if git -C "$v2_root" diff --name-only HEAD -- "$path" 2>/dev/null | grep -q .; then
+        violations+=("$path")
+      fi
+    fi
+  done
+  if [[ "${#violations[@]}" -gt 0 ]]; then
+    echo "[four-brain] BLOCKED: mechanic touched sovereign-locked constants:" >&2
+    for v in "${violations[@]}"; do
+      echo "  - $v" >&2
+    done
+    if [[ -n "$run_dir" ]]; then
+      printf '%s\n' "${violations[@]}" > "$run_dir/LOCKED-CONSTANTS-VIOLATION.txt"
+    fi
+    return 1
+  fi
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -548,18 +603,32 @@ write_lbb_transition() {
     return 0
   fi
   if [[ "$defer_lbb" == "true" ]]; then
+    # F-008: deferred path is local dry-test only; block unless FOUR_BRAIN_LOCAL_DEV=true
+    if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" != "true" ]]; then
+      echo "[four-brain] write_lbb_transition: --defer-lbb requires FOUR_BRAIN_LOCAL_DEV=true. Live LBB logging is mandatory in non-local environments." >&2
+      return 1
+    fi
+    # Write deferred stub with all 12 required LBB schema fields
     cat > "$output" <<EOF
 {
+  "record_id": "deferred-$(date -u +%s)-$bar_id",
+  "sovereign_ref": "imo-creator",
+  "hub_id": "four-brain",
+  "cc_layer": "CC-03",
+  "subject_id": "processes",
+  "ctb_placement": "leaf",
   "bar_id": "$bar_id",
   "role": "$role",
   "action": "$action",
-  "subject": "system",
   "status": "DEFERRED_LOCAL_ONLY",
-  "reason": "scripts/lbb-log.sh unavailable in this checkout",
+  "reason": "scripts/lbb-log.sh unavailable in this checkout; FOUR_BRAIN_LOCAL_DEV=true",
   "evidence": "$run_dir",
   "timestamp": "$ts"
 }
 EOF
+    # Mark run as non-certifiable — deferred LBB writes cannot be auditor-certified
+    touch "$run_dir/.non-certifiable"
+    echo "[four-brain] LBB write deferred (local dry-test). Run marked .non-certifiable." >&2
     echo "$output"
     return 0
   fi
@@ -572,7 +641,7 @@ Action: $action
 Timestamp: $ts
 
 Process 070 cannot transition this role because live LB&B logging is required
-by FOUR_BRAIN_AVIATION Â§Y and $LBB_SCRIPT is not executable.
+by FOUR_BRAIN_AVIATION §Y and $LBB_SCRIPT is not executable.
 
 For local dry testing only, rerun with --defer-lbb.
 EOF
@@ -1410,6 +1479,14 @@ run_mechanic() {
   log_transition "$bar_id" "$run_dir" "mechanic" "start" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING" "$prompt" "" "done" "Mechanic stage started."
   local cli_rc=0
   run_claude_cli "$mechanic_model" "$prompt" "$run_dir/mechanic-output.raw.md" || cli_rc=$?
+  # F-001: persist mechanic model for engine separation check in run_auditor (G12)
+  echo "$mechanic_model" > "$run_dir/.four_brain_mechanic_model"
+  # F-003: assert no sovereign-locked constants were touched by the mechanic CLI
+  if ! assert_no_locked_constants_touched "$run_dir"; then
+    update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
+    log_transition "$bar_id" "$run_dir" "mechanic" "edit" "MECHANIC_RUNNING" "BLOCKED" "$run_dir/mechanic-output.raw.md" "" "failed" "Mechanic touched sovereign-locked constants (G12 violation). See LOCKED-CONSTANTS-VIOLATION.txt."
+    return 1
+  fi
   # Fallback per Atlas §4.5: if Sonnet returned the completion report as stdout
   # (captured to mechanic-output.raw.md) but didn't use the Write tool to create
   # MECHANIC-OUTPUT.md at the canonical path, promote raw.md. Without this, the
@@ -1465,6 +1542,15 @@ run_auditor() {
     echo "No run dir found for $bar_id" >&2
     return 1
   fi
+  # F-001: engine separation guard (G12) — auditor model must differ from mechanic model
+  if [[ -f "$run_dir/.four_brain_mechanic_model" ]]; then
+    local mechanic_model_on_disk
+    mechanic_model_on_disk="$(cat "$run_dir/.four_brain_mechanic_model")"
+    if [[ "$auditor_model" == "$mechanic_model_on_disk" ]]; then
+      echo "[four-brain] BLOCKED: auditor_model ($auditor_model) == mechanic_model ($mechanic_model_on_disk). G12 engine separation violated. Aviation Model: mechanic != auditor." >&2
+      return 1
+    fi
+  fi
   local prompt
   prompt="$(write_auditor_prompt "$bar_id" "$run_dir")"
   if [[ "$execute" != "true" ]]; then
@@ -1514,10 +1600,16 @@ run_auditor() {
 reconcile_bar() {
   local bar_id="$1"
   local defer_lbb="false"
+  # F-007: auto_continue allows FOREMAN_RUNNING→FOREMAN_DISPATCHED and
+  # MECHANIC_RUNNING→MECHANIC_DONE without pausing at REVIEW_* gates.
+  # AUDITOR_RUNNING always lands at REVIEW_AUDIT_VERDICT per G-19 doctrine
+  # (sovereign must sign the audit verdict — no auto-advance past that gate).
+  local auto_continue="false"
   shift || true
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --defer-lbb) defer_lbb="true"; shift ;;
+      --auto-continue) auto_continue="true"; shift ;;
       *) echo "Unknown reconcile option: $1" >&2; exit 2 ;;
     esac
   done
@@ -1541,8 +1633,13 @@ reconcile_bar() {
         update_status "$intake_yaml" "FOREMAN_RUNNING" "BLOCKED"
         return 1
       fi
-      update_status "$intake_yaml" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH"
-      log_transition "$bar_id" "$run_dir" "foreman" "reconcile" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Reconciled from interrupted Foreman run."
+      if [[ "$auto_continue" == "true" ]]; then
+        update_status "$intake_yaml" "FOREMAN_RUNNING" "FOREMAN_DISPATCHED"
+        log_transition "$bar_id" "$run_dir" "foreman" "reconcile" "FOREMAN_RUNNING" "FOREMAN_DISPATCHED" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Reconciled from interrupted Foreman run; auto-continue."
+      else
+        update_status "$intake_yaml" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH"
+        log_transition "$bar_id" "$run_dir" "foreman" "reconcile" "FOREMAN_RUNNING" "REVIEW_FOREMAN_DISPATCH" "$run_dir/FOREMAN-DISPATCH.md" "" "done" "Reconciled from interrupted Foreman run."
+      fi
       write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
       ;;
     MECHANIC_RUNNING)
@@ -1554,8 +1651,13 @@ reconcile_bar() {
         update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
         return 1
       fi
-      update_status "$intake_yaml" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT"
-      log_transition "$bar_id" "$run_dir" "mechanic" "reconcile" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Reconciled from interrupted Mechanic run."
+      if [[ "$auto_continue" == "true" ]]; then
+        update_status "$intake_yaml" "MECHANIC_RUNNING" "MECHANIC_DONE"
+        log_transition "$bar_id" "$run_dir" "mechanic" "reconcile" "MECHANIC_RUNNING" "MECHANIC_DONE" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Reconciled from interrupted Mechanic run; auto-continue."
+      else
+        update_status "$intake_yaml" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT"
+        log_transition "$bar_id" "$run_dir" "mechanic" "reconcile" "MECHANIC_RUNNING" "REVIEW_MECHANIC_OUTPUT" "$run_dir/MECHANIC-OUTPUT.md" "" "done" "Reconciled from interrupted Mechanic run."
+      fi
       write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
       ;;
     AUDITOR_RUNNING)
@@ -1568,6 +1670,8 @@ reconcile_bar() {
           update_status "$intake_yaml" "AUDITOR_RUNNING" "BLOCKED"
           return 1
         fi
+        # G-19 mandatory gate: AUDITOR_RUNNING always lands at REVIEW_AUDIT_VERDICT.
+        # No --auto-continue bypass here — sovereign must sign the audit verdict.
         update_status "$intake_yaml" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT"
         log_transition "$bar_id" "$run_dir" "auditor" "reconcile" "AUDITOR_RUNNING" "REVIEW_AUDIT_VERDICT" "$run_dir/AUDIT-VERDICT.md" "" "done" "Reconciled from interrupted Auditor run."
       else
@@ -1753,6 +1857,72 @@ approve_bar() {
   review_bar "$bar_id"
 }
 
+# F-002: run_strike1 — Strike-1 repair-and-re-audit loop
+# Resets BAR to MECHANIC_RUNNING, re-runs Mechanic, re-runs Auditor.
+# Increments strike_count in planner-intake.yaml.
+# At Strike-3, sets status to TROUBLESHOOT_TRAIN and halts (no further auto-run).
+# FOUR_BRAIN_AVIATION v1.1.0 §Strike system.
+run_strike1() {
+  local bar_id="${1:-}"
+  local defer_lbb="false"
+  shift || true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --defer-lbb) defer_lbb="true"; shift ;;
+      *) echo "Unknown strike1 option: $1" >&2; exit 2 ;;
+    esac
+  done
+  require_bar_id "$bar_id"
+  local intake_yaml="$INBOX/$bar_id/planner-intake.yaml"
+  local run_dir
+  run_dir="$(latest_run_dir "$bar_id")"
+  if [[ -z "$run_dir" ]]; then
+    echo "No run dir found for $bar_id" >&2
+    return 1
+  fi
+  # Read current strike_count from intake YAML
+  local strike_count=0
+  if grep -q "^strike_count:" "$intake_yaml" 2>/dev/null; then
+    strike_count="$(grep "^strike_count:" "$intake_yaml" | awk '{print $2}')"
+  fi
+  strike_count=$((strike_count + 1))
+  # Write updated strike_count back to YAML
+  if grep -q "^strike_count:" "$intake_yaml"; then
+    sed -i "s/^strike_count:.*/strike_count: $strike_count/" "$intake_yaml"
+  else
+    echo "strike_count: $strike_count" >> "$intake_yaml"
+  fi
+  echo "[four-brain] Strike $strike_count recorded for $bar_id." >&2
+  # Strike-3: halt — sovereign must investigate structural failure
+  if [[ "$strike_count" -ge 3 ]]; then
+    update_status "$intake_yaml" "$(current_status "$bar_id")" "TROUBLESHOOT_TRAIN"
+    log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "$(current_status "$bar_id")" "TROUBLESHOOT_TRAIN" "$intake_yaml" "" "failed" "Strike-3: BAR moved to TROUBLESHOOT_TRAIN. Structural investigation required. Pipeline halted."
+    echo "[four-brain] Strike-3 on $bar_id: status set to TROUBLESHOOT_TRAIN. No further auto-repair. Sovereign intervention required." >&2
+    return 1
+  fi
+  # Strike-1 or Strike-2: reset to MECHANIC_RUNNING, re-run Mechanic, re-run Auditor
+  local mechanic_model="sonnet"
+  local auditor_model="gpt-5.3-codex"
+  if [[ "$strike_count" -ge 2 ]]; then
+    # Strike-2: escalate Mechanic to Opus per FOUR_BRAIN_AVIATION §Strike system
+    mechanic_model="opus"
+    echo "[four-brain] Strike-2: escalating Mechanic to $mechanic_model." >&2
+  fi
+  update_status "$intake_yaml" "$(current_status "$bar_id")" "MECHANIC_RUNNING"
+  log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "BLOCKED" "MECHANIC_RUNNING" "$intake_yaml" "" "done" "Strike-$strike_count repair: resetting to MECHANIC_RUNNING with model=$mechanic_model."
+  echo "[four-brain] Re-running Mechanic ($mechanic_model) for $bar_id (Strike $strike_count)..." >&2
+  if ! run_mechanic "$bar_id" --execute --mechanic-model "$mechanic_model" ${defer_lbb:+--defer-lbb}; then
+    echo "[four-brain] Mechanic re-run failed for $bar_id." >&2
+    return 1
+  fi
+  echo "[four-brain] Re-running Auditor ($auditor_model) for $bar_id (Strike $strike_count)..." >&2
+  if ! run_auditor "$bar_id" --execute --auditor-model "$auditor_model" ${defer_lbb:+--defer-lbb}; then
+    echo "[four-brain] Auditor re-run failed for $bar_id." >&2
+    return 1
+  fi
+  echo "[four-brain] Strike-$strike_count repair-and-re-audit complete for $bar_id." >&2
+}
+
 final_pointer() {
   local bar_id="$1"
   require_bar_id "$bar_id"
@@ -1829,6 +1999,11 @@ case "$cmd" in
     bar_id="${2:-}"
     shift 2 || true
     recover_bar "$bar_id" "$@"
+    ;;
+  strike1)
+    bar_id="${2:-}"
+    shift 2 || true
+    run_strike1 "$bar_id" "$@"
     ;;
   run-once)
     shift

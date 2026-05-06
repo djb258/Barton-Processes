@@ -18,7 +18,7 @@ inherits:
   ut_checklist: UT_CHECKLIST_v1.3.1
   bs_law: v1.5.0
   book_law: v1.5.0
-  aviation_model: v1.2.0
+  aviation_model: v1.3.0
   process_doctrine: PROC-070
 
 # =============================================================================
@@ -43,7 +43,7 @@ outside:
       - Codex (codex-dop exec)
       - Opus 4.7 (Agent tool, model=opus, escalation only)
     acceptance_criteria: |-
-      D-070-01: All 10 gates PASS (P=1 on each).
+      D-070-01: All 19 gates PASS (P=1 on each).
       D-070-02: No-op BAR run produces exactly 4 LBB rows + 1 Audit Book on PASS.
       D-070-03: Atlas registry row 9 present in both paired-artifacts.yaml AND atlas/ATLAS.md §7.3a.
       D-070-04: No locked constants modified except atlas/ATLAS.md (verified by git diff HEAD).
@@ -78,7 +78,7 @@ inside:
       - Opus 4.7 (Agent tool, model=opus, escalation only)
     secrets_provider: doppler
     acceptance_criteria: |-
-      D-070-01: All 10 gates PASS (P=1 on each).
+      D-070-01: All 19 gates PASS (P=1 on each).
       D-070-02: No-op BAR run produces exactly 4 LBB rows + 1 Audit Book on PASS.
       D-070-03: Atlas registry row 9 present in both paired-artifacts.yaml AND atlas/ATLAS.md §7.3a.
       D-070-04: No locked constants modified except atlas/ATLAS.md (verified by git diff HEAD).
@@ -137,12 +137,12 @@ data:
     - target: lbb.records
       what: "Terminal Audit Book row on Codex PASS (subject_id='processes', species='Audit-Body')"
     - target: lbb.logbook
-      what: CERTIFY row when BAR achieves P=1 on all 10 gates
+      what: CERTIFY row when BAR achieves P=1 on all 19 gates
   forbidden:
     - LLM on the spine of any gate evaluation
     - Mechanic self-audits (Aviation Model violation)
-    - Foreman flips Auditor verdicts (FOUR_BRAIN_AVIATION v1.2.0 Foreman Lock)
-    - Skip Atlas Step 0 read for any role (FOUR_BRAIN_AVIATION v1.2.0 §X)
+    - Foreman flips Auditor verdicts (FOUR_BRAIN_AVIATION v1.3.0 Foreman Lock)
+    - Skip Atlas Step 0 read for any role (FOUR_BRAIN_AVIATION v1.3.0 §X)
     - Skip LBB Step N write before any role transition (§Y)
     - Modify any of 17 locked constants except atlas/ATLAS.md
   d1:
@@ -199,13 +199,13 @@ data:
         expectation: "0 for OPERATE; any RED auto-elevates gauge"
     composition_rule: |-
       ALL 4 GREEN -> OPERATE; any 1 YELLOW -> drift watch; signal 4 RED -> auto-RED.
-      Per FOUR_BRAIN_AVIATION v1.2.0 "Pressure Gauge -- the Operational Read".
+      Per FOUR_BRAIN_AVIATION v1.3.0 "Pressure Gauge -- the Operational Read".
   join_chain: |-
     Sovereign Plan Book (docs/plans/BAR-X.plan.md)
       -> Foreman dispatch
       -> Sonnet builds + lbb-log.sh writes 1 row per role transition
       -> Codex audit run
-      -> 10 gates evaluated (G01-G10)
+      -> 19 gates evaluated (G01-G12 + W-1..W-7)
       -> PASS: Audit Book -> lbb.records (subject_id='processes', species='Audit-Body')
             + lbb.logbook CERTIFY row + four_brain_run.verdict='PASS'
       -> FAIL: squawks row + Strike count incremented; Strike-ladder applies
@@ -251,16 +251,16 @@ nodes:
   - id: 05-emit
     type: output
     action: |-
-      If all 10 gates PASS -> emit P=1; write Audit Book to lbb.records + CERTIFY to lbb.logbook;
+      If all 19 gates PASS -> emit P=1; write Audit Book to lbb.records + CERTIFY to lbb.logbook;
       four_brain_run.verdict='PASS'.
       If any FAIL -> emit P=0; write squawks; Strike ladder applied.
-    gate_check: "G07, G08, G09, G10"
+    gate_check: "G07, G08, G09, G10, G11, G12, W-1, W-2, W-3, W-4, W-5, W-6, W-7"
     next: null
 
 # Block 11 — gates + lbb
 gates:
-  total: 10
-  pass_threshold: 10
+  total: 19
+  pass_threshold: 19
   source_of_truth: "atlas/manifests/paired-artifacts.yaml row 9 + this file"
   gate_ids:
     - id: G01
@@ -311,12 +311,12 @@ gates:
       predicate: |-
         LBB row schema is referenced by _ref:, NOT redefined locally.
         Source of truth = four-brain-doctrine-gate.yaml#lbb_row_schema.
-      atlas_source: "FOUR_BRAIN_AVIATION v1.2.0 §Y + four-brain-doctrine-gate.yaml G07"
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §Y + four-brain-doctrine-gate.yaml G07"
       tolerance: exact_match
       failure_impact: BLOCK
     - id: G08
       predicate: |-
-        YAML gates block specifies total: 10 AND lists 10 gate IDs G01-G10
+        YAML gates block specifies total: 19 AND lists 19 gate IDs G01-G12 + W-1..W-7
         each with predicate + tolerance + failure_impact.
       atlas_source: "Plan Book §7"
       tolerance: exact_match
@@ -336,6 +336,76 @@ gates:
         Atlas version bumped to v2.2.6 in 3 locations + Last Modified updated;
         §14 logbook row appended.
       atlas_source: "Atlas §7.3a + memory feedback_pair_version_with_last_modified.md"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: G11
+      predicate: |-
+        Strike ladder enforced: strike_count field present in garage_status and
+        four_brain_run.strikes; Strike-3 transitions to TROUBLESHOOT_TRAIN, not another repair.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §Strike System"
+      tolerance: exact_match
+      failure_impact: HIGH
+    - id: G12
+      predicate: |-
+        Engine separation guard: $run_dir/.four_brain_mechanic_model written by run_mechanic;
+        read by run_auditor; auditor_model != mechanic_model_on_disk asserted before
+        Codex dispatch. Violation = pipeline halt.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 mechanic != auditor rule"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: W-1
+      predicate: |-
+        Mission Control four_brain_run row written at BAR start with correct run_id, bar_id,
+        process_id='four-brain', subject_id='processes', runtime_state, started_at.
+      atlas_source: "atlas/constants/MISSION_CONTROL.md §10.4"
+      tolerance: exact_match
+      failure_impact: HIGH
+    - id: W-2
+      predicate: |-
+        Mission Control four_brain_transition row written at each role handoff with
+        transition_id, run_id FK, role, action, timestamp, lbb_record_id.
+      atlas_source: "atlas/constants/MISSION_CONTROL.md §10.4"
+      tolerance: exact_match
+      failure_impact: HIGH
+    - id: W-3
+      predicate: |-
+        MC API URL unset -> silent skip (no error). MC API URL set + non-2xx response ->
+        visible warning logged; pipeline blocked if FOUR_BRAIN_D1_REQUIRED=true.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §Mission Control Wiring"
+      tolerance: exact_match
+      failure_impact: HIGH
+    - id: W-4
+      predicate: |-
+        LBB write_lbb_transition 12-field schema enforced. Deferred path writes
+        .non-certifiable marker to $run_dir/. Deferred mode blocked unless
+        FOUR_BRAIN_LOCAL_DEV=true.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §LBB Step-N Write"
+      tolerance: exact_match
+      failure_impact: HIGH
+    - id: W-5
+      predicate: |-
+        auto_continue parameter in reconcile_bar: when true, FOREMAN_RUNNING ->
+        FOREMAN_DISPATCHED (not REVIEW_FOREMAN_DISPATCH) and MECHANIC_RUNNING ->
+        MECHANIC_DONE (not REVIEW_MECHANIC_OUTPUT). AUDITOR_RUNNING ->
+        REVIEW_AUDIT_VERDICT always (G-19 mandatory sovereign gate, no bypass).
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §G-19 Doctrine"
+      tolerance: exact_match
+      failure_impact: MEDIUM
+    - id: W-6
+      predicate: |-
+        assert_no_locked_constants_touched() called after every mechanic CLI invocation.
+        Checks 17+1 forbidden paths (atlas/constants/, atlas/dyno/us.py, atlas/dyno/up.py,
+        atlas/skills/, atlas/manifests/STRUCTURE_MANIFEST.yaml, mission-control.yaml, etc.).
+        Any dirty path = pipeline halt.
+      atlas_source: "CLAUDE.md §17 locked constants + FOUR_BRAIN_AVIATION v1.3.0"
+      tolerance: exact_match
+      failure_impact: BLOCK
+    - id: W-7
+      predicate: |-
+        run_strike1 subcommand present in forebrain-garage.sh command router.
+        Function reads intake YAML strike_count, increments, persists. Strike >= 3
+        sets TROUBLESHOOT_TRAIN + exits 1. Strike 1 or 2 re-dispatches to Mechanic.
+      atlas_source: "FOUR_BRAIN_AVIATION v1.3.0 §Strike System"
       tolerance: exact_match
       failure_impact: BLOCK
 

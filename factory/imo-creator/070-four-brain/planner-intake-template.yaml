@@ -56,7 +56,11 @@ inside:
       mechanic: sonnet
       auditor: codex
       rule: "mechanic != auditor"
-    determinism_gate: "operator_sets_destination_in_plain_language_planner_translates_to_doctrine"
+    determinism_gate: ai_on_spine_forbidden
+    determinism_gate_note: >
+      LLM is tail arbitration only — never the spine of any gate evaluation.
+      Planner translates operator plain-language answers into structured doctrine;
+      that translation is LLM-assisted but every gate predicate is deterministic.
   orbt:
     runtime_state: BUILD
     promotion_gate: "used successfully by 3+ BARs end-to-end with auditor P=1"
@@ -182,12 +186,14 @@ edge_case_routing:
 
 garage_status:
   current: DRAFT
+  strike_count: 0
   enum:
     - DRAFT                # Parked, not ready
     - READY_FOR_PLANNER    # In the bay with work order on windshield
     - PLANNER_RUNNING      # Planner has claimed it
-    - PLAN_BOOK_READY      # Plan Book produced; Foreman can dispatch
+    - PLAN_BOOK_SIGNED     # Plan Book produced and sovereign-signed; Foreman can dispatch
     - BLOCKED              # Planner asks question back to operator
+    - TROUBLESHOOT_TRAIN   # Strike 3 — structural investigation; pipeline halted
     - CLOSED               # BAR finished
   trigger_field: true
   rule: "Watcher polls this field. READY_FOR_PLANNER triggers Planner pickup."
@@ -254,6 +260,37 @@ non_drift_invariants:
     - "BS Law applies to every durable structured artifact."
     - "Mechanic does not change Mission Control skeleton without sovereign sign-off."
     - "Wiring disposition (WIRE / EXEMPT / NEW_SLOT_NEEDED) is declared by Planner in Plan Book, executed by Mechanic, verified by Auditor."
+
+# =============================================================================
+# PARITY ZONE — BS Law v1.5.0 paired-artifact synchronization contract
+# =============================================================================
+
+parity_zone:
+  law: "BS Law v1.5.0 — paired-artifact parity"
+  paired_md: PLANNER-INTAKE-TEMPLATE.md
+  enforcement: "Codex G06 parsed_value_match — drift = BLOCK"
+  synchronized_fields:
+    - yaml_field: version
+      md_field: "Version (header + Document Control)"
+      sync_rule: Bump together
+    - yaml_field: last_modified
+      md_field: "Last Modified (header + Document Control)"
+      sync_rule: Update together
+    - yaml_field: status
+      md_field: "Status (header + Document Control)"
+      sync_rule: Match always
+    - yaml_field: garage_status.enum
+      md_field: "Garage Intake Status table rows"
+      sync_rule: Every MD status row must appear in YAML enum
+    - yaml_field: planner_responsibilities.discipline_order
+      md_field: "What the Planner Does Next list"
+      sync_rule: Steps must match in order
+    - yaml_field: document_control.changelog
+      md_field: "Changelog"
+      sync_rule: Major entries mirrored
+    - yaml_field: document_control.authority
+      md_field: "Authority"
+      sync_rule: Identical prose
 
 # =============================================================================
 # Document Control

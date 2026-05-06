@@ -19,7 +19,6 @@ status_values:
   - DRAFT
   - READY_FOR_PLANNER
   - PLANNER_RUNNING
-  - PLAN_BOOK_READY
   - REVIEW_PLAN_BOOK
   - PLAN_BOOK_SIGNED
   - FOREMAN_RUNNING
@@ -32,6 +31,7 @@ status_values:
   - REVIEW_AUDIT_VERDICT
   - CLOSED
   - BLOCKED
+  - TROUBLESHOOT_TRAIN
 
 pickup_rule:
   required_file: "planner-intake.yaml"
