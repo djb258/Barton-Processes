@@ -1195,7 +1195,14 @@ run_codex_cli() {
   # combined into single flag --dangerously-bypass-approvals-and-sandbox per
   # `codex exec --help`. Auditor needs read across Atlas + run dir + working
   # tree + write of AUDIT-VERDICT.md. Sovereign-authorized dispatch.
-  codex exec --cd "$ROOT" --dangerously-bypass-approvals-and-sandbox --model "$model" "$(cat "$prompt")" > "$output" || rc=$?
+  #
+  # CRITICAL: stdin redirected from /dev/null. Per codex exec --help, "If
+  # stdin is piped and a prompt is also provided, stdin is appended as a
+  # <stdin> block". When run from bash background commands, stdin is open
+  # (not piped, not closed) and Codex hangs forever showing "Reading
+  # additional input from stdin..." Surfaced on BAR-MC-FOUR-BRAIN-WIRE
+  # first Auditor run 2026-05-06.
+  codex exec --cd "$ROOT" --dangerously-bypass-approvals-and-sandbox --model "$model" "$(cat "$prompt")" > "$output" < /dev/null || rc=$?
   return "$rc"
 }
 
