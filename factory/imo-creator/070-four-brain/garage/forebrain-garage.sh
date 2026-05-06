@@ -366,11 +366,16 @@ dispatch_bar_run() {
   fi
   echo "[four-brain] dispatch_bar_run failed (HTTP $http_code): $(cat "$tmp_body")" >&2
   rm -f "$tmp_body"
-  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
-  # FOUR_BRAIN_LOCAL_DEV=true keeps the legacy soft-continue behavior for local dry testing.
+  # Finding 10: FOUR_BRAIN_LOCAL_DEV=true soft-continue only allowed when MC_API_URL is localhost/127.0.0.1/file://
+  # Hard-block if LOCAL_DEV=true but URL points to a non-local host (production masking guard)
   if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
-    echo "[four-brain] dispatch_bar_run: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
-    return 0
+    if [[ "$MC_API_URL" =~ ^(http://localhost|http://127\.0\.0\.1|file://) ]]; then
+      echo "[four-brain] dispatch_bar_run: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true + local URL confirmed)." >&2
+      return 0
+    else
+      echo "[four-brain] BLOCKED: FOUR_BRAIN_LOCAL_DEV=true but MC_API_URL='$MC_API_URL' is non-local. Hard-blocking to prevent production masking." >&2
+      return 1
+    fi
   fi
   return 1
 }
@@ -410,11 +415,15 @@ claim_role_api() {
     return 0
   fi
   echo "[four-brain] claim_role_api ($role) failed (HTTP $http_code)." >&2
-  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
-  # FOUR_BRAIN_LOCAL_DEV=true keeps legacy soft-continue for local dry testing.
+  # Finding 10: hard-block if FOUR_BRAIN_LOCAL_DEV=true but MC_API_URL is non-local
   if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
-    echo "[four-brain] claim_role_api ($role): non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
-    return 0
+    if [[ "$MC_API_URL" =~ ^(http://localhost|http://127\.0\.0\.1|file://) ]]; then
+      echo "[four-brain] claim_role_api ($role): non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true + local URL confirmed)." >&2
+      return 0
+    else
+      echo "[four-brain] BLOCKED: FOUR_BRAIN_LOCAL_DEV=true but MC_API_URL='$MC_API_URL' is non-local. Hard-blocking to prevent production masking." >&2
+      return 1
+    fi
   fi
   return 1
 }
@@ -489,9 +498,24 @@ write_d1_transition() {
   escaped_role="$(json_escape "$role")"
   enotes="$(json_escape "${notes:-}")"
   eevidence="$(json_escape "${evidence_hash:-}")"
+  # Finding 3: include explicit timestamp and lbb_record_id for W-2 evidence completeness
+  local ts_now lbb_record_id_val=""
+  ts_now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  # Load lbb_record_id from the most recent LBB write for this role/action if available
+  local lbb_json_file="$run_dir/LBB-$role-$action.json"
+  if [[ -f "$lbb_json_file" ]]; then
+    lbb_record_id_val="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("record_id",""))' < "$lbb_json_file" 2>/dev/null || true)"
+  fi
+  local elbb_record_id ets
+  elbb_record_id="$(json_escape "${lbb_record_id_val:-}")"
+  ets="$(json_escape "$ts_now")"
   local json_body
   json_body="{\"bar_id\":$eb,\"run_id\":$erun,\"role\":$escaped_role,\"action\":$ea"
+  json_body="${json_body},\"timestamp\":$ets"
   json_body="${json_body},\"atlas_sections_consulted\":\"FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070\""
+  if [[ -n "$lbb_record_id_val" ]]; then
+    json_body="${json_body},\"lbb_record_id\":$elbb_record_id"
+  fi
   if [[ -n "$evidence_hash" ]]; then
     json_body="${json_body},\"evidence_hash\":$eevidence"
   fi
@@ -509,16 +533,27 @@ write_d1_transition() {
     -H "X-API-Key: ${MC_API_KEY:-}" \
     -H "Content-Type: application/json" \
     -d "$json_body")"
-  rm -f "$tmp_body"
   if [[ "$http_code" =~ ^2 ]]; then
+    # Finding 3: persist returned transition ID for downstream audit evidence
+    local transition_id
+    transition_id="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("id","") or d.get("transition_id",""))' < "$tmp_body" 2>/dev/null || true)"
+    if [[ -n "$transition_id" ]]; then
+      printf "%s" "$transition_id" > "$run_dir/.transition_${role}_id"
+    fi
+    rm -f "$tmp_body"
     return 0
   fi
+  rm -f "$tmp_body"
   echo "[four-brain] write_d1_transition failed (HTTP $http_code) for $bar_id $role $action." >&2
-  # F-004: fail-closed by default when URL is configured and non-2xx is returned.
-  # FOUR_BRAIN_LOCAL_DEV=true keeps legacy soft-continue for local dry testing.
+  # Finding 10: hard-block if FOUR_BRAIN_LOCAL_DEV=true but MC_API_URL is non-local
   if [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
-    echo "[four-brain] write_d1_transition: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true)." >&2
-    return 0
+    if [[ "$MC_API_URL" =~ ^(http://localhost|http://127\.0\.0\.1|file://) ]]; then
+      echo "[four-brain] write_d1_transition: non-2xx ignored (FOUR_BRAIN_LOCAL_DEV=true + local URL confirmed)." >&2
+      return 0
+    else
+      echo "[four-brain] BLOCKED: FOUR_BRAIN_LOCAL_DEV=true but MC_API_URL='$MC_API_URL' is non-local. Hard-blocking to prevent production masking." >&2
+      return 1
+    fi
   fi
   return 1
 }
@@ -611,12 +646,19 @@ write_lbb_transition() {
   local ts
   ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   if [[ -x "$LBB_SCRIPT" ]]; then
+    # Finding 4: use --subject processes (canonical BAR-run subject per PROCESS-UT §3/§5)
+    # Add mission-control-wiring tag when action is a wiring artifact
+    local extra_tags=""
+    if [[ "$action" == "wire" || "$action" == "wiring" ]]; then
+      extra_tags="--tags mission-control-wiring"
+    fi
     "$LBB_SCRIPT" \
       --bar-id "$bar_id" \
       --role "$role" \
       --action "$action" \
-      --subject system \
+      --subject processes \
       --evidence "$run_dir" \
+      ${extra_tags:+$extra_tags} \
       > "$output"
     echo "$output"
     return 0
@@ -627,22 +669,24 @@ write_lbb_transition() {
       echo "[four-brain] write_lbb_transition: --defer-lbb requires FOUR_BRAIN_LOCAL_DEV=true. Live LBB logging is mandatory in non-local environments." >&2
       return 1
     fi
-    # Write deferred stub with all 12 required LBB schema fields
+    # Write deferred stub with all 12 canonical LBB schema fields
+    # Canonical fields: record_id, bar_id, role, action, evidence_hash,
+    #   atlas_sections_consulted, timestamp, sovereign_ref, subject_id,
+    #   orbt_mode, gate_verdicts, notes
     cat > "$output" <<EOF
 {
   "record_id": "deferred-$(date -u +%s)-$bar_id",
-  "sovereign_ref": "imo-creator",
-  "hub_id": "four-brain",
-  "cc_layer": "CC-03",
-  "subject_id": "processes",
-  "ctb_placement": "leaf",
   "bar_id": "$bar_id",
   "role": "$role",
   "action": "$action",
-  "status": "DEFERRED_LOCAL_ONLY",
-  "reason": "scripts/lbb-log.sh unavailable in this checkout; FOUR_BRAIN_LOCAL_DEV=true",
-  "evidence": "$run_dir",
-  "timestamp": "$ts"
+  "evidence_hash": null,
+  "atlas_sections_consulted": "FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070",
+  "timestamp": "$ts",
+  "sovereign_ref": "imo-creator",
+  "subject_id": "processes",
+  "orbt_mode": "BUILD",
+  "gate_verdicts": null,
+  "notes": "DEFERRED_LOCAL_ONLY: scripts/lbb-log.sh unavailable; FOUR_BRAIN_LOCAL_DEV=true"
 }
 EOF
     # Mark run as non-certifiable — deferred LBB writes cannot be auditor-certified
@@ -1284,23 +1328,37 @@ run_claude_cli() {
   local model="$1"
   local prompt="$2"
   local output="$3"
+  # Finding 2: Mechanic must be able to edit Mission Control + worker code in sibling repo
+  # Add --add-dir imo-creator-v2 to Mechanic's allowed directory scope
+  local sibling_repo
+  sibling_repo="$(cd "$ROOT/../imo-creator-v2" 2>/dev/null && pwd || true)"
   if command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
-    local prompt_win root_win output_win
+    local prompt_win root_win output_win sibling_win
     prompt_win="$(cygpath -w "$prompt")"
     root_win="$(cygpath -w "$ROOT")"
     output_win="$(cygpath -w "$output")"
+    local add_dir_flags
+    add_dir_flags="--add-dir '$(ps_escape "$root_win")'"
+    if [[ -n "$sibling_repo" ]]; then
+      sibling_win="$(cygpath -w "$sibling_repo")"
+      add_dir_flags="$add_dir_flags --add-dir '$(ps_escape "$sibling_win")'"
+    fi
     powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "\
 \$ErrorActionPreference = 'Stop'; \
 Remove-Item Env:\ANTHROPIC_API_KEY -ErrorAction SilentlyContinue; \
 Remove-Item Env:\ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue; \
 \$env:CLAUDE_CODE_GIT_BASH_PATH = 'C:\Program Files\Git\bin\bash.exe'; \
 \$promptText = Get-Content -Raw -LiteralPath '$(ps_escape "$prompt_win")'; \
-\$result = \$promptText | & '$(ps_escape "$CLAUDE_CODE_PS1")' --print --model '$(ps_escape "$model")' --permission-mode acceptEdits --add-dir '$(ps_escape "$root_win")'; \
+\$result = \$promptText | & '$(ps_escape "$CLAUDE_CODE_PS1")' --print --model '$(ps_escape "$model")' --permission-mode acceptEdits $add_dir_flags; \
 \$code = \$LASTEXITCODE; \
 if (\$null -ne \$result) { \$result | Set-Content -LiteralPath '$(ps_escape "$output_win")' -NoNewline; } \
 exit \$code"
   else
-    claude --print --model "$model" --permission-mode acceptEdits --add-dir "$ROOT" < "$prompt" > "$output"
+    local add_dir_args=("--add-dir" "$ROOT")
+    if [[ -n "$sibling_repo" ]]; then
+      add_dir_args+=("--add-dir" "$sibling_repo")
+    fi
+    claude --print --model "$model" --permission-mode acceptEdits "${add_dir_args[@]}" < "$prompt" > "$output"
   fi
 }
 
@@ -1965,32 +2023,26 @@ run_strike1() {
     echo "No run dir found for $bar_id" >&2
     return 1
   fi
-  # Finding 2 (HIGH): Read current strike_count from canonical garage_status.strike_count first;
-  # fallback to root-level strike_count for legacy intakes.
+  # Finding 6 (MEDIUM): Canonical operational path is garage_status.strike_count ONLY.
+  # No legacy root-level fallback. If the canonical path is missing, the intake is malformed
+  # and we halt rather than silently promote a root-level field.
   local strike_count=0
   if grep -q "^  strike_count:" "$intake_yaml" 2>/dev/null; then
     # Canonical nested path: garage_status.strike_count
     strike_count="$(grep "^  strike_count:" "$intake_yaml" | awk '{print $2}')"
-  elif grep -q "^strike_count:" "$intake_yaml" 2>/dev/null; then
-    # Legacy root-level fallback
-    strike_count="$(grep "^strike_count:" "$intake_yaml" | awk '{print $2}')"
+  else
+    echo "[four-brain] BLOCKED: intake YAML at $intake_yaml has no 'garage_status.strike_count' field (canonical path ^  strike_count: not found)." >&2
+    echo "[four-brain] Remediation: ensure intake was created from planner-intake-template.yaml which always includes garage_status.strike_count." >&2
+    return 1
+  fi
+  # Remove any stale root-level strike_count field (Finding 6: eliminate ambiguous duplicate)
+  if grep -q "^strike_count:" "$intake_yaml" 2>/dev/null; then
+    sed -i "/^strike_count:/d" "$intake_yaml"
+    echo "[four-brain] Removed stale root-level strike_count from $intake_yaml (Finding 6 cleanup)." >&2
   fi
   strike_count=$((strike_count + 1))
-  # Write updated strike_count to canonical garage_status.strike_count first
-  if grep -q "^  strike_count:" "$intake_yaml"; then
-    sed -i "s/^  strike_count:.*$/  strike_count: $strike_count/" "$intake_yaml"
-  else
-    # Legacy: update or append root-level field; also ensure canonical field if garage_status block present
-    if grep -q "^strike_count:" "$intake_yaml"; then
-      sed -i "s/^strike_count:.*/strike_count: $strike_count/" "$intake_yaml"
-    else
-      echo "strike_count: $strike_count" >> "$intake_yaml"
-    fi
-  fi
-  # Ensure single authoritative field: remove stale root-level if canonical nested was written
-  if grep -q "^  strike_count:" "$intake_yaml" && grep -q "^strike_count:" "$intake_yaml"; then
-    sed -i "/^strike_count:/d" "$intake_yaml"
-  fi
+  # Write updated value to canonical garage_status.strike_count only
+  sed -i "s/^  strike_count:.*$/  strike_count: $strike_count/" "$intake_yaml"
   echo "[four-brain] Strike $strike_count recorded for $bar_id." >&2
   # Strike-3: halt — sovereign must investigate structural failure
   if [[ "$strike_count" -ge 3 ]]; then
@@ -2012,8 +2064,18 @@ run_strike1() {
       has_mechanic_target=true
     fi
   else
-    echo "[four-brain] WARNING: AUDIT-VERDICT.md not found at $verdict_file; defaulting to Mechanic rerun." >&2
-    has_mechanic_target=true
+    # Finding 5: halt as BLOCKED — do NOT default to Mechanic rerun on missing/unparseable verdict
+    echo "[four-brain] BLOCKED: AUDIT-VERDICT.md not found at $verdict_file." >&2
+    echo "[four-brain] Remediation: ensure Auditor writes AUDIT-VERDICT.md with 'Strike target:' lines before run_strike1 is called." >&2
+    update_status "$intake_yaml" "$(current_status "$bar_id" 2>/dev/null || echo "UNKNOWN")" "BLOCKED" 2>/dev/null || true
+    return 1
+  fi
+  if [[ "$has_planner_target" == "false" && "$has_mechanic_target" == "false" ]]; then
+    # Finding 5: halt as BLOCKED when verdict file exists but has no parseable strike-target lines
+    echo "[four-brain] BLOCKED: AUDIT-VERDICT.md found at $verdict_file but contains no parseable 'Strike target:' lines." >&2
+    echo "[four-brain] Remediation: Auditor must declare at least one 'Strike target: Mechanic' or 'Strike target: Planner' line in the verdict." >&2
+    update_status "$intake_yaml" "$(current_status "$bar_id" 2>/dev/null || echo "UNKNOWN")" "BLOCKED" 2>/dev/null || true
+    return 1
   fi
   echo "[four-brain] Strike $strike_count target parse: planner=$has_planner_target mechanic=$has_mechanic_target" >&2
 

@@ -373,7 +373,7 @@ SELECT COUNT(*) FROM lbb_records WHERE bar_id='BAR-{id}' AND subject_id='process
 Deferred until first completed BAR run + Codex CERTIFY. At that time, append:
 - Actual `four_brain_run` row count
 - LBB row count (must be 4)
-- Gate verdict table (G01-G10 all PASS)
+- Gate verdict table (G01-G12 + W-1..W-7 all PASS)
 - D1 `last_completed_at` value
 
 ---
