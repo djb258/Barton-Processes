@@ -153,9 +153,15 @@ claim_intake() {
   fi
   local ts
   ts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-  perl -0pi -e 's/(^garage:\n(?:  .*\n)*?  garage_status: )READY_FOR_PLANNER/${1}PLANNER_RUNNING/m' "$file"
-  perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_by: )null/\${1}$planner/m" "$file"
-  perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_at: )null/\${1}$ts/m" "$file"
+  # Supports both legacy nested-block form and v2.0.0 root-level form.
+  if grep -qE "^garage:" "$file"; then
+    perl -0pi -e 's/(^garage:\n(?:  .*\n)*?  garage_status: )READY_FOR_PLANNER/${1}PLANNER_RUNNING/m' "$file"
+    perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_by: )null/\${1}$planner/m" "$file"
+    perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  planner_claimed_at: )null/\${1}$ts/m" "$file"
+  else
+    # v2.0.0 thin form — root-level garage_status; planner_claimed_* fields not required.
+    perl -pi -e 's/^(garage_status:[[:space:]]+)READY_FOR_PLANNER\b/${1}PLANNER_RUNNING/' "$file"
+  fi
   local run_dir
   run_dir="$(latest_run_dir "$bar_id")"
   dispatch_bar_run "$bar_id" "$run_dir"
@@ -931,14 +937,24 @@ PROMPT
 }
 
 update_status() {
+  # Updates the garage_status field in an intake YAML.
+  # Supports BOTH legacy nested form (garage_status: under garage: parent block)
+  # AND v2.0.0 thin form (garage_status: at root level). Without this, v2.0.0
+  # intakes silently no-op and the pipeline drifts out of sync with reality.
   local file="$1"
   local from="$2"
   local to="$3"
-  if [[ "$(grep "garage_status:" "$file" | tail -n 1 | sed 's/.*garage_status:[[:space:]]*//')" == "$from" ]]; then
+  local current
+  current="$(grep "garage_status:" "$file" | tail -n 1 | sed 's/.*garage_status:[[:space:]]*//')"
+  if [[ "$current" != "$from" ]]; then
+    echo "Expected status $from in $file (got: $current)" >&2
+    return 1
+  fi
+  # Try nested-block form first (legacy), then root-level form (v2.0.0).
+  if grep -qE "^garage:" "$file"; then
     perl -0pi -e "s/(^garage:\n(?:  .*\n)*?  garage_status: )$from/\${1}$to/m" "$file"
   else
-    echo "Expected status $from in $file" >&2
-    return 1
+    perl -pi -e "s/^(garage_status:[[:space:]]+)$from\b/\${1}$to/" "$file"
   fi
 }
 
