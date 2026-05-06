@@ -1,12 +1,18 @@
 name: planner-intake-template
-version: "1.0.0"
+version: "2.0.0"
 status: TEMPLATE
-last_modified: "2026-05-05"
+last_modified: "2026-05-06"
 paired_md: PLANNER-INTAKE-TEMPLATE.md
 purpose: >
-  Reusable source packet template for Process 070 Planner runs. The packet
-  tells the Planner what outcome is wanted, what sources and constraints are
-  locked, and what P=1 means. It does not prescribe how the Planner should plan.
+  Thin operator-facing source packet. Operator answers four mandatory questions
+  (IMO + Type) plus a conditional follow-up and six optional fields. The Planner
+  translates the plain-language answers into structured doctrine (CTB, BS Law,
+  read set, connector binding, P=1, audit packet) by consulting Atlas. Operator
+  does not need to know doctrine vocabulary.
+
+# =============================================================================
+# OUTSIDE — identity in the Library / CTB / Atlas
+# =============================================================================
 
 outside:
   bs_law_arm: outside_dewey
@@ -25,13 +31,18 @@ outside:
       - Mission Control
     secrets_provider: none
     acceptance_criteria: >
-      Any BAR or process can use this template to produce a planner packet with
-      a clear desired outcome, source-of-truth split, read set, constraints,
-      evidence requirements, and P=1 definition.
+      An operator with no doctrine vocabulary can drop a BAR by answering
+      four plain-language questions plus a conditional follow-up. The Planner
+      can produce a Plan Book from the packet OR mark BLOCKED with a specific
+      question back to the operator.
     species: Workflow-Body
   orbt:
     library_state: BUILD
-    indexed_by: codex
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE — runtime identity
+# =============================================================================
 
 inside:
   bs_law_arm: inside_fractal
@@ -40,15 +51,19 @@ inside:
     parent_process: bp.070-four-brain
     output_type: planner_intake_packet
     aviation_model:
-      planner: four-brain-planner
+      planner: opus-4-7
       foreman: sonnet
       mechanic: sonnet
       auditor: codex
       rule: "mechanic != auditor"
-    determinism_gate: "intake_sets_destination_planner_sets_route"
+    determinism_gate: "operator_sets_destination_in_plain_language_planner_translates_to_doctrine"
   orbt:
     runtime_state: BUILD
-    promotion_gate: "used successfully by multiple BAR planner packets and audited P=1"
+    promotion_gate: "used successfully by 3+ BARs end-to-end with auditor P=1"
+
+# =============================================================================
+# BS LAW CONFORMANCE
+# =============================================================================
 
 bs_law_conformance:
   law: "Book and Spine together, always."
@@ -67,234 +82,188 @@ bs_law_conformance:
     ctb_present: true
     imo_present: true
 
-template_fields:
-  planner_request:
-    bar_or_work_id: required
-    target_process: required
-    desired_outcome: required
-    operating_mode: required
-    due_or_timing: optional
-    sovereign_decision_needed: optional
-  source_of_truth_split:
-    blueprint_architecture: optional
-    execution_operations: optional
-    runtime_deployment: optional
-    evidence_observability: optional
-  required_format:
-    plan_book: required
-    ut_body: conditional
-    companion_yaml: conditional
-    bs_law: required
-    atlas_references: required
-    lbb_mission_control_evidence: conditional
-  read_set:
-    atlas:
-      - imo-creator-v2/atlas/constants/KEY.md
-      - imo-creator-v2/atlas/constants/BS_LAW.md
-      - imo-creator-v2/atlas/manifests/STRUCTURE_MANIFEST.yaml
-      - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
-    process_070:
-      - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
-      - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
-    target_specific:
-      rule: "Fill with exact files the Planner must inspect."
-  documentation_anchors:
-    rule: "List existing docs that support claims and constraints."
-  research_brainstorming_packet:
-    purpose: >
-      Accept rough thinking, voice notes, chat notes, whiteboard notes, BAR notes,
-      and operator observations as planning input without treating them as certified facts.
-    inputs:
-      brainstorm_notes:
-        required: false
-        examples:
-          - path
-          - chat_summary
-          - voice_transcript
-          - whiteboard_note
-      existing_bar_notes:
-        required: false
-        examples:
-          - linear_bar
-          - lbb_record
-          - plan_book
-      operator_observations:
-        required: false
-        rule: "Treat as clues until verified against source docs, runtime evidence, or sovereign confirmation."
-    fact_handling_rule: >
-      Brainstorming is input, not certification. Planner may use it to form the
-      plan, but P=1 requires cited documentation, runtime evidence, or sovereign
-      confirmation.
-  lbb_pull_contract:
-    purpose: "Tell Planner where to pull prior memory, role logs, compliance context, and closeout evidence."
-    fields:
-      work_ids_or_bar_ids: optional
-      search_terms: optional
-      time_window: optional
-      required_records:
-        - planner_notes
-        - foreman_dispatches
-        - mechanic_outputs
-        - auditor_verdicts
-        - closeout_logs
-      evidence_needed_for_p1: optional
-    rule: >
-      Before planning, pull relevant LB&B records when they exist. During
-      execution, every role transition and closeout must be logged to LB&B when
-      the process is operational or compliance-relevant. If LB&B is unavailable,
-      Planner must mark evidence as blocked or deferred; it cannot silently skip
-      the logbook.
-  connector_run_binding:
-    purpose: "Declare which connectors or repo surfaces Process 070 may use for this BAR and what each must prove."
-    connectors:
-      lbb:
-        required: conditional
-        purpose: "Pull prior memory; write role transitions and closeout."
-        credential_or_access_source: "Doppler LBB_API_KEY or approved connector"
-        evidence_expected:
-          - query_results
-          - transition_rows
-          - audit_book_or_certify_row
-      linear_bar_tracker:
-        required: conditional
-        purpose: "Pull BAR status, comments, checklist, owner, and blockers."
-        credential_or_access_source: "Linear connector or exported BAR notes"
-        evidence_expected:
-          - bar_url_or_id
-          - status_snapshot
-      github:
-        required: conditional
-        purpose: "Read/write versioned process docs and code."
-        credential_or_access_source: "GitHub CLI or connector"
-        evidence_expected:
-          - branch
-          - commit
-          - pull_request_or_pushed_sha
-      atlas:
-        required: true
-        purpose: "Resolve constants, structure, BS Law, and Four-Brain doctrine."
-        credential_or_access_source: "Local repo path"
-        evidence_expected:
-          - cited_file_paths
-          - cited_sections
-      mission_control:
-        required: conditional
-        purpose: "Surface run state, telemetry, and dashboard visibility."
-        credential_or_access_source: "D1, worker, or Mission Control connector"
-        evidence_expected:
-          - run_row
-          - dashboard_link
-          - blocked_note
-      r2_d1:
-        required: conditional
-        purpose: "Stage artifacts in R2 and vault accepted records in D1 when the process uses data cycles."
-        credential_or_access_source: "Cloudflare/Doppler bindings"
-        evidence_expected:
-          - r2_object_keys
-          - d1_rows
-          - blocked_note
-    rule: >
-      The intake names the connector and the job it performs. The Planner
-      decides how to use the connector inside the route. No connector access
-      means an explicit blocker/defer note, not silent omission.
-  process_070_start_contract:
-    purpose: "Define the ForeBrain garage handoff that starts a Process 070 Planner run."
-    canonical_paths:
-      intake_markdown: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/PLANNER-INTAKE.md"
-      intake_yaml: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/planner-intake.yaml"
-      final_product_pointer: "Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
-      plan_book: "Barton-Processes/docs/plans/BAR-{id}/PLAN-BOOK.md"
-      process_070_docs:
-        - "Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md"
-        - "Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml"
-    commands:
-      new: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh new BAR-{id}"
-      run_once_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh run-once --execute"
-      watch_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh watch --execute --interval 3"
-      final: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh final BAR-{id}"
-    sequence:
-      - "Run forebrain-garage.sh new BAR-{id}."
-      - "Fill the intake markdown and YAML at the canonical BAR path."
-      - "Set garage_status: READY_FOR_PLANNER."
-      - "Run run-once --execute or watcher mode."
-      - "Planner reads the intake packet plus Atlas and Process 070 docs."
-      - "Planner writes the Plan Book."
-      - "Garage writes FINAL-PRODUCT.yaml pointing to the durable product."
-      - "Sovereign approves or corrects the Plan Book."
-      - "Foreman dispatches scoped Mechanic work orders from the Plan Book."
-      - "Mechanic builds; Auditor audits; LB&B logs each transition."
-    runtime_note: >
-      Process 070 starts through the ForeBrain garage. A BAR is eligible for
-      pickup only when its paired YAML says garage_status: READY_FOR_PLANNER.
-      The final pickup ticket is FINAL-PRODUCT.yaml, which points to the durable
-      product, usually docs/plans/BAR-{id}/PLAN-BOOK.md.
-  non_drift_invariants:
-    common:
-      - "The Planner owns the plan; intake owns desired outcome and constraints."
-      - "Foreman dispatches; Mechanic builds; Auditor certifies."
-      - "Mechanic cannot audit its own work."
-      - "BS Law applies to every durable structured artifact."
-      - "Blueprint, execution, runtime, and evidence layers must not drift."
-  input_contract:
-    target_process: required
-    desired_outcome: required
-    blueprint_home: conditional
-    execution_home: conditional
-    runtime_surface: conditional
-    evidence_target: conditional
-    brainstorming_packet: optional
-    lbb_search_contract: optional
-    connector_run_binding: conditional
-    protected_constraints: conditional
-    p1_definition: required
-  storage_evidence_contract:
-    r2:
-      role: workbench_staging_cycle_artifacts
-      conditional: true
-    d1:
-      role: registry_vault_indexed_record
-      conditional: true
-    lbb:
-      role: compliance_logbook_memory
-      conditional: true
-    mission_control:
-      role: operator_visibility
-      conditional: true
-    github:
-      role: versioned_source
-      conditional: true
-  planner_deliverables:
-    - plan_book_path_or_proposed_path
-    - read_set
+# =============================================================================
+# TEMPLATE STRUCTURE — the four mandatory + conditional + six optional
+# =============================================================================
+
+template_structure:
+  philosophy: |
+    Operator owns: the destination (where from / what / where to) and the
+    type of work (build / fix / maintenance). That's it.
+
+    Planner owns: CTB lookup, source-of-truth split, read set, connector
+    binding, P=1 definition, audit packet, mechanic dispatch hints. All
+    derived from Atlas + the four answers above.
+
+    99.9% of operator dispatches are sovereign-issued. Don't over-engineer
+    the front door.
+
+  mandatory:
+    - id: Q1
+      label: where_from
+      prompt: "Where is the information / signal / trigger coming from?"
+      format: free_text
+      required: true
+
+    - id: Q2
+      label: what
+      prompt: "What do you want done with it?"
+      format: free_text
+      required: true
+
+    - id: Q3
+      label: where_to
+      prompt: "Where does the result go?"
+      format: free_text
+      required: true
+
+    - id: Q4
+      label: type
+      prompt: "Pick one: Build / Fix / Maintenance."
+      format: enum
+      enum: [build, fix, maintenance]
+      required: true
+      asked_position: last_of_mandatory
+      drives: Q4A_conditional
+
+  conditional:
+    Q4A:
+      depends_on: Q4
+      branches:
+        build:
+          label: maintenance_cadence
+          prompt: "After this is built, what's the maintenance cadence?"
+          format: enum
+          enum: [a_check_weekly, b_check_monthly, c_check_quarterly, d_check_yearly, none]
+        fix:
+          label: squawk_symptom
+          prompt: "What is broken? What did you observe?"
+          format: free_text
+        maintenance:
+          label: check_level
+          prompt: "Which scheduled check level?"
+          format: enum
+          enum: [a_check_weekly, b_check_monthly, c_check_quarterly, d_check_yearly, ad_event_driven]
+
+  optional:
+    - id: O1
+      label: why
+      prompt: "Why does this matter? Driver, deadline, business context."
+    - id: O2
+      label: who_for
+      prompt: "Who consumes the output?"
+    - id: O3
+      label: deadline
+      prompt: "Date / event / no rush."
+    - id: O4
+      label: constraints
+      prompt: "Locked files, no-touch zones, sovereign-only decisions."
+    - id: O5
+      label: existing
+      prompt: "Anything in flight, already documented, already failed."
+    - id: O6
+      label: reference
+      prompt: "Files, BAR IDs, LBB rows, Linear issues, screenshots."
+
+# =============================================================================
+# EDGE-CASE ROUTING — for Planner classification, not operator
+# =============================================================================
+
+edge_case_routing:
+  refactor: build
+  research: build
+  delete: fix
+  audit_or_review: maintenance
+  investigate: fix
+
+# =============================================================================
+# GARAGE STATUS — the trigger field
+# =============================================================================
+
+garage_status:
+  current: DRAFT
+  enum:
+    - DRAFT                # Parked, not ready
+    - READY_FOR_PLANNER    # In the bay with work order on windshield
+    - PLANNER_RUNNING      # Planner has claimed it
+    - PLAN_BOOK_READY      # Plan Book produced; Foreman can dispatch
+    - BLOCKED              # Planner asks question back to operator
+    - CLOSED               # BAR finished
+  trigger_field: true
+  rule: "Watcher polls this field. READY_FOR_PLANNER triggers Planner pickup."
+
+# =============================================================================
+# PLANNER RESPONSIBILITIES — what the Planner does after pickup
+# =============================================================================
+
+planner_responsibilities:
+  step_0_atlas_pre_flight:
+    - "Read atlas/constants/KEY.md (vocabulary)"
+    - "Read atlas/constants/BS_LAW.md (Book + Spine)"
+    - "Read atlas/manifests/STRUCTURE_MANIFEST.yaml (CTB)"
+    - "Read atlas/constants/FOUR_BRAIN_AVIATION.md (role separation)"
+    - "Read atlas/constants/MISSION_CONTROL.md §10 (artifact wiring authority)"
+
+  discipline_order:
+    - 0_atlas_pre_flight: non_negotiable
+    - 1_simplicity_gate: "default NO on new builds; reuse beats reinvent"
+    - 2_inventory: "Library Books, workers, scripts, FCEs, schemas"
+    - 3_priority_ladder: "existing automation > new automation > new code > AI (last resort)"
+    - 4_bs_law_lens: "every output Book passes the Y-junction"
+    - 5_determinism_first: "AI never on the spine"
+
+  derived_from_operator_answers:
+    - ctb_position
     - source_of_truth_split
-    - required_artifacts
+    - read_set
+    - connector_run_binding
+    - p1_definition
+    - mission_control_wiring_disposition  # WIRE | EXEMPT | NEW_SLOT_NEEDED
     - mechanic_work_orders
     - auditor_packet
-    - p1_definition
-    - stop_conditions
-    - open_blockers
-    - evidence_requirements
-    - lbb_records_used_or_required
-    - connectors_used_or_blocked
-    - process_070_start_or_handoff_path
-    - brainstorming_claims_promoted_to_facts
-    - brainstorming_claims_left_as_assumptions
-  auditor_packet:
-    audit_areas:
-      - bs_law
-      - ut_conformance
-      - source_of_truth_split
-      - scope
-      - runtime_safety
-      - evidence
-      - connector_evidence
-      - research_provenance
-      - aviation_role_separation
-    verdict_format:
-      pass: "VERDICT: P=1"
-      fail: "VERDICT: P=0"
 
-usage:
-  instantiate_under: "Barton-Processes/docs/plans/BAR-*/"
-  fill_method: "Copy this template and replace bracketed fields with BAR-specific facts."
-  rule: "Tell the Planner what is wanted; do not tell the Planner how to plan."
+  blocking_rule: |
+    If any mandatory operator answer is ambiguous, set garage_status: BLOCKED
+    and write a single specific question back. Do not guess.
+
+# =============================================================================
+# PROCESS 070 START CONTRACT
+# =============================================================================
+
+process_070_start_contract:
+  canonical_paths:
+    intake_markdown: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/PLANNER-INTAKE.md"
+    intake_yaml: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/planner-intake.yaml"
+    plan_book: "Barton-Processes/docs/plans/BAR-{id}/PLAN-BOOK.md"
+    final_product_pointer: "Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
+  commands:
+    new: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh new BAR-{id}"
+    run_once_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh run-once --execute"
+    watch_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh watch --execute --interval 3"
+    final: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh final BAR-{id}"
+
+# =============================================================================
+# NON-DRIFT INVARIANTS
+# =============================================================================
+
+non_drift_invariants:
+  common:
+    - "Operator owns destination + type. Planner owns route."
+    - "Foreman dispatches; Mechanic builds; Auditor certifies."
+    - "Mechanic cannot audit its own work."
+    - "BS Law applies to every durable structured artifact."
+    - "Mechanic does not change Mission Control skeleton without sovereign sign-off."
+    - "Wiring disposition (WIRE / EXEMPT / NEW_SLOT_NEEDED) is declared by Planner in Plan Book, executed by Mechanic, verified by Auditor."
+
+# =============================================================================
+# Document Control
+# =============================================================================
+
+document_control:
+  version: "2.0.0"
+  last_modified: "2026-05-06"
+  status: TEMPLATE
+  authority: "Sovereign-locked. Mechanic refactors instances; doctrine changes require sovereign sign-off."
+  changelog:
+    - "v1.0.0 (2026-05-05): Initial 19-section verbose template."
+    - "v2.0.0 (2026-05-06): Collapsed to thin operator form (4 mandatory IMO+Type + conditional Q4A + 6 optional). Doctrine fill is Planner's job, not operator's. Added Mission Control wiring disposition to Planner deliverables per MISSION_CONTROL.md §10.4."
