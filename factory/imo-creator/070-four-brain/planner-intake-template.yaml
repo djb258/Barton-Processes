@@ -188,13 +188,22 @@ garage_status:
   current: DRAFT
   strike_count: 0
   enum:
-    - DRAFT                # Parked, not ready
-    - READY_FOR_PLANNER    # In the bay with work order on windshield
-    - PLANNER_RUNNING      # Planner has claimed it
-    - PLAN_BOOK_SIGNED     # Plan Book produced and sovereign-signed; Foreman can dispatch
-    - BLOCKED              # Planner asks question back to operator
-    - TROUBLESHOOT_TRAIN   # Strike 3 — structural investigation; pipeline halted
-    - CLOSED               # BAR finished
+    - DRAFT                     # Parked, not ready
+    - READY_FOR_PLANNER         # In the bay with work order on windshield
+    - PLANNER_RUNNING           # Planner has claimed it
+    - PLAN_BOOK_SIGNED          # Plan Book produced and sovereign-signed; Foreman can dispatch
+    - FOREMAN_RUNNING           # Foreman is producing the dispatch
+    - FOREMAN_DISPATCHED        # Foreman dispatch written; Mechanic not yet started
+    - MECHANIC_RUNNING          # Mechanic is executing work orders
+    - MECHANIC_DONE             # Mechanic output written; Auditor not yet started
+    - AUDITOR_RUNNING           # Auditor is inspecting
+    - REVIEW_PLAN_BOOK          # Awaiting sovereign review of Plan Book
+    - REVIEW_FOREMAN_DISPATCH   # Awaiting sovereign review of Foreman dispatch
+    - REVIEW_MECHANIC_OUTPUT    # Awaiting sovereign review of Mechanic output
+    - REVIEW_AUDIT_VERDICT      # Awaiting sovereign review of Audit verdict
+    - BLOCKED                   # Planner asks question back to operator
+    - TROUBLESHOOT_TRAIN        # Strike 3 — structural investigation; pipeline halted
+    - CLOSED                    # BAR finished
   trigger_field: true
   rule: "Watcher polls this field. READY_FOR_PLANNER triggers Planner pickup."
 

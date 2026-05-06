@@ -772,6 +772,21 @@ After writing the Plan Book:
 - Do not run Auditor work.
 - Return the Plan Book path and any TRUE blockers (open questions that block dispatch only — runtime-resolvable items go in the Plan Book itself, not as blockers).
 PROMPT
+  # Finding 1 (BLOCKER): inject STRIKE-CONTEXT.md into required read set if present
+  local strike_ctx="$run_dir/STRIKE-CONTEXT.md"
+  if [[ -f "$strike_ctx" ]]; then
+    cat >> "$prompt" <<STRIKE_INJECT
+
+==============================================================================
+STRIKE CONTEXT — READ THIS FIRST (repair run)
+==============================================================================
+REQUIRED READ: $strike_ctx
+
+You are in a STRIKE REPAIR run. Read STRIKE-CONTEXT.md before any other file.
+Repair ONLY the FAIL findings listed in that file. Do NOT redesign scope.
+Do NOT address findings not listed. Close listed FAILs in order.
+STRIKE_INJECT
+  fi
   echo "$prompt"
 }
 
@@ -931,6 +946,21 @@ REQUIRED OUTPUT — MECHANIC-OUTPUT.md must contain
 - Blockers (if any)
 - Final line: "Mechanic complete. Auditor handoff ready. Mechanic does not self-audit."
 PROMPT
+  # Finding 1 (BLOCKER): inject STRIKE-CONTEXT.md into required read set if present
+  local strike_ctx="$run_dir/STRIKE-CONTEXT.md"
+  if [[ -f "$strike_ctx" ]]; then
+    cat >> "$prompt" <<STRIKE_INJECT
+
+==============================================================================
+STRIKE CONTEXT — READ THIS FIRST (repair run)
+==============================================================================
+REQUIRED READ: $strike_ctx
+
+You are in a STRIKE REPAIR run. Read STRIKE-CONTEXT.md before any other file.
+Repair ONLY the FAIL findings listed in that file. Do NOT redesign scope.
+Do NOT address findings not listed. Close listed FAILs in order.
+STRIKE_INJECT
+  fi
   echo "$prompt"
 }
 
@@ -1935,17 +1965,31 @@ run_strike1() {
     echo "No run dir found for $bar_id" >&2
     return 1
   fi
-  # Read current strike_count from intake YAML
+  # Finding 2 (HIGH): Read current strike_count from canonical garage_status.strike_count first;
+  # fallback to root-level strike_count for legacy intakes.
   local strike_count=0
-  if grep -q "^strike_count:" "$intake_yaml" 2>/dev/null; then
+  if grep -q "^  strike_count:" "$intake_yaml" 2>/dev/null; then
+    # Canonical nested path: garage_status.strike_count
+    strike_count="$(grep "^  strike_count:" "$intake_yaml" | awk '{print $2}')"
+  elif grep -q "^strike_count:" "$intake_yaml" 2>/dev/null; then
+    # Legacy root-level fallback
     strike_count="$(grep "^strike_count:" "$intake_yaml" | awk '{print $2}')"
   fi
   strike_count=$((strike_count + 1))
-  # Write updated strike_count back to YAML
-  if grep -q "^strike_count:" "$intake_yaml"; then
-    sed -i "s/^strike_count:.*/strike_count: $strike_count/" "$intake_yaml"
+  # Write updated strike_count to canonical garage_status.strike_count first
+  if grep -q "^  strike_count:" "$intake_yaml"; then
+    sed -i "s/^  strike_count:.*$/  strike_count: $strike_count/" "$intake_yaml"
   else
-    echo "strike_count: $strike_count" >> "$intake_yaml"
+    # Legacy: update or append root-level field; also ensure canonical field if garage_status block present
+    if grep -q "^strike_count:" "$intake_yaml"; then
+      sed -i "s/^strike_count:.*/strike_count: $strike_count/" "$intake_yaml"
+    else
+      echo "strike_count: $strike_count" >> "$intake_yaml"
+    fi
+  fi
+  # Ensure single authoritative field: remove stale root-level if canonical nested was written
+  if grep -q "^  strike_count:" "$intake_yaml" && grep -q "^strike_count:" "$intake_yaml"; then
+    sed -i "/^strike_count:/d" "$intake_yaml"
   fi
   echo "[four-brain] Strike $strike_count recorded for $bar_id." >&2
   # Strike-3: halt — sovereign must investigate structural failure

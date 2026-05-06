@@ -142,6 +142,15 @@ Operator sets `garage_status` in the paired YAML, not here. The MD is for human 
 | `READY_FOR_PLANNER` | In the bay with a work order on the windshield. Planner picks it up. |
 | `PLANNER_RUNNING` | Planner has claimed it. |
 | `PLAN_BOOK_SIGNED` | Plan Book produced and sovereign-signed. Foreman can dispatch. |
+| `FOREMAN_RUNNING` | Foreman is producing the dispatch. |
+| `FOREMAN_DISPATCHED` | Foreman dispatch written; Mechanic not yet started. |
+| `MECHANIC_RUNNING` | Mechanic is executing work orders. |
+| `MECHANIC_DONE` | Mechanic output written; Auditor not yet started. |
+| `AUDITOR_RUNNING` | Auditor is inspecting. |
+| `REVIEW_PLAN_BOOK` | Awaiting sovereign review of Plan Book. |
+| `REVIEW_FOREMAN_DISPATCH` | Awaiting sovereign review of Foreman dispatch. |
+| `REVIEW_MECHANIC_OUTPUT` | Awaiting sovereign review of Mechanic output. |
+| `REVIEW_AUDIT_VERDICT` | Awaiting sovereign review of Audit verdict. |
 | `BLOCKED` | Question back to operator (Planner can't proceed). |
 | `CLOSED` | BAR finished. |
 
