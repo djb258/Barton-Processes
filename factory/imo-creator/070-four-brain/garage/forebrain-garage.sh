@@ -1,4 +1,35 @@
 #!/usr/bin/env bash
+# =============================================================================
+# forebrain-garage.sh — Process 070 Four-Brain runtime
+#
+# G-19 DOCTRINE COMPLIANCE (atlas/constants/MISSION_CONTROL.md §10.4)
+# -------------------------------------------------------------------
+# Sovereign cannot gate the pipeline mid-flight. The only sovereign
+# touchpoints are:
+#   1. Template-drop boundary (input)  — operator fills planner-intake.yaml
+#   2. Auditor verdict boundary (output) — sovereign reviews REVIEW_AUDIT_VERDICT
+#
+# Between Planner → Foreman → Mechanic → Auditor the pipeline auto-advances.
+# All quality judgment of intermediate artifacts (Plan Book, Foreman dispatch,
+# Mechanic output) belongs to the Auditor per Aviation Model (mechanic ≠
+# auditor). Mid-pipeline content gates that re-judge intermediate artifacts
+# either duplicate the Auditor's job or substitute sovereign approval for it
+# — both forbidden by G-19.
+#
+# The three intermediate gate functions (sign_plan_book_gate,
+# approve_foreman_dispatch_gate, approve_mechanic_output_gate) are
+# artifact-exists checks ONLY. They write a checklist for traceability
+# and auto-advance unless the artifact file is missing.
+#
+# auto_continue defaults to "true" for all role runners. The legacy
+# REVIEW_* statuses still exist and the `approve` subcommand still works
+# for opt-in manual review during debugging, but the default flow is
+# auto-advance per G-19.
+#
+# Atlas references: §4.5 Repair SOP, §6 Governance, §1.5 Aviation Model
+# Refactor: BAR-G-19-COMPLIANCE (2026-05-06)
+# =============================================================================
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -744,267 +775,161 @@ check_line() {
 }
 
 sign_plan_book_gate() {
+  # G-19 doctrine (atlas/constants/MISSION_CONTROL.md §10.4):
+  # Sovereign cannot gate the pipeline mid-flight. The only sovereign
+  # touchpoints are template-drop (input boundary) and Auditor verdict
+  # (output boundary). This gate is artifact-exists ONLY — all Plan Book
+  # quality judgment belongs to the Auditor per Aviation Model.
   local bar_id="$1"
   local run_dir="$2"
   local plan="$ROOT/docs/plans/$bar_id/PLAN-BOOK.md"
-  local signer="${FOUR_BRAIN_SIGNER:-Dave Barton}"
-  local signed_at="${FOUR_BRAIN_SIGNED_AT:-$(date -u +"%Y-%m-%d")}"
   local checklist="$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md"
-  local failed="false"
 
   mkdir -p "$run_dir"
 
-  local exists="false"
-  local top_status_ready="false"
-  local dc_status_ready="false"
-  local has_handoff="false"
-  local has_mechanic_dispatch="false"
-  local has_auditor_packet="false"
-  local has_p1="false"
-  local has_stop_conditions="false"
-  local has_open_blockers="false"
-  local has_dmj_default_yes="false"
-
-  [[ -f "$plan" ]] && exists="true"
-  if [[ "$exists" == "true" ]]; then
-    grep -q '^\*\*Status:\*\* READY-FOR-FOREMAN' "$plan" && top_status_ready="true"
-    grep -q '| Status | READY-FOR-FOREMAN |' "$plan" && dc_status_ready="true"
-    grep -q '## .*HANDOFF' "$plan" && has_handoff="true"
-    grep -q 'MECHANIC DISPATCH REQUIREMENTS' "$plan" && has_mechanic_dispatch="true"
-    grep -q 'AUDITOR PACKET' "$plan" && has_auditor_packet="true"
-    grep -q 'P=1 DEFINITION' "$plan" && has_p1="true"
-    grep -q 'STOP CONDITIONS' "$plan" && has_stop_conditions="true"
-    grep -q 'OPEN BLOCKERS / SOVEREIGN DECISIONS' "$plan" && has_open_blockers="true"
-    grep -q 'Q-01.*DMJ.*new process number.*YES' "$plan" && has_dmj_default_yes="true"
-  fi
-
-  for ok in "$exists" "$top_status_ready" "$dc_status_ready" "$has_handoff" "$has_mechanic_dispatch" "$has_auditor_packet" "$has_p1" "$has_stop_conditions" "$has_open_blockers" "$has_dmj_default_yes"; do
-    [[ "$ok" == "true" ]] || failed="true"
-  done
-
   cat > "$checklist" <<EOF
-# Approval Checklist: PLAN_BOOK_SIGNED
+# Auto-Advance: PLAN_BOOK_SIGNED (G-19 compliant)
 
 BAR: $bar_id
-Reviewer: $signer
-Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Auto-advanced at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Plan Book: $plan
 
-## Dispatchability Checks
+## Mechanical Check (artifact exists only — no sovereign content judgment)
 
-$(check_line "$exists" "Plan Book artifact exists.")
-$(check_line "$top_status_ready" "Plan Book front-matter status is READY-FOR-FOREMAN before signing.")
-$(check_line "$dc_status_ready" "Document Control status is READY-FOR-FOREMAN before signing.")
-$(check_line "$has_handoff" "Plan Book has a Handoff section.")
-$(check_line "$has_mechanic_dispatch" "Plan Book contains Mechanic dispatch requirements.")
-$(check_line "$has_auditor_packet" "Plan Book contains Auditor packet requirements.")
-$(check_line "$has_p1" "Plan Book contains P=1 definition.")
-$(check_line "$has_stop_conditions" "Plan Book contains stop conditions.")
-$(check_line "$has_open_blockers" "Plan Book exposes open blockers / sovereign decisions.")
-$(check_line "$has_dmj_default_yes" "DMJ separate-process default is present for sovereign approval.")
+$(check_line "$([[ -f "$plan" ]] && echo true || echo false)" "Plan Book artifact exists at expected path.")
 
-## Sovereign Approval Checks
+## G-19 Doctrine Note
 
-- [x] Approval command explicitly requested transition REVIEW_PLAN_BOOK -> PLAN_BOOK_SIGNED.
-- [x] Q-01 accepted at approval time: downstream DMJ gets a separate process number; PROC-060 emits DMJ-ready evidence only.
-- [x] Runtime wiring remains follow-on BAR unless separately assigned.
+Plan Book quality (Atlas citations, P=1 definition, work orders, BS Law conformance,
+Mission Control wiring section, etc.) is verified by the **Auditor** at the output
+boundary, not by a sovereign mid-pipeline gate. This auto-advance preserves the
+Aviation Model: mechanic ≠ auditor; the construction crew does not certify itself.
+
+If the Plan Book is structurally insufficient, the Auditor returns FAIL → Strike-1
+→ Mechanic re-runs against corrected Plan Book.
 
 EOF
 
-  if [[ "$failed" == "true" ]]; then
+  if [[ ! -f "$plan" ]]; then
     {
       echo "## Verdict"
       echo
-      echo "BLOCKED: one or more required checkboxes failed. Plan Book was not signed."
+      echo "BLOCKED: Plan Book file does not exist. Planner did not write the artifact."
     } >> "$checklist"
-    echo "Plan Book approval checklist failed: $checklist" >&2
+    echo "Plan Book artifact missing: $plan" >&2
     return 1
   fi
 
   {
     echo "## Verdict"
     echo
-    echo "PASS: all required checkboxes passed. Signing Plan Book artifact."
+    echo "AUTO-ADVANCE: Plan Book exists. Pipeline advances PLANNER_RUNNING → PLAN_BOOK_SIGNED → FOREMAN_RUNNING per G-19."
   } >> "$checklist"
-
-  perl -0pi -e 's/^\*\*Status:\*\* READY-FOR-FOREMAN/**Status:** PLAN_BOOK_SIGNED/m' "$plan"
-  perl -0pi -e 's/\| Q-01 \| Should downstream DMJ receive a new process number separate from PROC-060\? \| open \| \*\*YES\*\* .+?\|/| Q-01 | Should downstream DMJ receive a new process number separate from PROC-060? | confirmed | **YES** - Downstream DMJ gets a separate process number; PROC-060 emits DMJ-ready evidence but the convergence engine lives in its own process. |/s' "$plan"
-  perl -0pi -e 's/\| Downstream DMJ should get its own PROC number \| \*\*ASSUMPTION\*\* \| Sovereign confirmation pending \(Q-01\) \|/| Downstream DMJ should get its own PROC number | **FACT** | Sovereign confirmed by PLAN_BOOK_SIGNED approval checklist. |/' "$plan"
-  perl -0pi -e 's/\| Runtime wiring belongs to follow-on BAR \| \*\*ASSUMPTION\*\* \| Sovereign confirmation pending \(Q-03\) \|/| Runtime wiring belongs to follow-on BAR | **ASSUMPTION** | Foreman may preserve follow-on BAR placeholder unless sovereign assigns BAR id. |/' "$plan"
-  perl -0pi -e 's/\| Status \| READY-FOR-FOREMAN \|/| Status | PLAN_BOOK_SIGNED |/' "$plan"
-  perl -0pi -e 's/\| Authority \| Dave Barton \(sovereign .+? signs at BAR open\) \|/| Authority | Dave Barton (sovereign - signed at BAR open) |/' "$plan"
-  if ! grep -q '| Signed By |' "$plan"; then
-    perl -0pi -e "s/\\| Authority \\| Dave Barton \\(sovereign - signed at BAR open\\) \\|/| Authority | Dave Barton (sovereign - signed at BAR open) |\\n| Signed By | $signer - $signed_at |/" "$plan"
-  fi
 
   echo "$checklist"
 }
 
 approve_foreman_dispatch_gate() {
+  # G-19 doctrine: artifact-exists ONLY. All dispatch quality judgment
+  # (Atlas citations, write scope, work orders, role separation, etc.)
+  # is the Auditor's job at the output boundary. Mid-pipeline content
+  # gates are forbidden per atlas/constants/MISSION_CONTROL.md §10.4.
   local bar_id="$1"
   local run_dir="$2"
   local dispatch="$run_dir/FOREMAN-DISPATCH.md"
   local checklist="$run_dir/APPROVAL-CHECKLIST-FOREMAN_DISPATCHED.md"
-  local failed="false"
-
-  local exists="false"
-  local not_blocked="false"
-  local has_atlas="false"
-  local has_mechanic="false"
-  local has_write_scope="false"
-  local has_forbidden="false"
-  local has_work_orders="false"
-  local has_acceptance="false"
-  local preserves_aviation="false"
-  local no_foreman_build="false"
-  local foreman_role_sonnet="false"
-  local foreman_role_not_opus="false"
-
-  [[ -f "$dispatch" ]] && exists="true"
-  if [[ "$exists" == "true" ]]; then
-    ! grep -q 'DISPATCH STATUS: BLOCKED' "$dispatch" && not_blocked="true"
-    grep -qi 'ATLAS STEP 0\|atlas' "$dispatch" && has_atlas="true"
-    grep -qi 'Mechanic' "$dispatch" && has_mechanic="true"
-    grep -qi 'WRITE SCOPE\|Allowed.*scope' "$dispatch" && has_write_scope="true"
-    grep -qi 'FORBIDDEN\|Do not modify\|No other file' "$dispatch" && has_forbidden="true"
-    grep -qi 'WORK ORDERS\|WO-0' "$dispatch" && has_work_orders="true"
-    grep -qi 'ACCEPTANCE\|P=1\|evidence' "$dispatch" && has_acceptance="true"
-    grep -qi 'Mechanic.*Auditor\|Auditor.*Mechanic\|different engine' "$dispatch" && preserves_aviation="true"
-    ! grep -qiE 'Foreman (must |should |will )?(build|edit|fix code)|Foreman.*using the Write tool' "$dispatch" && no_foreman_build="true"
-    grep -qiE '^\*\*Foreman role:\*\*.*Sonnet|Foreman role.*Sonnet/default routing' "$dispatch" && foreman_role_sonnet="true"
-    ! grep -qiE '^\*\*Foreman role:\*\*.*Opus' "$dispatch" && foreman_role_not_opus="true"
-  fi
-
-  for ok in "$exists" "$not_blocked" "$has_atlas" "$has_mechanic" "$has_write_scope" "$has_forbidden" "$has_work_orders" "$has_acceptance" "$preserves_aviation" "$no_foreman_build" "$foreman_role_sonnet" "$foreman_role_not_opus"; do
-    [[ "$ok" == "true" ]] || failed="true"
-  done
 
   cat > "$checklist" <<EOF
-# Approval Checklist: FOREMAN_DISPATCHED
+# Auto-Advance: FOREMAN_DISPATCHED (G-19 compliant)
 
 BAR: $bar_id
-Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Auto-advanced at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Foreman Dispatch: $dispatch
 
-## Foreman -> Mechanic Gate
+## Mechanical Check (artifact exists only)
 
-$(check_line "$exists" "Foreman dispatch artifact exists.")
-$(check_line "$not_blocked" "Foreman dispatch is not marked BLOCKED.")
-$(check_line "$has_atlas" "Dispatch cites Atlas / Step 0 sources.")
-$(check_line "$has_mechanic" "Dispatch is addressed to Mechanic.")
-$(check_line "$has_write_scope" "Dispatch states allowed write scope.")
-$(check_line "$has_forbidden" "Dispatch states forbidden paths / constraints.")
-$(check_line "$has_work_orders" "Dispatch contains literal work orders.")
-$(check_line "$has_acceptance" "Dispatch contains acceptance criteria or evidence gates.")
-$(check_line "$preserves_aviation" "Dispatch preserves Mechanic != Auditor separation.")
-$(check_line "$no_foreman_build" "Dispatch does not make Foreman the builder.")
-$(check_line "$foreman_role_sonnet" "Dispatch states Foreman role is Sonnet/default routing.")
-$(check_line "$foreman_role_not_opus" "Dispatch does not identify Foreman as Opus.")
+$(check_line "$([[ -f "$dispatch" ]] && echo true || echo false)" "Foreman dispatch artifact exists.")
+
+## G-19 Doctrine Note
+
+Foreman dispatch quality is verified by the Auditor downstream. Mid-pipeline
+content judgment (Atlas citations, write scope declarations, work order
+structure, Aviation Model role separation) is forbidden per G-19. Quality
+issues surface as Auditor strikes, not pipeline halts.
 
 EOF
 
-  if [[ "$failed" == "true" ]]; then
+  if [[ ! -f "$dispatch" ]]; then
     {
       echo "## Verdict"
       echo
-      echo "BLOCKED: Foreman dispatch is not approved for Mechanic."
+      echo "BLOCKED: Foreman dispatch file does not exist."
     } >> "$checklist"
-    echo "Foreman dispatch approval checklist failed: $checklist" >&2
+    echo "Foreman dispatch artifact missing: $dispatch" >&2
     return 1
   fi
 
   {
     echo "## Verdict"
     echo
-    echo "PASS: Foreman dispatch is approved for Mechanic."
+    echo "AUTO-ADVANCE: Foreman dispatch exists. Pipeline advances FOREMAN_RUNNING → FOREMAN_DISPATCHED → MECHANIC_RUNNING per G-19."
   } >> "$checklist"
 
   echo "$checklist"
 }
 
 approve_mechanic_output_gate() {
+  # G-19 doctrine: artifact-exists ONLY. All Mechanic output quality
+  # judgment (file lists, tests, Plan Book references, BAR-specific
+  # spine checks like FCE-00..FCE-14, locked-engine cleanliness) is
+  # the Auditor's job at the output boundary. Per atlas/constants/
+  # MISSION_CONTROL.md §10.4 + Aviation Model: mechanic != auditor.
   local bar_id="$1"
   local run_dir="$2"
   local output="$run_dir/MECHANIC-OUTPUT.md"
-  local dispatch="$run_dir/FOREMAN-DISPATCH.md"
-  local process_ut="$ROOT/factory/imo-creator/060-run-dyno/PROCESS-UT.md"
-  local workflow="$ROOT/factory/imo-creator/060-run-dyno/run-dyno.yaml"
   local checklist="$run_dir/APPROVAL-CHECKLIST-MECHANIC_DONE.md"
-  local failed="false"
-
-  local output_exists="false"
-  local dispatch_exists="false"
-  local process_exists="false"
-  local workflow_exists="false"
-  local has_files_changed="false"
-  local has_tests="false"
-  local has_no_self_audit="false"
-  local has_plan_ref="false"
-  local has_step_spine="false"
-  local locked_engine_clean="true"
-
-  [[ -f "$output" ]] && output_exists="true"
-  [[ -f "$dispatch" ]] && dispatch_exists="true"
-  [[ -f "$process_ut" ]] && process_exists="true"
-  [[ -f "$workflow" ]] && workflow_exists="true"
-  if [[ "$output_exists" == "true" ]]; then
-    grep -qi 'Files changed\|Changed files\|PROCESS-UT.md\|run-dyno.yaml' "$output" && has_files_changed="true"
-    grep -qi 'Tests run\|Validation\|Verified\|syntax' "$output" && has_tests="true"
-    grep -qi 'Do not audit\|not audit\|Auditor\|hand.*Codex' "$output" && has_no_self_audit="true"
-    grep -qi 'Plan Book\|PLAN-BOOK.md' "$output" && has_plan_ref="true"
-  fi
-  if [[ "$process_exists" == "true" && "$workflow_exists" == "true" ]]; then
-    grep -q 'FCE-00' "$process_ut" && grep -q 'FCE-14' "$process_ut" && grep -q 'FCE-00' "$workflow" && grep -q 'FCE-14' "$workflow" && has_step_spine="true"
-  fi
-
-  # If sibling blueprint repo is present, verify locked engine files were not changed.
-  if [[ -d "$ROOT/../dyno-engine" ]]; then
-    if ! git -C "$ROOT/../dyno-engine" diff --quiet -- engine/us.py engine/up.py 2>/dev/null; then
-      locked_engine_clean="false"
-    fi
-  fi
-
-  for ok in "$output_exists" "$dispatch_exists" "$process_exists" "$workflow_exists" "$has_files_changed" "$has_tests" "$has_no_self_audit" "$has_plan_ref" "$has_step_spine" "$locked_engine_clean"; do
-    [[ "$ok" == "true" ]] || failed="true"
-  done
 
   cat > "$checklist" <<EOF
-# Approval Checklist: MECHANIC_DONE
+# Auto-Advance: MECHANIC_DONE (G-19 compliant)
 
 BAR: $bar_id
-Reviewed at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Auto-advanced at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Mechanic Output: $output
-Foreman Dispatch: $dispatch
 
-## Mechanic -> Auditor Gate
+## Mechanical Check (artifact exists only)
 
-$(check_line "$output_exists" "Mechanic output artifact exists.")
-$(check_line "$dispatch_exists" "Foreman dispatch artifact exists for comparison.")
-$(check_line "$process_exists" "PROC-060 PROCESS-UT.md exists.")
-$(check_line "$workflow_exists" "PROC-060 companion workflow YAML exists.")
-$(check_line "$has_files_changed" "Mechanic output lists changed files.")
-$(check_line "$has_tests" "Mechanic output reports tests or validation.")
-$(check_line "$has_no_self_audit" "Mechanic output preserves Auditor handoff / no self-audit.")
-$(check_line "$has_plan_ref" "Mechanic output references the Plan Book.")
-$(check_line "$has_step_spine" "Both PROC-060 artifacts contain FCE-00 through FCE-14 spine endpoints.")
-$(check_line "$locked_engine_clean" "Locked us.py/up.py files are clean when blueprint repo is present.")
+$(check_line "$([[ -f "$output" ]] && echo true || echo false)" "Mechanic output artifact exists.")
+
+## G-19 Doctrine Note
+
+Mechanic output quality is verified by the **Auditor** (different inference
+engine per Aviation Model). Mid-pipeline content gates that re-judge
+Mechanic work would either duplicate the Auditor's job or substitute
+sovereign approval for the Auditor's verdict — both forbidden by G-19.
+
+BAR-specific quality predicates (e.g., FCE spine endpoints, locked-engine
+cleanliness, file change manifest format) belong in:
+- the Plan Book's auditor_packet section, OR
+- atlas/manifests/four-brain-doctrine-gate.yaml gate definitions
+
+NOT in this script's mid-pipeline gate.
 
 EOF
 
-  if [[ "$failed" == "true" ]]; then
+  if [[ ! -f "$output" ]]; then
     {
       echo "## Verdict"
       echo
-      echo "BLOCKED: Mechanic output is not approved for Auditor."
+      echo "BLOCKED: Mechanic output file does not exist."
     } >> "$checklist"
-    echo "Mechanic output approval checklist failed: $checklist" >&2
+    echo "Mechanic output artifact missing: $output" >&2
     return 1
   fi
 
   {
     echo "## Verdict"
     echo
-    echo "PASS: Mechanic output is approved for Auditor."
+    echo "AUTO-ADVANCE: Mechanic output exists. Pipeline advances MECHANIC_RUNNING → MECHANIC_DONE → AUDITOR_RUNNING per G-19."
   } >> "$checklist"
 
   echo "$checklist"
@@ -1078,7 +1003,7 @@ run_codex_cli() {
 
 run_once() {
   local execute="false"
-  local auto_continue="false"
+  local auto_continue="true"   # G-19 default: pipeline auto-advances; sovereign gates only at template-drop and Auditor verdict
   local defer_lbb="false"
   local planner_model="opus"
   while [[ $# -gt 0 ]]; do
@@ -1174,7 +1099,7 @@ run_once() {
 run_foreman() {
   local bar_id="$1"
   local execute="false"
-  local auto_continue="false"
+  local auto_continue="true"   # G-19 default: pipeline auto-advances; sovereign gates only at template-drop and Auditor verdict
   local defer_lbb="false"
   local foreman_model="sonnet"
   shift || true
@@ -1241,7 +1166,7 @@ run_foreman() {
 run_mechanic() {
   local bar_id="$1"
   local execute="false"
-  local auto_continue="false"
+  local auto_continue="true"   # G-19 default: pipeline auto-advances; sovereign gates only at template-drop and Auditor verdict
   local defer_lbb="false"
   local mechanic_model="sonnet"
   shift || true
@@ -1516,7 +1441,7 @@ recover_bar() {
 
 run_pipeline() {
   local execute="false"
-  local auto_continue="false"
+  local auto_continue="true"   # G-19 default: pipeline auto-advances; sovereign gates only at template-drop and Auditor verdict
   local defer_lbb="false"
   local planner_model="opus"
   local foreman_model="sonnet"
