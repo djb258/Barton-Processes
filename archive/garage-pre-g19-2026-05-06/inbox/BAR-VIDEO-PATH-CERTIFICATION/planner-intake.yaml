@@ -1,0 +1,475 @@
+name: planner-intake-template
+version: "1.0.0"
+status: TEMPLATE
+last_modified: "2026-05-05"
+paired_md: PLANNER-INTAKE-TEMPLATE.md
+purpose: >
+  Reusable source packet template for Process 070 Planner runs. The packet
+  tells the Planner what outcome is wanted, what sources and constraints are
+  locked, and what P=1 means. It does not prescribe how the Planner should plan.
+
+outside:
+  bs_law_arm: outside_dewey
+  book_law_species: Workflow-Body
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: planner-intake-template
+    ctb_placement: barton-enterprises/imo-creator/processes/four-brain/planner-intake-template
+    imo_topology: input
+    cc_layer: CC-02
+    services:
+      - Barton-Processes
+      - imo-creator-v2 atlas
+      - Process 070 Four-Brain
+      - LBB
+      - Mission Control
+    secrets_provider: none
+    acceptance_criteria: >
+      Any BAR or process can use this template to produce a planner packet with
+      a clear desired outcome, source-of-truth split, read set, constraints,
+      evidence requirements, and P=1 definition.
+    species: Workflow-Body
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+
+inside:
+  bs_law_arm: inside_fractal
+  heir:
+    process_id: bp.070-planner-intake-template
+    parent_process: bp.070-four-brain
+    output_type: planner_intake_packet
+    aviation_model:
+      planner: four-brain-planner
+      foreman: sonnet
+      mechanic: sonnet
+      auditor: codex
+      rule: "mechanic != auditor"
+    determinism_gate: "intake_sets_destination_planner_sets_route"
+  orbt:
+    runtime_state: BUILD
+    promotion_gate: "used successfully by multiple BAR planner packets and audited P=1"
+
+bs_law_conformance:
+  law: "Book and Spine together, always."
+  source: "imo-creator-v2/atlas/constants/BS_LAW.md"
+  syntactic_separation:
+    outside_construct: outside
+    inside_construct: inside
+    rule: "outside and inside are distinct top-level YAML constructs."
+  book_arm:
+    species: Workflow-Body
+    durable_artifact: true
+    paired_markdown: PLANNER-INTAKE-TEMPLATE.md
+  spine_arm:
+    heir_present: true
+    orbt_present: true
+    ctb_present: true
+    imo_present: true
+
+template_fields:
+  planner_request:
+    bar_or_work_id: required
+    target_process: required
+    desired_outcome: required
+    operating_mode: required
+    due_or_timing: optional
+    sovereign_decision_needed: optional
+  source_of_truth_split:
+    blueprint_architecture: optional
+    execution_operations: optional
+    runtime_deployment: optional
+    evidence_observability: optional
+  required_format:
+    plan_book: required
+    ut_body: conditional
+    companion_yaml: conditional
+    bs_law: required
+    atlas_references: required
+    lbb_mission_control_evidence: conditional
+  read_set:
+    atlas:
+      - imo-creator-v2/atlas/constants/KEY.md
+      - imo-creator-v2/atlas/constants/BS_LAW.md
+      - imo-creator-v2/atlas/manifests/STRUCTURE_MANIFEST.yaml
+      - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
+    process_070:
+      - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+      - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+    target_specific:
+      rule: "Fill with exact files the Planner must inspect."
+  documentation_anchors:
+    rule: "List existing docs that support claims and constraints."
+  research_brainstorming_packet:
+    purpose: >
+      Accept rough thinking, voice notes, chat notes, whiteboard notes, BAR notes,
+      and operator observations as planning input without treating them as certified facts.
+    inputs:
+      brainstorm_notes:
+        required: false
+        examples:
+          - path
+          - chat_summary
+          - voice_transcript
+          - whiteboard_note
+      existing_bar_notes:
+        required: false
+        examples:
+          - linear_bar
+          - lbb_record
+          - plan_book
+      operator_observations:
+        required: false
+        rule: "Treat as clues until verified against source docs, runtime evidence, or sovereign confirmation."
+    fact_handling_rule: >
+      Brainstorming is input, not certification. Planner may use it to form the
+      plan, but P=1 requires cited documentation, runtime evidence, or sovereign
+      confirmation.
+  lbb_pull_contract:
+    purpose: "Tell Planner where to pull prior memory, role logs, compliance context, and closeout evidence."
+    fields:
+      work_ids_or_bar_ids: optional
+      search_terms: optional
+      time_window: optional
+      required_records:
+        - planner_notes
+        - foreman_dispatches
+        - mechanic_outputs
+        - auditor_verdicts
+        - closeout_logs
+      evidence_needed_for_p1: optional
+    rule: >
+      Before planning, pull relevant LB&B records when they exist. During
+      execution, every role transition and closeout must be logged to LB&B when
+      the process is operational or compliance-relevant. If LB&B is unavailable,
+      Planner must mark evidence as blocked or deferred; it cannot silently skip
+      the logbook.
+  connector_run_binding:
+    purpose: "Declare which connectors or repo surfaces Process 070 may use for this BAR and what each must prove."
+    connectors:
+      lbb:
+        required: conditional
+        purpose: "Pull prior memory; write role transitions and closeout."
+        credential_or_access_source: "Doppler LBB_API_KEY or approved connector"
+        evidence_expected:
+          - query_results
+          - transition_rows
+          - audit_book_or_certify_row
+      linear_bar_tracker:
+        required: conditional
+        purpose: "Pull BAR status, comments, checklist, owner, and blockers."
+        credential_or_access_source: "Linear connector or exported BAR notes"
+        evidence_expected:
+          - bar_url_or_id
+          - status_snapshot
+      github:
+        required: conditional
+        purpose: "Read/write versioned process docs and code."
+        credential_or_access_source: "GitHub CLI or connector"
+        evidence_expected:
+          - branch
+          - commit
+          - pull_request_or_pushed_sha
+      atlas:
+        required: true
+        purpose: "Resolve constants, structure, BS Law, and Four-Brain doctrine."
+        credential_or_access_source: "Local repo path"
+        evidence_expected:
+          - cited_file_paths
+          - cited_sections
+      mission_control:
+        required: conditional
+        purpose: "Surface run state, telemetry, and dashboard visibility."
+        credential_or_access_source: "D1, worker, or Mission Control connector"
+        evidence_expected:
+          - run_row
+          - dashboard_link
+          - blocked_note
+      r2_d1:
+        required: conditional
+        purpose: "Stage artifacts in R2 and vault accepted records in D1 when the process uses data cycles."
+        credential_or_access_source: "Cloudflare/Doppler bindings"
+        evidence_expected:
+          - r2_object_keys
+          - d1_rows
+          - blocked_note
+    rule: >
+      The intake names the connector and the job it performs. The Planner
+      decides how to use the connector inside the route. No connector access
+      means an explicit blocker/defer note, not silent omission.
+  process_070_start_contract:
+    purpose: "Define the ForeBrain garage handoff that starts a Process 070 Planner run."
+    canonical_paths:
+      intake_markdown: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/PLANNER-INTAKE.md"
+      intake_yaml: "Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-{id}/planner-intake.yaml"
+      final_product_pointer: "Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
+      plan_book: "Barton-Processes/docs/plans/BAR-{id}/PLAN-BOOK.md"
+      process_070_docs:
+        - "Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md"
+        - "Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml"
+    commands:
+      new: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh new BAR-{id}"
+      run_once_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh run-once --execute"
+      watch_execute: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh watch --execute --interval 3"
+      final: "factory/imo-creator/070-four-brain/garage/forebrain-garage.sh final BAR-{id}"
+    sequence:
+      - "Run forebrain-garage.sh new BAR-{id}."
+      - "Fill the intake markdown and YAML at the canonical BAR path."
+      - "Set garage_status: READY_FOR_PLANNER."
+      - "Run run-once --execute or watcher mode."
+      - "Planner reads the intake packet plus Atlas and Process 070 docs."
+      - "Planner writes the Plan Book."
+      - "Garage writes FINAL-PRODUCT.yaml pointing to the durable product."
+      - "Sovereign approves or corrects the Plan Book."
+      - "Foreman dispatches scoped Mechanic work orders from the Plan Book."
+      - "Mechanic builds; Auditor audits; LB&B logs each transition."
+    runtime_note: >
+      Process 070 starts through the ForeBrain garage. A BAR is eligible for
+      pickup only when its paired YAML says garage_status: READY_FOR_PLANNER.
+      The final pickup ticket is FINAL-PRODUCT.yaml, which points to the durable
+      product, usually docs/plans/BAR-{id}/PLAN-BOOK.md.
+  non_drift_invariants:
+    common:
+      - "The Planner owns the plan; intake owns desired outcome and constraints."
+      - "Foreman dispatches; Mechanic builds; Auditor certifies."
+      - "Mechanic cannot audit its own work."
+      - "BS Law applies to every durable structured artifact."
+      - "Blueprint, execution, runtime, and evidence layers must not drift."
+  input_contract:
+    target_process: required
+    desired_outcome: required
+    blueprint_home: conditional
+    execution_home: conditional
+    runtime_surface: conditional
+    evidence_target: conditional
+    brainstorming_packet: optional
+    lbb_search_contract: optional
+    connector_run_binding: conditional
+    protected_constraints: conditional
+    p1_definition: required
+  storage_evidence_contract:
+    r2:
+      role: workbench_staging_cycle_artifacts
+      conditional: true
+    d1:
+      role: registry_vault_indexed_record
+      conditional: true
+    lbb:
+      role: compliance_logbook_memory
+      conditional: true
+    mission_control:
+      role: operator_visibility
+      conditional: true
+    github:
+      role: versioned_source
+      conditional: true
+  planner_deliverables:
+    - plan_book_path_or_proposed_path
+    - read_set
+    - source_of_truth_split
+    - required_artifacts
+    - mechanic_work_orders
+    - auditor_packet
+    - p1_definition
+    - stop_conditions
+    - open_blockers
+    - evidence_requirements
+    - lbb_records_used_or_required
+    - connectors_used_or_blocked
+    - process_070_start_or_handoff_path
+    - brainstorming_claims_promoted_to_facts
+    - brainstorming_claims_left_as_assumptions
+  auditor_packet:
+    audit_areas:
+      - bs_law
+      - ut_conformance
+      - source_of_truth_split
+      - scope
+      - runtime_safety
+      - evidence
+      - connector_evidence
+      - research_provenance
+      - aviation_role_separation
+    verdict_format:
+      pass: "VERDICT: P=1"
+      fail: "VERDICT: P=0"
+
+usage:
+  instantiate_under: "Barton-Processes/docs/plans/BAR-*/"
+  fill_method: "Copy this template and replace bracketed fields with BAR-specific facts."
+  rule: "Tell the Planner what is wanted; do not tell the Planner how to plan."
+
+garage:
+  garage_status: BLOCKED
+  bar_id: BAR-VIDEO-PATH-CERTIFICATION
+  intake_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-VIDEO-PATH-CERTIFICATION/PLANNER-INTAKE.md
+  intake_yaml_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-VIDEO-PATH-CERTIFICATION/planner-intake.yaml
+  ready_at: "2026-05-05T00:00:00Z"
+  planner_claimed_by: forebrain-planner
+  planner_claimed_at: 2026-05-05T19:21:32Z
+  next_artifact: docs/plans/BAR-VIDEO-PATH-CERTIFICATION/PLAN-BOOK.md
+  blocked_at: "2026-05-05T19:21:33Z"
+  blocked_reason: "Claude Opus Planner unavailable: Credit balance is too low. No Plan Book exists; PLAN_BOOK_SIGNED gate is not satisfied."
+
+filled_intake:
+  bar_id: BAR-VIDEO-PATH-CERTIFICATION
+  target_process: video-production-paths
+  operating_mode:
+    - BUILD
+    - REPAIR
+  desired_outcome: >
+    Produce a Process 070 Plan Book that tells Foreman how to dispatch
+    Mechanic and Auditor work for the reusable video production path system.
+    A script should be able to enter the system and route to the correct video
+    lane after the Plan Book is accepted and Foreman dispatches.
+  durable_product: Barton-Processes/docs/plans/BAR-VIDEO-PATH-CERTIFICATION/PLAN-BOOK.md
+  final_product_pointer: Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-VIDEO-PATH-CERTIFICATION/FINAL-PRODUCT.yaml
+  source_of_truth_split:
+    blueprint:
+      owner: imo-creator-v2
+      path: imo-creator-v2/docs/processes/video-blueprints/
+      owns:
+        - parent Blueprint UTs
+        - lane constants and variables
+        - provider research
+        - reusable rules
+    execution:
+      owner: Barton-Processes
+      path: Barton-Processes/factory/content/1710-* through 1750-*
+      owns:
+        - executable Process UTs
+        - DOCTRINE
+        - HEIR
+        - ORBT
+        - stop conditions
+    runtime:
+      owner: provider_or_local_tool
+      surfaces:
+        - HeyGen
+        - NotebookLM via Chrome MCP
+        - ElevenLabs
+        - Claude Code plus In Motion
+        - local picker scripts
+      owns:
+        - generation
+        - source packaging
+        - rendering
+        - route execution
+        - upload handoff
+    evidence:
+      owner: lbb_linear_manifests_mission_control
+      surfaces:
+        - LBB
+        - Linear
+        - output manifest
+        - provider job IDs
+        - Mission Control where applicable
+      owns:
+        - proof
+        - closeout records
+        - blocker evidence
+        - audit trail
+  lanes:
+    - id: heygen_avatar
+      blueprint: imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1710-HEYGEN.md
+      executable_ut: Barton-Processes/factory/content/1710-heygen-avatar/PROCESS-UT.md
+      runtime_surface: HeyGen API
+    - id: notebooklm_source_video
+      blueprint: imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1720-NOTEBOOKLM.md
+      executable_ut: Barton-Processes/factory/content/1720-notebooklm-source-video/PROCESS-UT.md
+      runtime_surface: NotebookLM through Chrome MCP
+    - id: elevenlabs_cinematic
+      blueprint: imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1730-ELEVENLABS.md
+      executable_ut: Barton-Processes/factory/content/1730-elevenlabs-cinematic/PROCESS-UT.md
+      runtime_surface: ElevenLabs API
+    - id: claude_code_sovereign
+      blueprint: imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1740-SOVEREIGN.md
+      executable_ut: Barton-Processes/factory/content/1740-claude-code-sovereign/PROCESS-UT.md
+      runtime_surface: Claude Code plus In Motion
+    - id: video_picker
+      blueprint: imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1750-PICKER.md
+      executable_ut: Barton-Processes/factory/content/1750-video-picker/PROCESS-UT.md
+      runtime_surface: imo-creator-v2/workers/video-pipeline/scripts/route-video-job.ps1
+  required_read_set:
+    atlas:
+      - imo-creator-v2/atlas/ATLAS.md
+      - imo-creator-v2/atlas/constants/KEY.md
+      - imo-creator-v2/atlas/constants/UNIFIED_TEMPLATE.md
+      - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
+    process_070:
+      - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+      - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+      - Barton-Processes/factory/imo-creator/070-four-brain/garage/README.md
+      - Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh
+    video_blueprints:
+      - imo-creator-v2/docs/processes/video-blueprints/INDEX.md
+      - imo-creator-v2/docs/processes/video-blueprints/templates/
+      - imo-creator-v2/docs/processes/video-blueprints/lanes/
+      - imo-creator-v2/docs/plans/VIDEO-PATHS-OPERATE-PUNCHLIST.md
+    executable_uts:
+      - Barton-Processes/factory/content/1710-heygen-avatar/PROCESS-UT.md
+      - Barton-Processes/factory/content/1720-notebooklm-source-video/PROCESS-UT.md
+      - Barton-Processes/factory/content/1730-elevenlabs-cinematic/PROCESS-UT.md
+      - Barton-Processes/factory/content/1740-claude-code-sovereign/PROCESS-UT.md
+      - Barton-Processes/factory/content/1750-video-picker/PROCESS-UT.md
+    runtime_evidence:
+      - imo-creator-v2/workers/video-pipeline/scripts/route-video-job.ps1
+      - imo-creator-v2/workers/video-pipeline/output/video-output-manifest.json
+  connectors:
+    lbb:
+      required: true_if_reachable
+      purpose: Pull prior memory and record role transitions.
+      blocker_rule: If unavailable, mark blocked or deferred in Plan Book.
+    linear:
+      required: true_if_reachable
+      bars:
+        - BAR-388
+        - BAR-389
+        - BAR-390
+        - BAR-391
+        - BAR-392
+      purpose: Pull lane status, comments, checklists, owners, and blockers.
+    heygen:
+      required_for_lane: heygen_avatar
+      secret_source: Doppler HEYGEN_API_KEY
+      evidence_expected:
+        - avatar_ids
+        - voice_ids
+        - generation_job_id_or_blocker
+    elevenlabs:
+      required_for_lane: elevenlabs_cinematic
+      secret_source: Doppler ELEVENLABS_API_KEY
+      evidence_expected:
+        - voice_ids
+        - generation_job_id_or_blocker
+    notebooklm:
+      required_for_lane: notebooklm_source_video
+      access_source: Chrome MCP session
+      evidence_expected:
+        - source_notebook
+        - export_path_or_blocker
+    cloudflare:
+      required_if_upload_or_stream_scope
+      secret_source: Doppler Cloudflare bindings
+      evidence_expected:
+        - r2_object_key_or_stream_uid_or_blocker
+  non_drift_invariants:
+    - Blueprint explains.
+    - Execution runs.
+    - Runtime implements.
+    - Evidence proves.
+    - Planner plans.
+    - Foreman dispatches.
+    - Mechanic builds.
+    - Auditor certifies.
+    - Mechanic cannot audit its own work.
+    - Do not expose secrets.
+    - Do not modify locked Atlas constants.
+  p1_definition:
+    - Plan Book exists at Barton-Processes/docs/plans/BAR-VIDEO-PATH-CERTIFICATION/PLAN-BOOK.md.
+    - Plan Book cites the Atlas, KEY, UT, Four-Brain, garage intake, video Blueprint index, and executable child UTs.
+    - Plan Book defines Foreman dispatch requirements for all five video lanes.
+    - Plan Book preserves the source-of-truth split.
+    - Plan Book defines Mechanic work orders, Auditor packet requirements, smoke tests, evidence surfaces, and stop conditions.
+    - Plan Book names blocked connectors, credentials, browser sessions, provider gates, or Linear/LBB gaps.
+    - ForeBrain garage writes FINAL-PRODUCT.yaml pointing to the durable Plan Book.

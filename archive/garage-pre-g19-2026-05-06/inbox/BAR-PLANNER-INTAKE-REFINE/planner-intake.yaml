@@ -1,0 +1,419 @@
+name: planner-intake-instance
+version: "1.0.0"
+status: READY
+last_modified: "2026-05-06"
+paired_md: PLANNER-INTAKE.md
+purpose: >
+  BAR-specific Planner intake instance for refining the canonical
+  PLANNER-INTAKE-TEMPLATE.md (and paired YAML) at
+  Barton-Processes/factory/imo-creator/070-four-brain/. Source conversation
+  is captured in LBB record 54214381-4d34-4717-8284-6407c483d21a.
+
+outside:
+  bs_law_arm: outside_dewey
+  book_law_species: Workflow-Body
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: planner-intake-instance-bar-planner-intake-refine
+    ctb_placement: barton-enterprises/imo-creator/processes/four-brain/garage/inbox/BAR-PLANNER-INTAKE-REFINE
+    imo_topology: input
+    cc_layer: CC-02
+    services:
+      - Barton-Processes
+      - imo-creator-v2 atlas
+      - Process 070 Four-Brain
+      - LBB
+      - Mission Control
+    secrets_provider: doppler
+    acceptance_criteria: >
+      Planner produces a Plan Book referencing LBB record
+      54214381-4d34-4717-8284-6407c483d21a and resolving sovereign decisions on
+      gaps G-01 through G-14 and open questions Q-01 through Q-04.
+    species: Workflow-Body
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+
+inside:
+  bs_law_arm: inside_fractal
+  heir:
+    process_id: bp.070-bar-planner-intake-refine
+    parent_process: bp.070-four-brain
+    output_type: refined_planner_intake_template
+    aviation_model:
+      planner: opus-4-7
+      foreman: opus-4-7
+      mechanic: sonnet
+      auditor: codex
+      rule: "mechanic != auditor"
+    determinism_gate: "intake_sets_destination_planner_sets_route"
+  orbt:
+    runtime_state: BUILD
+    promotion_gate: "Codex VERDICT: P=1 + sovereign sign-off on version bump"
+
+bs_law_conformance:
+  law: "Book and Spine together, always."
+  source: "imo-creator-v2/atlas/constants/BS_LAW.md"
+  syntactic_separation:
+    outside_construct: outside
+    inside_construct: inside
+    rule: "outside and inside are distinct top-level YAML constructs."
+  book_arm:
+    species: Workflow-Body
+    durable_artifact: true
+    paired_markdown: PLANNER-INTAKE.md
+  spine_arm:
+    heir_present: true
+    orbt_present: true
+    ctb_present: true
+    imo_present: true
+
+bar_intake:
+  bar_or_work_id: BAR-PLANNER-INTAKE-REFINE
+  target_process: PROC-070 / Four-Brain Aviation Model — Template Refinement + Downstream UT Sync
+  target_artifacts:
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md
+      role: primary (template skeleton being refined)
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/planner-intake-template.yaml
+      role: paired_yaml (lock-step with primary)
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+      role: downstream_ut_sync (PROC-070 operating manual reflects new template version)
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+      role: paired_yaml (lock-step with PROCESS-UT)
+    - path: imo-creator-v2/<TBD-four-brain-UT-path>
+      role: imo_creator_four_brain_ut_sync
+      planner_resolves: true
+      note: "Planner identifies the exact non-locked artifact in imo-creator-v2 documenting the four-brain. Sovereign confirms. Locked constants are NOT eligible."
+  desired_outcome: >
+    Three artifacts updated in lock-step: (1) PLANNER-INTAKE-TEMPLATE.md +
+    paired YAML; (2) PROC-070 PROCESS-UT.md + four-brain.yaml; (3) the
+    corresponding four-brain UT in imo-creator-v2. All three reflect the
+    sovereign-accepted gaps from LBB record 54214381-4d34-4717-8284-6407c483d21a.
+    Skeleton (14-section UT format + 13-item UT_CHECKLIST + BS Law Y-junction)
+    is CONSTANT and unchanged. Variable fill is what updates.
+  skeleton_invariant: >
+    Per Atlas C&V Test: UT skeleton (sections, ordering, required fields per
+    UT_CHECKLIST v1.3.1, paired-artifact .md/.yaml structure, Book Law species
+    declarations) is a CONSTANT. The specific content filling each section is
+    a VARIABLE. Mechanic edits variables only — never restructures skeletons.
+    Auditor verifies skeleton integrity at audit time.
+  operating_mode: BUILD
+  build_sub_mode: maintenance
+  build_sub_mode_justification: >
+    Existing template at v1.0.0 is the baseline; this BAR is a delta against
+    it, not a new structure to discover. Sovereign already approved that the
+    Aviation Model framework is correct; we are filling in fields, not
+    reconceiving the template.
+  due_or_timing: no deadline; sovereign reviews and signs at next session
+  sovereign_decision_needed: >
+    Yes. Sovereign must decide each of gaps G-01 through G-14 (accept / reject)
+    and resolve open questions Q-01 through Q-04 in the LBB record.
+
+source_of_truth_split:
+  blueprint_architecture: imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md (v1.2.0)
+  execution_operations: Barton-Processes/factory/imo-creator/070-four-brain/
+  runtime_deployment: Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh
+  evidence_observability: LBB (record 54214381-4d34-4717-8284-6407c483d21a) + mission-control D1 (four_brain_run, four_brain_transition)
+
+required_format:
+  plan_book: required
+  ut_body_or_workflow_body: required
+  companion_yaml: required
+  bs_law: required
+  atlas_references: required
+  lbb_evidence: required
+  mission_control_evidence: conditional
+
+read_set:
+  atlas:
+    - imo-creator-v2/atlas/constants/KEY.md
+    - imo-creator-v2/atlas/constants/BS_LAW.md
+    - imo-creator-v2/atlas/constants/BOOK_LAW.md
+    - imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md
+    - imo-creator-v2/atlas/manifests/STRUCTURE_MANIFEST.yaml
+    - imo-creator-v2/atlas/ATLAS.md
+  process_070:
+    - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+    - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+  target_specific:
+    - Barton-Processes/factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md
+    - Barton-Processes/factory/imo-creator/070-four-brain/planner-intake-template.yaml
+  lbb_records:
+    - record_id: 090520d7-ff64-4b6e-9e14-5e8928b24db7
+      role: canonical_conversation_summary_v2
+      subject_id: processes
+      tags: ["session", "four-brain", "planner-intake-template", "BAR-PLANNER-INTAKE-REFINE", "drift-protection", "supersedes-54214381"]
+      contains: "§8 G-01 through G-18; §8b 9 drift vectors mapped; §9 open questions; §10-§13 invariants and P=1"
+      retrieval: >
+        curl -s -X POST "https://lbb.svg-outreach.workers.dev/records/090520d7-ff64-4b6e-9e14-5e8928b24db7"
+        -H "Authorization: Bearer $LBB_API_KEY"
+    - record_id: 54214381-4d34-4717-8284-6407c483d21a
+      role: historical_first_ingest
+      subject_id: processes
+      tags: ["session", "four-brain", "planner-intake-template", "BAR-PLANNER-INTAKE-REFINE"]
+      contains: "§8 G-01 through G-14 only; superseded — kept for audit trail"
+      note: "Use 090520d7 as canonical. This record is reference-only."
+
+documentation_anchors:
+  - claim: Atlas defines altitude scale 50K/40K/30K/10K/5K and places sovereign at 50K
+    anchor: imo-creator-v2/atlas/ATLAS.md §1.2.3
+  - claim: Four-Brain pipeline = Planner → Foreman → Mechanic → Auditor; mechanic != auditor
+    anchor: imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md v1.2.0
+  - claim: BS Law universal Y-junction requirement
+    anchor: imo-creator-v2/atlas/constants/BS_LAW.md v1.5.0
+  - claim: Two-mode dispatch (reactive squawk + scheduled tune-up A/B/C/D-check + AD); scheduled findings don't accumulate Strikes
+    anchor: imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md v1.2.0 §Two-Mode Dispatch
+  - claim: Sovereign-only amendment rule for the 17 locked constants
+    anchor: imo-creator-v2/CLAUDE.md §Seventeen Constants + §Sovereign-Lock Protocol
+
+research_brainstorming_packet:
+  primary_source:
+    type: lbb_record
+    record_id: 54214381-4d34-4717-8284-6407c483d21a
+    role: canonical
+    sections:
+      - "§8 — gaps G-01 through G-14 (candidates for sovereign accept/reject)"
+      - "§9 — open questions Q-01 through Q-04"
+      - "§10 — out-of-scope items (do NOT include)"
+      - "§11 — non-drift invariants"
+      - "§12 — P=1 definition"
+  secondary_source:
+    type: file_copy
+    path: Barton-Processes/factory/imo-creator/070-four-brain/garage/inbox/BAR-PLANNER-INTAKE-REFINE/CONVERSATION-SUMMARY.md
+    role: convenience_only
+    note: "LBB record is the source of truth; this file is a copy for offline read."
+  fact_handling_rule: >
+    Each gap (G-01 through G-14) is an assumption until sovereign confirms
+    accept OR reject. Planner promotes accepted gaps to facts in the Plan
+    Book and leaves rejected ones as documented assumptions with reasoning.
+
+lbb_pull_contract:
+  work_ids_or_bar_ids:
+    - BAR-PLANNER-INTAKE-REFINE
+    - LBB record 54214381-4d34-4717-8284-6407c483d21a
+  search_terms:
+    - planner-intake-template
+    - four-brain
+    - BAR-PLANNER-INTAKE-REFINE
+  time_window: "2026-05-06 forward; also pull historical records tagged planner-intake-template"
+  required_records:
+    - record_id_54214381 (canonical conversation summary)
+    - planner_transition_row (this BAR — written at planner claim)
+    - foreman_transition_row (this BAR)
+    - mechanic_transition_row (this BAR)
+    - auditor_transition_row (this BAR)
+    - audit_book_row (on Codex PASS)
+  evidence_needed_for_p1:
+    - "LBB record 54214381 cited in Plan Book"
+    - "4 transition rows minimum"
+    - "Audit Book row on PASS"
+    - "CERTIFY row in lbb.logbook on BAR P=1"
+
+connector_run_binding:
+  lbb:
+    required: true
+    purpose: "Read conversation summary; write transition rows; write CERTIFY"
+    credential: "Doppler LBB_API_KEY (imo-creator → dev)"
+    evidence_expected:
+      - "Read of record 54214381"
+      - "4 transition rows"
+      - "Audit Book row"
+      - "CERTIFY row"
+  github:
+    required: true
+    purpose: "Read/write PLANNER-INTAKE-TEMPLATE.md and planner-intake-template.yaml in Barton-Processes repo"
+    credential: "GitHub CLI / connector"
+    evidence_expected: ["branch", "commit", "pushed_sha"]
+  atlas:
+    required: true
+    purpose: "Resolve constants, structure, BS Law, Four-Brain doctrine"
+    credential: "Local repo path imo-creator-v2/atlas/"
+    evidence_expected: ["cited_file_paths", "cited_sections"]
+  mission_control:
+    required: conditional
+    purpose: "Write four_brain_run + four_brain_transition rows if D1 migration is live"
+    credential: "D1 binding via mission-control-api"
+    evidence_expected: ["run_row", "transition_rows", "OR explicit deferred-pending-BAR-FOUR-BRAIN-CLI"]
+  linear:
+    required: optional
+    purpose: "Link to Linear ticket if one exists"
+  r2_d1_data_cycle:
+    required: false
+    purpose: "Not applicable — doctrine refinement, no data-cycle"
+
+non_drift_invariants:
+  bar_specific:
+    - "Planner OWNS the route — this packet specifies destination only"
+    - "Mechanic != Auditor (Sonnet refines, Codex audits)"
+    - "BS Law Y-junction conformance on both .md and .yaml refined outputs"
+    - "Current template at v1.0.0 is baseline — refined version is a delta, backward-compatible parsing strongly preferred"
+    - "No locked constants modified (the 17 in imo-creator-v2)"
+    - "Sovereign decides each gap G-01 through G-14 — Planner does NOT autonomously accept/reject"
+    - "LBB record 54214381 is canonical — file copy is convenience only"
+  common:
+    - "The Planner owns the plan; intake owns desired outcome and constraints"
+    - "Foreman dispatches; Mechanic builds; Auditor certifies"
+    - "Mechanic cannot audit its own work"
+    - "BS Law applies to every durable structured artifact"
+    - "Blueprint, execution, runtime, and evidence layers must not drift"
+
+input_contract:
+  target_process: PROC-070
+  desired_outcome: refined PLANNER-INTAKE-TEMPLATE.md + paired YAML at next version
+  blueprint_home: imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md v1.2.0
+  execution_home: Barton-Processes/factory/imo-creator/070-four-brain/
+  runtime_surface: forebrain-garage.sh + Planner runtime
+  evidence_target: LBB transition rows + Audit Book + CERTIFY in lbb.logbook
+  brainstorming_packet: LBB record 54214381-4d34-4717-8284-6407c483d21a
+  lbb_search_contract: see lbb_pull_contract above
+  connector_run_binding: see connector_run_binding above
+  protected_constraints:
+    - "17 locked constants under imo-creator-v2/atlas/constants/ NOT modified"
+    - "imo-creator-v2/atlas/ATLAS.md NOT modified"
+    - "Other process intake templates under Barton-Processes/factory/*/ NOT modified — scoped to 070 only"
+  p1_definition: see p1_definition below
+
+storage_evidence_contract:
+  lbb:
+    role: compliance_logbook + conversation source
+    timing: "Source: pre-planning. Transitions: each role. CERTIFY: at close."
+  github:
+    role: versioned_source
+    timing: "After Auditor PASS — commit refined .md + .yaml"
+  mission_control:
+    role: run-level_telemetry
+    timing: conditional
+    deferred_if: "D1 migration not yet live (BAR-FOUR-BRAIN-CLI)"
+  r2:
+    role: not_applicable
+  d1_data_cycle:
+    role: not_applicable
+
+planner_deliverables:
+  - plan_book_path: Barton-Processes/docs/plans/BAR-PLANNER-INTAKE-REFINE/PLAN-BOOK.md
+  - read_set_resolved
+  - source_of_truth_split
+  - required_artifacts (refined .md + .yaml paths and species)
+  - mechanic_work_orders (literal file:line | old | new triples)
+  - auditor_packet (gates G01-G10 + BAR-specific gates)
+  - p1_definition (scoped to this BAR)
+  - stop_conditions
+  - open_blockers (sovereign decisions on G-01 through G-14 and Q-01 through Q-04)
+  - evidence_requirements
+  - lbb_records_used_or_required
+  - connectors_used_or_blocked
+  - process_070_start_or_handoff_path
+  - brainstorming_claims_promoted_to_facts (sovereign-accepted gaps with citation)
+  - brainstorming_claims_left_as_assumptions (sovereign-rejected or deferred gaps with reasoning)
+
+mechanic_dispatch_hints:
+  allowed_write_scope:
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/PLANNER-INTAKE-TEMPLATE.md
+      edit_mode: variable_fill_only
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/planner-intake-template.yaml
+      edit_mode: variable_fill_only_yaml_lock_step
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+      edit_mode: variable_fill_only_within_14_section_skeleton
+    - path: Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+      edit_mode: variable_fill_only_yaml_lock_step
+    - path: "imo-creator-v2/<planner-resolves>"
+      edit_mode: variable_fill_only_within_skeleton
+      note: "Planner identifies; sovereign confirms; locked constants ineligible"
+  forbidden:
+    - "Any of the 17 locked constants under imo-creator-v2/atlas/constants/"
+    - "imo-creator-v2/atlas/ATLAS.md (sovereign-only via pending-atlas-updates queue, NOT this BAR)"
+    - "Other process intake templates under Barton-Processes/factory/*/"
+    - "Skeleton restructuring of any UT — section headers, ordering, required fields per UT_CHECKLIST v1.3.1, paired-artifact .md/.yaml Y-junction, Book Law species declaration. ALL CONSTANTS."
+    - "Renumbering sections, inventing new section types, removing required UT_CHECKLIST items"
+  skeleton_vs_fill_rule: >
+    Per Atlas C&V Test. Constants: section structure, ordering, required-field
+    list, paired-artifact .md/.yaml Y-junction, Book Law species. Variables:
+    the content INSIDE each section. Mechanic edits variables only.
+
+auditor_packet:
+  audit_areas:
+    - bs_law (Y-junction on both .md and .yaml)
+    - workflow_body_or_ut_body_conformance
+    - source_of_truth_split
+    - scope (only the two target files modified)
+    - evidence (LBB record cited, transition rows present, Audit Book on PASS)
+    - connector_evidence (LBB writes, GitHub commit/SHA)
+    - research_provenance (gap acceptance/rejection traceable to sovereign)
+    - aviation_role_separation (Sonnet built, Codex audited)
+  verdict_format:
+    pass: "VERDICT: P=1"
+    fail: "VERDICT: P=0"
+
+p1_definition:
+  conditions:
+    - "PLANNER-INTAKE-TEMPLATE.md (variable fill only) updated to incorporate every sovereign-accepted gap (G-01 through G-18) from LBB record 090520d7-ff64-4b6e-9e14-5e8928b24db7 §8; version bumped from 1.0.0 to next; skeleton unchanged"
+    - "planner-intake-template.yaml updated in lock-step, BS Law Y-junction conformant, version matching markdown"
+    - "PROCESS-UT.md (variable fill within 14-section skeleton + 13-item UT_CHECKLIST) updated to reflect new template version; Maintenance Logbook §14 row appended; version bumped"
+    - "four-brain.yaml updated lock-step with PROCESS-UT.md"
+    - "Corresponding four-brain UT in imo-creator-v2 (Planner identifies + sovereign confirms exact file) updated to reflect new template version; skeleton unchanged; locked constants NOT modified"
+    - "G-15 lock: pinned_atlas_version + pinned_gate_spec_version fields present and required in Plan-Body species; downstream roles read pinned versions only"
+    - "G-16 lock: plan_book_ttl_hours field present and required in Plan-Body; Foreman re-validation hook implemented (forebrain-garage.sh or equivalent) to detect stale Plan Books past TTL"
+    - "G-17 lock: file-level concurrency check at Foreman dispatch — overlapping allowed_write_scope between in-flight BARs is blocked OR routed to a conflict-resolution queue. Implementation in forebrain-garage.sh + a bar_locks tracking surface (D1 table or file-based)"
+    - "G-18 lock: every gate in four-brain-doctrine-gate.yaml has a deterministic predicate (regex / hash / file-existence / git-diff / JSON-schema). Gates requiring LLM judgment marked requires_llm_tail=true with deterministic fallback test"
+    - "G-19 lock: NO sovereign approval gates between Planner→Foreman→Mechanic→Auditor. The only sovereign touchpoints are (a) template-drop into inbox (input boundary) and (b) reading the Auditor verdict (output boundary). All intermediate stage transitions auto-advance on stage success and route through Strike system on stage failure. Mission Control surfaces stage-to-stage handoffs as observation only — no approve/reject buttons between Planner and Auditor. Garage statuses like REVIEW_PLAN_BOOK or REVIEW_DIFF that imply sovereign gating must be removed; replaced with PLAN_BOOK_READY → FOREMAN_DISPATCHED auto-transition, MECHANIC_RUNNING → AUDIT_RUNNING auto-transition, etc. Implementation: forebrain-garage.sh advances status mechanically on stage exit code 0; sovereign sees the transition but is not asked for input."
+    - "Codex VERDICT: P=1 against gates BS Law / Workflow-Body or UT-Body conformance / scope / aviation / evidence — applied to ALL artifacts"
+    - "Skeleton invariant verified: section headers, ordering, required UT_CHECKLIST items match v1.3.1 14-section format on every modified UT"
+    - "Sovereign reviews and signs the locked version of the TEMPLATE (intake-side), not intermediate Plan/UT/Audit Books produced by the pipeline"
+    - "4 LBB transition rows minimum (planner / foreman / mechanic / auditor)"
+    - "CERTIFY row in lbb.logbook"
+    - "FINAL-PRODUCT.yaml at outbox/BAR-PLANNER-INTAKE-REFINE/ pointing to ALL refined artifacts"
+
+open_questions:
+  - id: Q-01
+    question: "Build sub-mode (discovery/declared/maintenance) — separate field on template, or sub-enum under Operating Mode?"
+    blocks_planning: true
+    sovereign_call: true
+  - id: Q-02
+    question: "Maintenance-schedule-at-build-time requirement — part of THIS template refinement, or separate Plan-Body / Book Law amendment BAR?"
+    blocks_planning: true
+    sovereign_call: true
+  - id: Q-03
+    question: "Strike counter location — augment mission-control.squawks or new strike_tally D1 table?"
+    blocks_planning: false
+    note: "Out-of-scope for this BAR; flag so refined template's root_cause_hash field stays neutral"
+  - id: Q-04
+    question: "Operational events as new species (Event-Body) or extension of Data-Body?"
+    blocks_planning: false
+    note: "Out-of-scope; refined template stays neutral on operational book species"
+
+usage:
+  this_is_an_instance: true
+  parent_template: Barton-Processes/factory/imo-creator/070-four-brain/planner-intake-template.yaml
+  rule: "Tell the Planner what is wanted; do not tell the Planner how to plan."
+
+garage:
+  garage_status: BLOCKED
+  next_status: FOREMAN_DISPATCHED
+  sovereign_review_gate: false
+  status_override_note: >
+    Status set directly to PLAN_BOOK_SIGNED to bypass the legacy REVIEW_PLAN_BOOK
+    sovereign-approval gate, per G-19 doctrine added to this BAR's scope. The
+    refactored forebrain-garage.sh produced by this BAR will remove the manual
+    PLAN_BOOK_SIGNED transition entirely and auto-advance PLAN_BOOK_READY →
+    FOREMAN_DISPATCHED on Planner success. Until then, this override unblocks
+    the pipeline so it can run autonomously on its own refinement.
+  sovereign_review_gate_note: >
+    G-19 doctrine: sovereign gates exist ONLY at template-drop (intake) and at
+    final auditor verdict. Between Planner→Foreman→Mechanic→Auditor there are
+    NO sovereign approval gates — only observation surfaces in Mission Control.
+    Pipeline auto-advances on stage success; Strike system handles failures.
+  bar_id: BAR-PLANNER-INTAKE-REFINE
+  intake_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-PLANNER-INTAKE-REFINE/PLANNER-INTAKE.md
+  intake_yaml_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-PLANNER-INTAKE-REFINE/planner-intake.yaml
+  conversation_summary_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-PLANNER-INTAKE-REFINE/CONVERSATION-SUMMARY.md
+  lbb_record_id: 090520d7-ff64-4b6e-9e14-5e8928b24db7
+  lbb_record_id_historical: 54214381-4d34-4717-8284-6407c483d21a
+  requested_by: Dave Barton (sovereign) via Opus-4-7-foreman in conversation 2026-05-06
+  ready_at: "2026-05-06T00:00:00Z"
+  planner_claimed_by: forebrain-planner
+  planner_claimed_at: 2026-05-06T13:21:46Z
+  next_artifact: docs/plans/BAR-PLANNER-INTAKE-REFINE/PLAN-BOOK.md
+  status_transition_rule: >
+    Intake is complete and ready for Planner pickup. The sovereign sign-off
+    happens later — on the Plan Book the Planner produces, not on this intake
+    packet. Planner may claim and proceed to generate the Plan Book.

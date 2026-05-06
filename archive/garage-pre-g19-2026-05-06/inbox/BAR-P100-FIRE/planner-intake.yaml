@@ -1,0 +1,80 @@
+name: bar-p100-fire-planner-intake
+version: "1.0.0"
+status: READY_FOR_PLANNER
+bar_id: BAR-P100-FIRE
+target_process: "PROC-100 / bp.100 / LCS Pipeline"
+desired_outcome: >
+  Produce the Process 070 Plan Book for repairing and operating Process 100 so
+  it can start firing daily outbound emails with servicing-agent limits, domain
+  safety, Mission Control visibility, and LB&B evidence.
+
+garage:
+  garage_status: BLOCKED
+  bar_id: BAR-P100-FIRE
+  intake_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-P100-FIRE/PLANNER-INTAKE.md
+  intake_yaml_path: factory/imo-creator/070-four-brain/garage/inbox/BAR-P100-FIRE/planner-intake.yaml
+  ready_at: "2026-05-05T00:00:00Z"
+  planner_claimed_by: forebrain-planner
+  planner_claimed_at: 2026-05-05T19:07:21Z
+  next_artifact: docs/plans/BAR-P100-FIRE/PLAN-BOOK.md
+
+source_of_truth_split:
+  blueprint_architecture:
+    owner: Company Lifecycle
+    path: company-lifecycle-cl/docs/lcs
+    owns: LCS architecture and blueprint context
+  execution_operations:
+    owner: Barton-Processes
+    path: Barton-Processes/factory/cl/100-lcs-pipeline
+    owns: Process 100 movement, cron, D1, delivery, and operational evidence
+  runtime_deployment:
+    owner: Cloudflare Worker
+    path: Barton-Processes/factory/cl/100-lcs-pipeline/wrangler.toml
+    owns: worker bindings, cron, queue, and route surface
+  evidence_observability:
+    owner: LB&B / Mission Control / D1 / R2
+    path: to_be_resolved_by_planner
+    owns: compliance records, operator view, and runtime proof
+
+read_set:
+  process_070:
+    - Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+    - Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+  process_100:
+    - Barton-Processes/factory/cl/100-lcs-pipeline/PROCESS-UT.md
+    - Barton-Processes/factory/cl/100-lcs-pipeline/wrangler.toml
+    - Barton-Processes/factory/cl/100-lcs-pipeline/src/index.ts
+    - Barton-Processes/factory/cl/100-lcs-pipeline/src/compiler.ts
+    - Barton-Processes/factory/cl/100-lcs-pipeline/src/spokes/delivery.ts
+    - Barton-Processes/factory/cl/100-lcs-pipeline/src/spokes/signal-intake.ts
+    - Barton-Processes/factory/cl/100-lcs-pipeline/src/migrations/001_lcs_tables.sql
+    - Barton-Processes/factory/cl/100-lcs-pipeline/PROCESS-100-STEP-BY-STEP.md
+    - Barton-Processes/factory/cl/100-lcs-pipeline/PROCESS-100-STEP-BY-STEP.yaml
+    - Barton-Processes/factory/cl/100-lcs-pipeline/DOMAIN-MAINTENANCE.md
+  blueprint:
+    - company-lifecycle-cl/docs/lcs/LCS-BLUEPRINT-UT.md
+    - company-lifecycle-cl/docs/lcs/LCS-BLUEPRINT.yaml
+
+connectors:
+  lbb: required_if_available
+  github: required
+  atlas: required
+  mission_control: required
+  cloudflare: required
+  mailgun: required
+
+invariants:
+  - Barton-Processes owns Process 100 execution.
+  - Company Lifecycle owns LCS blueprint and architecture.
+  - Planner writes the Plan Book; Mechanic builds; Auditor certifies.
+  - Mechanic cannot audit its own work.
+  - Protected domains svg.agency and svgwv.com must not be burned for cold outreach.
+  - Daily firing must respect servicing-agent constraints and radius targeting.
+  - Mission Control must provide operator visibility as IMO/map layer when possible.
+  - P=1 requires runtime/evidence surfaces, not just documentation.
+
+p1_definition:
+  - Plan Book exists at Barton-Processes/docs/plans/BAR-P100-FIRE/PLAN-BOOK.md.
+  - Foreman can dispatch Mechanic and Auditor without guessing.
+  - Daily firing path, servicing-agent filter, domain safety, delivery path, MC visibility, LBB logging, D1/R2 evidence, and protected-domain constraints are explicit.
+  - Blockers are resolved or elevated as sovereign decisions.
