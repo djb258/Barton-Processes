@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/600-bit-scoring/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 600-bit-scoring
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
+  orbt:
+    library_state: TROUBLESHOOT_TRAIN
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.600
+    species: UT-Body
+    version: "2.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
+  orbt:
+    library_state: TROUBLESHOOT_TRAIN
+---
+
 # BIT Scoring (Buyer Intent Tracker)
 ## Cross-hub signal aggregation engine that assigned authorization bands 0-5 per company — RETIRED 2026-03-25; replaced by direct data-completeness checks in the LCS compiler.
 ### Status: TROUBLESHOOT_TRAIN
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -71,7 +100,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Runs AFTER all dumb workers complete; Reads signals from 200/300/400/500; Produces composite score per company; Classifies into band 0-5; Gate 8 reads this score |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 BIT Scoring was a cross-hub signal aggregation engine that combined weighted signals from four sub-hubs (DOL/People/Blog/Talent Flow) into a single composite score (0-100) per company, then classified each company into one of six authorization bands (0-5). No external tools — pure computation reading D1, writing to `outreach_bit_scores`.
@@ -98,7 +127,7 @@ Process designer: Dave Barton. Consumer (when active): LCS pipeline compiler (Pr
 ### SUCCESS METRIC
 RETIRED. Former metric: every company in territory has a current BIT score + correct band assignment, and Gate 8 correctly reads scores. This metric is now satisfied by direct field-completeness checks in Process 100.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -172,7 +201,7 @@ Required doctrine references for every process UT:
 | svg-outreach | svg-outreach · branch · CC-03 | TBV | Retirement rationale, architecture decision | on-change |
 | processes | processes · branch · CC-03 | TBV | Process retirement record | on-change |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? Monthly cron, runs AFTER all dumb workers (200/300/400/500) complete their cycle.
@@ -201,7 +230,7 @@ Composite score (0-100), score_tier (band 0-5), signal_count, and component scor
 ### Circle (Bedrock §5)
 Each cycle's scores would be compared to prior cycle — tightening sigma = real signal, flat = noise, expanding = model needs recalibration. No feedback loop was established before retirement. PROCESS.md notes this as a design flaw: "The score never fed back to improve input quality — dead-end output."
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -271,7 +300,7 @@ Single key: outreach_id. No cross-database joins.
 | Which companies are band 4+? | outreach_bit_scores (stale) | score >= 60 |
 | What signals drove the score? | outreach_bit_scores | people_score, dol_score, blog_score, talent_flow_score |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -306,7 +335,7 @@ Single key: outreach_id. No cross-database joins.
 | outreach_company_target → outreach_blog | direct | outreach_id FK |
 | outreach_company_target → outreach_bit_scores | direct | outreach_id FK (DEPRECATED) |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Authorization bands are 0-5, fixed — the six-slot structure is invariant (D-600-02)
@@ -324,7 +353,7 @@ Single key: outreach_id. No cross-database joins.
 - Band assignment per company — derived from score; variable even though band structure is constant
 - Signal weights — classified as variables per PROCESS.md retirement analysis (D-600-07): weights must be config-driven, not hardcoded
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -344,7 +373,7 @@ Single key: outreach_id. No cross-database joins.
 # 3. Do NOT touch outreach_bit_scores — leave deprecated data in place for audit trail
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. Confirm process folder root matches 5-entry locked shape -> expected: PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, _archived-fragments/ only
@@ -367,7 +396,7 @@ Single key: outreach_id. No cross-database joins.
 | LCS compiler does not reference outreach_bit_scores | §5 | barton-outreach-core/src/compiler-v2.ts | `grep -r "outreach_bit_scores" barton-outreach-core/src/` | [ ] | TBV | TBV |
 | Process folder root has exactly 5 entries | §1 | filesystem | `ls factory/outreach/600-bit-scoring/` | [ ] | 2026-04-29 | 5 entries (G25 target) |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -392,7 +421,7 @@ Single key: outreach_id. No cross-database joins.
 | OPERATE | REPAIR | Any metric outside tolerance |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -433,7 +462,7 @@ Single key: outreach_id. No cross-database joins.
 | ORBT is explicit | TROUBLESHOOT_TRAIN set, not BUILD | clean |
 | heir.yaml status field | stale "build" — flagged in §1 note | conflict captured, not a doc error |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 > Process never reached certification (retired before production deployment). No birth certificate. No logbook entries beyond the retirement record below.
 
@@ -443,13 +472,13 @@ Single key: outreach_id. No cross-database joins.
 |------|-------|--------|---------------|----------|------------|
 | 2026-03-25 | Dave Barton | RETIRE | Composite BIT scoring retired during LCS compiler v2 architecture review. Replaced by direct field-completeness checks in compiler-v2.ts. outreach_bit_scores table deprecated. | PROCESS.md §10 logbook; CLAUDE.md retirement notice | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
 | FP-600-01 | PROC-600 architecture | VARIABLE_AS_CONSTANT | 2026-03-25 | 1 | N/A | RESOLVED — process retired; root cause: composite score was a variable masquerading as a constant (aggregation destroyed useful signal granularity) |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

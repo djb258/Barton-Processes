@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/client/830-client-portal/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 830-client-portal
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/client/830-client-portal
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.830
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # CLIENT PORTAL
 ## Renders audience-specific HTML pages for each client, branded per client record, served at app.svgagency.com/:slug/:page
 ### Status: BUILD
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [ ] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -34,12 +63,12 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-06 |
 | BAR Reference | BAR-38, BAR-82, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/client-portal |
 
-### 1b. Geometry {#sec-1b-geometry}
+## §1b GEOMETRY {#sec-1b-geometry}
 
 **CTB Position:** barton-enterprises → svg-agency → client → client-portal (leaf)
 
@@ -69,7 +98,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Slug resolves to client_id from shared D1; Unknown slug returns 404; Each page renders with client branding (logo, colors); All pages read-only except agent (ticket status updates); Agent validates status transitions before writing; Server-side HTML — no SPA framework |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Client Portal (PROC-830) is a Cloudflare Worker that renders five audience-specific HTML pages per client, served at `app.svgagency.com/:slug/:page`. Each page pulls client data from the shared D1 database (process 810) and wraps it in the client's branding. The agent page additionally accepts POST requests to update ticket status.
@@ -101,7 +130,7 @@ Without this process there is no client-facing view of the data SVG Agency colle
 ### SUCCESS METRIC
 All five audience pages render with correct client branding and page-specific data for at least one live slug in production (zero 500 errors, zero blank pages).
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -158,13 +187,13 @@ Required doctrine references for every process UT:
 |--------|----------------|--------|---------|
 | (none) | — | — | No external API calls; reads from shared D1 binding only |
 
-### 3c. FCEs Attached
+### §3c FCEs Attached
 
 | FCE Name | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Run Directory | Latest P=1 | Rows | Status |
 |----------|----------------------------------|------|--------------|------------|------|--------|
 | N/A — no FCE runs for this process yet | TBV | BUILD | TBV | pending | TBV | red |
 
-### 3d. BARs Referenced
+### §3d BARs Referenced
 
 | BAR | Title | HEIR (`bar-id · ctb · cc_layer`) | ORBT | Status | Relation |
 |-----|-------|----------------------------------|------|--------|----------|
@@ -172,13 +201,13 @@ Required doctrine references for every process UT:
 | BAR-82 | TBV | TBV | TBV | TBV | implements |
 | BAR-178 | TBV | TBV | TBV | TBV | implements |
 
-### 3e. LBB Subjects Fed
+### §3e LBB Subjects Fed
 
 | LBB Subject | HEIR (`subject-id · ctb · cc_layer`) | ORBT | What This Doc Writes | Frequency |
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-client | svg-client · branch · CC-02 | BUILD | session summaries, build progress, known issues | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO — INPUT, MIDDLE, OUTPUT {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. **What triggers this?** User navigates to `app.svgagency.com/:slug/:page` (HTTP GET). Agent page also accepts HTTP POST for ticket status updates.
@@ -206,7 +235,7 @@ HTTP request with URL path containing two segments: slug (client identifier) and
 ### Circle (Bedrock §5)
 No automated feedback loop. The circle closes through human observation: the audience reads the page, identifies issues (wrong data, missing info), and reports back through the agent page's service request system or direct communication. Agent page ticket updates feed back into 810's canonical data (service_request table).
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -272,9 +301,9 @@ client.slug (URL resolution)
 | Who is enrolled? | person, election | client_id |
 | What service tickets exist? | service_request | client_id |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ — DEFINE, MAP, JOIN {#sec-6-dmj}
 
-### 6a. DEFINE (Build the Key)
+### §6a DEFINE (Build the Key)
 
 | Element | ID | Format | Description | C or V |
 |---------|-----|--------|-------------|--------|
@@ -289,7 +318,7 @@ client.slug (URL resolution)
 | ticket_status | E-830-09 | string (valid transitions TBV) | New ticket status on POST | V |
 | HTML response | E-830-10 | text/html document | Full rendered page output | V |
 
-### 6b. MAP (Connect Key to Structure)
+### §6b MAP (Connect Key to Structure)
 
 | Source | Target | Transform |
 |--------|--------|-----------|
@@ -301,7 +330,7 @@ client.slug (URL resolution)
 | page + client_id | E-830-10 HTML body | renderer function per page |
 | ClientContext + HTML body | E-830-10 full document | layout.ts renderPage() |
 
-### 6c. JOIN (Path to Spine)
+### §6c JOIN (Path to Spine)
 
 | Join Path | Type | Description |
 |-----------|------|-------------|
@@ -312,7 +341,7 @@ client.slug (URL resolution)
 | client_id -> election | direct | client_id FK, HR page |
 | client_id -> service_request | direct | client_id FK, agent page |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Five fixed audience pages: renewal, ceo, hr, underwriting, agent (D-830-01)
@@ -331,7 +360,7 @@ client.slug (URL resolution)
 - Page data (plans, people, tickets — different per client, changes over time)
 - Ticket status value on POST (the new status being set by the agent)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -352,7 +381,7 @@ npx wrangler delete --name client-portal-830
 
 (Removes the deployed Worker from Cloudflare. To pause without deletion: undeploy via Cloudflare dashboard -> Workers -> client-portal-830 -> Disable.)
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET /health -> expected: {"process":"PROC-CLIENT-PORTAL","number":830,"status":"ok"}
@@ -373,7 +402,7 @@ npx wrangler delete --name client-portal-830
 2. **Flow** — Does the slug resolve to client_id, and does client_id reach the page renderer with correct data?
 3. **Change** — Does the layout template correctly inject branding (logo, colors, display name) and does each page render the right data for its audience?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b LIVE VERIFICATION LOG {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -386,9 +415,9 @@ npx wrangler delete --name client-portal-830
 | BAR-82 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
 | BAR-178 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
-### 10a. Metrics
+### §10a Metrics
 
 | Metric | Unit | Baseline | Target | Tolerance |
 |--------|------|----------|--------|-----------|
@@ -398,7 +427,7 @@ npx wrangler delete --name client-portal-830
 | Ticket updates | count/day | BASELINE | TBV | TBV |
 | 500 error rate | % of requests | BASELINE | 0% | <1% |
 
-### 10b. Sigma Tracking
+### §10b Sigma Tracking
 
 | Metric | Run 1 | Run 2 | Run 3 | Trend | Action |
 |--------|-------|-------|-------|-------|--------|
@@ -406,7 +435,7 @@ npx wrangler delete --name client-portal-830
 | 404 rate | — | — | — | pending | No production runs yet |
 | 500 error rate | — | — | — | pending | No production runs yet |
 
-### 10c. ORBT Gate Rules
+### §10c ORBT Gate Rules
 
 | From | To | Gate |
 |------|-----|------|
@@ -415,7 +444,7 @@ npx wrangler delete --name client-portal-830
 | REPAIR | OPERATE | fix + metric back + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix -> AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -455,7 +484,7 @@ npx wrangler delete --name client-portal-830
 | 800 Client Mint client record | 830 depends on client.slug existing | clean — dependency declared; slug is a variable, client record is constant |
 | IMO-Creator Sovereign (CC-01) | 830 is CC-04 leaf | clean — inherits from sovereign, no conflict |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -478,8 +507,9 @@ No logbook during BUILD.
 | 2026-03-29 | Dave Barton | BUILD | Initial PROCESS.md created; IMO, OSAM, C&V, dependencies, known issues documented | PROCESS.md v1.1.0 | none |
 | 2026-04-22 | TBV | BUILD | Skeleton wrangler.toml + src/ updated; all screens render with mock data | wrangler.toml skeleton comment | none |
 | 2026-04-29 | Sonnet Runner | BUILD | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written; fragments archived | UT consolidation run | pending |
+| 2026-05-06 | sonnet-mechanic | BUILD | BAR-830-CONFORM-WIRE — Atlas conformance pass; BS Law Y-junction applied to workflow.yaml; YAML frontmatter added to PROCESS-UT.md; section headers updated to §N format | BAR-830-CONFORM-WIRE MECHANIC-OUTPUT.md | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -488,22 +518,23 @@ No logbook during BUILD.
 | FP-830-03 | 800 Client Mint | SLUG_MANUAL | 2026-03-29 | 1 | 0 | OPEN — Slugs must be manually set on client records |
 | FP-830-04 | logo_url | ASSET_MISSING | 2026-03-29 | 1 | 0 | OPEN — No R2 bucket or CDN for client logos |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|
 | 2026-03-29 | Initial PROCESS.md created. Documented IMO, OSAM, C&V, dependencies, known issues. BUILD state. | none |
 | 2026-04-22 | Skeleton wrangler.toml and src/ updated; all routes render with mock data. | none |
 | 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md and DOCTRINE.md written; README.md, CLAUDE.md, PROCESS.md archived to _archived-fragments/. | pending |
+| 2026-05-06 | BAR-830-CONFORM-WIRE — Atlas conformance pass. BS Law Y-junction applied to workflow.yaml. YAML frontmatter added to PROCESS-UT.md. Section headers updated to §N format. Gate-runner verified P=1. | pending |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
-| Template Version | 2.7.0 |
+| Last Modified | 2026-05-06 |
+| Version | 2.1.0 |
+| Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |

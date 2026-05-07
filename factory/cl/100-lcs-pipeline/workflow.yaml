@@ -1,41 +1,105 @@
-name: bp-100-lcs-pipeline
-inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+# bp-100-lcs-pipeline — Workflow-Body
+# inherits: atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0,
+#            book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0,
+#            parent_bar: BAR-377
+
 outside:
-  heir: { sovereign_ref: svg-outreach, hub_id: 100-lcs-pipeline, cc_layer: CC-02, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/lcs-pipeline, species: Workflow-Body, owner: dave-barton }
-  orbt: { library_state: REPAIR, last_indexed_at: "2026-05-03", indexed_by: codex }
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 100-lcs-pipeline
+    ctb_placement: leaf
+    imo_topology: hub
+    cc_layer: CC-02
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/lcs-pipeline
+    species: Workflow-Body
+    owner: dave-barton
+    services:
+      - cloudflare-worker
+      - cloudflare-d1
+      - mailgun
+      - heyreach
+      - lbb
+      - mission-control
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; two crons verified; lcs-fire-daily migration gate green"
+    companion_manifest: PROCESS-UT.md
+  orbt:
+    library_state: REPAIR
+    last_indexed_at: "2026-05-03"
+    indexed_by: codex
+
 inside:
   heir:
     process_id: bp.100
-    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
+    species: Workflow-Body
+    version: "1.0.1"
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
     services: [cloudflare-worker, cloudflare-d1, mailgun, heyreach, lbb, mission-control]
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; two crons verified; lcs-fire-daily migration gate green"
     determinism_gate: ai_on_spine_forbidden
-  orbt: { runtime_state: REPAIR, strikes: 2, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: three_clean_fires_and_codex_10_gate_pass }
-description: "UT-local workflow for bp.100 LCS Pipeline. Verifies compiler cron, migrates/validates lcs-fire-daily scheduling, audits delivery loop, and closes LBB/MC."
-inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml, daily_email_run: daily-email-run.yaml }
-schedule: ["0 7 * * *"]
-data:
-  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, daily-email-run.yaml]
-  writes: [docs/audit/process-runs/bp-100/inventory-bp-100.md, docs/audit/process-runs/bp-100/live-state-bp-100.md, docs/audit/process-runs/bp-100/diff-bp-100.md, docs/audit/process-runs/bp-100/audit-bp-100.md]
-  forbidden: [llm_on_schedule_spine, send_without_suppression_check, mission_control_green_before_all_pass]
-nodes:
-  - { id: inventory, brain: gemini, output: inventory-bp-100.md }
-  - { id: live-introspection, brain: sonnet, output: live-state-bp-100.md }
-  - { id: diff, brain: opus-4.7, output: diff-bp-100.md }
-  - { id: lcs-fire-daily-cron-migration, brain: sonnet, gate: required_before_operate }
-  - { id: fix, brain: sonnet, mode: repair, output: fix_commits_if_needed }
-  - { id: audit, brain: codex, output: audit-bp-100.md }
-  - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
-gates:
-  cron_exists: "0 7 * * * plus daily-fire schedule declared"
-  cron_firing: "wrangler cron triggers list confirms recent lcs-hub fires"
-  no_ai_on_schedule_spine: "scheduled handler has zero LLM calls"
-  ut_ops_matches_reality: "PROCESS-UT schedule and lcs-fire-daily reality match"
-  lbb_ingest_each_fire: "bp.100 LCS rows exist in lbb_records"
-  orbt_promoted_or_confirmed: "REPAIR to OPERATE only after Strike 2 fixes and three clean fires"
-  d1_surface_documented: "lcs_signal_queue, lcs_outbound, and lcs_event checks pass"
-  upstream_healthy: "bp.700 produces CIDs"
-  downstream_wired: "delivery hub consumes webhook events"
-  squawk_live: "bounce or send failure writes mission-control squawk"
-lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.100 LCS", ingest_on_pass: true, ingest_on_fail: true }
+    companion_manifest: PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+    runtime_state: REPAIR
+    strikes: 2
+    last_transition_at: "2026-05-03"
+    last_transition_reason: "BAR-377 UT-local YAML creation"
+    flipped_by: codex
+    promotion_gate: three_clean_fires_and_codex_10_gate_pass
+  workflow:
+    description: "UT-local workflow for bp.100 LCS Pipeline. Verifies compiler cron, migrates/validates lcs-fire-daily scheduling, audits delivery loop, and closes LBB/MC."
+    inputs:
+      bar_id: BAR-377
+      process_ut: PROCESS-UT.md
+      doctrine: DOCTRINE.md
+      heir: heir.yaml
+      orbt: orbt.yaml
+      wrangler: wrangler.toml
+      daily_email_run: daily-email-run.yaml
+    schedule: ["0 7 * * *"]
+    data:
+      reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, daily-email-run.yaml]
+      writes:
+        - docs/audit/process-runs/bp-100/inventory-bp-100.md
+        - docs/audit/process-runs/bp-100/live-state-bp-100.md
+        - docs/audit/process-runs/bp-100/diff-bp-100.md
+        - docs/audit/process-runs/bp-100/audit-bp-100.md
+      forbidden: [llm_on_schedule_spine, send_without_suppression_check, mission_control_green_before_all_pass]
+    nodes:
+      - { id: inventory, brain: gemini, output: inventory-bp-100.md }
+      - { id: live-introspection, brain: sonnet, output: live-state-bp-100.md }
+      - { id: diff, brain: opus-4.7, output: diff-bp-100.md }
+      - { id: lcs-fire-daily-cron-migration, brain: sonnet, gate: required_before_operate }
+      - { id: fix, brain: sonnet, mode: repair, output: fix_commits_if_needed }
+      - { id: audit, brain: codex, output: audit-bp-100.md }
+      - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
+    gates:
+      cron_exists: "0 7 * * * plus daily-fire schedule declared"
+      cron_firing: "wrangler cron triggers list confirms recent lcs-hub fires"
+      no_ai_on_schedule_spine: "scheduled handler has zero LLM calls"
+      ut_ops_matches_reality: "PROCESS-UT schedule and lcs-fire-daily reality match"
+      lbb_ingest_each_fire: "bp.100 LCS rows exist in lbb_records"
+      orbt_promoted_or_confirmed: "REPAIR to OPERATE only after Strike 2 fixes and three clean fires"
+      d1_surface_documented: "lcs_signal_queue, lcs_outbound, and lcs_event checks pass"
+      upstream_healthy: "bp.700 produces CIDs"
+      downstream_wired: "delivery hub consumes webhook events"
+      squawk_live: "bounce or send failure writes mission-control squawk"
+    lbb:
+      subject_id: svg-outreach-proc
+      title_prefix: "bp.100 LCS"
+      ingest_on_pass: true
+      ingest_on_fail: true
+
+bs_law_conformance:
+  version: BS_LAW_v1.3.0
+  y_junction: true
+  outside_arm: outside
+  inside_arm: inside
+  syntactic_separation: two_distinct_top_level_keys
+  auditor: codex
+  bar_id: BAR-100-CONFORM-WIRE

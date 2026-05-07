@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/500-talent-flow/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 500-talent-flow
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; monthly cron verified; zero-detection squawk live"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.500
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Talent Flow
 ## Movement detection engine for executive slot changes — if we can't see who moved, we're selling blind
 ### Status: BUILD
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +98,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Runs AFTER 200-people-worker completes monthly refresh; compares current vs previous People snapshot; emits TF-01/TF-02 signals for executive movement; snapshot gate enforced (count=0 → HALT); dedup via ON CONFLICT DO NOTHING |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Talent Flow is a monthly snapshot-diff sensor that reads Process 200's LinkedIn snapshot data, compares it month-over-month against stored people records, and emits deterministic movement signals (TF-01 EXECUTIVE_JOINED, TF-02 EXECUTIVE_LEFT) for CEO, CFO, and HR slots in territory companies.
@@ -97,7 +126,7 @@ Downstream: Process 100 (LCS Pipeline) consumes signals from outreach.signal_out
 ### SUCCESS METRIC
 Monthly signal count > 0 when Process 200 has produced snapshots, with classification deviation count = 0 and write failure count = 0.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -174,7 +203,7 @@ Required doctrine references for every process UT:
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-outreach-proc | TBV | BUILD | Monthly run summaries, signal counts, movement detection results | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? — Monthly, after Process 200 completes its LinkedIn refresh for the target month.
@@ -198,7 +227,7 @@ TF-01 and TF-02 signal rows in `outreach.signal_output` (Neon), keyed by outreac
 ### Circle (Bedrock §5)
 Signals feed Process 100 (LCS Pipeline) which compiles CIDs. Movement signals adjust outreach priority — a company with a freshly joined CEO is a higher-value target than one with a stable roster. Signal expiry (90 days) ensures stale movements don't persist. The following month, Process 200 runs again, produces new snapshots, and Talent Flow diffs against the updated baseline, closing the loop.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -261,7 +290,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | What company does the signal attach to? | `people.company_slot` | `outreach_id` |
 | Is this company in territory? | `people.v_territory_companies` | `company_unique_id` |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -297,7 +326,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | linkedin_snapshots.company_unique_id → v_territory_companies.company_unique_id | direct | Territory filter |
 | company_slot.outreach_id → signal_output.outreach_id | direct | Spine join — attaches signal to outreach entity |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Signal types are fixed: TF-01 (EXECUTIVE_JOINED, magnitude 10, 90d expiry) and TF-02 (EXECUTIVE_LEFT, magnitude 8, 90d expiry) — see D-500-02
@@ -315,7 +344,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 - left_count — TF-02 signals emitted this run
 - affected companies and persons — changes each month
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -334,7 +363,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 # Dry-run mode (no writes): python3 src/talent-flow.py --dry-run
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. python3 src/talent-flow.py --dry-run -> expected: gate check passes, movements listed, no writes to signal_output
@@ -349,7 +378,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 2. Flow — does linkedin_snapshots join correctly to people_master and company_slot? Does territory filter apply? Do classified signals reach signal_output?
 3. Change — is movement_type classified correctly to TF-01 or TF-02? Does dedup prevent duplicates on re-run? Does magnitude match signal definition (10 for joined, 8 for left)?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -359,7 +388,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | Movement detection query returns results | §4 Middle Step 2 | people.linkedin_snapshots | `python3 src/talent-flow.py --dry-run` | [ ] | TBV | TBV |
 | Monthly run completes without HALT | §8 stop conditions | script stdout | `python3 src/talent-flow.py --month YYYY-MM` | [ ] | TBV | TBV |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -390,7 +419,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | REPAIR | OPERATE | fix + metric back + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix -> AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -426,7 +455,7 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | Dependency gate (Process 200 first) | Confirmed in heir.yaml, PROCESS.md, CLAUDE.md, and source code | clean |
 | Pure database diff (no AI, no external APIs) | Confirmed in all fragments and code | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -448,7 +477,7 @@ No logbook during BUILD.
 |------|-------|--------|---------------|----------|------------|
 | 2026-04-29 | Sonnet Runner | BUILD | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | STAGE-1-CODEX-MECHANIC-OUTPUT.md Packet 10 | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -459,7 +488,7 @@ No logbook during BUILD.
 | FP-500-05 | src/talent-flow.py | Unknown movement_type silently skipped (no logging) | 2026-03-29 | 1 | 0 | OPEN |
 | FP-500-06 | src/talent-flow.py line 103 | Dependency check is simple count, not Process 200 completion flag | 2026-03-29 | 1 | 0 | OPEN |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

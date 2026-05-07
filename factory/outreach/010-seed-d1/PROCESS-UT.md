@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/010-seed-d1/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 010-seed-d1
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach-intelligence/010-seed-d1
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; verify-only OPERATE"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.010
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/010-seed-d1/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # PROCESS-UT — SVG D1 SEED
 ## Unified Template v2.7.0 | PROC-010 | UT Consolidation 2026-04-29
 

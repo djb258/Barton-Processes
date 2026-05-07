@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/client/810-client-intake/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 810-client-intake
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/client/810-client-intake
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; intake staging and validation gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.810
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Client Data Intake
 ## Receives client benefits data via HTTP, validates with Zod, stages to immutable D1 audit trail, promotes to canonical tables, and vaults to Neon
 ### Status: BUILD
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b — TBV (pre-deployment) |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [ ] | §1 — TBV |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +98,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | (1) Zod validates all incoming data at boundary; (2) Rejected data never enters staging; (3) intake_record is INSERT-only immutable; (4) Promotion validates business rules before writing canonical; (5) Errors write to spoke-specific error tables in D1; (6) Same worker handles initial load and incremental updates; (7) Vault promotion pushes certified records to Neon clnt.* schema |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Client Data Intake is the single entry gate for all client benefits data into the SVG Agency system. Every plan, employee, election, vendor, invoice, and service request enters via HTTP POST, passes Zod validation, is staged immutably in D1, promoted to canonical working tables, and eventually vaulted to Neon for permanent storage.
@@ -100,7 +129,7 @@ Without this process, no downstream process has canonical data to operate on. Pr
 ### SUCCESS METRIC
 100% of submitted records either promoted to canonical D1 tables or written to a spoke-specific error table with source traceability back to intake_record — no records silently lost.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -179,7 +208,7 @@ Required doctrine references for every process UT:
 | svg-client-proc | TBV | BUILD | Session summaries, promotion run outcomes, error patterns | per-run |
 | svg-client | TBV | BUILD | Canonical intake events, batch statistics | on-change |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. **What triggers this?** — HTTP POST to /intake from operator upload or external system
@@ -210,7 +239,7 @@ All five steps execute in a single HTTP request — Validate, Stage, Promote in 
 ### Circle (Bedrock §5)
 Vault promotion (`POST /vault`) pushes certified D1 canonical records to Neon `clnt.*` schema and stamps `vaulted_at` on D1 rows. Error table review via `GET /errors/:client_id` closes the feedback loop — unresolved errors block downstream processes from seeing clean data. The Circle: intake → canonical D1 → vault (Neon) → errors reviewed → corrected records re-submitted via intake.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -291,7 +320,7 @@ client.client_id (S1 Hub — universal spine)
 | What is a person's election + plan? | `election` | `person_id` JOIN `plan` via `plan_id` |
 | What invoices does a vendor have? | `invoice` | `vendor_id` |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -332,7 +361,7 @@ client.client_id (S1 Hub — universal spine)
 | intake_record → enrollment_intake | direct | intake_record.enrollment_intake_id = enrollment_intake.enrollment_intake_id |
 | canonical tables → Neon clnt.* | direct | vault promotion copies row; join key = same PK (plan_id, person_id, etc.) |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure — never changes)
 - Single-pass pipeline: Validate → Stage → Promote in one HTTP request (D-810-04)
@@ -356,7 +385,7 @@ client.client_id (S1 Hub — universal spine)
 - Promotion error count per batch
 - Number of unvaulted records awaiting vault promotion at any given time
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -377,7 +406,7 @@ wrangler deployments list --name client-intake-810
 # Or: remove the worker route binding to stop receiving traffic
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET /health → expected: { process: 'PROC-CLIENT-DATA-INTAKE', number: 810, status: 'ok' }
@@ -398,7 +427,7 @@ wrangler deployments list --name client-intake-810
 
 If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). Do not patch. Do not guess.
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -412,7 +441,7 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 
 Rule: at least one live gauge row must be checked before BUILD can move to OPERATE.
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -446,7 +475,7 @@ Rule: at least one live gauge row must be checked before BUILD can move to OPERA
 | REPAIR | OPERATE | fix + metric back within tolerance + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → Airworthiness Directive |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -487,7 +516,7 @@ Rule: at least one live gauge row must be checked before BUILD can move to OPERA
 | client_id universal key | Does any table lack client_id? | clean — all 16 tables have client_id; intake_record traces to enrollment_intake which has client_id |
 | Single-pass pipeline (D-810-04) | Does vault (POST /vault) violate single-pass? | clean — vault is a separate endpoint by design; single-pass refers to intake path only |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -509,29 +538,30 @@ No logbook during BUILD.
 |------|-------|--------|---------------|----------|------------|
 | — | — | — | No entries — BUILD state | — | — |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
 | FP-810-01 | wrangler.toml | DEPLOY_BLOCKED | 2026-03-29 | 1 | 0 | OPEN — D1 database_id empty; `wrangler d1 create client-intake-810` not run |
 | FP-810-02 | src/index.ts (all routes) | AUTH_MISSING | 2026-03-29 | 1 | 0 | OPEN — No auth on any endpoint; BUILD BLOCKER before OPERATE |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|
 | 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none |
 | 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none |
 | 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md written from CLAUDE.md + PROCESS.md + heir.yaml; DOCTRINE.md extracted; orbt.yaml created; fragments archived | pending |
+| 2026-05-06 | BAR-810-CONFORM-WIRE — BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms | pending |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
-| Template Version | 2.7.0 |
+| Last Modified | 2026-05-06 |
+| Version | 2.1.0 |
+| Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |

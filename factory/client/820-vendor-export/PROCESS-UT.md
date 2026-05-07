@@ -1,3 +1,34 @@
+---
+species: UT-Body
+companion_yaml: workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 820-vendor-export
+    ctb_placement: leaf
+    imo_topology: middle
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/client/820-vendor-export
+    services: [vendor-export, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; vendor export cron green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-03"
+    indexed_by: codex
+inside:
+  heir:
+    process_id: bp.820
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Vendor Export
 ## Reads canonical client data from D1, applies per-vendor blueprint mappings from KV, and generates formatted export files for insurance vendors (TPAs, PBMs, carriers) on a daily/weekly cron schedule.
 ### Status: BUILD
@@ -22,7 +53,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -70,7 +101,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Reads D1 canonical read-only; applies vendor blueprint from KV; translates internal UUIDs to external IDs; logs every export to export_log; missing external ID logs error and skips record; daily TPA/PBM, weekly carriers |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Process 820 is the terminal egress point for all client data leaving the SVG system toward external insurance vendor platforms. It reads canonical person/election/plan records from 810's D1, applies a per-vendor blueprint mapping from KV to translate internal column names and UUIDs to vendor-specific formats, and generates CSV or JSON export files.
@@ -99,7 +130,7 @@ SVG Agency operations team and Dave Barton own this process. Vendor systems (TPA
 ### SUCCESS METRIC
 100% of scheduled vendors export successfully with zero BLUEPRINT_NOT_FOUND errors and MISSING_EXTERNAL_ID rate below 1% per run.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -177,7 +208,7 @@ Required doctrine references for every process UT:
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-client-proc | svg-client-proc · leaf · CC-04 | BUILD | Export run summaries, error counts, vendor coverage | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? Cron schedule at 5 AM UTC daily, or manual HTTP POST to `/export { client_id, vendor_id }`.
@@ -212,7 +243,7 @@ Required doctrine references for every process UT:
 ### Circle (Bedrock §5)
 Every export writes to `export_log` (status, record_count, timestamp) closing the feedback loop. The `/status` endpoint exposes recent exports and error_count for operational visibility. `export_schedule.last_run_at` tracks cadence. If error rate rises, the Circle signals re-entry into REPAIR mode.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -277,7 +308,7 @@ vendor.vendor_id
 | What is this person's vendor ID? | external_identity_map | internal_id + vendor_id → external_id_value |
 | What format does this vendor need? | KV | blueprint:{vendor_id} → file_format, delimiter |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -317,7 +348,7 @@ vendor.vendor_id
 | person.person_id → external_identity_map.internal_id | direct | Filtered by vendor_id and active status |
 | export result → export_log | direct | INSERT on every generateExport() call |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Export pipeline steps are fixed: determine vendors → get clients → load blueprint → read data → translate IDs → map fields → generate output → log — **D-820-04**
@@ -338,7 +369,7 @@ vendor.vendor_id
 - Vendor blueprint field mappings (different per vendor, updatable in KV)
 - Specific external IDs in external_identity_map at run time
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -358,7 +389,7 @@ wrangler delete --name vendor-export-820
 
 To suspend without deleting: disable the cron trigger in Cloudflare dashboard → Workers → vendor-export-820 → Triggers → disable cron.
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET /health -> expected: { "process": "PROC-VENDOR-EXPORT", "number": 820, "status": "ok" }
@@ -375,7 +406,7 @@ To suspend without deleting: disable the cron trigger in Cloudflare dashboard �
 2. Flow — Cron fires → worker runs → reads 810 D1 → reads KV blueprint → generates output → writes export_log?
 3. Change — Internal UUIDs correctly translated to vendor external IDs? Field mappings applied correctly? CSV/JSON formatted per blueprint spec?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -390,7 +421,7 @@ To suspend without deleting: disable the cron trigger in Cloudflare dashboard �
 
 Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -420,7 +451,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | REPAIR | OPERATE | fix + metric back + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -460,7 +491,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | Vendor blueprint KV key pattern | Fixed `blueprint:{vendor_id}` — matches src/blueprints.ts | clean |
 | Export pipeline step order | 8-step sequence matches src/export.ts implementation | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -484,7 +515,7 @@ No logbook during BUILD.
 | 2026-04-29 | Claude Sonnet (Runner) | BUILD | UT consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | UT v2.7.0 consolidation run | pending |
 | 2026-05-04 | Codex | REPAIR | Bound wrangler to live svg-d1-client and EGRESS_KV; aligned source queries to live client schema; applied additive export tracking migration | BAR-377 bp.820 repair | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -494,7 +525,7 @@ No logbook during BUILD.
 | FP-820-04 | src/index.ts + wrangler.toml | Shared D1 access with 810 not formalized | 2026-03-29 | 1 | 0 | CLOSED 2026-05-04 |
 | FP-820-05 | src/index.ts | No authentication on HTTP endpoints | 2026-03-29 | 1 | 0 | OPEN |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

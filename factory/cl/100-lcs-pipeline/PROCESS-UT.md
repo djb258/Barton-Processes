@@ -1,3 +1,62 @@
+---
+species: UT-Body
+companion_yaml: workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 100-lcs-pipeline
+    ctb_placement: leaf
+    imo_topology: hub
+    cc_layer: CC-02
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/lcs-pipeline
+    services:
+      - cloudflare-worker
+      - cloudflare-d1
+      - mailgun
+      - heyreach
+      - lbb
+      - mission-control
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; two crons verified; lcs-fire-daily migration gate green"
+  orbt:
+    library_state: REPAIR
+    last_indexed_at: "2026-05-03"
+    indexed_by: codex
+
+inside:
+  heir:
+    process_id: bp.100
+    species: UT-Body
+    version: "1.0.1"
+    last_modified: "2026-05-06"
+    companion_manifest: PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+    determinism_gate: ai_on_spine_forbidden
+  orbt:
+    library_state: BUILD
+    runtime_state: REPAIR
+    strikes: 2
+    last_transition_at: "2026-05-03"
+    last_transition_reason: "BAR-377 UT-local YAML creation"
+    flipped_by: codex
+    promotion_gate: three_clean_fires_and_codex_10_gate_pass
+
+bs_law_conformance:
+  version: BS_LAW_v1.3.0
+  y_junction: true
+  outside_arm: outside
+  inside_arm: inside
+  syntactic_separation: two_distinct_top_level_keys
+  certification_label: provisional-runtime
+  auditor: codex
+  bar_id: BAR-100-CONFORM-WIRE
+---
+
 # LCS Pipeline
 ## Three-stage compiler — CID → SID → MID — converts raw signals from upstream worker spokes into delivered outreach messages with full webhook feedback loop.
 ### Status: REPAIR
@@ -22,7 +81,7 @@
 | 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node — declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -73,7 +132,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Signal in → CID compiled → SID constructed → MID delivered → webhook received → CID enriched; bidirectional trace MID→SID→CID→signal; errors write to lcs_err0; ORBT 3-strike protocol operational; all processing on D1 — Neon vault only; SID compiler gates on has_verified_email = 1 only |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PRD {#sec-2-purpose}
 
 ### WHAT
 The LCS Pipeline is the outreach machine. It is a three-stage config-driven compiler: CID (Compiled Intelligence Dossier) gathers all available company intelligence from upstream D1 tables; SID (Signal Document) constructs a personalized message using a frame template selected from the registry; MID (Message Delivery Record) delivers the message via Mailgun or HeyReach and tracks webhook feedback. Every cycle is smarter than the last — bounces and opens accumulate, the footprint never shrinks.
@@ -106,7 +165,7 @@ Without this process, every upstream enrichment (32,704 company records, DOL fil
 ### SUCCESS METRIC
 Zero bounced messages attributed to unverified email addresses; delivery_failure_rate ≤ 5%; bounce_rate ≤ 2% per domain per 24h window.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -209,7 +268,7 @@ Required doctrine references for every process UT:
 | svg-outreach-proc | svg-outreach-proc · branch · CC-03 | OPERATE | Session summaries; quarantine events; REPAIR state transitions | per-run / on-change |
 | svg-sales | svg-sales · branch · CC-03 | OPERATE | SID message enrichment reads (read-only consumer) | per-SID |
 
-## 4. IMO — Input, Middle, Output {#sec-4-imo}
+## §4 IMO — Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. **What triggers this?** — Signals arrive in `lcs_signal_queue` from upstream dumb worker spokes (DOL, People, Blog, Talent Flow). Daily cron at 07:00 UTC scans for pending signals. Queue consumer processes in real-time on ingest.
@@ -233,7 +292,7 @@ Delivered email or LinkedIn message to verified target recipient. Full append-on
 ### Circle (Bedrock §5)
 Webhook delivery events feed back → update MID state → bounced addresses accumulate in lcs_err0 → ORBT strikes gate future sends → strike 3 triggers human escalation + suppression. Each cycle makes the next smarter: intelligence tier adjusts by footprint section_count, frame selection improves by signal type.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -322,7 +381,7 @@ lcs_domain_rotation (LRU selection: is_paused = 0 AND sent_today < daily_cap)
 | What contacts have verified email? | people_company_slot / slot_workbench | has_verified_email = 1 (NOT person_email_verified) |
 | What are the adapter health states? | lcs_adapter_registry | daily_cap, sent_today, health_status |
 
-## 6. DMJ — Define, Map, Join {#sec-6-dmj}
+## §6 DMJ — Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -362,7 +421,7 @@ lcs_domain_rotation (LRU selection: is_paused = 0 AND sent_today < daily_cap)
 | outreach_company_target → people_company_slot → people_people_master | direct | outreach_id → person_unique_id |
 | lcs_domain_rotation (LRU selection) | indirect | last_sent_at ASC, filtered by cap + pause state |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure — never changes)
 - Three-stage compiler: CID → SID → MID (D-100-03 — stage_skip_count = 0)
@@ -390,7 +449,7 @@ lcs_domain_rotation (LRU selection: is_paused = 0 AND sent_today < daily_cap)
 - Daily sent counts per domain (resets at 07:00 UTC)
 - recipient_email per SID (slot_type priority determines selection)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -418,7 +477,7 @@ npx wrangler deployments rollback lcs-hub
 npx wrangler d1 execute lcs-hub --remote --command "UPDATE lcs_domain_rotation SET is_paused = 1"
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET https://lcs-hub.svg-outreach.workers.dev/health → expected: status ok, companies > 0, all adapters healthy
@@ -437,7 +496,7 @@ npx wrangler d1 execute lcs-hub --remote --command "UPDATE lcs_domain_rotation S
 2. **Flow** — Does the signal reach CID compilation? Does CID reach SID? Does SID pass has_verified_email gate? Does SID reach MID delivery?
 3. **Change** — Is the CID compiled correctly (intelligence tier assigned)? Is the message personalized? Is the delivery status updated on webhook?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -457,7 +516,7 @@ npx wrangler d1 execute lcs-hub --remote --command "UPDATE lcs_domain_rotation S
 | LBB API responds | §3 | LBB Worker | `curl -s https://lbb.svg-outreach.workers.dev/health` | [ ] | TBV | TBV |
 | HeyReach webhook URL configured | §3 | HeyReach dashboard | Manual check — HeyReach dashboard → webhook settings | [ ] | TBV | TBV — not confirmed |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -487,7 +546,7 @@ npx wrangler d1 execute lcs-hub --remote --command "UPDATE lcs_domain_rotation S
 | REPAIR | OPERATE | Gate fix deployed (has_verified_email) + metrics clean + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | Fleet-wide fix → Airworthiness Directive |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -537,7 +596,7 @@ npx wrangler d1 execute lcs-hub --remote --command "UPDATE lcs_domain_rotation S
 | 2026-04-28 | Claude Code | QUARANTINE | 356 slot_workbench rows nulled (contradicted flags); 4 MIDs canceled (gate_verdict=THROTTLED); 190 SID recipient_emails nulled; ORBT→REPAIR | quarantine-356-2026-04-28.json | 3cfc7d65-0624-44d9-89cf-cb1946d2de87 (svg-outreach-proc) |
 | 2026-04-29 | Claude Code | UT CONSOLIDATION | PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived | this file | pending |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR → OPERATE transition.
 
@@ -547,7 +606,7 @@ No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR 
 |------|-------|--------|---------------|----------|------------|
 | — | — | — | No entries — REPAIR phase | — | — |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -559,7 +618,7 @@ No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR 
 
 **Note on FP-100-01:** SID compiler gates on legacy `person_email_verified = 1` instead of canonical `has_verified_email = 1`. Pattern guesses were being treated as verified addresses and delivered. Strike 2 reached. Strike 3 → AD issued. Fix: update deployed lcs-hub gate query from `person_email_verified = 1` → `has_verified_email = 1`. This is captured here; execution is NOT in scope for this UT consolidation.
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

@@ -1,3 +1,26 @@
+---
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 800-client-mint
+    ctb_placement: barton-enterprises/svg-agency/client/800-client-mint
+    imo_topology: hub
+    cc_layer: CC-04
+  orbt:
+    library_state: BUILD
+    indexed_by: codex
+inside:
+  heir:
+    process_id: bp.800
+    version: "1.0.0"
+    companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+certification_label: provisional-runtime
+species: UT-Body
+companion_yaml: factory/cl/800-client-mint/workflow.yaml
+---
+
 # Client Mint
 ## Converts a CL sovereign company into a formal client record — the birth certificate for every client relationship in SVG Agency.
 ### Status: BUILD
@@ -22,7 +45,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1. IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +92,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Receives CL sovereign ID → mints client_id in D1; populates clnt.client from CL sovereign data; links client_id back to CL sovereign ID; promotes certified client to Neon vault; errors write to D1 client_error; duplicate sovereign ID detection halts with error |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2. PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Client Mint receives a CL sovereign_id (company lifecycle identifier) via HTTP POST, reads the company's identity from the Neon CL vault, generates a unique client_id, writes the client record to D1 working tables, and optionally promotes certified clients to the Neon clnt.* canonical vault. It is the single gate that converts an outreach prospect into a billable client entity.
@@ -98,7 +121,7 @@ Operated by Dave Barton or a delegated SVG Agency operator. Documentation consum
 ### SUCCESS METRIC
 100% of minted client_ids are linked to a valid CL sovereign_id with zero orphaned records in D1 client table.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3. RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -177,7 +200,7 @@ Required doctrine references for every process UT:
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-client-proc | svg-client-proc · leaf · CC-04 | BUILD | session summaries, mint events, error logs | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4. IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? — Human provides a CL sovereign_id via HTTP POST /mint
@@ -205,7 +228,7 @@ Manual HTTP POST to `/mint` with `{ "sovereign_id": "<uuid>" }`. Sovereign_id is
 ### Circle (Bedrock §5)
 Minted client_id feeds 810 Client Intake. Errors surface via GET /status. Vault promotion closes the loop by persisting D1 working records into Neon canonical layer. GET /client/:id provides read-back verification. Errors in client_error table feed back into operations dashboard for resolution.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5. DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -266,7 +289,7 @@ cl.company_identity.company_unique_id (sovereign_id)
 | Is this client promoted to vault? | D1: client | vaulted_at |
 | How many clients are unvaulted? | D1: client | vaulted_at IS NULL |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6. DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -303,7 +326,7 @@ cl.company_identity.company_unique_id (sovereign_id)
 | D1 client.client_id -> clnt.client.client_id | direct | Vault promotion — D1 working to Neon canonical |
 | D1 client.client_id -> 810 intake spine | direct | Downstream — client_id is the join key for all intake operations |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - sovereign_id is the universal link between CL pipeline and minted client — D-800-01
@@ -325,7 +348,7 @@ cl.company_identity.company_unique_id (sovereign_id)
 - Error messages and timestamps
 - Number of unvaulted clients at promotion time
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8. STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -346,7 +369,7 @@ wrangler delete --name client-mint-800
 npx wrangler worker route delete <route_id>
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9. VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET /health → expected: { "status": "ok", "process": "PROC-CLIENT-MINT", "number": 800 }
@@ -376,7 +399,7 @@ npx wrangler worker route delete <route_id>
 | Migration 002 applied | §5 | Neon schema | `psql $NEON_URL -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='clnt'"` | [ ] | TBV | TBV |
 | Open error count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status \| jq .open_errors` | [ ] | TBV | TBV |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10. ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -404,7 +427,7 @@ npx wrangler worker route delete <route_id>
 | REPAIR | OPERATE | fix + metric back + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix -> AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11. EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -444,7 +467,7 @@ npx wrangler worker route delete <route_id>
 | D1 = working, Neon = vault | Confirmed in vault.ts write path and migration 002 | clean |
 | Manual trigger only | Confirmed in wrangler.toml (no crons), index.ts (no scheduled handler) | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12. LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -467,14 +490,14 @@ No logbook during BUILD.
 | 2026-03-29 | Dave Barton | BUILD | PROCESS.md created from template v2.0.0; D1 not created; no auth; worker not deployed | PROCESS.md §13 | none |
 | 2026-04-29 | Claude Sonnet | BUILD | UT consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | This file | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
 | FP-800-01 | wrangler.toml | database_id empty | 2026-03-29 | 1 | 0 | OPEN — run wrangler d1 create client-mint-800 |
 | FP-800-02 | src/index.ts | No auth on endpoints | 2026-03-29 | 1 | 0 | OPEN — implement auth middleware before OPERATE |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14. SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

@@ -1,3 +1,31 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/700-campaign-engine/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 700-campaign-engine
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/700-campaign-engine
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; campaign routing deterministic before bp.100"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.700
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/700-campaign-engine/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
 # Campaign Engine
 ## Sequences outreach messages (MIDs) based on movement detection — terminal execution layer of the LCS pipeline.
 ### Status: BUILD
@@ -22,7 +50,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1. IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +97,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Tags every MID (path_type + channel + movement_signal + sequence_position); sequences movement campaigns over 2 weeks; monthly generic for non-movement; CTA link in every MID; errors write to D1 master error table |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2. PURPOSE {#sec-2-purpose}
 
 ### WHAT
 The Campaign Engine is the terminal execution layer of the LCS outreach pipeline. It receives CID (Campaign Instruction Document) targets compiled by Process 100, evaluates movement signals from Process 200, selects the appropriate campaign model, tags each outreach message (MID), and routes delivery through Composio to Mailgun (email) or HeyReach (LinkedIn). It is not a separate worker — sequencing logic lives inside the LCS Hub (lcs-hub) worker as a cron-triggered campaign scanner.
@@ -98,7 +126,7 @@ Dave Barton operates this. SVG Agency sales team consumes the meeting pipeline d
 ### SUCCESS METRIC
 100% of pending CIDs produce tagged MIDs delivered within the cadence window, with delivery failure rate below 5%.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3. RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -187,7 +215,7 @@ Required doctrine references for every process UT:
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-outreach-proc | svg-outreach-proc · leaf · CC-03 | BUILD | Session summaries, delivery run results, error patterns | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4. IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. **What triggers this?** — LCS Pipeline (Process 100) completes CID compilation for a company cycle; cron fires at `0 7 * * *` and the campaign scanner evaluates pending CIDs.
@@ -212,7 +240,7 @@ Delivered outreach messages (email via Mailgun, LinkedIn via HeyReach). Full MID
 ### Circle (Bedrock §5)
 Webhook callbacks from Mailgun/HeyReach feed delivery status back to Process 100 (LCS Pipeline). Bounces and failures update company reachability status. Repeated bounces on a contact trigger ORBT strikes on the person record. Delivery metrics (open rate, click rate per frame type) inform frame selection in future CID compilations — closing the feedback loop.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5. DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -290,7 +318,7 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 | Did the webhook come back? | `lcs_event` | `event_type`, `received_at` |
 | Is the contact suppressed? | Suppression list table | `suppressed = true` |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6. DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -326,7 +354,7 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 | people_company_slot.outreach_id → people_people_master.unique_id | indirect | Slot links to person record via person_unique_id |
 | campaign_queue.cid_id → lcs_mid_sequence_state.mid_id | direct | Tagged MID connects to delivery state record |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Two campaign models: NO_MOVEMENT and MOVEMENT_DETECTED — binary, no other options (D-700-02)
@@ -351,7 +379,7 @@ lcs_cid.sovereign_company_id (CID from pipeline)
 - movement_signal value per MID (JOINED/LEFT/REPLACED/TITLE_CHANGED/EMAIL_CHANGED/NONE)
 - Tolerance thresholds k_i — calibrated through production runs
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8. STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -379,7 +407,7 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 # UPDATE campaign_queue SET status = 'PAUSED' WHERE status = 'pending'
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9. VERIFICATION {#sec-9-verification}
 
 ```text
 1. Verify CID exists: SELECT COUNT(*) FROM lcs_cid WHERE status = 'pending' → expected: > 0
@@ -397,7 +425,7 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 2. **Flow** — Does the CID reach the campaign model selector? Does the tagged MID reach Composio? Does the webhook reach back to the event table?
 3. **Change** — Is the MID correctly tagged with all 4 fields? Is the message delivered? Is the delivery status recorded in `lcs_mid_sequence_state`?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b. Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -410,7 +438,7 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 | HeyReach API key set | §3 | Doppler imo-creator/dev | `doppler secrets get HEYREACH_API_KEY --project imo-creator --config dev` | [ ] | TBV | TBV (PENDING) |
 | Suppression check enforced (D-700-04) | §7 | D1 spine | `SELECT COUNT(*) FROM campaign_queue q JOIN suppression_list s ON q.recipient_id = s.contact_id WHERE q.status != 'SUPPRESSED'` | [ ] | TBV | TBV |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10. ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -442,7 +470,7 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 | REPAIR | OPERATE | fix + metric back within tolerance + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11. EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -477,7 +505,7 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 | D1 spine binding (641a9a1e) | Same binding used by Process 100 — shared schema | clean |
 | Suppression list (CQRS rule) | No fragment conflict found — PROCESS.md Forbidden Paths aligns | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12. LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -499,7 +527,7 @@ No logbook during BUILD.
 |------|-------|--------|---------------|----------|------------|
 | 2026-04-28 | Sonnet Runner | BUILD | UT consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | _archived-fragments/ contains CLAUDE.md, PROCESS.md | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -508,21 +536,22 @@ No logbook during BUILD.
 | FP-700-03 | HeyReach integration | API_NOT_CONFIGURED | 2026-03-29 | 1 | 0 | OPEN — no API key, no account setup |
 | FP-700-04 | Webhook feedback loop | NOT_IMPLEMENTED | 2026-03-29 | 1 | 0 | OPEN — Composio webhook → Process 100 status update not built |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14. SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|
 | 2026-03-29 | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. | none |
 | 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/ | pending |
+| 2026-05-06 | BAR-700-CONFORM-WIRE — BS Law Y-junction conformance pass. YAML frontmatter added. Section headers converted to §N format. workflow.yaml rewritten to Y-junction spec. certification_label: provisional-runtime. | pending |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-28 |
-| Version | 2.0.0 |
-| Template Version | 2.7.0 |
+| Last Modified | 2026-05-06 |
+| Version | 2.1.0 |
+| Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |

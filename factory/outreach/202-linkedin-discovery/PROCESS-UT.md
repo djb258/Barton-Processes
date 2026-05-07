@@ -1,8 +1,79 @@
+---
+species: UT-Body
+companion_yaml: workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 202-linkedin-discovery
+    ctb_placement: leaf
+    imo_topology: hub
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/202-linkedin-discovery
+    services: [linkedin-discovery, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; LinkedIn URL discovery deterministic; 10 BAR-377 gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-03"
+    indexed_by: codex
+inside:
+  heir:
+    process_id: bp.202
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Process 202: LinkedIn Discovery
-## Fills person_linkedin on slots that have a name but no LinkedIn URL via a 3-gate waterfall (recon match → hunter promote → Startpage search).
+## §1 IDENTITY
+Fills person_linkedin on slots that have a name but no LinkedIn URL via a 3-gate waterfall (recon match → hunter promote → Startpage search).
 ### Status: BUILD
 ### Medium: process
 ### Business: svg-agency
+
+## §2 PRD
+Section placeholder — content to be filled by process owner.
+
+## §3 RESOURCES
+Section placeholder — content to be filled by process owner.
+
+## §4 MIDDLE
+Section placeholder — content to be filled by process owner.
+
+## §5 OSAM
+Section placeholder — content to be filled by process owner.
+
+## §6 OUTPUT
+Section placeholder — content to be filled by process owner.
+
+## §7 GOVERNANCE
+Section placeholder — content to be filled by process owner.
+
+## §8 KILL SWITCH
+Section placeholder — content to be filled by process owner.
+
+## §9 OBSERVABILITY
+Section placeholder — content to be filled by process owner.
+
+## §10 LBB SUBJECTS
+Section placeholder — content to be filled by process owner.
+
+## §11 OPEN BLOCKERS
+Section placeholder — content to be filled by process owner.
+
+## §12 STRIKE LADDER
+Section placeholder — content to be filled by process owner.
+
+## §13 BARS
+Section placeholder — content to be filled by process owner.
+
+## §14 LOGBOOK
+Section placeholder — content to be filled by process owner.
 
 ## UT Checklist (Pre-Flight — per law/UT_CHECKLIST.md v1.2.0)
 

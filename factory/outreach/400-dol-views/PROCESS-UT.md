@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/400-dol-views/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 400-dol-views
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/400-dol-views
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; verify-only OPERATE DOL views"
+  orbt:
+    library_state: OPERATE
+    last_indexed_at: "2026-05-06"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.400
+    species: UT-Body
+    version: "2.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/400-dol-views/PROCESS-UT.md
+  orbt:
+    library_state: OPERATE
+---
+
 # DOL Views — Process 400
 ## SQL view library against DOL Form 5500 filing data: 6 read-only views detecting renewal proximity, premium pressure, carrier instability, and broker churn.
 ### Status: OPERATE
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +98,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | All 6 views queryable via Hyperdrive; Gate 3/4/5 evaluable from views; PEPM benchmarking by state/size available |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 This process defines 6 read-only SQL views against DOL Form 5500 annual filing data stored in Neon. Each view computes a specific actionable signal from public EBSA filings: filing existence (Gate 3), renewal proximity (Gate 4), participant-count pressure (Gate 5), PEPM market comparison, carrier switches, and broker churn.
@@ -96,7 +125,7 @@ DOL Form 5500 filings are the only public dataset revealing what a company spend
 ### SUCCESS METRIC
 All 6 Neon views return non-zero rows for a known-populated state (e.g., WV) with correct boolean signals on a fresh query.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -172,7 +201,7 @@ Required doctrine references for every process UT:
 |-------------|--------------------------------------|------|---------------------|-----------|
 | svg-outreach | svg-outreach · branch · CC-03 | OPERATE | Session summaries, EBSA import events, view refresh notes | on-change (annual) |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? Nothing triggers it on a schedule. Views exist and are queryable on demand. Underlying data refreshes once per year via manual EBSA bulk import.
@@ -196,7 +225,7 @@ EBSA Form 5500 annual bulk filings, loaded manually into Neon `dol` schema. As o
 ### Circle (Bedrock §5)
 Annual cycle: EBSA publishes filings (6-18 month lag) → manual import to Neon → Process 010 seeds D1 → views queryable → LCS uses signals for outreach targeting → outreach results inform next year's targeting priorities. Data is static between annual imports — no intra-cycle feedback loop.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -266,7 +295,7 @@ dol_form_5500.company_unique_id → territory linkage
 | What state are they in? | `dol_form_5500` | `spons_dfe_mail_us_state` |
 | What size band? | `dol_form_5500` | `tot_active_partcp_cnt` → SMALL/MID/LARGE/JUMBO |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -303,7 +332,7 @@ dol_form_5500.company_unique_id → territory linkage
 | `dol.schedule_a.ack_id + form_id` → `dol.schedule_a_part1` | direct (compound key) | Insurance to broker detail |
 | `dol_form_5500.company_unique_id` → territory tables | direct | DOL to territory linkage (partial) |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - 6 views: `v_dol_filing_status`, `v_dol_renewal_window`, `v_dol_premium_pressure`, `v_dol_market_comparison`, `v_dol_carrier_changes`, `v_dol_broker_changes` — per D-400-08
@@ -327,7 +356,7 @@ dol_form_5500.company_unique_id → territory linkage
 - PEPM benchmarks per state/size band (shift annually as new filings arrive)
 - `form_year` data type (TEXT in some contexts — must cast to INT for YoY comparisons)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -348,7 +377,7 @@ dol_form_5500.company_unique_id → territory linkage
 # Or drop views: psql $DATABASE_URL -c "DROP VIEW IF EXISTS dol.v_dol_filing_status, dol.v_dol_renewal_window, dol.v_dol_premium_pressure, dol.v_dol_market_comparison, dol.v_dol_carrier_changes, dol.v_dol_broker_changes CASCADE"
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. psql $DATABASE_URL -c "SELECT COUNT(*) FROM dol.form_5500" → expected: 432,000+ rows
@@ -367,7 +396,7 @@ dol_form_5500.company_unique_id → territory linkage
 2. Flow — Can a query reach each view and return rows? Does D1 data match Neon source?
 3. Change — Do the views correctly compute boolean signals (renewal_approaching, carrier_changed, etc.)?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -382,7 +411,7 @@ dol_form_5500.company_unique_id → territory linkage
 
 Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -413,7 +442,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | REPAIR | OPERATE | fix + view verified + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → Airworthiness Directive |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -449,7 +478,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | Bedrock CQRS rule | No writes in views confirmed — read-only SQL SELECT only | clean |
 | Atlas §1.6 (sovereign isolation) | Process self-contained — no cross-silo references | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD. This process is in OPERATE — logbook promoted from PROCESS.md historical entries.
 
@@ -474,7 +503,7 @@ No logbook during BUILD. This process is in OPERATE — logbook promoted from PR
 | 2026-03-29 00:00 UTC | Dave Barton | BUILD | PROCESS.md written from template v2.0.0 | PROCESS.md v1.1.0 | none |
 | 2026-04-29 00:00 UTC | Sonnet Runner | BUILD | Consolidated to UT v2.7.0 lock shape — PROCESS.md + CLAUDE.md archived | UT consolidation Wave 1 Packet 9 | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -484,7 +513,7 @@ No logbook during BUILD. This process is in OPERATE — logbook promoted from PR
 | FP-400-04 | v_dol_market_comparison PEPM | NULL_BROKER_DATA | 2026-03-25 | 1 | 0 | RESOLVED — NULL filtered in view |
 | FP-400-05 | Renewal window projection | ESTIMATED_DATE | 2026-03-25 | 1 | 0 | OPEN — accepted limitation, projections not confirmed |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

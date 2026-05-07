@@ -1,0 +1,1943 @@
+{
+  "total": 16,
+  "passed": 0,
+  "failure_counts_by_gate": {
+    "G01": 16,
+    "G02": 16,
+    "G03": 16,
+    "G04": 16,
+    "G11": 16,
+    "Rung-3": 16,
+    "Rung-7": 16,
+    "Rung-8": 16,
+    "Rung-1": 15
+  },
+  "results": [
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-010-SEED-D1",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-1",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "010-seed-d1",
+      "yaml_companion": "factory/outreach/010-seed-d1/heir.yaml",
+      "proc_dir": "factory/outreach/010-seed-d1"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-200-PEOPLE-WORKER",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'enrichment_priority', 'feeds', 'governing_engine', 'hub_id', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'reachability_gate', 'runtime', 'schema_approach', 'secrets_provider', 'services', 'slots', 'source_trust', 'sovereign_ref', 'status', 'tool_priority', 'ut_sub_hubs'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'enrichment_priority', 'feeds', 'governing_engine', 'hub_id', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'reachability_gate', 'runtime', 'schema_approach', 'secrets_provider', 'services', 'slots', 'source_trust', 'sovereign_ref', 'status', 'tool_priority', 'ut_sub_hubs'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "200-people-worker",
+      "yaml_companion": "factory/outreach/200-people-worker/heir.yaml",
+      "proc_dir": "factory/outreach/200-people-worker"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-201-EMAIL-DISCOVERY",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'prior_created_at', 'secrets_env', 'secrets_keys', 'secrets_project', 'secrets_provider', 'services', 'sovereign_ref', 'stamped_at', 'stamped_by'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'prior_created_at', 'secrets_env', 'secrets_keys', 'secrets_project', 'secrets_provider', 'services', 'sovereign_ref', 'stamped_at', 'stamped_by'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "201-email-discovery",
+      "yaml_companion": "factory/outreach/201-email-discovery/heir.yaml",
+      "proc_dir": "factory/outreach/201-email-discovery"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-202-LINKEDIN-DISCOVERY",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['heir'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['heir'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "202-linkedin-discovery",
+      "yaml_companion": "factory/outreach/202-linkedin-discovery/heir.yaml",
+      "proc_dir": "factory/outreach/202-linkedin-discovery"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-300-BLOG-WORKER",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'snap_on_tools', 'sovereign_ref', 'status', 'ut_sub_hubs'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'snap_on_tools', 'sovereign_ref', 'status', 'ut_sub_hubs'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "300-blog-worker",
+      "yaml_companion": "factory/outreach/300-blog-worker/heir.yaml",
+      "proc_dir": "factory/outreach/300-blog-worker"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-301-PAGE-PARSER",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "301-page-parser",
+      "yaml_companion": "factory/outreach/301-page-parser/heir.yaml",
+      "proc_dir": "factory/outreach/301-page-parser"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-400-DOL-VIEWS",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'data_volumes', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'name', 'process_id', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'views_defined'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'data_volumes', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'name', 'process_id', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'views_defined'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "400-dol-views",
+      "yaml_companion": "factory/outreach/400-dol-views/heir.yaml",
+      "proc_dir": "factory/outreach/400-dol-views"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-500-TALENT-FLOW",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'bars', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'bars', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'movement_detection', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "500-talent-flow",
+      "yaml_companion": "factory/outreach/500-talent-flow/heir.yaml",
+      "proc_dir": "factory/outreach/500-talent-flow"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-600-BIT-SCORING",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'bands', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'signal_sources', 'snap_on_tools', 'sovereign_ref', 'status', 'ut_sub_hubs'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'bands', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'signal_sources', 'snap_on_tools', 'sovereign_ref', 'status', 'ut_sub_hubs'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "600-bit-scoring",
+      "yaml_companion": "factory/outreach/600-bit-scoring/heir.yaml",
+      "proc_dir": "factory/outreach/600-bit-scoring"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-700-CAMPAIGN-ENGINE",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'campaign_models', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'mid_tagging', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'snap_on_tools', 'sovereign_ref', 'status'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'campaign_models', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'hub_id', 'imo_topology', 'mid_tagging', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'snap_on_tools', 'sovereign_ref', 'status'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "700-campaign-engine",
+      "yaml_companion": "factory/outreach/700-campaign-engine/heir.yaml",
+      "proc_dir": "factory/outreach/700-campaign-engine"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-100-LCS-PIPELINE",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['authority', 'date', 'identity', 'inputs', 'limits', 'name', 'observability', 'preflight_gates', 'promotion_to_operate', 'purpose', 'run_steps', 'schedule', 'status', 'version', 'voice_contract'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['authority', 'date', 'identity', 'inputs', 'limits', 'name', 'observability', 'preflight_gates', 'promotion_to_operate', 'purpose', 'run_steps', 'schedule', 'status', 'version', 'voice_contract'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "100-lcs-pipeline",
+      "yaml_companion": "factory/cl/100-lcs-pipeline/daily-email-run.yaml",
+      "proc_dir": "factory/cl/100-lcs-pipeline"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-800-CLIENT-MINT",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status', 'two_question_intake'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status', 'two_question_intake'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "800-client-mint",
+      "yaml_companion": "factory/cl/800-client-mint/heir.yaml",
+      "proc_dir": "factory/cl/800-client-mint"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-810-CLIENT-INTAKE",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'hub_id', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'spoke_routing', 'status', 'two_question_intake'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'hub_id', 'imo_topology', 'name', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'spoke_routing', 'status', 'two_question_intake'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "810-client-intake",
+      "yaml_companion": "factory/client/810-client-intake/heir.yaml",
+      "proc_dir": "factory/client/810-client-intake"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-820-VENDOR-EXPORT",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "820-vendor-export",
+      "yaml_companion": "factory/client/820-vendor-export/heir.yaml",
+      "proc_dir": "factory/client/820-vendor-export"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-830-CLIENT-PORTAL",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'imo_topology', 'name', 'pages', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status', 'two_question_intake'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'blueprint_owner', 'cc_layer', 'ctb_placement', 'depends_on', 'feeds', 'governing_engine', 'imo_topology', 'name', 'pages', 'process_id', 'process_number', 'runtime', 'secrets_provider', 'services', 'sovereign_ref', 'status', 'two_question_intake'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "830-client-portal",
+      "yaml_companion": "factory/client/830-client-portal/heir.yaml",
+      "proc_dir": "factory/client/830-client-portal"
+    },
+    {
+      "verdict": "FAIL",
+      "p_value": 0,
+      "bar_id": "BATCH-900-SALES-PORTAL",
+      "manifest_version": "1.2.0",
+      "gates_evaluated": 14,
+      "gates_passed": [
+        "G05",
+        "G07",
+        "G10",
+        "G12",
+        "Rung-2"
+      ],
+      "gates_failed": [
+        {
+          "id": "G01",
+          "name": "y_junction_syntactic_separation",
+          "predicate": "(read from manifest)",
+          "evidence": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G02",
+          "name": "outside_heir_8_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G03",
+          "name": "outside_orbt_3_fields",
+          "predicate": "(read from manifest)",
+          "evidence": "missing outside.orbt.library_state",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G04",
+          "name": "inside_heir_orbt_present",
+          "predicate": "(read from manifest)",
+          "evidence": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "G11",
+          "name": "parity_sha256_match",
+          "predicate": "(read from manifest)",
+          "evidence": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-1",
+          "name": "template_conformity",
+          "predicate": "(read from manifest)",
+          "evidence": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-3",
+          "name": "heir_completeness",
+          "predicate": "(read from manifest)",
+          "evidence": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-7",
+          "name": "cross_manual_graph",
+          "predicate": "(read from manifest)",
+          "evidence": "no ctb_placement declared",
+          "strike_target": "Mechanic"
+        },
+        {
+          "id": "Rung-8",
+          "name": "certification_label",
+          "predicate": "(read from manifest)",
+          "evidence": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))",
+          "strike_target": "Mechanic"
+        }
+      ],
+      "deferred_to_tail": [],
+      "diagnostic_vector": [
+        {
+          "gate_id": "G01",
+          "deviation": "missing top-level outside or inside keys (got: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref'])"
+        },
+        {
+          "gate_id": "G02",
+          "deviation": "missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "G03",
+          "deviation": "missing outside.orbt.library_state"
+        },
+        {
+          "gate_id": "G04",
+          "deviation": "inside.heir missing: ['aviation_model', 'companion_manifest', 'determinism_gate', 'process_id', 'species', 'version']"
+        },
+        {
+          "gate_id": "G11",
+          "deviation": "PROCESS-UT.md has no YAML frontmatter \u2014 G11 requires structured frontmatter to compare against .yaml"
+        },
+        {
+          "gate_id": "Rung-1",
+          "deviation": "missing sections: \u00a7[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]"
+        },
+        {
+          "gate_id": "Rung-3",
+          "deviation": "outside.heir: missing fields: ['acceptance_criteria', 'cc_layer', 'ctb_placement', 'hub_id', 'imo_topology', 'secrets_provider', 'services', 'sovereign_ref']"
+        },
+        {
+          "gate_id": "Rung-7",
+          "deviation": "no ctb_placement declared"
+        },
+        {
+          "gate_id": "Rung-8",
+          "deviation": "no certification label found (expected one of ('repo-certified', 'deployment-certified', 'provisional-runtime'))"
+        }
+      ],
+      "process": "900-sales-portal",
+      "yaml_companion": "factory/sales/900-sales-portal/heir.yaml",
+      "proc_dir": "factory/sales/900-sales-portal"
+    }
+  ]
+}

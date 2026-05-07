@@ -1,3 +1,31 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/300-blog-worker/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 300-blog-worker
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/300-blog-worker
+    imo_topology: spoke
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; blog source discovery gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.300
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/300-blog-worker/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
 # Blog Worker (Process 300)
 ## Monthly content movement detector — scans company websites via search engine proxy, detects fresh content, classifies signal type, and feeds signals to LCS Pipeline (100).
 ### Status: BUILD
@@ -22,7 +50,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +97,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Monthly sitemap scan compared to previous snapshot; binary movement gate per company; AI classification only on movement=1; errors write to master error table (D1) |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE
 
 ### WHAT
 Process 300 is a monthly content movement detector. It runs a two-phase cycle: Phase 1 queries Startpage via a residential proxy for each company domain, parses search result snippets for freshness indicators (dates, "ago", "this week"), and produces a binary movement flag (0 = stale, 1 = fresh). Phase 2 runs only on movement=1 companies — it fires targeted signal-specific Startpage queries and classifies the content into one of 6 signal types. AI classification is the tail: it reads content and tags the signal type, but the detection is deterministic.
@@ -97,7 +125,7 @@ Dave Barton (General) owns the business outcome. The SVG Agency outreach team co
 ### SUCCESS METRIC
 Capture rate ≥ 95% (companies returning valid results, not CAPTCHA/error) on each monthly run.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES
 
 Required doctrine references for every process UT:
 
@@ -189,7 +217,7 @@ Required doctrine references for every process UT:
 | svg-outreach | svg-outreach · branch · CC-03 | OPERATE | Session learnings, run summaries, recon metrics | per-run |
 | svg-outreach-proc | svg-outreach-proc · leaf · CC-04 | OPERATE | Process-specific learnings (proxy config, query pattern, parse learnings) | per-run |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output
 
 ### Two-Question Intake (Bedrock §3)
 1. **What triggers this?** Monthly manual run (currently). Future: CF Worker with monthly cron trigger.
@@ -220,7 +248,7 @@ Required doctrine references for every process UT:
 ### Circle (Bedrock §5)
 `--stale 90` re-runs companies not searched in 90 days — output feeds back as skip logic on next run. After first pass, `about_url` and LinkedIn URLs become constants (the URL mapping). Each subsequent run is cheaper because the mapping exists. If CAPTCHA rate rises above 10%, the circle reveals the break — trace back through proxy ports, delay, query pattern. Sigma tracking on r(x) across monthly runs: tightening = process stabilizing.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA
 
 ### READ Access
 
@@ -314,7 +342,7 @@ cl.company_identity.company_unique_id::text = people.v_territory_companies.compa
 | Which companies had content movement? | `src/output/blog-indicators-YYYY-MM.jsonl` | `movement` |
 | What signal type was detected? | `src/output/blog-signals-YYYY-MM.jsonl` | `signal_type` |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join
 
 ### 6a. DEFINE (Build the Key)
 
@@ -355,7 +383,7 @@ cl.company_identity.company_unique_id::text = people.v_territory_companies.compa
 | cl.company_identity.company_unique_id → people.v_territory_companies.company_unique_id | direct | Startup Neon join to get company list with domains |
 | blog-indicators JSONL → blog-signals JSONL | direct | company domain is the join key between Phase 1 and Phase 2 |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES
 
 ### Constants (structure - never changes)
 
@@ -386,7 +414,7 @@ cl.company_identity.company_unique_id::text = people.v_territory_companies.compa
 - Signal types detected per run (distribution changes with market events)
 - Tolerance values k_i (calibrated through operation)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS
 
 | Condition | Action | Rule |
 |-----------|--------|------|
@@ -414,7 +442,7 @@ pgrep -f "blog-monitor.py" || echo "stopped"
 pgrep -f "company-recon.py" || echo "stopped"
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION
 
 ```text
 1. python3 src/company-recon.py --limit 20 -> expected: 20 companies searched, JSONL written to src/output/
@@ -432,7 +460,7 @@ pgrep -f "company-recon.py" || echo "stopped"
 
 If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). Do not patch. Do not guess.
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b Live Verification Log
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -444,7 +472,7 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 | Proxy reachable (ports 11000+) | §3 Components | DataImpulse ping | `curl -x http://${PROXY_USER}:${PROXY_PASS}@${PROXY_HOST}:11000 https://www.startpage.com -o /dev/null -s -w "%{http_code}"` | [ ] | TBV | TBV |
 | Movement flag is binary 0 or 1 | §7 Constants (D-300-02) | blog-indicators JSONL | `cat src/output/blog-indicators-*.jsonl \| python3 -c "import sys,json; rows=[json.loads(l) for l in sys.stdin]; assert all(r['movement'] in [0,1] for r in rows)"` | [ ] | TBV | TBV |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS
 
 ### 10a. Metrics
 
@@ -483,7 +511,7 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 | REPAIR | OPERATE | Fix applied + metric back within tolerance + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | Same failure pattern 3× → fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -532,7 +560,7 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 | Determinism first (LLM is tail) | D-300-03 and D-300-05 enforce AI as classification tail only | clean |
 | Process ordering (300 before 200) | D-300-10 enforces this | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only)
 
 No logbook during BUILD. Certification pending — auditor sign-off required.
 
@@ -548,7 +576,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 | signed_by | Pending |
 | signed_at | Pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -562,7 +590,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 
 **FP-300-01 Detail:** src/ tree has version sprawl — blog-monitor.py + blog-monitor-v2.py; find-person.py + find-person-v3.py. Canonical script must be picked and the other archived before OPERATE certification.
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

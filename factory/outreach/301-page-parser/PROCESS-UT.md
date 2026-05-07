@@ -1,8 +1,79 @@
+---
+species: UT-Body
+companion_yaml: workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 301-page-parser
+    ctb_placement: leaf
+    imo_topology: spoke
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/301-page-parser
+    services: [page-parser, cloudflare-d1, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; parser outputs audited and wired downstream"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-03"
+    indexed_by: codex
+inside:
+  heir:
+    process_id: bp.301
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Management Page Parser
-## Fetches leadership/team pages discovered by Process 300, parses ALL names + titles, and fills CEO/CFO/HR slots — one page fetch, up to three slot fills.
+## §1 IDENTITY
+Fetches leadership/team pages discovered by Process 300, parses ALL names + titles, and fills CEO/CFO/HR slots — one page fetch, up to three slot fills.
 ### Status: BUILD
 ### Medium: process
 ### Business: svg-agency
+
+## §2 PRD
+Section placeholder — content to be filled by process owner.
+
+## §3 RESOURCES
+Section placeholder — content to be filled by process owner.
+
+## §4 MIDDLE
+Section placeholder — content to be filled by process owner.
+
+## §5 OSAM
+Section placeholder — content to be filled by process owner.
+
+## §6 OUTPUT
+Section placeholder — content to be filled by process owner.
+
+## §7 GOVERNANCE
+Section placeholder — content to be filled by process owner.
+
+## §8 KILL SWITCH
+Section placeholder — content to be filled by process owner.
+
+## §9 OBSERVABILITY
+Section placeholder — content to be filled by process owner.
+
+## §10 LBB SUBJECTS
+Section placeholder — content to be filled by process owner.
+
+## §11 OPEN BLOCKERS
+Section placeholder — content to be filled by process owner.
+
+## §12 STRIKE LADDER
+Section placeholder — content to be filled by process owner.
+
+## §13 BARS
+Section placeholder — content to be filled by process owner.
+
+## §14 LOGBOOK
+Section placeholder — content to be filled by process owner.
 
 ## UT Checklist (Pre-Flight - per law/UT_CHECKLIST.md v1.2.0)
 

@@ -1,17 +1,40 @@
 name: bp-200-people-worker
 inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
 outside:
-  heir: { sovereign_ref: svg-outreach, hub_id: 200-people-worker, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/200-people-worker, species: Workflow-Body, owner: dave-barton }
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 200-people-worker
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/200-people-worker
+    ctb_placement: leaf
+    imo_topology: spoke
+    species: Workflow-Body
+    owner: dave-barton
+    services: [cloudflare-worker, cloudflare-d1, vendor-apis, lbb, mission-control]
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; people_slots leak diagnosed; 10 BAR-377 gates green"
   orbt: { library_state: REPAIR, last_indexed_at: "2026-05-03", indexed_by: codex }
 inside:
   heir:
     process_id: bp.200
+    species: Workflow-Body
+    version: "1.0.0"
+    last_modified: "2026-05-03"
+    companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
     aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
     services: [cloudflare-worker, cloudflare-d1, vendor-apis, lbb, mission-control]
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; people_slots leak diagnosed; 10 BAR-377 gates green"
     determinism_gate: ai_on_spine_forbidden
-  orbt: { runtime_state: REPAIR, strikes: 1, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: fill_rate_repaired_and_codex_10_gate_pass }
+  orbt:
+    library_state: REPAIR
+    runtime_state: REPAIR
+    strikes: 1
+    last_transition_at: "2026-05-03"
+    last_transition_reason: BAR-377 UT-local YAML creation
+    flipped_by: codex
+    promotion_gate: fill_rate_repaired_and_codex_10_gate_pass
 description: "UT-local workflow for bp.200 People Worker. Diagnoses slot-fill leak, verifies deterministic vendor/cached enrichment, audits downstream readiness."
 inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
 schedule: ["0 6 * * *"]

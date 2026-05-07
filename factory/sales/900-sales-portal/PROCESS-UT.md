@@ -1,3 +1,37 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/sales/900-sales-portal/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 900-sales-portal
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/sales/900-sales-portal
+    imo_topology: hub
+    cc_layer: CC-04
+    secrets_provider: doppler
+    services:
+      - sales-portal
+      - cloudflare-d1
+      - lbb
+      - mission-control
+    acceptance_criteria: "UT-local Workflow-Body; sales portal route/data gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.900
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/sales/900-sales-portal/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # Sales Portal
 ## Prospect-facing sales cycle portal — 4 meetings from Fact Finder through Financials, driven by outreach intelligence. Terminal node of the SVG Agency revenue engine.
 ### Status: BUILD
@@ -22,7 +56,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +103,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Meeting 1 pre-populates from outreach 5 sub-hubs via sovereign_id; Meeting 1 form writes to sales_factfinder; Meetings 2-4 are read-only; Meeting 2 renders Monte Carlo results when built; Meeting 4 shows quoted costs by insurance line; all pages branded per prospect |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PRD {#sec-2-purpose}
 
 ### WHAT
 Process 900 is a Cloudflare Worker that serves a 4-meeting prospect-facing sales portal at `app.svgagency.com/sales/:slug/:meeting`. Each prospect gets a unique slug. Meeting 1 (Fact Finder) is a read-write form pre-populated from outreach intelligence. Meetings 2-4 are read-only presentation pages. All HTML is server-side rendered with no SPA.
@@ -97,7 +131,7 @@ Dave Barton (operator — runs the meetings, owns the portal), SVG Agency prospe
 ### SUCCESS METRIC
 All 4 meeting pages return 200 for a valid slug, Meeting 1 form submission writes to `sales_factfinder` and advances `current_phase`, and the portal correctly gates phase access.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -180,7 +214,7 @@ Required doctrine references for every process UT:
 | svg-sales | svg-sales · branch · CC-02 | OPERATE | Session summaries, retrofit events, audit findings | per-session |
 | svg-sales-proc | svg-sales-proc · leaf · CC-03 | OPERATE | Per-process learnings: schema gaps, deploy blockers, phase gate behavior | on-change |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 MIDDLE {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? — A user (Dave or prospect) navigates to `app.svgagency.com/sales/:slug/:meeting` via HTTP GET, or Dave submits the Meeting 1 form via HTTP POST.
@@ -208,7 +242,7 @@ HTML pages served to browser — no downstream process consumes rendered HTML. M
 ### Circle (Bedrock §5)
 Meeting 1 form submission writes to `sales_factfinder` which seeds Meeting 2 insurance education with validated company data. Phase progression in `sales_state` gates which meetings are accessible (D-900-04). Error tables capture validation failures per meeting and feed back into ORBT state assessment. Terminal process: the circle closes at revenue conversion when `sales_state.current_phase = closed` triggers Process 800.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 OSAM {#sec-5-data-schema}
 
 ### READ Access
 
@@ -283,7 +317,7 @@ sales_state.sovereign_id -> outreach.company_target.company_unique_id (Neon, cro
 | What is the prospect's renewal month? | outreach_snapshot | renewal_month |
 | Who are the decision makers? | outreach_snapshot | ceo_name, cfr_name, hr_name |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 OUTPUT {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -323,7 +357,7 @@ sales_state.sovereign_id -> outreach.company_target.company_unique_id (Neon, cro
 | sales_state.sales_id → all meeting tables | direct | 1:1 joins for all 4 meeting data tables |
 | sales_quotes grouped by benefit_type | direct | 1:N join for Meeting 4 quote rendering |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 GOVERNANCE {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 
@@ -349,7 +383,7 @@ sales_state.sovereign_id -> outreach.company_target.company_unique_id (Neon, cro
 - What quotes by benefit_type + carrier appear in Meeting 4 — variable per prospect
 - Current phase of the sales cycle for this prospect — variable as deal progresses
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 KILL SWITCH {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -371,7 +405,7 @@ wrangler delete --name sales-portal-900
 
 (Or: disable via Cloudflare dashboard → Workers & Pages → sales-portal-900 → Disable)
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 OBSERVABILITY {#sec-9-verification}
 
 ```text
 1. GET /health -> expected: {"process":"PROC-SALES-PORTAL","number":900,"status":"ok"}
@@ -403,7 +437,7 @@ wrangler delete --name sales-portal-900
 | Meeting 1 GET renders 200 for valid slug | §9 | Worker response | `curl https://sales-portal-900.svg-outreach.workers.dev/sales/test-slug/meeting1` | [ ] | TBV | TBV |
 | TABLES-AUDIT gaps captured in §13 | §13 | TABLES-AUDIT.md archived | See §13 FLEET FAILURE REGISTRY | [x] | 2026-04-29 | 8 gaps logged |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 LBB SUBJECTS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -431,7 +465,7 @@ wrangler delete --name sales-portal-900
 | REPAIR | OPERATE | fix + metric back + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 OPEN BLOCKERS {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -471,7 +505,7 @@ wrangler delete --name sales-portal-900
 | D1 is working layer; Neon is vault | No Neon writes in worker code | clean |
 | outreach_snapshot frozen after seed | No write routes to outreach_snapshot | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 STRIKE LADDER {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -495,7 +529,7 @@ No logbook during BUILD.
 | 2026-04-16 | claude-code | AUDIT | TABLES-AUDIT.md created — live D1 query against svg-d1-sales; 8 gaps identified | TABLES-AUDIT.md | none |
 | 2026-04-29 | claude-code | BUILD | UT consolidation — PROCESS-UT.md + DOCTRINE.md written; fragments archived | wave-1-runner packet-16 | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 BARS {#sec-13-fleet-failure-registry}
 
 Gaps from TABLES-AUDIT.md (2026-04-16) captured here before archiving per runner instructions:
 
@@ -514,7 +548,7 @@ Gaps from TABLES-AUDIT.md (2026-04-16) captured here before archiving per runner
 | FP-900-11 | outreach_snapshot | SEEDING-NOT-BUILT | 2026-03-29 | 1 | 0 | OPEN — no mechanism to copy 5 outreach sub-hubs into D1 outreach_snapshot by sovereign_id |
 | FP-900-12 | worker | NO-AUTH | 2026-03-29 | 1 | 0 | OPEN — no authentication on endpoints; prospect URLs are public; CF Access or bearer token required before OPERATE |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 LOGBOOK {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

@@ -1,34 +1,134 @@
+# =============================================================================
+# workflow.yaml — Workflow-Body companion to PROCESS-UT.md
+# bp.500 Talent Flow — Monthly Executive Movement Detection
+# ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow
+# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-06
+# BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
+# =============================================================================
+
+# Block 1 — name
 name: bp-500-talent-flow
-inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+version: "1.0.0"
+last_modified: "2026-05-06"
+
+# Block 2 — inherits
+inherits:
+  atlas: ATLAS_v2.1.2
+  ut_schema: UT_v2.8.0
+  bs_law: BS_LAW_v1.3.0
+  book_law: BOOK_LAW_v1.4.0
+  aviation_model: FOUR_BRAIN_AVIATION_v1.1.0
+  parent_bar: BAR-377
+
+# =============================================================================
+# OUTSIDE ARM — Library-level addressing (BS Law Y-junction arm 1)
+# =============================================================================
+
 outside:
-  heir: { sovereign_ref: svg-outreach, hub_id: 500-talent-flow, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow, species: Workflow-Body, owner: dave-barton }
-  orbt: { library_state: BUILD, last_indexed_at: "2026-05-03", indexed_by: codex }
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 500-talent-flow
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow
+    ctb_placement: leaf
+    imo_topology: hub
+    secrets_provider: doppler
+    species: Workflow-Body
+    owner: dave-barton
+    services:
+      - neon-postgresql
+      - lcs-signal-queue
+      - mission-control
+      - lbb
+    acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; monthly cron verified; zero-detection squawk live"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE ARM — Per-process runtime identity (BS Law Y-junction arm 2)
+# =============================================================================
+
 inside:
   heir:
     process_id: bp.500
-    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
-    services: [cloudflare-d1, talent-flow, lbb, mission-control]
+    species: Workflow-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    services:
+      - neon-postgresql
+      - lcs-signal-queue
+      - mission-control
+      - lbb
     secrets_provider: doppler
-    acceptance_criteria: "UT-local Workflow-Body; talent movement signals generated after bp.200 healthy"
+    acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; monthly cron verified; zero-detection squawk live"
     determinism_gate: ai_on_spine_forbidden
-  orbt: { runtime_state: BUILD, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: bp_200_operate_and_codex_10_gate_pass }
-description: "UT-local workflow for bp.500 Talent Flow. Runs after bp.200, verifies movement signals and downstream BIT readiness."
-inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
-schedule: []
+  orbt:
+    library_state: BUILD
+    runtime_state: BUILD
+    strikes: 0
+    last_transition_at: "2026-05-06"
+    last_transition_reason: BAR-500-CONFORM-WIRE Atlas conformance pass
+    flipped_by: sonnet-mechanic
+    promotion_gate: codex_10_gate_pass
+
+# Block 7 — description
+description: "Monthly movement detection engine for bp.500 Talent Flow. Diffs people_slots history snapshots (current vs prior period), classifies executive movement (title change, departure, new hire), writes to talent_movement table, and emits TALENT signals into lcs_signal_queue for downstream bp.100 LCS Pipeline and bp.700 Campaign Engine. No AI — pure snapshot diff."
+
+# Block 8 — schedule
+schedule:
+  - cron: "0 8 1 * *"
+    label: monthly-talent-scan
+    dependency: bp.200-must-have-two-consecutive-snapshots
+
+# Block 9 — data
 data:
-  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
-  writes: [docs/audit/process-runs/bp-500/inventory-bp-500.md, docs/audit/process-runs/bp-500/live-state-bp-500.md, docs/audit/process-runs/bp-500/diff-bp-500.md, docs/audit/process-runs/bp-500/audit-bp-500.md]
-  forbidden: [llm_on_schedule_spine, skip_bp_200_gate, stale_people_slots]
-nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+  reads:
+    - people.linkedin_snapshots
+    - people.people_master
+    - people.company_slot
+  writes:
+    - outreach.signal_output
+    - lcs_signal_queue
+  forbidden:
+    - llm_on_schedule_spine
+    - llm_inference_on_movement_detection
+    - skip_bp_200_snapshot_gate
+    - modify_locked_doctrine
+
+# Block 10 — nodes
+nodes:
+  - { id: preflight, brain: deterministic, action: verify-bp200-two-consecutive-snapshots }
+  - { id: snapshot-diff, brain: deterministic, action: diff-current-vs-prior-period }
+  - { id: classify-movement, brain: deterministic, action: classify-title-change-departure-new-hire }
+  - { id: write-talent-movement, brain: deterministic, output: talent_movement-table }
+  - { id: emit-signals, brain: deterministic, output: lcs_signal_queue-signal_category-TALENT }
+  - { id: stop-check, brain: deterministic, action: zero-detections-two-cycles-check }
+  - { id: lbb-mc-closeout, brain: deterministic, depends_on: [emit-signals] }
+
+# Block 11 — gates + lbb
 gates:
-  cron_exists: "cron or explicit run policy declared"
-  cron_firing: "recent deterministic run evidence exists"
-  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
-  ut_ops_matches_reality: "PROCESS-UT operations match talent-flow reality"
-  lbb_ingest_each_fire: "bp.500 LBB rows exist"
-  orbt_promoted_or_confirmed: "BUILD to OPERATE only after audit pass"
-  d1_surface_documented: "talent_movement surface documented and checked"
-  upstream_healthy: "bp.200 is OPERATE"
-  downstream_wired: "bp.600 consumes talent movement"
-  squawk_live: "movement detection failure writes squawk"
-lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.500 Talent Flow", ingest_on_pass: true, ingest_on_fail: true }
+  cron_exists: "monthly cron 0 8 1 * * declared and registered"
+  cron_firing: "recent fire or verified operator-trigger record exists"
+  no_ai_on_schedule_spine: "no LLM/API model calls on the detection or signal spine"
+  ut_ops_matches_reality: "PROCESS-UT operations match live trigger and Neon surface"
+  lbb_ingest_each_fire: "lbb_records contains bp.500 run rows"
+  orbt_promoted_or_confirmed: "orbt.yaml remains OPERATE after Codex audit"
+  neon_surface_documented: "people.linkedin_snapshots and people.company_slot checks pass"
+  upstream_healthy: "bp.200 is OPERATE with two consecutive snapshots available"
+  downstream_wired: "bp.100 LCS Pipeline consumes TALENT signals; bp.700 sequences on them"
+  squawk_live: "zero-detection two-cycle trip writes mission-control squawk"
+
+lbb:
+  subject_id: svg-outreach-proc
+  title_prefix: "bp.500 Talent Flow"
+  ingest_on_pass: true
+  ingest_on_fail: true

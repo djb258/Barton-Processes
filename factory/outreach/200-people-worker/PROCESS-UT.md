@@ -1,3 +1,32 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/outreach/200-people-worker/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 200-people-worker
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/200-people-worker
+    imo_topology: spoke
+    cc_layer: CC-04
+    secrets_provider: doppler
+    acceptance_criteria: "UT-local Workflow-Body; people_slots leak diagnosed; 10 BAR-377 gates green"
+  orbt:
+    library_state: REPAIR
+    last_indexed_at: "2026-05-03T00:00:00Z"
+    indexed_by: codex
+inside:
+  heir:
+    process_id: bp.200
+    species: UT-Body
+    version: "1.0.0"
+    last_modified: "2026-05-03"
+    companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
+  orbt:
+    library_state: REPAIR
+---
+
 # 200 People Worker
 ## Monthly dumb worker that fills CEO/CFO/HR slots for every company in the territory and detects personnel movement — the gateway to the entire outreach pipeline.
 ### Status: REPAIR
@@ -22,7 +51,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -69,7 +98,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | At least one reachable slot before company enters LCS; well drinks exhausted before top shelf; every data point tagged with source_tool + timestamp; monthly snapshot compared to previous month; binary movement gate per slot; DOL-linked companies prioritized; errors write to master error table; wide schema — collect everything |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Monthly CF Worker that fills CEO, CFO, and HR contact slots for every agent-assigned company in the territory (32,704 companies → 43,209+ slots). Runs a four-pass well-drinks-first gate chain: promote staging → scrape about/team pages → Startpage search via proxy → movement detection. Produces reachability status per company (UNREACHABLE, EMAIL_ONLY, LINKEDIN_ONLY, FULL).
@@ -98,7 +127,7 @@ Dave Barton (operator); outreach agents (consumers of reachability status); Proc
 ### SUCCESS METRIC
 At least 60% slot fill rate maintained across the territory with every filled slot tagged with source_tool and every company assigned a reachability status by end of monthly cycle.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -194,7 +223,7 @@ Required doctrine references for every process UT:
 | svg-outreach-proc | TBV | BUILD | Session summaries, fill-rate data, gate performance | Per-run |
 | processes | TBV | BUILD | Cross-cutting process learnings | On-change |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO - Input, Middle, Output {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? Daily cron at 6am UTC (`0 6 * * *`). Day 1 runs SEED. Days 1-28 run batches. Day 28+ runs PUSH.
@@ -219,7 +248,7 @@ Filled CEO/CFO/HR slots with: person name, source_tool tag, timestamp. Reachabil
 ### Circle (Bedrock §5)
 Each month's snapshot becomes next month's baseline. Movement trends accumulate in Process 500 (Talent Flow). Companies that were UNREACHABLE become reachable as slots fill. BIT scores (Process 600) improve with people data. LCS pipeline (Process 100) sends outreach to newly reachable contacts. Responses feed back to slot status. If a person leaves, slot clears and process re-runs.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -311,7 +340,7 @@ slot_workbench.outreach_id (spine join key)
 | Did a slot move this month? | people_company_slot vs baseline | diff on slot state columns |
 | Contradicted email-verified flags? | slot_workbench | WHERE person_email_verified=1 AND has_verified_email=0 |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ - Define, Map, Join {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -347,7 +376,7 @@ slot_workbench.outreach_id (spine join key)
 | people_company_slot.person_unique_id → people_people_master.unique_id | Direct | One hop. Slot points to contact record. |
 | intake_people_staging.company_unique_id → people_company_slot.company_unique_id | Direct | Pass 0 join for staging promotion. |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 
@@ -376,7 +405,7 @@ slot_workbench.outreach_id (spine join key)
 - Slot fill count, error count (per batch)
 - Tolerance values k_i (calibrated through operation)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -401,7 +430,7 @@ wrangler cron triggers delete --name people-worker-200 --cron "0 6 * * *"
 # For immediate batch halt, deploy a worker version that returns 200 with no-op on POST /batch.
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. GET https://people-worker-200.svg-outreach.workers.dev/health
@@ -442,7 +471,7 @@ wrangler cron triggers delete --name people-worker-200 --cron "0 6 * * *"
 | DOL records in D1 | §5 | PROCESS.md (MANIFEST) | `wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_dol WHERE filing_present=1"` | [ ] | 2026-03-24 | ~27,464 |
 | 356-row quarantine from process 100 REPAIR | §13 | svg-d1-outreach-ops slot_workbench | `wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM slot_workbench WHERE person_email_verified=1 AND has_verified_email=0"` | [ ] | 2026-04-28 | TBV (investigate FP-200-01) |
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -475,7 +504,7 @@ wrangler cron triggers delete --name people-worker-200 --cron "0 6 * * *"
 | REPAIR | OPERATE | Fix applied + FP-200-01 cleared + metric back within tolerance + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | Fleet-wide fix → Airworthiness Directive |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -517,7 +546,7 @@ wrangler cron triggers delete --name people-worker-200 --cron "0 6 * * *"
 | D1_SPINE read-only (OSAM.md) | §5 forbidden paths | Clean |
 | Process 200 writes name only (PROCESS.md) | §5 forbidden paths, D-200-11 | Clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK (After Certification Only) {#sec-12-logbook}
 
 No logbook during BUILD/REPAIR.
 
@@ -539,14 +568,14 @@ No logbook during BUILD/REPAIR.
 |------|-------|--------|---------------|----------|------------|
 | — | — | — | No logbook until auditor certification | — | — |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
 | FP-001 (legacy) | find-person-v3 | SCHEMA_MISMATCH | 2026-04-01 | 1 | 0 | RESOLVED — v1 used old schema; rewrote as v3 against slot_workbench |
 | FP-200-01 | slot_workbench + MV adapter | SPURIOUS_EMAIL_VERIFIED_FLAG | 2026-04-28 | TBV | 1 | OPEN — person_email_verified=1 set on rows where MV did not pass; investigate where MV adapter sets the local flag; 356-row quarantine from process 100 REPAIR action today |
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|

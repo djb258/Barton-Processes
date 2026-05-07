@@ -1,25 +1,107 @@
+# =============================================================================
+# workflow.yaml — Workflow-Body companion to PROCESS-UT.md
+# bp.600 BIT Scoring (Buyer Intent Tracker) — TROUBLESHOOT_TRAIN (retired 2026-03-25)
+# ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring
+# Species: Workflow-Body | Version: 2.0.0 | Last Modified: 2026-05-06
+# BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
+# =============================================================================
+
+# Block 1 — name
 name: bp-600-bit-scoring
-inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+version: "2.0.0"
+last_modified: "2026-05-06"
+
+# Block 2 — inherits
+inherits:
+  atlas: ATLAS_v2.1.2
+  ut_schema: UT_v2.8.0
+  bs_law: BS_LAW_v1.3.0
+  book_law: BOOK_LAW_v1.4.0
+  aviation_model: FOUR_BRAIN_AVIATION_v1.1.0
+  parent_bar: BAR-377
+
+# =============================================================================
+# OUTSIDE ARM — Library-level addressing (BS Law Y-junction arm 1)
+# =============================================================================
+
 outside:
-  heir: { sovereign_ref: svg-outreach, hub_id: 600-bit-scoring, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring, species: Workflow-Body, owner: dave-barton }
-  orbt: { library_state: TROUBLESHOOT_TRAIN, last_indexed_at: "2026-05-03", indexed_by: codex }
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 600-bit-scoring
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring
+    ctb_placement: leaf
+    imo_topology: hub
+    secrets_provider: doppler
+    species: Workflow-Body
+    owner: dave-barton
+    services:
+      - scoring-engine
+      - cloudflare-d1
+      - lbb
+      - mission-control
+    acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
+  orbt:
+    library_state: TROUBLESHOOT_TRAIN
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE ARM — Per-process runtime identity (BS Law Y-junction arm 2)
+# =============================================================================
+
 inside:
   heir:
     process_id: bp.600
-    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
-    services: [scoring-engine, cloudflare-d1, lbb, mission-control]
+    species: Workflow-Body
+    version: "2.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    services:
+      - scoring-engine
+      - cloudflare-d1
+      - lbb
+      - mission-control
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
     determinism_gate: ai_on_spine_forbidden
-  orbt: { runtime_state: TROUBLESHOOT_TRAIN, strikes: 3, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: sovereign_retirement_or_tt_resolution }
+  orbt:
+    library_state: TROUBLESHOOT_TRAIN
+    runtime_state: TROUBLESHOOT_TRAIN
+    strikes: 3
+    last_transition_at: "2026-05-06"
+    last_transition_reason: BAR-600-CONFORM-WIRE Atlas conformance — Y-junction restructure
+    flipped_by: sonnet-mechanic
+    promotion_gate: sovereign_retirement_or_tt_resolution
+
+# Block 7 — description
 description: "UT-local workflow for bp.600 BIT Scoring. Encodes T/T or formal retirement path; no blind repair after Strike 3."
-inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+
+# Block 8 — schedule
 schedule: []
+
+# Block 9 — data
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
   writes: [docs/audit/process-runs/bp-600/inventory-bp-600.md, docs/audit/process-runs/bp-600/live-state-bp-600.md, docs/audit/process-runs/bp-600/diff-bp-600.md, docs/audit/process-runs/bp-600/audit-bp-600.md]
   forbidden: [llm_on_schedule_spine, fourth_repair_after_strike_3, promote_without_sovereign_resolution]
-nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: retirement-or-tt-plan, brain: opus-4.7 }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+
+# Block 10 — nodes
+nodes:
+  - { id: inventory, brain: gemini }
+  - { id: live-introspection, brain: sonnet }
+  - { id: diff, brain: opus-4.7 }
+  - { id: retirement-or-tt-plan, brain: opus-4.7 }
+  - { id: audit, brain: codex }
+  - { id: lbb-mc-closeout, brain: deterministic }
+
+# Block 11 — gates + lbb
 gates:
   cron_exists: "disabled/retired/T/T schedule state is explicit"
   cron_firing: "no unintended scoring cron fires"
@@ -31,4 +113,9 @@ gates:
   upstream_healthy: "bp.200, bp.300, bp.400, bp.500 status known"
   downstream_wired: "bp.700 dependency is explicitly handled"
   squawk_live: "unintended scoring fire writes squawk"
-lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.600 BIT Scoring", ingest_on_pass: true, ingest_on_fail: true }
+
+lbb:
+  subject_id: svg-outreach-proc
+  title_prefix: "bp.600 BIT Scoring"
+  ingest_on_pass: true
+  ingest_on_fail: true

@@ -1,25 +1,107 @@
+# =============================================================================
+# workflow.yaml — Workflow-Body companion to PROCESS-UT.md
+# bp.830 CLIENT PORTAL — Audience-specific client portal pages
+# ctb_node: barton-enterprises/svg-agency/client/830-client-portal
+# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-06
+# BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
+# =============================================================================
+
+# Block 1 — name
 name: bp-830-client-portal
-inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+version: "1.0.0"
+last_modified: "2026-05-06"
+
+# Block 2 — inherits
+inherits:
+  atlas: ATLAS_v2.1.2
+  ut_schema: UT_v2.8.0
+  bs_law: BS_LAW_v1.3.0
+  book_law: BOOK_LAW_v1.4.0
+  aviation_model: FOUR_BRAIN_AVIATION_v1.1.0
+  parent_bar: BAR-377
+
+# =============================================================================
+# OUTSIDE ARM — Library-level addressing (BS Law Y-junction arm 1)
+# =============================================================================
+
 outside:
-  heir: { sovereign_ref: svg-outreach, hub_id: 830-client-portal, cc_layer: CC-04, subject_id: svg-outreach-proc, ctb_node: barton-enterprises/svg-agency/client/830-client-portal, species: Workflow-Body, owner: dave-barton }
-  orbt: { library_state: BUILD, last_indexed_at: "2026-05-03", indexed_by: codex }
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 830-client-portal
+    cc_layer: CC-04
+    subject_id: svg-outreach-proc
+    ctb_node: barton-enterprises/svg-agency/client/830-client-portal
+    ctb_placement: leaf
+    imo_topology: hub
+    secrets_provider: doppler
+    species: Workflow-Body
+    owner: dave-barton
+    services:
+      - client-portal
+      - cloudflare-d1
+      - lbb
+      - mission-control
+    acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE ARM — Per-process runtime identity (BS Law Y-junction arm 2)
+# =============================================================================
+
 inside:
   heir:
     process_id: bp.830
-    aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
-    services: [client-portal, cloudflare-d1, lbb, mission-control]
+    species: Workflow-Body
+    version: "1.0.0"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    services:
+      - client-portal
+      - cloudflare-d1
+      - lbb
+      - mission-control
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
     determinism_gate: ai_on_spine_forbidden
-  orbt: { runtime_state: BUILD, strikes: 0, last_transition_at: "2026-05-03", last_transition_reason: BAR-377 UT-local YAML creation, flipped_by: codex, promotion_gate: bp_810_operate_and_codex_10_gate_pass }
-description: "UT-local workflow for bp.830 Client Portal. Verifies portal data joins, routes, and client visibility after bp.810."
-inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
+  orbt:
+    library_state: BUILD
+    runtime_state: BUILD
+    strikes: 0
+    last_transition_at: "2026-05-06"
+    last_transition_reason: BAR-830-CONFORM-WIRE Atlas conformance pass
+    flipped_by: sonnet-mechanic
+    promotion_gate: bp_810_operate_and_codex_10_gate_pass
+
+# Block 7 — description
+description: "UT-local workflow for bp.830 Client Portal. Renders audience-specific HTML pages for each client, branded per client record, served at app.svgagency.com/:slug/:page."
+
+# Block 8 — schedule
 schedule: []
+
+# Block 9 — data
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml]
   writes: [docs/audit/process-runs/bp-830/inventory-bp-830.md, docs/audit/process-runs/bp-830/live-state-bp-830.md, docs/audit/process-runs/bp-830/diff-bp-830.md, docs/audit/process-runs/bp-830/audit-bp-830.md]
   forbidden: [llm_on_schedule_spine, expose_unvalidated_client_data, skip_bp_810_gate]
-nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
+
+# Block 10 — nodes
+nodes:
+  - { id: inventory, brain: gemini, output: inventory-bp-830.md }
+  - { id: live-introspection, brain: sonnet, output: live-state-bp-830.md }
+  - { id: diff, brain: opus-4.7, output: diff-bp-830.md }
+  - { id: fix, brain: sonnet, mode: verify-only, output: no_code_change_unless_gate_fails }
+  - { id: audit, brain: codex, output: audit-bp-830.md }
+  - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
+
+# Block 11 — gates + lbb
 gates:
   cron_exists: "cron/cache-refresh or explicit route-trigger policy declared"
   cron_firing: "recent deterministic refresh evidence exists"
@@ -31,4 +113,9 @@ gates:
   upstream_healthy: "bp.810 is OPERATE"
   downstream_wired: "client-facing pages consume portal data"
   squawk_live: "route/data failure writes squawk"
-lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.830 Client Portal", ingest_on_pass: true, ingest_on_fail: true }
+
+lbb:
+  subject_id: svg-outreach-proc
+  title_prefix: "bp.830 Client Portal"
+  ingest_on_pass: true
+  ingest_on_fail: true

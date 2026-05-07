@@ -1,3 +1,46 @@
+---
+# BS Law Y-junction frontmatter — mirrors workflow.yaml outside/inside arms
+# Species: UT-Body | companion_yaml: Barton-Processes/factory/outreach/201-email-discovery/workflow.yaml
+species: UT-Body
+certification_label: provisional-runtime
+companion_yaml: Barton-Processes/factory/outreach/201-email-discovery/workflow.yaml
+
+outside:
+  heir:
+    sovereign_ref: svg-outreach
+    hub_id: 201-email-discovery
+    cc_layer: CC-04
+    ctb_placement: barton-enterprises/svg-agency/factory/outreach/201-email-discovery
+    imo_topology: middle
+    secrets_provider: doppler
+    species: Workflow-Body
+    services:
+      - vendor-email-api
+      - cloudflare-d1
+      - lbb
+      - mission-control
+    acceptance_criteria: "UT-local Workflow-Body; email discovery deterministic; 10 BAR-377 gates green"
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+
+inside:
+  heir:
+    process_id: bp.201
+    version: "1.0.0"
+    companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
+    aviation_model:
+      planner: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+      rule: mechanic != auditor
+    determinism_gate: ai_on_spine_forbidden
+    species: UT-Body
+  orbt:
+    library_state: BUILD
+---
+
 # Process 201 — Find Email
 ## Fills person_email on slot_workbench slots that have a name but no email, enabling LCS pipeline entry.
 ### Status: BUILD
@@ -22,7 +65,7 @@
 | 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b |
 | 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
-## 1. IDENTITY {#sec-1-identity}
+## §1 IDENTITY {#sec-1-identity}
 
 | Field | Value |
 |-------|-------|
@@ -39,7 +82,7 @@
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/outreach/201-email-discovery |
 
-### 1b. Geometry {#sec-1b-geometry}
+## §1b GEOMETRY {#sec-1b-geometry}
 
 **CTB Position:** barton-enterprises → svg-agency → factory → outreach → 201-email-discovery (leaf)
 
@@ -69,7 +112,7 @@ flowchart LR
 | secrets_provider | doppler |
 | acceptance_criteria | Gate order A→B→C enforced; person_email_verified tracks MV verdict only (not existence of guess); pattern guesses not written to person_email until gate hit; hunter_confidence threshold ≥ 80 enforced for Gate B |
 
-## 2. PURPOSE {#sec-2-purpose}
+## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
 Process 201 discovers and writes email addresses to slot_workbench for slots that have a person name but no email. It runs three gates in deterministic priority order — pattern generation (free), Hunter promotion (free), and Startpage search (proxy cost only) — stopping at the first hit per slot.
@@ -95,7 +138,7 @@ Outreach operations (Dave Barton). Downstream consumers: LCS pipeline, Process 7
 ### SUCCESS METRIC
 Overall email fill rate ≥ 80% across all three gates, with D1 write success rate ≥ 99% and Gate C CAPTCHA rate < 5%.
 
-## 3. RESOURCES {#sec-3-resources}
+## §3 RESOURCES {#sec-3-resources}
 
 Required doctrine references for every process UT:
 
@@ -182,7 +225,7 @@ Required doctrine references for every process UT:
 | svg-outreach | svg-outreach · branch · CC-03 | BUILD | session summaries, gate hit rates, bounce flag events | per-run |
 | processes | processes · branch · CC-03 | BUILD | process consolidation events, UT retrofit | on-change |
 
-## 4. IMO - Input, Middle, Output {#sec-4-imo}
+## §4 IMO {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
 1. What triggers this? A slot in slot_workbench where has_name = 1 AND has_email = 0.
@@ -212,7 +255,7 @@ Rows from slot_workbench where has_name=1 AND has_email=0. Contains person_first
 ### Circle (Bedrock §5)
 Email found → slot updated → readiness_tier promoted → enters LCS pipeline → Mailgun sends → bounce webhook (future) → person_email_verified flag checked → if bounce, re-enter 201 on next cycle. Bounce feedback closes the loop. MV Gate D (PLANNED) will close verification loop independently.
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## §5 DATA SCHEMA {#sec-5-data-schema}
 
 ### READ Access
 
@@ -298,7 +341,7 @@ slot_workbench.slot_id (individual slot, person-level variables)
 | Is this slot ready for LCS? | slot_workbench | readiness_tier |
 | Is email verified by MV? | slot_workbench | person_email_verified (tracks MV verdict only — D-201-01) |
 
-## 6. DMJ - Define, Map, Join {#sec-6-dmj}
+## §6 DMJ {#sec-6-dmj}
 
 ### 6a. DEFINE (Build the Key)
 
@@ -335,7 +378,7 @@ slot_workbench.slot_id (individual slot, person-level variables)
 | slot_workbench.outreach_id → company constants | self-join | company-level pattern/domain data fetched via outreach_id |
 | person_email_verified → MV verdict (PLANNED) | future | MV Gate D will write this field; must not be set by discovery gates |
 
-## 7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
+## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - Gate order: A → B → C — enforced by D-201-04; gate_skip_count tolerance = ε
@@ -358,7 +401,7 @@ slot_workbench.slot_id (individual slot, person-level variables)
 - Fill rate per gate per run
 - MV credits remaining (111,167 — applies after Gate D integration)
 
-## 8. STOP CONDITIONS {#sec-8-stop-conditions}
+## §8 STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
@@ -386,7 +429,7 @@ python3 src/find-email.py --dry-run --limit 0
 python3 src/find-email.py --resume --limit N
 ```
 
-## 9. VERIFICATION {#sec-9-verification}
+## §9 VERIFICATION {#sec-9-verification}
 
 ```text
 1. Select 5 slots: has_name=1, has_email=0, has_email_pattern=1
@@ -420,7 +463,7 @@ python3 src/find-email.py --resume --limit N
 2. Flow — Does the name + domain reach the gate chain? Does the result reach D1 via wrangler?
 3. Change — Is person_email written? Is has_email flipped to 1? Is readiness_tier recalculated?
 
-## 9b. Live Verification Log {#sec-9b-live-verification}
+## §9b LIVE VERIFICATION {#sec-9b-live-verification}
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
@@ -433,7 +476,7 @@ python3 src/find-email.py --resume --limit N
 
 Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 
-## 10. ANALYTICS {#sec-10-analytics}
+## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
 
@@ -467,7 +510,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | REPAIR | OPERATE | fix + metric back within tolerance + auditor verification |
 | Any (Strike 3) | TROUBLESHOOT_TRAIN | fleet-wide fix → AD |
 
-## 11. EXECUTION TRACE {#sec-11-execution-trace}
+## §11 EXECUTION TRACE {#sec-11-execution-trace}
 
 | Field | Format | Required |
 |-------|--------|----------|
@@ -504,7 +547,7 @@ Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 | person_email_verified tracks MV verdict only | find-email.py does NOT write person_email_verified in any path (MV not integrated) — FP-201-01 source is elsewhere in write path or upstream | clean (no violation in current code) |
 | CQRS write gate | D1 writes only occur after found_email is confirmed not None | clean |
 
-## 12. LOGBOOK (After Certification Only) {#sec-12-logbook}
+## §12 LOGBOOK {#sec-12-logbook}
 
 No logbook during BUILD.
 
@@ -526,7 +569,7 @@ No logbook during BUILD.
 |------|-------|--------|---------------|----------|------------|
 | 2026-04-29 | claude-sonnet-4-6 | BUILD | UT consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments | WAVE-1 Packet 5 dispatch | pending |
 
-## 13. FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
+## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
@@ -534,7 +577,7 @@ No logbook during BUILD.
 
 **FP-201-01 Investigation Note:** Current find-email.py code does NOT write person_email_verified in any gate path. The spurious flag is set elsewhere — likely in the write path of a different process or a manual update. Auditor must trace which line/process sets this flag before Strike 2.
 
-## 14. SESSION LOG {#sec-14-session-log}
+## §14 SESSION LOG {#sec-14-session-log}
 
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|
