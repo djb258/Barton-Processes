@@ -1,3 +1,8 @@
+---
+mission_control_exempt: true
+mission_control_exempt_reason: Internal template artifact — defines intake YAML format used by the Four-Brain pipeline. Not operator-facing content. Per BAR-070-MC-WIRE Plan Book §7.
+---
+
 # Planner Intake Template
 
 **Process 070 Four-Brain — Operator → Planner source packet**
@@ -153,6 +158,7 @@ Operator sets `garage_status` in the paired YAML, not here. The MD is for human 
 | `REVIEW_AUDIT_VERDICT` | Awaiting sovereign review of Audit verdict. |
 | `BLOCKED` | Question back to operator (Planner can't proceed). |
 | `CLOSED` | BAR finished. |
+| `TROUBLESHOOT_TRAIN` | Strike-3 reached. Pipeline halted; structural review required (not another repair). |
 
 ---
 

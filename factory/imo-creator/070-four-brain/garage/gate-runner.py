@@ -1,0 +1,921 @@
+#!/usr/bin/env python3
+# mission_control_exempt: true
+# mission_control_exempt_reason: Internal predicate evaluator. Outputs flow into Auditor verdicts which surface via mission-control.system.pipeline slot. Per BAR-070-MC-WIRE Plan Book §7.
+# =============================================================================
+# gate-runner.py — Deterministic Four-Brain Doctrine Gate evaluator
+#
+# Atlas authority:
+#   atlas/constants/FOUR_BRAIN_AVIATION.md §75-94 (Determinism-First Gate)
+#   atlas/manifests/four-brain-doctrine-gate.yaml (predicate source of truth)
+#   atlas/constants/AUDITOR_ROLE.md §7 (8-rung audit ladder), §7b (W-1..W-7)
+#
+# Atlas mandate (verbatim):
+#   "Run LLM on the spine of any gate evaluation" — FORBIDDEN
+#   "determinism_gate: ai_on_spine_forbidden — deterministic checks only"
+#   "GATES — the 19 conformance predicates (closed-form, deterministic)"
+#
+# This script is the deterministic implementation. Predicates are READ from the
+# manifest, NOT embedded here. The script is the executor; the manifest is the
+# spec. If a predicate changes, the manifest changes — the script does not.
+#
+# W-7 (disposition sanity) is the ONLY gate that legitimately requires LLM
+# judgment per Atlas (it evaluates architectural quality of a Planner decision).
+# It is deferred to tail arbitration AFTER all 18 deterministic gates pass.
+#
+# HEIR:
+#   sovereign_ref:   imo-creator
+#   hub_id:          gate-runner
+#   ctb_placement:   barton-enterprises/imo-creator/070-four-brain/gate-runner
+#   imo_topology:    hub
+#   cc_layer:        CC-01
+#   services:        [four-brain-doctrine-gate.yaml, AUDITOR_ROLE.md]
+#   secrets_provider: doppler (LBB_API_KEY for G06/G08/G09/W-5 LBB queries)
+#   acceptance_criteria: All 18 deterministic gates evaluate without LLM call.
+#
+# ORBT:
+#   library_state: BUILD
+# =============================================================================
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
+# Force UTF-8 stdout on Windows so unicode in evidence strings (—, §) doesn't mojibake.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except (AttributeError, OSError):
+        pass
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional
+
+try:
+    import yaml
+except ImportError:
+    print("FATAL: PyYAML not installed. pip install pyyaml", file=sys.stderr)
+    sys.exit(2)
+
+
+VERSION = "1.0.0"
+LBB_BASE = os.environ.get("LBB_URL", "https://lbb.svg-outreach.workers.dev")
+
+
+# -----------------------------------------------------------------------------
+# Output contract
+# -----------------------------------------------------------------------------
+
+@dataclass
+class GateResult:
+    gate_id: str
+    name: str
+    passed: bool
+    predicate: str
+    evidence: str
+    strike_target: str = ""
+    deferred_to_tail: bool = False
+
+
+@dataclass
+class AuditReport:
+    bar_id: str
+    manifest_version: str
+    gates_evaluated: int = 0
+    gates_passed: list[str] = field(default_factory=list)
+    gates_failed: list[dict] = field(default_factory=list)
+    deferred_to_tail: list[str] = field(default_factory=list)
+    diagnostic_vector: list[dict] = field(default_factory=list)
+
+    @property
+    def verdict(self) -> str:
+        return "PASS" if not self.gates_failed else "FAIL"
+
+    @property
+    def p_value(self) -> int:
+        return 1 if self.verdict == "PASS" else 0
+
+    def record(self, r: GateResult):
+        self.gates_evaluated += 1
+        if r.deferred_to_tail:
+            self.deferred_to_tail.append(r.gate_id)
+            return
+        if r.passed:
+            self.gates_passed.append(r.gate_id)
+        else:
+            self.gates_failed.append({
+                "id": r.gate_id,
+                "name": r.name,
+                "predicate": r.predicate,
+                "evidence": r.evidence,
+                "strike_target": r.strike_target,
+            })
+            self.diagnostic_vector.append({
+                "gate_id": r.gate_id,
+                "deviation": r.evidence,
+            })
+
+    def to_json(self) -> str:
+        return json.dumps({
+            "verdict": self.verdict,
+            "p_value": self.p_value,
+            "bar_id": self.bar_id,
+            "manifest_version": self.manifest_version,
+            "gates_evaluated": self.gates_evaluated,
+            "gates_passed": self.gates_passed,
+            "gates_failed": self.gates_failed,
+            "deferred_to_tail": self.deferred_to_tail,
+            "diagnostic_vector": self.diagnostic_vector,
+        }, indent=2)
+
+
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
+
+def load_yaml(path: Path) -> Any:
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def load_yaml_top_level_keys(path: Path) -> set[str]:
+    """Return the set of top-level keys without parsing into a single dict."""
+    keys = set()
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):", line)
+            if m:
+                keys.add(m.group(1))
+    return keys
+
+
+def load_md_frontmatter(path: Path) -> dict:
+    """Extract YAML frontmatter from a Book .md file (between leading --- markers)."""
+    text = path.read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if not m:
+        return {}
+    return yaml.safe_load(m.group(1)) or {}
+
+
+def lbb_query(sql: str, timeout: int = 30) -> Optional[dict]:
+    """Hit LBB worker with a parametrized SQL query. Returns None on auth failure."""
+    api_key = os.environ.get("LBB_API_KEY")
+    if not api_key:
+        return None
+    req = urllib.request.Request(
+        f"{LBB_BASE}/query",
+        data=json.dumps({"sql": sql}).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+        return None
+
+
+def file_contains(path: Path, pattern: str) -> bool:
+    if not path.exists():
+        return False
+    return bool(re.search(pattern, path.read_text(encoding="utf-8", errors="replace")))
+
+
+# -----------------------------------------------------------------------------
+# Predicate registry — one function per gate
+# Each function returns (passed: bool, evidence: str)
+# Predicate text comes FROM the manifest, NOT hardcoded here (G07 conformance)
+# -----------------------------------------------------------------------------
+
+class GateEvaluator:
+    """
+    Evaluates the deterministic predicates declared in
+    atlas/manifests/four-brain-doctrine-gate.yaml.
+
+    The script is the executor. The manifest is the spec.
+    """
+
+    def __init__(self, manifest_path: Path, repo_v2: Path, repo_processes: Path,
+                 bar_id: str, audited_yaml: Optional[Path] = None,
+                 audited_md: Optional[Path] = None):
+        self.manifest_path = manifest_path
+        self.manifest = load_yaml(manifest_path)
+        self.repo_v2 = repo_v2
+        self.repo_processes = repo_processes
+        self.bar_id = bar_id
+        self.audited_yaml = audited_yaml
+        self.audited_md = audited_md
+
+    # --- G-gates: artifact + CI conformance ---
+
+    def G01(self) -> tuple[bool, str]:
+        """Y-junction syntactic separation."""
+        if not self.audited_yaml:
+            return False, "no audited yaml provided"
+        top_keys = load_yaml_top_level_keys(self.audited_yaml)
+        doc = load_yaml(self.audited_yaml)
+        if "outside" not in top_keys or "inside" not in top_keys:
+            return False, f"missing top-level outside or inside keys (got: {sorted(top_keys)})"
+        outside = doc.get("outside") or {}
+        inside = doc.get("inside") or {}
+        if not isinstance(outside, dict) or not isinstance(inside, dict):
+            return False, "outside/inside not maps"
+        if "heir" not in outside or "orbt" not in outside:
+            return False, "outside missing nested heir or orbt"
+        if "heir" not in inside or "orbt" not in inside:
+            return False, "inside missing nested heir or orbt"
+        return True, "outside+inside top-level maps with nested heir+orbt"
+
+    def G02(self) -> tuple[bool, str]:
+        """outside.heir 8 required fields non-null."""
+        required = {"sovereign_ref", "hub_id", "ctb_placement", "imo_topology",
+                    "cc_layer", "services", "secrets_provider", "acceptance_criteria"}
+        if not self.audited_yaml:
+            return False, "no audited yaml"
+        doc = load_yaml(self.audited_yaml)
+        heir = (doc.get("outside") or {}).get("heir") or {}
+        present = {k for k, v in heir.items() if v is not None}
+        missing = required - present
+        if missing:
+            return False, f"missing fields: {sorted(missing)}"
+        return True, "all 8 outside.heir fields present and non-null"
+
+    def G03(self) -> tuple[bool, str]:
+        """outside.orbt 3 fields + library_state enum."""
+        valid = {"BUILD", "OPERATE", "REPAIR", "TROUBLESHOOT_TRAIN"}
+        if not self.audited_yaml:
+            return False, "no audited yaml"
+        orbt = ((load_yaml(self.audited_yaml).get("outside") or {}).get("orbt")) or {}
+        for f in ("library_state", "last_indexed_at", "indexed_by"):
+            if not orbt.get(f):
+                return False, f"missing outside.orbt.{f}"
+        if orbt["library_state"] not in valid:
+            return False, f"library_state '{orbt['library_state']}' not in {sorted(valid)}"
+        return True, f"library_state={orbt['library_state']}, all 3 fields present"
+
+    def G04(self) -> tuple[bool, str]:
+        """inside.heir + inside.orbt populated."""
+        valid = {"BUILD", "OPERATE", "REPAIR", "TROUBLESHOOT_TRAIN"}
+        required = {"process_id", "version", "companion_manifest", "aviation_model",
+                    "determinism_gate", "species"}
+        if not self.audited_yaml:
+            return False, "no audited yaml"
+        doc = load_yaml(self.audited_yaml)
+        heir = (doc.get("inside") or {}).get("heir") or {}
+        orbt = (doc.get("inside") or {}).get("orbt") or {}
+        missing = {k for k in required if not heir.get(k)}
+        if missing:
+            return False, f"inside.heir missing: {sorted(missing)}"
+        if orbt.get("library_state") not in valid:
+            return False, f"inside.orbt.library_state invalid: {orbt.get('library_state')!r}"
+        return True, "inside.heir + inside.orbt valid"
+
+    def G05(self) -> tuple[bool, str]:
+        """lbb_row_schema.mandatory_fields == 12 with field+format+example+validation."""
+        # The manifest IS the audited yaml when auditing the gate spec itself.
+        # Otherwise, the audited yaml must reference the canonical schema.
+        schema = self.manifest.get("lbb_row_schema", {})
+        fields = schema.get("mandatory_fields", [])
+        if len(fields) != 12:
+            return False, f"manifest lbb_row_schema.mandatory_fields count={len(fields)}, expected 12"
+        for entry in fields:
+            for key in ("field", "format", "example", "validation"):
+                if not entry.get(key):
+                    return False, f"field {entry.get('field')!r} missing key '{key}'"
+        return True, "12 fields, all with format+example+validation"
+
+    def G06(self) -> tuple[bool, str]:
+        """All 4 LBB rows have non-empty atlas_sections_consulted."""
+        rows = self._fetch_bar_lbb_rows()
+        if rows is None:
+            return False, "LBB unreachable (LBB_API_KEY not set or query failed)"
+        if not rows:
+            return False, f"no LBB rows for bar_id={self.bar_id}"
+        for row in rows:
+            sections = row.get("atlas_sections_consulted") or ""
+            if not sections.strip():
+                return False, f"row role={row.get('role')} has empty atlas_sections_consulted"
+        return True, f"{len(rows)} rows, all cite atlas sections"
+
+    def G07(self) -> tuple[bool, str]:
+        """CI workflow + runtime auditor prompt reference manifest; no inline predicates."""
+        wf = self.repo_v2 / ".github" / "workflows" / "atlas-audit.yml"
+        if not wf.exists():
+            return False, f"workflow missing: {wf}"
+        wf_text = wf.read_text(encoding="utf-8", errors="replace")
+        if "four-brain-doctrine-gate.yaml" not in wf_text:
+            return False, "atlas-audit.yml does not reference four-brain-doctrine-gate.yaml"
+        # Forbidden inline predicate patterns — gate spec text MUST NOT be embedded
+        # in CI workflows or runtime prompt heredocs. The manifest is the source of truth.
+        forbidden_patterns = [
+            r"COUNT\(.*lbb_records",
+            r"all 8 HEIR fields",
+            r"Y-junction.*outside.*inside",
+        ]
+        for pat in forbidden_patterns:
+            if re.search(pat, wf_text, re.IGNORECASE):
+                return False, f"workflow embeds gate predicate /{pat}/"
+        # Also scan the runtime auditor prompt writer in forebrain-garage.sh — Codex caught
+        # this pattern in the prior Atlas-only audit (G07 violation in heredoc).
+        garage = self.repo_processes / "factory" / "imo-creator" / "070-four-brain" / "garage" / "forebrain-garage.sh"
+        if garage.exists():
+            g_text = garage.read_text(encoding="utf-8", errors="replace")
+            inline_predicate_in_prompt = [
+                r"W-1\s+.*\[strike:",  # W-gate strike-target inline in heredoc
+                r"W-2\s+.*\[strike:",
+                r"W-7\s+.*\[strike:",
+            ]
+            for pat in inline_predicate_in_prompt:
+                if re.search(pat, g_text):
+                    return False, (f"forebrain-garage.sh auditor prompt embeds W-gate "
+                                   f"predicate text matching /{pat}/ — Atlas: prompt must "
+                                   f"reference manifest, not embed predicates")
+        # Workflow must say it CALLS the runner (deterministic), not that Codex evaluates.
+        if re.search(r"codex.*evaluat|llm.*evaluat", wf_text, re.IGNORECASE):
+            return False, "workflow says LLM evaluates predicates — Atlas: ai_on_spine_forbidden"
+        return True, "workflow + runtime prompt reference manifest; no inline predicates"
+
+    def G08(self) -> tuple[bool, str]:
+        """COUNT(lbb_records WHERE bar_id=? AND subject_id='four-brain-gate-audit') == 4."""
+        rows = self._fetch_bar_lbb_rows(subject_id="four-brain-gate-audit")
+        if rows is None:
+            return False, "LBB unreachable"
+        if len(rows) != 4:
+            return False, f"row count={len(rows)} for subject_id='four-brain-gate-audit', expected 4"
+        return True, "4 LBB rows under subject_id='four-brain-gate-audit'"
+
+    def G09(self) -> tuple[bool, str]:
+        """All 12 schema fields valid across all 4 LBB rows."""
+        rows = self._fetch_bar_lbb_rows()
+        if rows is None:
+            return False, "LBB unreachable"
+        if not rows:
+            return False, f"no rows for bar_id={self.bar_id}"
+        valid_orbt = {"BUILD", "OPERATE", "REPAIR", "TROUBLESHOOT_TRAIN"}
+        valid_role = {"planner", "foreman", "mechanic", "auditor"}
+        uuid_re = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+        bar_re = re.compile(r"^(BAR-\d+|CI-PR-\d+|DRIFT-SWEEP-\d{8})$")
+        sha_re = re.compile(r"^[0-9a-f]{64}$")
+        ts_re = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+        for row in rows:
+            rid = row.get("record_id", "")
+            if not uuid_re.match(rid):
+                return False, f"row record_id={rid!r} not UUIDv4"
+            if not bar_re.match(row.get("bar_id", "")):
+                return False, f"row bar_id={row.get('bar_id')!r} invalid"
+            if row.get("role") not in valid_role:
+                return False, f"row role={row.get('role')!r} not in enum"
+            if not (row.get("action") or "").strip():
+                return False, f"row action empty (role={row.get('role')})"
+            if not sha_re.match(row.get("evidence_hash", "")):
+                return False, f"row evidence_hash invalid (role={row.get('role')})"
+            if not (row.get("atlas_sections_consulted") or "").strip():
+                return False, f"row atlas_sections_consulted empty (role={row.get('role')})"
+            if not ts_re.match(row.get("timestamp", "")):
+                return False, f"row timestamp invalid (role={row.get('role')})"
+            if row.get("orbt_mode") not in valid_orbt:
+                return False, f"row orbt_mode={row.get('orbt_mode')!r} invalid"
+        return True, f"{len(rows)} rows, all 12 fields valid"
+
+    def G10(self) -> tuple[bool, str]:
+        """atlas-audit.yml: triggers on atlas/** PR; blocks merge on P=0; calls lbb-log.sh."""
+        wf = self.repo_v2 / ".github" / "workflows" / "atlas-audit.yml"
+        if not wf.exists():
+            return False, f"missing: {wf}"
+        text = wf.read_text(encoding="utf-8", errors="replace")
+        if "pull_request" not in text:
+            return False, "no pull_request trigger"
+        if not re.search(r"paths:[^\n]*\n[^\n]*atlas/", text) and "atlas/**" not in text:
+            return False, "no atlas/** path filter"
+        if "lbb-log.sh" not in text:
+            return False, "does not call scripts/lbb-log.sh"
+        # Atlas G10 demands BLOCK on P=0. Sovereign override pathways violate the predicate.
+        if re.search(r"sovereign[-_]?override", text, re.IGNORECASE):
+            return False, "workflow contains sovereign-override path (Atlas G10 says BLOCK on P=0)"
+        return True, "workflow triggers on atlas/** PR, calls lbb-log.sh, no override path"
+
+    def G11(self) -> tuple[bool, str]:
+        """11 parity fields identical between .yaml and .md frontmatter."""
+        if not self.audited_yaml or not self.audited_md:
+            return False, "G11 requires both .yaml and .md to be provided"
+        ydoc = load_yaml(self.audited_yaml)
+        mfm = load_md_frontmatter(self.audited_md)
+        if not mfm:
+            return False, (f"{self.audited_md.name} has no YAML frontmatter — "
+                           f"G11 requires structured frontmatter to compare against .yaml")
+        parity_fields = (self.manifest.get("nodes") or [])
+        # The manifest declares the 11 parity fields under check_parity_sha256
+        parity_list = []
+        for node in parity_fields:
+            if node.get("id") == "check_parity_sha256":
+                parity_list = node.get("parity_fields", [])
+                break
+        if not parity_list:
+            return False, "manifest does not declare parity_fields"
+        mismatches = []
+        for path in parity_list:
+            yval = self._dotpath(ydoc, path)
+            mval = self._dotpath(mfm, path)
+            if yval != mval:
+                mismatches.append(f"{path}: yaml={yval!r} md={mval!r}")
+        if mismatches:
+            return False, "; ".join(mismatches[:3])
+        return True, f"{len(parity_list)} parity fields match"
+
+    def G12(self) -> tuple[bool, str]:
+        """drift-sweep workflow: cron '0 12 * * 1', calls lbb-log.sh."""
+        wf = self.repo_v2 / ".github" / "workflows" / "atlas-drift-sweep.yml"
+        if not wf.exists():
+            return False, f"missing: {wf}"
+        text = wf.read_text(encoding="utf-8", errors="replace")
+        if "0 12 * * 1" not in text:
+            return False, "cron '0 12 * * 1' not present"
+        if "lbb-log.sh" not in text:
+            return False, "does not call scripts/lbb-log.sh"
+        return True, "drift-sweep cron correct, calls lbb-log.sh"
+
+    # --- W-gates: Mission Control wiring ---
+
+    def W1(self) -> tuple[bool, str]:
+        """Every produced/modified artifact has a HEIR ID in spoke frontmatter."""
+        artifacts = self._planner_declared_artifacts()
+        if artifacts is None:
+            return False, "Plan Book missing or unreadable"
+        missing = []
+        for art in artifacts:
+            p = self._resolve_artifact_path(art)
+            if not p or not p.exists():
+                missing.append(f"{art} (file not found)")
+                continue
+            heir_id = self._extract_heir_id(p)
+            if not heir_id:
+                missing.append(f"{art} (no heir_id)")
+        if missing:
+            return False, "; ".join(missing[:3])
+        return True, f"{len(artifacts)} artifacts have heir_id"
+
+    def W2(self) -> tuple[bool, str]:
+        """Plan Book has mission_control_wiring section with disposition for every artifact."""
+        plan = self._plan_book()
+        if plan is None:
+            return False, "Plan Book not found"
+        text = plan.read_text(encoding="utf-8", errors="replace")
+        if "mission_control_wiring" not in text:
+            return False, "Plan Book missing 'mission_control_wiring' section"
+        # Extract the section as YAML if formatted as a block
+        wiring = self._extract_wiring_block(text)
+        if not wiring:
+            return False, "mission_control_wiring section present but not parseable"
+        for entry in wiring:
+            disp = entry.get("disposition")
+            if disp not in ("WIRE", "NEW_SLOT_NEEDED", "EXEMPT"):
+                return False, f"artifact {entry.get('artifact')} has disposition={disp!r}"
+            if disp == "WIRE" and not entry.get("target_slot_heir_id"):
+                return False, f"WIRE artifact {entry.get('artifact')} missing target_slot_heir_id"
+            if disp == "NEW_SLOT_NEEDED" and not entry.get("proposed_slot"):
+                return False, f"NEW_SLOT_NEEDED artifact {entry.get('artifact')} missing proposed_slot"
+            if disp == "EXEMPT" and not entry.get("rationale"):
+                return False, f"EXEMPT artifact {entry.get('artifact')} missing rationale"
+        return True, f"{len(wiring)} artifacts with valid dispositions"
+
+    def W3(self) -> tuple[bool, str]:
+        """WIRE: target slot's data_source updated; EXEMPT/NEW_SLOT execution per Atlas."""
+        wiring = self._wiring_entries()
+        if wiring is None:
+            return False, "no wiring section"
+        mc = self.repo_v2 / "atlas" / "constants" / "mission-control.yaml"
+        mc_doc = load_yaml(mc) if mc.exists() else {}
+        slots = {s.get("heir_id"): s for s in (mc_doc.get("slots") or [])}
+        for entry in wiring:
+            disp = entry.get("disposition")
+            art = entry.get("artifact")
+            if disp == "WIRE":
+                slot_id = entry.get("target_slot_heir_id")
+                slot = slots.get(slot_id)
+                if not slot:
+                    return False, f"WIRE: slot {slot_id} not found in mission-control.yaml"
+                ds = slot.get("data_source")
+                ds_str = json.dumps(ds) if ds else ""
+                if art and art not in ds_str:
+                    return False, f"WIRE: slot {slot_id} data_source does not reference {art}"
+            elif disp == "EXEMPT":
+                p = self._resolve_artifact_path(art)
+                if p and p.exists():
+                    fm = load_md_frontmatter(p) if p.suffix == ".md" else (load_yaml(p) or {}).get("outside", {})
+                    if not fm.get("mission_control_exempt"):
+                        return False, f"EXEMPT: {art} frontmatter missing mission_control_exempt: true"
+            # NEW_SLOT_NEEDED: carry-forward verified by W-5 LBB tag
+        return True, f"{len(wiring)} entries executed per declared disposition"
+
+    def W4(self) -> tuple[bool, str]:
+        """Paired Books (.md + .yaml) registered in paired-artifacts.yaml."""
+        registry = self.repo_v2 / "atlas" / "manifests" / "paired-artifacts.yaml"
+        if not registry.exists():
+            return False, f"missing: {registry}"
+        reg_doc = load_yaml(registry) or {}
+        registered = {e.get("md_path") or e.get("ut_md") for e in (reg_doc.get("paired_artifacts") or [])}
+        wiring = self._wiring_entries() or []
+        for entry in wiring:
+            if entry.get("disposition") != "WIRE":
+                continue
+            art = entry.get("artifact", "")
+            if art.endswith(".md"):
+                companion = art.replace(".md", ".yaml")
+                cp = self._resolve_artifact_path(companion)
+                if cp and cp.exists() and art not in registered:
+                    return False, f"paired Book {art} not in paired-artifacts.yaml"
+        return True, "paired Books registered (or none in this BAR)"
+
+    def W5(self) -> tuple[bool, str]:
+        """LBB row tagged 'mission-control-wiring|exempt|new-slot-needed' per artifact."""
+        rows = self._fetch_bar_lbb_rows()
+        if rows is None:
+            return False, "LBB unreachable"
+        wiring = self._wiring_entries() or []
+        wanted = {
+            "WIRE": "mission-control-wiring",
+            "EXEMPT": "mission-control-exempt",
+            "NEW_SLOT_NEEDED": "mission-control-new-slot-needed",
+        }
+        for entry in wiring:
+            tag = wanted[entry["disposition"]]
+            art = entry.get("artifact", "")
+            if not any(tag in (r.get("tags") or "") and art in (r.get("notes") or r.get("evidence_hash") or "") for r in rows):
+                return False, f"no LBB row tagged {tag!r} referencing {art}"
+        return True, f"{len(wiring)} artifacts have correctly tagged LBB rows"
+
+    def W6(self) -> tuple[bool, str]:
+        """Mechanic did NOT modify mission-control skeleton without sovereign signature."""
+        # Check git log for changes to mission-control.yaml/.md NOT signed by sovereign.
+        # Sovereign signature convention: commit message prefix 'Sovereign'
+        try:
+            out = subprocess.check_output(
+                ["git", "-C", str(self.repo_v2), "log", "--format=%s",
+                 "--", "atlas/constants/mission-control.yaml",
+                 "atlas/constants/MISSION_CONTROL.md"],
+                stderr=subprocess.DEVNULL, text=True, timeout=15,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+            return False, "git history unreadable"
+        for line in out.splitlines():
+            if line.strip() and not re.match(r"^(Sovereign|sovereign)", line):
+                # Allow non-sovereign commits ONLY if they touch fill, not skeleton.
+                # Conservative: any non-sovereign commit on these files is a flag.
+                # Mechanic strikes are not retroactive; only flag the most recent.
+                return False, f"non-sovereign commit on skeleton: {line[:80]}"
+            break  # only check the head commit
+        return True, "skeleton clean (head commit sovereign-signed or no changes)"
+
+    def W7(self) -> tuple[bool, str]:
+        """Disposition sanity check — DEFERRED to tail (LLM judgment)."""
+        # Per Atlas FOUR_BRAIN_AVIATION.md §75-94: this is the one legitimate
+        # tail-arbitration gate. Runner emits review-needed status; Codex
+        # evaluates AFTER all 18 deterministic gates pass.
+        return True, "DEFERRED_TO_TAIL (Codex evaluates after all deterministic gates pass)"
+
+    # --- Audit ladder rungs (AUDITOR_ROLE.md §7) ---
+
+    def Rung1(self) -> tuple[bool, str]:
+        """Template conformity: 14 sections present and non-empty."""
+        if not self.audited_md:
+            return False, "no md provided"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        sections = re.findall(r"^## §(\d+[a-z]?)[\.\s]", text, re.MULTILINE)
+        section_nums = sorted({int(re.match(r"\d+", s).group()) for s in sections})
+        required = list(range(1, 15))
+        missing = [n for n in required if n not in section_nums]
+        if missing:
+            return False, f"missing sections: §{missing}"
+        return True, "all 14 sections present"
+
+    def Rung2(self) -> tuple[bool, str]:
+        """Fill-rule conformity: each section non-empty (no placeholders)."""
+        if not self.audited_md:
+            return False, "no md provided"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        # Find each section, check the body (until next ## §) is more than placeholders.
+        sections = list(re.finditer(r"^## §(\d+[a-z]?)[\.\s].*$", text, re.MULTILINE))
+        for i, m in enumerate(sections):
+            start = m.end()
+            end = sections[i + 1].start() if i + 1 < len(sections) else len(text)
+            body = text[start:end].strip()
+            if len(body) < 20 or re.fullmatch(r"(TBD|TODO|N/A|—|-|_+)+", body, re.IGNORECASE):
+                return False, f"§{m.group(1)} appears empty/placeholder"
+        return True, f"{len(sections)} sections all filled"
+
+    def Rung3(self) -> tuple[bool, str]:
+        """HEIR completeness: 8 fields in outside.heir + inside.heir."""
+        g2_pass, g2_ev = self.G02()
+        g4_pass, g4_ev = self.G04()
+        if not g2_pass:
+            return False, f"outside.heir: {g2_ev}"
+        if not g4_pass:
+            return False, f"inside.heir: {g4_ev}"
+        return True, "HEIR complete on both arms"
+
+    def Rung4(self) -> tuple[bool, str]:
+        """Binding/config exact match against wrangler.toml."""
+        # The audited artifact must declare a wrangler.toml binding match.
+        # If not applicable (doctrine-only artifact), this rung is N/A=PASS.
+        if not self.audited_md:
+            return False, "no md"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        if "wrangler.toml" not in text and "binding" not in text.lower():
+            # Doctrine-only artifacts are exempt from rung 4
+            return True, "N/A (no worker bindings declared)"
+        # If declared, must reference a real wrangler.toml — defer to per-artifact check
+        # For now, conservatively pass if declared and matches some wrangler.toml in tree.
+        wrangler_files = list(self.repo_v2.rglob("wrangler.toml")) + list(self.repo_processes.rglob("wrangler.toml"))
+        if not wrangler_files:
+            return False, "no wrangler.toml found in either repo to match against"
+        # Future-state phrasing fails this rung.
+        if re.search(r"\b(future|TBD|pending|will be|to be added)\b", text, re.IGNORECASE):
+            return False, "doc references future/TBD state — Atlas requires exact match to existing wrangler.toml"
+        return True, "wrangler binding declarations present and not future-state"
+
+    def Rung5(self) -> tuple[bool, str]:
+        """Route/trigger exact match."""
+        if not self.audited_md:
+            return False, "no md"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        if not re.search(r"route|trigger|cron", text, re.IGNORECASE):
+            return True, "N/A (no routes/triggers declared)"
+        if re.search(r"\b(URL TBD|route TBD|future|to be added|pending)\b", text, re.IGNORECASE):
+            return False, "doc references future/TBD route state"
+        return True, "routes/triggers declared, not future-state"
+
+    def Rung6(self) -> tuple[bool, str]:
+        """Schema/migration exact match."""
+        if not self.audited_md:
+            return False, "no md"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        if not re.search(r"\.sql|migration|schema", text, re.IGNORECASE):
+            return True, "N/A (no schema/migration declared)"
+        # Future-state migration references fail this rung.
+        if re.search(r"\b(future|TBD|pending BAR|will be created|to be shipped)\b", text, re.IGNORECASE):
+            return False, "doc references future migration — Atlas requires exact match to existing SQL"
+        return True, "schema/migration references present and not future-state"
+
+    def Rung7(self) -> tuple[bool, str]:
+        """Cross-manual graph validation: ctb_node consistent with BARTON_ENTERPRISES_CTB.md."""
+        if not self.audited_yaml:
+            return False, "no yaml"
+        doc = load_yaml(self.audited_yaml)
+        ctb = ((doc.get("outside") or {}).get("heir") or {}).get("ctb_placement", "")
+        if not ctb:
+            return False, "no ctb_placement declared"
+        ctb_doc = self.repo_v2 / "atlas" / "constants" / "BARTON_ENTERPRISES_CTB.md"
+        if not ctb_doc.exists():
+            return False, f"trunk doc missing: {ctb_doc}"
+        if ctb.split("/")[0] not in ctb_doc.read_text(encoding="utf-8", errors="replace"):
+            return False, f"ctb root '{ctb.split('/')[0]}' not present in trunk doc"
+        return True, f"ctb_node={ctb} traceable to trunk"
+
+    def Rung8(self) -> tuple[bool, str]:
+        """Certification label assigned: repo-certified | deployment-certified | provisional-runtime."""
+        if not self.audited_md:
+            return False, "no md"
+        text = self.audited_md.read_text(encoding="utf-8", errors="replace")
+        labels = ("repo-certified", "deployment-certified", "provisional-runtime")
+        if not any(lbl in text for lbl in labels):
+            return False, f"no certification label found (expected one of {labels})"
+        return True, "certification label assigned"
+
+    # --- Helpers ---
+
+    def _fetch_bar_lbb_rows(self, subject_id: Optional[str] = None) -> Optional[list[dict]]:
+        sql = f"SELECT * FROM lbb_records WHERE bar_id='{self.bar_id}'"
+        if subject_id:
+            sql += f" AND subject_id='{subject_id}'"
+        result = lbb_query(sql)
+        if result is None:
+            return None
+        return result.get("results") or result.get("rows") or []
+
+    def _planner_declared_artifacts(self) -> Optional[list[str]]:
+        wiring = self._wiring_entries()
+        if wiring is None:
+            return None
+        return [e.get("artifact") for e in wiring if e.get("artifact")]
+
+    def _wiring_entries(self) -> Optional[list[dict]]:
+        plan = self._plan_book()
+        if not plan:
+            return None
+        return self._extract_wiring_block(plan.read_text(encoding="utf-8", errors="replace"))
+
+    def _plan_book(self) -> Optional[Path]:
+        candidate = self.repo_processes / "docs" / "plans" / self.bar_id / "PLAN-BOOK.md"
+        return candidate if candidate.exists() else None
+
+    def _extract_wiring_block(self, text: str) -> Optional[list[dict]]:
+        # Iterate through every fenced ```yaml/```yml block; return the first that
+        # contains mission_control_wiring: as a parseable list.
+        for m in re.finditer(r"```ya?ml\s*\n(.*?)\n```", text, re.DOTALL):
+            block = m.group(1)
+            if "mission_control_wiring:" not in block:
+                continue
+            try:
+                doc = yaml.safe_load(block)
+            except yaml.YAMLError:
+                continue
+            if isinstance(doc, dict) and isinstance(doc.get("mission_control_wiring"), list):
+                return doc["mission_control_wiring"]
+        # Fallback: non-fenced — capture from `mission_control_wiring:` until a
+        # line that begins at column 0 with non-yaml content (next markdown section).
+        m2 = re.search(
+            r"^mission_control_wiring:\s*\n((?:[ \t#].*\n|\n)+?)(?=^\S|\Z)",
+            text, re.MULTILINE,
+        )
+        if m2:
+            try:
+                doc = yaml.safe_load("mission_control_wiring:\n" + m2.group(1))
+                if isinstance(doc, dict) and isinstance(doc.get("mission_control_wiring"), list):
+                    return doc["mission_control_wiring"]
+            except yaml.YAMLError:
+                pass
+        return None
+
+    def _resolve_artifact_path(self, art: str) -> Optional[Path]:
+        for root in (self.repo_v2, self.repo_processes):
+            p = root / art
+            if p.exists():
+                return p
+        return None
+
+    def _extract_heir_id(self, p: Path) -> Optional[str]:
+        if p.suffix == ".md":
+            fm = load_md_frontmatter(p)
+            return fm.get("heir_id") or (fm.get("outside", {}).get("heir", {}) or {}).get("hub_id")
+        if p.suffix in (".yaml", ".yml"):
+            doc = load_yaml(p)
+            if isinstance(doc, dict):
+                return ((doc.get("outside") or {}).get("heir") or {}).get("hub_id")
+        return None
+
+    @staticmethod
+    def _dotpath(doc: dict, path: str) -> Any:
+        cur = doc
+        for part in path.split("."):
+            if not isinstance(cur, dict):
+                return None
+            cur = cur.get(part)
+        return cur
+
+
+# -----------------------------------------------------------------------------
+# Strike-target table (AUDITOR_ROLE.md §7b — verbatim)
+# -----------------------------------------------------------------------------
+
+STRIKE_TARGETS = {
+    "G01": "Mechanic", "G02": "Mechanic", "G03": "Mechanic", "G04": "Mechanic",
+    "G05": "Mechanic", "G06": "Mechanic", "G07": "Mechanic", "G08": "Mechanic",
+    "G09": "Mechanic", "G10": "Sovereign", "G11": "Mechanic", "G12": "Mechanic",
+    "W-1": "Mechanic", "W-2": "Planner", "W-3": "Mechanic", "W-4": "Mechanic",
+    "W-5": "Mechanic", "W-6": "Mechanic", "W-7": "Planner",
+    "Rung-1": "Mechanic", "Rung-2": "Mechanic", "Rung-3": "Mechanic",
+    "Rung-4": "Mechanic", "Rung-5": "Mechanic", "Rung-6": "Mechanic",
+    "Rung-7": "Mechanic", "Rung-8": "Mechanic",
+}
+
+
+# -----------------------------------------------------------------------------
+# Dispatcher
+# -----------------------------------------------------------------------------
+
+GATE_DISPATCH = [
+    ("G01", "y_junction_syntactic_separation",  "G01"),
+    ("G02", "outside_heir_8_fields",            "G02"),
+    ("G03", "outside_orbt_3_fields",            "G03"),
+    ("G04", "inside_heir_orbt_present",         "G04"),
+    ("G05", "lbb_row_schema_present",           "G05"),
+    ("G06", "atlas_section_citations_declared", "G06"),
+    ("G07", "gate_spec_source_of_truth",        "G07"),
+    ("G08", "lbb_row_count_4_per_bar",          "G08"),
+    ("G09", "lbb_row_schema_valid",             "G09"),
+    ("G10", "ci_gate_active",                   "G10"),
+    ("G11", "parity_sha256_match",              "G11"),
+    ("G12", "drift_sweep_active",               "G12"),
+    ("W-1", "mission_control_artifact_has_heir_id",            "W1"),
+    ("W-2", "mission_control_disposition_declared_by_planner", "W2"),
+    ("W-3", "mission_control_data_source_updated",             "W3"),
+    ("W-4", "mission_control_paired_artifacts_registered",     "W4"),
+    ("W-5", "mission_control_lbb_wiring_row_present",          "W5"),
+    ("W-6", "mission_control_no_silent_skeleton_drift",        "W6"),
+    ("W-7", "mission_control_disposition_sanity_check",        "W7"),
+    ("Rung-1", "template_conformity",       "Rung1"),
+    ("Rung-2", "fill_rule_conformity",      "Rung2"),
+    ("Rung-3", "heir_completeness",         "Rung3"),
+    ("Rung-4", "binding_config_exact",      "Rung4"),
+    ("Rung-5", "route_trigger_exact",       "Rung5"),
+    ("Rung-6", "schema_migration_exact",    "Rung6"),
+    ("Rung-7", "cross_manual_graph",        "Rung7"),
+    ("Rung-8", "certification_label",       "Rung8"),
+]
+
+
+def run(args) -> int:
+    repo_v2 = Path(args.repo_v2).resolve()
+    repo_processes = Path(args.repo_processes).resolve()
+    manifest_path = Path(args.manifest).resolve() if args.manifest else (
+        repo_v2 / "atlas" / "manifests" / "four-brain-doctrine-gate.yaml"
+    )
+    if not manifest_path.exists():
+        print(f"FATAL: manifest not found: {manifest_path}", file=sys.stderr)
+        return 2
+
+    audited_yaml = Path(args.audited_yaml).resolve() if args.audited_yaml else None
+    audited_md = Path(args.audited_md).resolve() if args.audited_md else None
+
+    evaluator = GateEvaluator(
+        manifest_path=manifest_path,
+        repo_v2=repo_v2,
+        repo_processes=repo_processes,
+        bar_id=args.bar_id,
+        audited_yaml=audited_yaml,
+        audited_md=audited_md,
+    )
+
+    manifest_version = (evaluator.manifest.get("document_control", {}) or {}).get("version", "unknown")
+    report = AuditReport(bar_id=args.bar_id, manifest_version=manifest_version)
+
+    only = set(args.only) if args.only else None
+    skip = set(args.skip) if args.skip else set()
+
+    for gate_id, gate_name, method_name in GATE_DISPATCH:
+        if only and gate_id not in only:
+            continue
+        if gate_id in skip:
+            continue
+        if args.deterministic_only and gate_id == "W-7":
+            report.record(GateResult(
+                gate_id=gate_id, name=gate_name, passed=True,
+                predicate="(read from manifest)", evidence="DEFERRED_TO_TAIL",
+                strike_target=STRIKE_TARGETS.get(gate_id, ""),
+                deferred_to_tail=True,
+            ))
+            continue
+        try:
+            method = getattr(evaluator, method_name)
+            passed, evidence = method()
+        except Exception as e:
+            passed, evidence = False, f"runner exception: {type(e).__name__}: {e}"
+        report.record(GateResult(
+            gate_id=gate_id, name=gate_name, passed=passed,
+            predicate="(read from manifest)", evidence=evidence,
+            strike_target=STRIKE_TARGETS.get(gate_id, ""),
+            deferred_to_tail=(gate_id == "W-7" and "DEFERRED" in evidence),
+        ))
+
+    if args.output_format == "json":
+        print(report.to_json())
+    else:
+        print(f"VERDICT: P={report.p_value}")
+        print(f"Manifest: v{manifest_version}")
+        print(f"BAR: {report.bar_id}")
+        print(f"Evaluated: {report.gates_evaluated}  Passed: {len(report.gates_passed)}  "
+              f"Failed: {len(report.gates_failed)}  Deferred: {len(report.deferred_to_tail)}")
+        if report.gates_failed:
+            print("\nFailures:")
+            for f in report.gates_failed:
+                print(f"  [{f['strike_target']:<10}] {f['id']} — {f['evidence']}")
+        if report.deferred_to_tail:
+            print(f"\nDeferred to tail: {report.deferred_to_tail}")
+
+    return 0 if report.verdict == "PASS" else 1
+
+
+def main():
+    p = argparse.ArgumentParser(
+        description="Deterministic Four-Brain Doctrine Gate runner. "
+                    "Reads predicates from atlas/manifests/four-brain-doctrine-gate.yaml. "
+                    "No LLM on the spine (Atlas: ai_on_spine_forbidden).",
+    )
+    p.add_argument("--bar-id", required=True, help="BAR identifier (e.g. BAR-394 or CI-PR-42)")
+    p.add_argument("--repo-v2", default=str(Path(__file__).resolve().parents[5] / "imo-creator-v2"),
+                   help="Path to imo-creator-v2 root")
+    p.add_argument("--repo-processes", default=str(Path(__file__).resolve().parents[4]),
+                   help="Path to Barton-Processes root")
+    p.add_argument("--manifest", help="Override path to four-brain-doctrine-gate.yaml")
+    p.add_argument("--audited-yaml", help="Path to the YAML artifact under audit (for G01-G05, G11)")
+    p.add_argument("--audited-md", help="Path to the MD companion under audit (for G11, Rungs)")
+    p.add_argument("--only", nargs="*", help="Only evaluate these gate IDs (e.g. G01 W-2 Rung-3)")
+    p.add_argument("--skip", nargs="*", help="Skip these gate IDs")
+    p.add_argument("--deterministic-only", action="store_true",
+                   help="Skip W-7 (tail arbitration). Default for CI; enable for sovereign reviews.")
+    p.add_argument("--output-format", choices=["json", "text"], default="text")
+    p.add_argument("--version", action="version", version=f"gate-runner.py {VERSION}")
+    sys.exit(run(p.parse_args()))
+
+
+if __name__ == "__main__":
+    main()

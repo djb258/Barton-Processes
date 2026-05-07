@@ -3,6 +3,8 @@ version: "2.0.0"
 status: TEMPLATE
 last_modified: "2026-05-06"
 paired_md: PLANNER-INTAKE-TEMPLATE.md
+mission_control_exempt: true
+mission_control_exempt_reason: Companion to PLANNER-INTAKE-TEMPLATE.md; same exemption per BAR-070-MC-WIRE Plan Book §7.
 purpose: >
   Thin operator-facing source packet. Operator answers four mandatory questions
   (IMO + Type) plus a conditional follow-up and six optional fields. The Planner

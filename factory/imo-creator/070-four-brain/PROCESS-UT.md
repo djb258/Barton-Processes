@@ -1,9 +1,39 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: four-brain
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/imo-creator/processes/four-brain
+    imo_topology: hub
+    cc_layer: CC-01
+    secrets_provider: doppler
+    acceptance_criteria: All 19 gates PASS via gate-runner.py + W-7 PASS via Codex tail arbitration; no-op BAR produces 4 LBB rows + 1 Audit Book.
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-06T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.070-four-brain
+    species: UT-Body
+    version: "1.3.1"
+    last_modified: "2026-05-06"
+    companion_manifest: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
+
 # PROCESS-UT — Four-Brain Aviation Model (PROC-070)
 
 **UT-Body species per Book Law (`atlas/constants/BOOK_LAW.md` v1.5.0)**
 **Y-junction conformant per BS Law (`atlas/constants/BS_LAW.md` v1.5.0)**
 **UT v2.8.0 + UT_CHECKLIST v1.3.1 conformant**
 **Companion YAML: `Barton-Processes/factory/imo-creator/070-four-brain/four-brain.yaml`**
+**Certification:** `provisional-runtime` (will promote to `repo-certified` after next clean audit, `deployment-certified` after first successful runtime BAR)
 
 ---
 

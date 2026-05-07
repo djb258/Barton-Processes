@@ -1,3 +1,8 @@
+---
+mission_control_exempt: true
+mission_control_exempt_reason: Internal developer README for the garage. Not operator-facing. Per BAR-070-MC-WIRE Plan Book §7.
+---
+
 # Process 070 Garage Intake
 
 ## Purpose

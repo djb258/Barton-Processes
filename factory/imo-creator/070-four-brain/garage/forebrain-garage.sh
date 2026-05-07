@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# mission_control_exempt: true
+# mission_control_exempt_reason: Runtime orchestrator. Pipeline state surfaces via mission-control.system.pipeline slot. Per BAR-070-MC-WIRE Plan Book §7.
 # =============================================================================
 # forebrain-garage.sh — Process 070 Four-Brain runtime
 #
@@ -270,9 +272,53 @@ ps_escape() {
   printf "%s" "$value" | sed "s/'/''/g"
 }
 
+# F-003: snapshot_forbidden_baseline
+# Called at the START of run_mechanic, before the Mechanic CLI runs.
+# Records SHA256 of each forbidden path so assert_no_locked_constants_touched
+# can compare post-run deltas only (ignoring pre-existing workspace dirtiness).
+snapshot_forbidden_baseline() {
+  local run_dir="$1"
+  local v2_root="$ROOT/../imo-creator-v2"
+  local baseline_file="$run_dir/.forbidden_baseline.sha256"
+  local forbidden_paths=(
+    "$v2_root/atlas/constants/FOUNDATIONAL_BEDROCK.md"
+    "$v2_root/atlas/constants/DMJ.md"
+    "$v2_root/atlas/constants/FCE.md"
+    "$v2_root/atlas/skills/skill-creator/SKILL.md"
+    "$v2_root/atlas/manifests/STRUCTURE_MANIFEST.yaml"
+    "$v2_root/atlas/constants/UNIFIED_TEMPLATE.md"
+    "$v2_root/atlas/dyno/us.py"
+    "$v2_root/atlas/dyno/up.py"
+    "$v2_root/atlas/constants/HOW_TO_BUILD_ANYTHING.md"
+    "$v2_root/atlas/constants/KEY.md"
+    "$v2_root/atlas/constants/UT_CHECKLIST.md"
+    "$v2_root/atlas/constants/BARTON_ENTERPRISES_CTB.md"
+    "$v2_root/atlas/ATLAS.md"
+    "$v2_root/atlas/constants/THREE_LAYERS_SPINE.md"
+    "$v2_root/atlas/constants/BOOK_LAW.md"
+    "$v2_root/atlas/constants/FOUR_BRAIN_AVIATION.md"
+    "$v2_root/atlas/constants/BS_LAW.md"
+    "$v2_root/atlas/constants/mission-control.yaml"
+  )
+  # Clear and write fresh baseline hashes
+  : > "$baseline_file"
+  for path in "${forbidden_paths[@]}"; do
+    if [[ -f "$path" ]]; then
+      local hash
+      hash="$(sha256sum "$path" 2>/dev/null | awk '{print $1}' || openssl dgst -sha256 "$path" 2>/dev/null | awk '{print $NF}' || true)"
+      printf '%s  %s\n' "${hash:-MISSING}" "$path" >> "$baseline_file"
+    else
+      printf '%s  %s\n' "ABSENT" "$path" >> "$baseline_file"
+    fi
+  done
+  echo "$baseline_file"
+}
+
 # F-003: assert_no_locked_constants_touched
-# Called after every mechanic CLI invocation. Checks git diff against the 17
-# sovereign-locked constants + mission-control.yaml. Any diff → BLOCK pipeline.
+# Called after every mechanic CLI invocation. Compares post-run SHA256 of each
+# forbidden path against the baseline captured before the Mechanic ran.
+# Only flags violations introduced by the Mechanic CLI — pre-existing workspace
+# dirtiness in imo-creator-v2 does NOT trigger a false block.
 assert_no_locked_constants_touched() {
   local run_dir="${1:-}"
   local v2_root="$ROOT/../imo-creator-v2"
@@ -296,12 +342,28 @@ assert_no_locked_constants_touched() {
     "$v2_root/atlas/constants/BS_LAW.md"
     "$v2_root/atlas/constants/mission-control.yaml"
   )
+  local baseline_file="${run_dir:+$run_dir/.forbidden_baseline.sha256}"
   local violations=()
   for path in "${forbidden_paths[@]}"; do
+    local baseline_hash="" post_hash=""
+    # Load baseline hash if snapshot exists
+    if [[ -n "$baseline_file" && -f "$baseline_file" ]]; then
+      baseline_hash="$(grep -F "  $path" "$baseline_file" 2>/dev/null | awk '{print $1}' || true)"
+    fi
+    # Compute post-run hash
     if [[ -f "$path" ]]; then
-      local rel_path
-      rel_path="$(git -C "$v2_root" ls-files --error-unmatch "$(realpath --relative-to="$v2_root" "$path" 2>/dev/null || echo "$path")" 2>/dev/null || true)"
-      if git -C "$v2_root" diff --name-only HEAD -- "$path" 2>/dev/null | grep -q .; then
+      post_hash="$(sha256sum "$path" 2>/dev/null | awk '{print $1}' || openssl dgst -sha256 "$path" 2>/dev/null | awk '{print $NF}' || true)"
+    else
+      post_hash="ABSENT"
+    fi
+    # If we have a baseline, compare hashes (delta-only check)
+    # If no baseline, fall back to git diff HEAD (legacy behaviour)
+    if [[ -n "$baseline_hash" ]]; then
+      if [[ "$post_hash" != "$baseline_hash" ]]; then
+        violations+=("$path")
+      fi
+    else
+      if [[ -f "$path" ]] && git -C "$v2_root" diff --name-only HEAD -- "$path" 2>/dev/null | grep -q .; then
         violations+=("$path")
       fi
     fi
@@ -512,7 +574,16 @@ write_d1_transition() {
   local json_body
   json_body="{\"bar_id\":$eb,\"run_id\":$erun,\"role\":$escaped_role,\"action\":$ea"
   json_body="${json_body},\"timestamp\":$ets"
-  json_body="${json_body},\"atlas_sections_consulted\":\"FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070\""
+  # Finding 4: role-specific citation sets per Step-0 doctrine requirements
+  local atlas_citations
+  case "$role" in
+    planner)  atlas_citations="KEY,BS_LAW,BOOK_LAW,FOUR_BRAIN_AVIATION,PLANNER_ROLE,MISSION_CONTROL,ATLAS,four-brain-doctrine-gate" ;;
+    foreman)  atlas_citations="FOUR_BRAIN_AVIATION,MISSION_CONTROL,MECHANIC_ROLE,paired-artifacts,four-brain-doctrine-gate" ;;
+    mechanic) atlas_citations="FOUR_BRAIN_AVIATION,MECHANIC_ROLE,MISSION_CONTROL,ATLAS" ;;
+    auditor)  atlas_citations="four-brain-doctrine-gate,AUDITOR_ROLE,BS_LAW,BOOK_LAW,MISSION_CONTROL,ATLAS" ;;
+    *)        atlas_citations="FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070" ;;
+  esac
+  json_body="${json_body},\"atlas_sections_consulted\":\"$atlas_citations\""
   if [[ -n "$lbb_record_id_val" ]]; then
     json_body="${json_body},\"lbb_record_id\":$elbb_record_id"
   fi
@@ -669,6 +740,15 @@ write_lbb_transition() {
       echo "[four-brain] write_lbb_transition: --defer-lbb requires FOUR_BRAIN_LOCAL_DEV=true. Live LBB logging is mandatory in non-local environments." >&2
       return 1
     fi
+    # Finding 4: role-specific citation sets in deferred stub
+    local deferred_citations
+    case "$role" in
+      planner)  deferred_citations="KEY,BS_LAW,BOOK_LAW,FOUR_BRAIN_AVIATION,PLANNER_ROLE,MISSION_CONTROL,ATLAS,four-brain-doctrine-gate" ;;
+      foreman)  deferred_citations="FOUR_BRAIN_AVIATION,MISSION_CONTROL,MECHANIC_ROLE,paired-artifacts,four-brain-doctrine-gate" ;;
+      mechanic) deferred_citations="FOUR_BRAIN_AVIATION,MECHANIC_ROLE,MISSION_CONTROL,ATLAS" ;;
+      auditor)  deferred_citations="four-brain-doctrine-gate,AUDITOR_ROLE,BS_LAW,BOOK_LAW,MISSION_CONTROL,ATLAS" ;;
+      *)        deferred_citations="FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070" ;;
+    esac
     # Write deferred stub with all 12 canonical LBB schema fields
     # Canonical fields: record_id, bar_id, role, action, evidence_hash,
     #   atlas_sections_consulted, timestamp, sovereign_ref, subject_id,
@@ -680,7 +760,7 @@ write_lbb_transition() {
   "role": "$role",
   "action": "$action",
   "evidence_hash": null,
-  "atlas_sections_consulted": "FOUR_BRAIN_AVIATION;FOUR_BRAIN_ROUTING;PROC-070",
+  "atlas_sections_consulted": "$deferred_citations",
   "timestamp": "$ts",
   "sovereign_ref": "imo-creator",
   "subject_id": "processes",
@@ -886,11 +966,13 @@ The dispatch packet MUST contain:
 10. Foreman role declaration: "Foreman role: Sonnet/default routing"
 
 ==============================================================================
-RULES
+RULES (verbatim role locks from FOUR_BRAIN_AVIATION.md §6 — Foreman Lock)
 ==============================================================================
 - Do not build. Do not audit. Do not re-architect the Plan Book.
 - Convert the Plan Book into LITERAL Mechanic work orders. No interpretation, no creative additions.
-- If the Plan Book is missing the mission_control_wiring section, mark BLOCKED and return — this is a Planner-side defect (W-2). Do NOT improvise dispositions.
+- Foreman NEVER flips an Auditor verdict. FAIL stays FAIL until the Auditor itself sees PASS on its own re-run. No "close enough." No human shortcut.
+- Foreman NEVER fixes code. Mechanic is the only repairer. On Strike-1, dispatch Mechanic. On Strike-2, escalate to Opus mechanic. On Strike-3, route to Troubleshoot/Train — NOT another repair dispatch.
+- Foreman cannot dispatch a BAR without a signed Plan Book. If the Plan Book is missing the mission_control_wiring section, mark BLOCKED and return — Planner-side defect (W-2). Do NOT improvise dispositions.
 - If the Plan Book is missing required sections (P=1, work orders, allowed write scope), mark BLOCKED and return — Planner re-runs.
 - Escalate ambiguity to the Planner; do not let it become a Mechanic problem.
 PROMPT
@@ -913,7 +995,11 @@ PROCESS: 070 Four-Brain
 BAR: $bar_id
 ENGINE: Sonnet (Strike-1 retry escalates to Opus). Build only what the Foreman dispatch says.
 
-You are the Mechanic. Construction crew. Do NOT audit your own work.
+You are the Mechanic. Construction crew. Per FOUR_BRAIN_AVIATION.md §6 (Mechanic Lock):
+- You build to the Plan Book, never beyond it.
+- You produce UT Books — the artifact files you write ARE the UT-Body species, shelved in the Library with HEIR coordinates referencing the Plan Book. MECHANIC-OUTPUT.md is the cover sheet, not the deliverable.
+- You are the repairer on FAIL. On Strike-1 you re-run against the corrected Plan Book.
+- You NEVER self-audit. Auditor (Codex) is the only verdict. Mechanic ≠ Auditor.
 
 ==============================================================================
 REQUIRED READ SET
@@ -1020,13 +1106,19 @@ write_auditor_prompt() {
   mechanic_ref="$(agent_path "$run_dir/MECHANIC-OUTPUT.md")"
   verdict_ref="$(agent_path "$run_dir/AUDIT-VERDICT.md")"
   local v2_atlas="$ROOT/../imo-creator-v2/atlas"
+  local gate_runner_ref
+  gate_runner_ref="$(agent_path "$ROOT/factory/imo-creator/070-four-brain/garage/gate-runner.py")"
   cat > "$prompt" <<PROMPT
 ROLE: AUDITOR
 PROCESS: 070 Four-Brain
 BAR: $bar_id
 ENGINE: Codex (DIFFERENT inference engine than Mechanic — Aviation Model: mechanic ≠ auditor).
 
-You are the Auditor. Inspect work you did not build. Certify or reject.
+You are the Auditor. Per Atlas (FOUR_BRAIN_AVIATION.md §75-94 + four-brain-doctrine-gate.yaml#determinism_gate), gate predicates are evaluated DETERMINISTICALLY by gate-runner.py. You do NOT evaluate them inferentially. Your role is:
+  1. Invoke the deterministic gate runner.
+  2. Tail-arbitrate W-7 (disposition sanity) — the ONE Atlas-sanctioned LLM-judgment gate.
+  3. Explain any FAIL with a diagnostic narrative, citing the runner's evidence.
+  4. Emit the verdict.
 
 ==============================================================================
 REQUIRED READ SET
@@ -1036,12 +1128,10 @@ Inputs to audit:
 - $dispatch_ref                                          (Foreman dispatch)
 - $mechanic_ref                                          (Mechanic completion report)
 
-Doctrine + gate spec (source of truth — predicates live HERE, not in this prompt):
-- $v2_atlas/manifests/four-brain-doctrine-gate.yaml      (G01-G12 + W-1..W-7 — your gate definitions)
-- $v2_atlas/constants/AUDITOR_ROLE.md §7b                (your role contract; W-1..W-7 detail)
-- $v2_atlas/constants/BS_LAW.md                          (Y-junction predicate)
-- $v2_atlas/constants/BOOK_LAW.md                        (species shape predicates)
-- $v2_atlas/constants/MISSION_CONTROL.md §10             (wiring authority chain — verify Planner declared, Mechanic executed)
+Doctrine (read for context only — DO NOT evaluate predicates from this; the runner does):
+- $v2_atlas/manifests/four-brain-doctrine-gate.yaml      (predicate source of truth — read by gate-runner.py, not by you)
+- $v2_atlas/constants/AUDITOR_ROLE.md §7b                (W-7 sanity-check criteria)
+- $v2_atlas/constants/MISSION_CONTROL.md §10             (W-7 reference: WIRE/EXEMPT/NEW_SLOT disposition contract)
 - $v2_atlas/ATLAS.md §6 Governance, §4.5 Repair SOP
 
 Process context:
@@ -1049,51 +1139,81 @@ Process context:
 - $four_brain_ref
 
 ==============================================================================
-REQUIRED OUTPUT — AUDIT-VERDICT.md
+STEP 1 — RUN THE DETERMINISTIC GATE RUNNER (mandatory, first action)
 ==============================================================================
+Invoke the runner against this BAR's artifacts:
+
+  python "$gate_runner_ref" \\
+    --bar-id "$bar_id" \\
+    --audited-yaml <path to .yaml under audit> \\
+    --audited-md <path to .md under audit> \\
+    --output-format json \\
+    --deterministic-only
+
+The runner reads predicates from four-brain-doctrine-gate.yaml, evaluates each gate by parse + compare (no LLM), and emits JSON:
+  {
+    "verdict": "PASS" | "FAIL",
+    "p_value": 1 | 0,
+    "gates_passed": [...],
+    "gates_failed": [{"id": ..., "evidence": ..., "strike_target": ...}, ...],
+    "deferred_to_tail": ["W-7"],
+    "diagnostic_vector": [...]
+  }
+
+Capture the runner's JSON output. This IS your deterministic verdict for G01-G12 + W-1..W-6 + Rung-1..Rung-8. Do NOT re-evaluate these gates inferentially. Atlas: ai_on_spine_forbidden.
+
+==============================================================================
+STEP 2 — W-7 TAIL ARBITRATION (the ONLY gate you evaluate by judgment)
+==============================================================================
+The runner defers W-7 to you because it is the one gate that requires architectural judgment, not parse + compare. Per AUDITOR_ROLE.md §7b:
+
+  W-7 — Disposition sanity check: for each entry in the Plan Book's
+        mission_control_wiring section, did the Planner make a defensible
+        architectural call?
+
+For each artifact's disposition:
+  - WIRE → does the chosen slot's render_mode and data_source contract actually fit this artifact's nature, or is the wire forced?
+  - EXEMPT → would a sovereign reasonably want this surfaced in Mission Control? If the rationale doesn't hold against that question, the disposition is indefensible.
+  - NEW_SLOT_NEEDED → is the proposed slot structurally coherent (heir_id + ctb_position + render_mode from UI_STYLE_GUIDE.md + data_source contract)?
+
+Emit W-7 verdict: PASS or FAIL with one-sentence rationale per artifact.
+
+W-7 strike target on FAIL: Planner.
+
+==============================================================================
+STEP 3 — DIAGNOSTIC NARRATIVE (only if any gate failed)
+==============================================================================
+If the runner returned any FAIL, write a brief diagnostic explanation citing the runner's evidence string and the Atlas source for the predicate. Do NOT re-evaluate the predicate. Do NOT add findings the runner didn't catch — Atlas envelope is the runner's gates plus W-7. Anything else is out-of-scope.
+
+==============================================================================
+STEP 4 — EMIT AUDIT-VERDICT.md
+==============================================================================
+Write to: $verdict_ref
+
 First line MUST be exactly:
   VERDICT: P=1
 OR
   VERDICT: P=0
 
-Body must include:
-- Per-gate evaluation table — every gate G01-G12 and W-1..W-7 with PASS/FAIL + evidence pointer
-- Strike target on each FAIL (Mechanic vs Planner — see below)
-- Diagnostic vector for any FAIL: which predicate broke, by how much, where
-- Atlas sections cited
-- Mission Control wiring sanity check (W-7 — see below)
-
-==============================================================================
-GATE LIST (run every one — predicates are in four-brain-doctrine-gate.yaml)
-==============================================================================
-G01-G12 — BS Law / Book Law / paired-artifact / LBB row schema / CI-gate / drift-sweep gates
-  Source: four-brain-doctrine-gate.yaml#gates
-  Strike target: Mechanic (these are execution gates)
-
-W-1  — Every produced/modified artifact has HEIR ID present in spoke frontmatter   [strike: Mechanic]
-W-2  — Plan Book contains mission_control_wiring section with disposition for every artifact   [strike: PLANNER]
-W-3  — WIRE: matched slot's data_source references the artifact's path/glob/query   [strike: Mechanic]
-W-4  — Paired Books (.md + .yaml) registered in paired-artifacts.yaml   [strike: Mechanic]
-W-5  — LBB contains row tagged 'mission-control-wiring' for each produced/modified artifact   [strike: Mechanic]
-W-6  — Mechanic did NOT modify Mission Control skeleton without sovereign amendment   [strike: Mechanic]
-W-7  — DISPOSITION SANITY CHECK: did the Planner make a defensible call per artifact?   [strike: PLANNER]
-       (e.g., is something marked EXEMPT that a sovereign would reasonably want surfaced?
-        Is a NEW_SLOT_NEEDED proposal structurally coherent: heir_id + ctb_position + render_mode + data_source?
-        Is a WIRE pointing at a slot whose render_mode actually fits the artifact's nature?)
+Body:
+- Runner JSON output (verbatim, in a code block)
+- W-7 verdict per artifact with rationale
+- Combined verdict: P=1 only if runner verdict=PASS AND W-7=PASS for all artifacts; else P=0
+- Diagnostic narrative for each FAIL (runner findings + W-7 findings)
+- Strike target per FAIL (per AUDITOR_ROLE.md §7b — the runner emits this; carry forward)
 
 ==============================================================================
 RULES
 ==============================================================================
 - Do NOT build. Do NOT modify any artifact. Audit-only.
-- You are a different inference engine than the Mechanic. Inspector ≠ construction crew.
-- A FAIL on any single gate = P=0. P=1 requires every gate PASS.
+- You are a different inference engine than the Mechanic.
+- Predicates are evaluated by gate-runner.py. You do NOT re-evaluate them. (Atlas: ai_on_spine_forbidden — FOUR_BRAIN_AVIATION.md §75-94.)
+- W-7 is the only gate you arbitrate by judgment. All other gates: cite the runner.
 - Strike-1 (first FAIL) → Mechanic re-runs against corrected dispatch (or Planner re-drafts if W-2/W-7).
 - Strike-2 (second FAIL on same BAR) → escalate to Opus mechanic.
 - Strike-3 (third FAIL) → Troubleshoot/Train, NOT another repair. Plan Book is wrong; rewrite the blueprint.
-- Do not fix findings.
-- Check against the Plan Book, Foreman dispatch, evidence requirements, and Aviation Model.
-- P=1 only if acceptance criteria and required evidence are satisfied.
-- P=0 must include blockers and repair direction for Foreman.
+- Do not fix findings. Audit only.
+- P=1 requires runner=PASS AND W-7=PASS. P=0 if either fails.
 PROMPT
   echo "$prompt"
 }
@@ -1382,6 +1502,83 @@ run_codex_cli() {
   return "$rc"
 }
 
+# run_planner_for_bar BAR-ID [--execute] [--auto-continue] [--defer-lbb] [--planner-model MODEL]
+# BAR-scoped planner rerun: runs the Planner for an explicit bar_id (already claimed/running),
+# bypassing the READY_FOR_PLANNER scan used by run_once. Used by run_strike1 for Planner-branch reruns.
+run_planner_for_bar() {
+  local bar_id="$1"
+  shift || true
+  local execute="false"
+  local auto_continue="true"
+  local defer_lbb="false"
+  local planner_model="opus"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --execute) execute="true"; shift ;;
+      --auto-continue) auto_continue="true"; shift ;;
+      --defer-lbb) defer_lbb="true"; shift ;;
+      --planner-model) planner_model="${2:-opus}"; shift 2 ;;
+      *) echo "Unknown run_planner_for_bar option: $1" >&2; exit 2 ;;
+    esac
+  done
+  require_bar_id "$bar_id"
+  local intake_yaml="$INBOX/$bar_id/planner-intake.yaml"
+  local ts run_dir
+  ts="$(date -u +"%Y%m%dT%H%M%SZ")"
+  run_dir="$RUNS/$bar_id/$ts"
+  mkdir -p "$run_dir"
+  local prompt plan_path
+  prompt="$(write_planner_prompt "$bar_id" "$run_dir")"
+  plan_path="$ROOT/docs/plans/$bar_id/PLAN-BOOK.md"
+  {
+    echo "bar_id: $bar_id"
+    echo "run_dir: $run_dir"
+    echo "prompt: $prompt"
+    echo "planner_cli: claude"
+    echo "planner_model: $planner_model"
+    echo "execute: $execute"
+    echo "defer_lbb: $defer_lbb"
+    echo "plan_book: $plan_path"
+    echo "started_at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    echo "origin: run_planner_for_bar (strike reroute)"
+  } > "$run_dir/run.yaml"
+  if [[ "$execute" != "true" ]]; then
+    echo "$prompt"
+    return 0
+  fi
+  if run_planner_cli "$planner_model" "$prompt" "$run_dir" > "$run_dir/planner-output-path.txt"; then
+    if [[ -f "$plan_path" ]]; then
+      if ! write_lbb_transition "$bar_id" "planner" "dispatch" "$run_dir" "$defer_lbb" > "$run_dir/lbb-planner-path.txt"; then
+        update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
+        return 1
+      fi
+      if [[ "$auto_continue" == "true" ]]; then
+        if ! sign_plan_book_gate "$bar_id" "$run_dir" > "$run_dir/approval-checklist-plan-book-path.txt"; then
+          log_transition "$bar_id" "$run_dir" "planner" "approval-check" "PLANNER_RUNNING" "BLOCKED" "$plan_path" "$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md" "blocked" "Plan Book approval checklist failed (strike reroute)."
+          update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
+          return 1
+        fi
+        update_status "$intake_yaml" "PLANNER_RUNNING" "PLAN_BOOK_SIGNED"
+        log_transition "$bar_id" "$run_dir" "planner" "approval-check" "PLANNER_RUNNING" "PLAN_BOOK_SIGNED" "$plan_path" "$run_dir/APPROVAL-CHECKLIST-PLAN_BOOK_SIGNED.md" "done" "Auto-continue signed Plan Book after strike reroute checklist pass."
+      else
+        update_status "$intake_yaml" "PLANNER_RUNNING" "REVIEW_PLAN_BOOK"
+        log_transition "$bar_id" "$run_dir" "planner" "dispatch" "PLANNER_RUNNING" "REVIEW_PLAN_BOOK" "$plan_path" "" "done" "Planner (strike reroute) produced Plan Book; review required."
+      fi
+      write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
+      write_final_pointer "$bar_id" "$(current_status "$bar_id")" "$plan_path" "$run_dir" > "$run_dir/final-product-pointer.txt"
+      echo "$plan_path"
+    else
+      update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
+      echo "Planner (strike reroute) completed but did not create Plan Book: $plan_path" >&2
+      return 1
+    fi
+  else
+    update_status "$intake_yaml" "PLANNER_RUNNING" "BLOCKED"
+    echo "Planner CLI failed (strike reroute). See $run_dir" >&2
+    return 1
+  fi
+}
+
 run_once() {
   local execute="false"
   local auto_continue="true"   # G-19 default: pipeline auto-advances; sovereign gates only at template-drop and Auditor verdict
@@ -1584,6 +1781,9 @@ run_mechanic() {
   update_status "$intake_yaml" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING"
   claim_role_api "$bar_id" "mechanic"
   log_transition "$bar_id" "$run_dir" "mechanic" "start" "FOREMAN_DISPATCHED" "MECHANIC_RUNNING" "$prompt" "" "done" "Mechanic stage started."
+  # Finding 3: snapshot forbidden-path hashes BEFORE Mechanic CLI runs so
+  # assert_no_locked_constants_touched compares run-deltas only, not ambient workspace state.
+  snapshot_forbidden_baseline "$run_dir" > /dev/null
   local cli_rc=0
   run_claude_cli "$mechanic_model" "$prompt" "$run_dir/mechanic-output.raw.md" || cli_rc=$?
   # F-001: persist mechanic model for engine separation check in run_auditor (G12)
@@ -1609,6 +1809,51 @@ run_mechanic() {
     if ! write_lbb_transition "$bar_id" "mechanic" "edit" "$run_dir" "$defer_lbb" > "$run_dir/lbb-mechanic-path.txt"; then
       update_status "$intake_yaml" "MECHANIC_RUNNING" "BLOCKED"
       return 1
+    fi
+    # Finding 2: emit artifact-level wiring LBB rows for W-5 mission-control-wiring evidence.
+    # Parse MECHANIC-OUTPUT.md for mission_control_wiring artifacts and write one
+    # wiring-tagged LBB row per produced/modified artifact.
+    if grep -q "mission_control_wiring" "$run_dir/MECHANIC-OUTPUT.md" 2>/dev/null; then
+      local wiring_artifacts
+      mapfile -t wiring_artifacts < <(
+        grep -A 999 "mission_control_wiring" "$run_dir/MECHANIC-OUTPUT.md" 2>/dev/null \
+          | grep -E "^\s*-\s+\S+" | sed 's/^\s*-\s*//' | head -20 || true
+      )
+      local wiring_idx=0
+      for artifact_path in "${wiring_artifacts[@]}"; do
+        [[ -z "$artifact_path" ]] && continue
+        wiring_idx=$(( wiring_idx + 1 ))
+        local wiring_output="$run_dir/LBB-mechanic-wiring-${wiring_idx}.json"
+        if [[ -x "$LBB_SCRIPT" ]]; then
+          "$LBB_SCRIPT" \
+            --bar-id "$bar_id" \
+            --role "mechanic" \
+            --action "wiring" \
+            --subject processes \
+            --evidence "$run_dir" \
+            --tags "mission-control-wiring" \
+            > "$wiring_output" || true
+        elif [[ "${FOUR_BRAIN_LOCAL_DEV:-false}" == "true" ]]; then
+          local wts
+          wts="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          cat > "$wiring_output" <<EOF
+{
+  "record_id": "deferred-wiring-$(date -u +%s)-${wiring_idx}-$bar_id",
+  "bar_id": "$bar_id",
+  "role": "mechanic",
+  "action": "wiring",
+  "evidence_hash": null,
+  "atlas_sections_consulted": "FOUR_BRAIN_AVIATION,MECHANIC_ROLE,MISSION_CONTROL,ATLAS",
+  "timestamp": "$wts",
+  "sovereign_ref": "imo-creator",
+  "subject_id": "processes",
+  "orbt_mode": "BUILD",
+  "gate_verdicts": null,
+  "notes": "W-5 artifact wiring: $artifact_path (DEFERRED_LOCAL_ONLY)"
+}
+EOF
+        fi
+      done
     fi
     if [[ "$auto_continue" == "true" ]]; then
       update_status "$intake_yaml" "MECHANIC_RUNNING" "MECHANIC_DONE"
@@ -2099,9 +2344,11 @@ run_strike1() {
     update_status "$intake_yaml" "$(current_status "$bar_id")" "PLANNER_RUNNING"
     log_transition "$bar_id" "$run_dir" "foreman" "reconcile-fail" "BLOCKED" "PLANNER_RUNNING" "$intake_yaml" "" "done" "Strike-$strike_count: Planner-targeted failures; routing to Planner re-draft."
     # write_planner_prompt checks for STRIKE-CONTEXT.md and appends to read set
+    # Finding 1: run_once scans READY_FOR_PLANNER and rejects an explicit bar_id.
+    # Use run_planner_for_bar which takes an explicit bar_id directly.
     local planner_rerun_args=("$bar_id" --execute)
     if [[ "$defer_lbb" == "true" ]]; then planner_rerun_args+=(--defer-lbb); fi
-    if ! run_once "${planner_rerun_args[@]}"; then
+    if ! run_planner_for_bar "${planner_rerun_args[@]}"; then
       echo "[four-brain] Planner re-draft failed for $bar_id." >&2
       return 1
     fi

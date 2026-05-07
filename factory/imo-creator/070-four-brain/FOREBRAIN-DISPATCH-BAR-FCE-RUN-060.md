@@ -1,3 +1,8 @@
+---
+mission_control_exempt: true
+mission_control_exempt_reason: Historical dispatch artifact for prior BAR (FCE-RUN-060). Stale runtime state. Per BAR-070-MC-WIRE Plan Book §7.
+---
+
 # Forebrain Dispatch: BAR-FCE-RUN-060-PLANNER
 ## Process 070 Planner Start Packet
 ### Status: READY

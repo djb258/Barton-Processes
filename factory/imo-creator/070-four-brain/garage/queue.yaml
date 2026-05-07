@@ -2,6 +2,8 @@ name: process-070-garage-queue
 version: "1.1.0"
 status: BUILD
 owner_process: bp.070-four-brain
+mission_control_exempt: true
+mission_control_exempt_reason: Mutable runtime queue state. Pipeline state surfaced via mission-control.system.pipeline slot. Per BAR-070-MC-WIRE Plan Book §7.
 purpose: >
   Path-based intake queue for Process 070 Planner work. Agents deposit filled
   Planner Intake packets under garage/inbox. Planner claims packets marked
