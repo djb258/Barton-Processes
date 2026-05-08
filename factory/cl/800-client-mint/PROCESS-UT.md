@@ -12,7 +12,8 @@ outside:
 inside:
   heir:
     process_id: bp.800
-    version: "1.0.0"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -57,7 +58,7 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/cl/800-client-mint |
@@ -499,18 +500,22 @@ No logbook during BUILD.
 
 ## §14. SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none |
-| 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented |
+| 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived. LBB: pending |
+| 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
+^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

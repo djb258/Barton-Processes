@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.200
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-03"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
   orbt:
     library_state: REPAIR
@@ -577,22 +577,30 @@ No logbook during BUILD/REPAIR.
 
 ## §14 SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-19 | Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (87-95% LinkedIn hit rate) | processes/Session 2026-03-19 |
-| 2026-03-24 | MANIFEST.md written, documentation chain created | session/2026-03-24-full-session-final |
-| 2026-03-29 | Initial PROCESS.md created (v1 format) | none |
-| 2026-04-01 | Full PROCESS.md rewrite to v3 against slot_workbench; C&V audit; gate chain documented | none |
-| 2026-04-02 | Math engine added (6 comparators); Gate A updated to recon_organized_people; funnel built (7,209 free fills); DOL 5500 signer match (1,979 fills) | a65dd7b1, 5db86e97, 54f035e9 |
-| 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; all fragments archived; FP-200-01 added to failure registry; ORBT set to REPAIR (Strike 1) | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-19 | v0.0.1 | legacy-session | `CREATE` | Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (LBB: processes/Session 2026-03-19) |
+| 2026-03-24 | v0.0.2 | legacy-session | `CREATE` | MANIFEST.md written, documentation chain created (LBB: session/2026-03-24-full-session-final) |
+| 2026-03-29 | v0.0.3 | legacy-session | `CREATE` | Initial PROCESS.md created (v1 format) |
+| 2026-04-01 | v0.0.4 | legacy-session | `RESTRUCTURE` | Full PROCESS.md rewrite to v3 against slot_workbench; C&V audit; gate chain documented |
+| 2026-04-02 | v0.0.5 | legacy-session | `AMEND` | Math engine added (6 comparators); Gate A updated to recon_organized_people; funnel built; DOL 5500 signer match (LBB: a65dd7b1, 5db86e97, 54f035e9) |
+| 2026-04-28 | v1.0.0 | Claude Code | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived; FP-200-01 added; ORBT → REPAIR (Strike 1) |
+| 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+
+^[ROW-2026-03-19]: Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (87-95% LinkedIn hit rate) | LBB Record: processes/Session 2026-03-19
+^[ROW-2026-03-24]: MANIFEST.md written, documentation chain created | LBB Record: session/2026-03-24-full-session-final
+^[ROW-2026-03-29]: Initial PROCESS.md created (v1 format) | LBB Record: none
+^[ROW-2026-04-01]: Full PROCESS.md rewrite to v3 against slot_workbench; C&V audit; gate chain documented | LBB Record: none
+^[ROW-2026-04-02]: Math engine added (6 comparators); Gate A updated to recon_organized_people; funnel built (7,209 free fills); DOL 5500 signer match (1,979 fills) | LBB Records: a65dd7b1, 5db86e97, 54f035e9
+^[ROW-2026-04-28]: UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; all fragments archived; FP-200-01 added to failure registry; ORBT set to REPAIR (Strike 1) | LBB: pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-19 |
-| Last Modified | 2026-04-29 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v1.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

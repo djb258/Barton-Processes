@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.300
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/300-blog-worker/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -62,7 +62,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 2 (FP-301 RESOLVED, FP-302 RESOLVED) |
 | Authority | inherited — imo-creator-v2 (sovereign) + Barton-Processes (parent) |
-| Last Modified | 2026-04-02 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-52, BAR-187, BAR-193, BAR-197 |
 | Owner | TBV — no named human owner in source fragments |
 | ctb_node | barton-enterprises/svg-agency/outreach/300-blog-worker |
@@ -592,24 +592,34 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 
 ## §14 SESSION LOG
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-29 | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design | none |
-| 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none |
-| 2026-04-02 | Run 1: full 32,556 company recon. 95.9% capture. All metrics passed. BUILD→OPERATE (pending cert). | a65dd7b1 |
-| 2026-04-02 | Math engine integrated: 12 comparators C_i, tolerances k_i, P(x;θ) per step. 5-step model. Organizer added. | a65dd7b1 |
-| 2026-04-02 | Organizer ran all 80K slots: 175,340 entries → 83,085 people (47%), 79,628 LinkedIn (45%), 12,627 garbage (7%). | 5db86e97 |
-| 2026-04-02 | 1,275 free_extraction garbage records purged from workbench. | 5db86e97 |
-| 2026-04-02 | DATA GAP: about_url (69K pages) never scraped. recon_result_urls (93K) never re-parsed. BAR-197 created. | 54f035e9 |
-| 2026-04-28 | UT consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. Source fragments archived. UT v2.7.0 standard. | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-29 | v0.1 | Sonnet Runner | `AMEND` | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design |
+| 2026-04-01 | v0.2 | Sonnet Runner | `AMEND` | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts |
+| 2026-04-02 | v0.3 | Sonnet Runner | `AMEND` | Run 1: full 32,556 company recon. 95.9% capture. All metrics passed. BUILD→OPERATE (pending cert). LBB: a65dd7b1 |
+| 2026-04-02 | v0.4 | Sonnet Runner | `AMEND` | Math engine integrated: 12 comparators C_i, tolerances k_i, P(x;θ) per step. 5-step model. Organizer added. LBB: a65dd7b1 |
+| 2026-04-02 | v0.5 | Sonnet Runner | `AMEND` | Organizer ran all 80K slots: 175,340 entries → 83,085 people (47%), 79,628 LinkedIn (45%), 12,627 garbage (7%). LBB: 5db86e97 |
+| 2026-04-02 | v0.6 | Sonnet Runner | `AMEND` | 1,275 free_extraction garbage records purged from workbench. LBB: 5db86e97 |
+| 2026-04-02 | v0.7 | Sonnet Runner | `AMEND` | DATA GAP: about_url (69K pages) never scraped. recon_result_urls (93K) never re-parsed. BAR-197 created. LBB: 54f035e9 |
+| 2026-04-28 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. Source fragments archived. UT v2.7.0 standard. LBB: pending |
+| 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped 1.0.0→1.0.1 across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-03-29]: 2026-03-29 | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design | none
+^[ROW-2026-04-01]: 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none
+^[ROW-2026-04-02a]: 2026-04-02 | Run 1: full 32,556 company recon. 95.9% capture. All metrics passed. BUILD→OPERATE (pending cert). | a65dd7b1
+^[ROW-2026-04-02b]: 2026-04-02 | Math engine integrated: 12 comparators C_i, tolerances k_i, P(x;θ) per step. 5-step model. Organizer added. | a65dd7b1
+^[ROW-2026-04-02c]: 2026-04-02 | Organizer ran all 80K slots: 175,340 entries → 83,085 people (47%), 79,628 LinkedIn (45%), 12,627 garbage (7%). | 5db86e97
+^[ROW-2026-04-02d]: 2026-04-02 | 1,275 free_extraction garbage records purged from workbench. | 5db86e97
+^[ROW-2026-04-02e]: 2026-04-02 | DATA GAP: about_url (69K pages) never scraped. recon_result_urls (93K) never re-parsed. BAR-197 created. | 54f035e9
+^[ROW-2026-04-28]: 2026-04-28 | UT consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. Source fragments archived. UT v2.7.0 standard. | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-28 |
-| Last Modified | 2026-04-28 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v1.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

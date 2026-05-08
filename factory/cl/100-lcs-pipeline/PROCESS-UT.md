@@ -29,8 +29,8 @@ inside:
   heir:
     process_id: bp.100
     species: UT-Body
-    version: "1.0.1"
-    last_modified: "2026-05-06"
+    version: "1.0.2"
+    last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -93,7 +93,8 @@ bs_law_conformance:
 | ORBT | REPAIR |
 | Strikes | 2 |
 | Authority | inherited — sovereign imo-creator-v2; Barton-Processes parent; company-lifecycle-cl blueprint |
-| Last Modified | 2026-04-29 |
+| Version | v1.0.2 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-131, BAR-132, BAR-37, BAR-48, BAR-152 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/lcs-pipeline |
@@ -620,21 +621,28 @@ No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR 
 
 ## §14 SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-23 | v1 smoke test; compiler architecture defined; fetchCompanyData fixed to D1 | TBV |
-| 2026-03-24 | v2 build + deploy; process extracted to Barton-Processes; MANIFEST/OSAM/ERD/PRD written | TBV |
-| 2026-03-30 | PROCESS.md written from template | TBV |
-| 2026-04-28 | Bounce-rate root cause diagnosed; 356 quarantine rows nulled; 4 MIDs canceled; ORBT → REPAIR | 3cfc7d65-0624-44d9-89cf-cb1946d2de87 |
-| 2026-04-29 | UT consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-23 | v0.0.1 | legacy-session | `CREATE` | v1 smoke test; compiler architecture defined; fetchCompanyData fixed to D1 |
+| 2026-03-24 | v0.0.2 | legacy-session | `CREATE` | v2 build + deploy; process extracted to Barton-Processes; MANIFEST/OSAM/ERD/PRD written |
+| 2026-03-30 | v0.0.3 | legacy-session | `CREATE` | PROCESS.md written from template |
+| 2026-04-28 | v1.0.0 | Claude Code | `REPAIR` | Bounce-rate root cause diagnosed; 356 quarantine rows nulled; 4 MIDs canceled; ORBT → REPAIR (LBB: 3cfc7d65) |
+| 2026-04-29 | v1.0.1 | Claude Code | `CREATE` | UT consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+
+^[ROW-2026-03-23]: v1 smoke test; compiler architecture defined; fetchCompanyData fixed to D1 | LBB: TBV
+^[ROW-2026-03-24]: v2 build + deploy; process extracted to Barton-Processes; MANIFEST/OSAM/ERD/PRD written | LBB: TBV
+^[ROW-2026-03-30]: PROCESS.md written from template | LBB: TBV
+^[ROW-2026-04-28]: Bounce-rate root cause diagnosed; 356 quarantine rows nulled; 4 MIDs canceled; ORBT → REPAIR | LBB Record: 3cfc7d65-0624-44d9-89cf-cb1946d2de87
+^[ROW-2026-04-29]: UT consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived | LBB: pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-29 |
-| Last Modified | 2026-04-29 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v1.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

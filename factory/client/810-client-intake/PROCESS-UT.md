@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -63,7 +63,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — Barton-Processes/factory + imo-creator-v2 sovereign |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-38, BAR-178 |
 | Owner | TBV |
 | ctb_node | TBV — barton-enterprises/svg-agency/client/810-client-intake |
@@ -547,20 +547,26 @@ No logbook during BUILD.
 
 ## §14 SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none |
-| 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none |
-| 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md written from CLAUDE.md + PROCESS.md + heir.yaml; DOCTRINE.md extracted; orbt.yaml created; fragments archived | pending |
-| 2026-05-06 | BAR-810-CONFORM-WIRE — BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-19 | v0.1 | Sonnet Runner | `CREATE` | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created |
+| 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md written from template v2.0.0; known issues documented |
+| 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md written from CLAUDE.md + PROCESS.md + heir.yaml; DOCTRINE.md extracted; orbt.yaml created; fragments archived. LBB: pending |
+| 2026-05-06 | v2.1.0 | Sonnet Mechanic (BAR-810-CONFORM-WIRE) | `REPAIR` | BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms. LBB: pending |
+| 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-03-19]: 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none
+^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none
+^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md written from CLAUDE.md + PROCESS.md + heir.yaml; DOCTRINE.md extracted; orbt.yaml created; fragments archived | pending
+^[ROW-2026-05-06]: 2026-05-06 | BAR-810-CONFORM-WIRE — BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-06 |
-| Version | 2.1.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.1.1 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

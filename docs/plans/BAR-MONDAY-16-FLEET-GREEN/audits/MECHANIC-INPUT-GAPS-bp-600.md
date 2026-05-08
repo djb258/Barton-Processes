@@ -1,0 +1,44 @@
+# MECHANIC-INPUT-GAPS — bp.600 BIT Scoring
+**BAR:** BAR-MONDAY-16-FLEET-GREEN
+**Audited:** 2026-05-08
+**Auditor:** Sonnet (read-only baseline)
+**Process path:** `factory/outreach/600-bit-scoring/`
+
+## Gate Scorecard
+
+| Gate | ID | Result | Detail |
+|------|----|--------|--------|
+| UT template ≥v2.7.0 | G01 | PASS | |
+| UT_CHECKLIST as TABLE | G02 | PASS | |
+| 8 HEIR fields in outside.heir | G03 | FAIL | `services` field absent from PROCESS-UT.md outside.heir frontmatter |
+| Valid 4-state ORBT | G04 | PASS | TROUBLESHOOT_TRAIN — valid 4-state value |
+| ctb_node anchored on barton-enterprises/... | G05 | PASS | |
+| §9b ≥1 real value (no TBD/TBV-only) | G06 | FAIL | Rows 1-4 are TBV; only row 5 has a real value |
+| Kill switch present | G07 | PASS | |
+| §14 columns = date/version/author/action/scope | G08 | FAIL | §14 uses Date / What Was Done / LBB Record (systemic wrong columns) |
+| workflow.yaml outside/inside distinct top-level maps | G09 | PASS | |
+| workflow.yaml all 11 blocks top-level | G10 | PASS | |
+| SHA256 parity | G11 | NEEDS_VERIFY | Cannot verify without script execution |
+| paired-artifacts.yaml presence | G12 | PASS | Pre-confirmed |
+
+## Gaps for Mechanic
+
+### GAP-600-01 — G03: `services` missing from outside.heir
+- **Fault:** `services` field absent from the outside.heir frontmatter block in PROCESS-UT.md
+- **Fix:** Add `services: [bit-scoring, cloudflare-d1, lbb, mission-control]` (verify against wrangler.toml) to outside.heir
+- **Scope:** PROCESS-UT.md outside.heir block
+
+### GAP-600-02 — G06: §9b majority TBV
+- **Fault:** Rows 1-4 of §9b have TBV in the Value column; only row 5 has a real value
+- **Fix:** Mechanic must run the verification commands for rows 1-4 or document the actual observed values; replace TBV with real observed values or explicit "NOT DEPLOYED" status
+- **Scope:** PROCESS-UT.md §9b — rows 1-4
+
+### GAP-600-03 — G08: §14 SESSION LOG wrong columns
+- **Fault:** §14 columns are Date / What Was Done / LBB Record — non-conformant
+- **Fix:** Replace §14 header with `| Date | Version | Author | Action | Scope |` and reformat all existing rows
+- **Scope:** PROCESS-UT.md §14
+
+## Unchanged (no mechanic action needed)
+G01, G02, G04, G05, G07, G09, G10, G12 — all PASS, no touch.
+
+**Note:** ORBT=TROUBLESHOOT_TRAIN is a valid 4-state value — G04 PASS is correct.

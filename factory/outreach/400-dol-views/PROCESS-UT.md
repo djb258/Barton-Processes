@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.400
     species: UT-Body
-    version: "2.0.0"
-    last_modified: "2026-05-06"
+    version: "2.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/400-dol-views/PROCESS-UT.md
   orbt:
     library_state: OPERATE
@@ -63,7 +63,7 @@ inside:
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited — barton-outreach-core doctrine / imo-creator-v2 sovereign |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-49 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/400-dol-views |
@@ -515,20 +515,26 @@ No logbook during BUILD. This process is in OPERATE — logbook promoted from PR
 
 ## §14 SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-19 | 6 SQL views created in Neon against DOL schema | none |
-| 2026-03-25 | 171,040 rows seeded to D1 via Process 010; OPERATE state reached | session/2026-03-25 |
-| 2026-03-29 | PROCESS.md written from template v2.0.0 | none |
-| 2026-04-29 | UT v2.7.0 consolidation — PROCESS.md + CLAUDE.md archived; PROCESS-UT.md + DOCTRINE.md + orbt.yaml written | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-19 | v0.1 | Sonnet Runner | `CREATE` | 6 SQL views created in Neon against DOL schema |
+| 2026-03-25 | v0.2 | Sonnet Runner | `AMEND` | 171,040 rows seeded to D1 via Process 010; OPERATE state reached. LBB: session/2026-03-25 |
+| 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md written from template v2.0.0 |
+| 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS.md + CLAUDE.md archived; PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. LBB: pending |
+| 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-03-19]: 2026-03-19 | 6 SQL views created in Neon against DOL schema | none
+^[ROW-2026-03-25]: 2026-03-25 | 171,040 rows seeded to D1 via Process 010; OPERATE state reached | session/2026-03-25
+^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from template v2.0.0 | none
+^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS.md + CLAUDE.md archived; PROCESS-UT.md + DOCTRINE.md + orbt.yaml written | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

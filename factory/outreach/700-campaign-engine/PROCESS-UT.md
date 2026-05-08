@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.700
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/700-campaign-engine/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -62,7 +62,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — parent doctrine imo-creator-v2 sovereign + Barton-Processes |
-| Last Modified | 2026-04-28 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-175, BAR-177 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/campaign-engine |
@@ -538,19 +538,24 @@ No logbook during BUILD.
 
 ## §14. SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-29 | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. | none |
-| 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/ | pending |
-| 2026-05-06 | BAR-700-CONFORM-WIRE — BS Law Y-junction conformance pass. YAML frontmatter added. Section headers converted to §N format. workflow.yaml rewritten to Y-junction spec. certification_label: provisional-runtime. | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. |
+| 2026-04-28 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/. LBB: pending |
+| 2026-05-06 | v2.1.0 | Sonnet Mechanic (BAR-700-CONFORM-WIRE) | `REPAIR` | BS Law Y-junction conformance pass. YAML frontmatter added. Section headers converted to §N format. workflow.yaml rewritten to Y-junction spec. certification_label: provisional-runtime. LBB: pending |
+| 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-03-29]: 2026-03-29 | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. | none
+^[ROW-2026-04-28]: 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/ | pending
+^[ROW-2026-05-06]: 2026-05-06 | BAR-700-CONFORM-WIRE — BS Law Y-junction conformance pass. YAML frontmatter added. Section headers converted to §N format. workflow.yaml rewritten to Y-junction spec. certification_label: provisional-runtime. | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-06 |
-| Version | 2.1.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.1.1 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

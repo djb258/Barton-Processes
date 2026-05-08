@@ -22,8 +22,8 @@ inside:
   heir:
     process_id: bp.202
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -592,21 +592,28 @@ No logbook during BUILD.
 
 ## 14. SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-04-01 | Process doc created (v2.0.0, old format) | none |
-| 2026-04-01 | Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | none |
-| 2026-04-02 | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A reads recon_organized_linkedin. | 5db86e97 |
-| 2026-04-02 | Gate A+B ran all 10,786 slots: 941 Gate A + 124 Gate B = 1,065 LinkedIn URLs filled. 999 slots → FULL, 66 → REACHABLE. | 5db86e97 |
-| 2026-04-29 | UT v2.7.0 consolidation: PROCESS-UT.md written from fragments (PROCESS.md + CLAUDE.md + DATA_FLOW.md + heir.yaml + src/find-linkedin.py). DOCTRINE.md extracted (10 rules). orbt.yaml created. heir.yaml updated to 8-field standard. Fragments archived. | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-04-01 | v0.0.1 | legacy-session | `CREATE` | Process doc created (v2.0.0, old format) |
+| 2026-04-01 | v0.0.2 | legacy-session | `RESTRUCTURE` | Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) |
+| 2026-04-02 | v0.0.3 | legacy-session | `AMEND` | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A reads recon_organized_linkedin. (LBB: 5db86e97) |
+| 2026-04-02 | v0.0.4 | legacy-session | `AMEND` | Gate A+B ran all 10,786 slots: 941+124 = 1,065 LinkedIn URLs filled. 999 slots → FULL, 66 → REACHABLE. (LBB: 5db86e97) |
+| 2026-04-29 | v1.0.0 | claude-sonnet-4-6 | `CREATE` | UT v2.7.0 consolidation: PROCESS-UT.md written from fragments. DOCTRINE.md extracted (10 rules). orbt.yaml created. heir.yaml updated to 8-field standard. Fragments archived. |
+| 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+
+^[ROW-2026-04-01a]: Process doc created (v2.0.0, old format) | LBB: none
+^[ROW-2026-04-01b]: Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | LBB: none
+^[ROW-2026-04-02a]: Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A reads recon_organized_linkedin. | LBB Record: 5db86e97
+^[ROW-2026-04-02b]: Gate A+B ran all 10,786 slots: 941 Gate A + 124 Gate B = 1,065 LinkedIn URLs filled. 999 slots → FULL, 66 → REACHABLE. | LBB Record: 5db86e97
+^[ROW-2026-04-29]: UT v2.7.0 consolidation: PROCESS-UT.md written from fragments (PROCESS.md + CLAUDE.md + DATA_FLOW.md + heir.yaml + src/find-linkedin.py). DOCTRINE.md extracted (10 rules). orbt.yaml created. heir.yaml updated to 8-field standard. Fragments archived. | LBB: pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-01 |
-| Last Modified | 2026-04-29 |
-| Version | 2.7.0 |
+| Last Modified | 2026-05-08 |
+| Version | v1.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

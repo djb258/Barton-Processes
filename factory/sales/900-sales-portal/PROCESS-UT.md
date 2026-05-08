@@ -25,8 +25,8 @@ inside:
   heir:
     process_id: bp.900
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/sales/900-sales-portal/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -68,7 +68,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-39, BAR-133, BAR-179 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/sales/900-sales-portal |
@@ -550,19 +550,24 @@ Gaps from TABLES-AUDIT.md (2026-04-16) captured here before archiving per runner
 
 ## §14 LOGBOOK {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-03-29 | PROCESS.md created v1.1.0 — full IMO, OSAM, C&V, dependencies, smoke test, schema | none |
-| 2026-04-16 | TABLES-AUDIT.md created — live D1 audit against svg-d1-sales; 8 schema gaps found; next_migration.sql written | none |
-| 2026-04-29 | Wave-1 UT consolidation — PROCESS-UT.md + DOCTRINE.md written; CLAUDE.md, PROCESS.md, TABLES-AUDIT.md archived | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-03-29 | v1.1.0 | claude-code | `CREATE` | PROCESS.md created v1.1.0 — full IMO, OSAM, C&V, dependencies, smoke test, schema |
+| 2026-04-16 | v1.1.0 | claude-code | `CREATE` | TABLES-AUDIT.md created — live D1 audit against svg-d1-sales; 8 schema gaps found; next_migration.sql written |
+| 2026-04-29 | v2.0.0 | claude-code (Wave-1 UT Consolidation) | `CREATE` | Wave-1 UT consolidation — PROCESS-UT.md + DOCTRINE.md written; CLAUDE.md, PROCESS.md, TABLES-AUDIT.md archived |
+| 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical (UT v2.8.0 / Atlas v2.3.0); verbatim footnotes preserved |
+
+^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created v1.1.0 — full IMO, OSAM, C&V, dependencies, smoke test, schema | none
+^[ROW-2026-04-16]: 2026-04-16 | TABLES-AUDIT.md created — live D1 audit against svg-d1-sales; 8 schema gaps found; next_migration.sql written | none
+^[ROW-2026-04-29]: 2026-04-29 | Wave-1 UT consolidation — PROCESS-UT.md + DOCTRINE.md written; CLAUDE.md, PROCESS.md, TABLES-AUDIT.md archived | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

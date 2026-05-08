@@ -28,7 +28,8 @@ outside:
 inside:
   heir:
     process_id: bp.201
-    version: "1.0.0"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -579,21 +580,28 @@ No logbook during BUILD.
 
 ## §14 SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-04-02 | Initial PROCESS.md created (v2.0.0 format) | none |
-| 2026-04-02 | Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections | none |
-| 2026-04-02 | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A ran all 2,478 slots: 226 emails generated via pattern. Gate C not yet run. | 5db86e97 |
-| 2026-04-02 | recon_emails (7.5K) identified as unused data — emails found during 300 recon sitting in JSON array, never written to person_email. Branch 1 database join fixing this. | 54f035e9 |
-| 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments. FP-201-01 captured in §13. | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-04-02 | v0.0.1 | legacy-session | `CREATE` | Initial PROCESS.md created (v2.0.0 format) |
+| 2026-04-02 | v0.0.2 | legacy-session | `RESTRUCTURE` | Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections |
+| 2026-04-02 | v0.0.3 | legacy-session | `AMEND` | Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A: 2,478 slots, 226 emails. Gate C not yet run. (LBB: 5db86e97) |
+| 2026-04-02 | v0.0.4 | legacy-session | `AMEND` | recon_emails (7.5K) identified as unused; Branch 1 database join fix queued (LBB: 54f035e9) |
+| 2026-04-29 | v1.0.0 | claude-sonnet-4-6 | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments. FP-201-01 captured in §13. |
+| 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+
+^[ROW-2026-04-02a]: Initial PROCESS.md created (v2.0.0 format) | LBB: none
+^[ROW-2026-04-02b]: Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections | LBB: none
+^[ROW-2026-04-02c]: Math engine added: 6 comparators, P(x;θ), conditional logic SQL. Gate A ran all 2,478 slots: 226 emails generated via pattern. Gate C not yet run. | LBB Record: 5db86e97
+^[ROW-2026-04-02d]: recon_emails (7.5K) identified as unused data — emails found during 300 recon sitting in JSON array, never written to person_email. Branch 1 database join fixing this. | LBB Record: 54f035e9
+^[ROW-2026-04-29]: UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments. FP-201-01 captured in §13. | LBB: pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-02 |
-| Last Modified | 2026-04-29 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v1.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

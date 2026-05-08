@@ -22,8 +22,8 @@ inside:
   heir:
     process_id: bp.301
     species: UT-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -105,7 +105,7 @@ Section placeholder — content to be filled by process owner.
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-08 |
 | BAR Reference | BAR-197 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/factory/301-page-parser |
@@ -584,23 +584,32 @@ No logbook during BUILD.
 
 ## 14. SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-04-03 | PROC-301 created via 060 altitude descent. Station added between 300-recon and 200-people. 14-section PROCESS.md, heir.yaml, CLAUDE.md created. 7 comparators defined. | 54f035e9 |
-| 2026-04-03 | Key Builder approach designed: decompose page → identify each element into defined buckets → quality gate → organize → store ALL. Unidentified stored, not discarded. Key reusable for Talent Flow monthly checks. | pending |
-| 2026-04-03 | key_builder_constants.py written: 7 buckets, ~60 position constants, strict name rules (reject navigation/company words). Snap-On Tool — reusable by any page-parsing process. | pending |
-| 2026-04-03 | First run (100 pages): 89 fetched, 84 with people (94%), 4,841 people found. Identification rate 39% — "Edit Profile" and "Leadership Team" passing as person names. NAME_REJECT_WORDS tightened. Re-run needed. | pending |
-| 2026-04-03 | KEY INSIGHT (Dave): Each page gets its own key. Store the key per URL — reusable. Talent Flow monthly checks = fetch page + apply stored key + diff values. | pending |
-| 2026-04-03 | KEY INSIGHT (Dave): Key Builder IS a Snap-On Tool. If current rules insufficient, use sub-hub 27 (Vendor Scout) to find a better driver. Unidentified pile is the funnel — each pass tightens. | pending |
-| 2026-04-29 | UT v2.7.0 consolidation (Wave 1). PROCESS-UT.md, DOCTRINE.md, orbt.yaml written. CLAUDE.md and PROCESS.md moved to _archived-fragments/. Locked shape applied. | pending |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-04-03 | v0.1 | Sonnet Runner | `CREATE` | PROC-301 created via 060 altitude descent. Station added between 300-recon and 200-people. 14-section PROCESS.md, heir.yaml, CLAUDE.md created. 7 comparators defined. LBB: 54f035e9 |
+| 2026-04-03 | v0.2 | Sonnet Runner | `AMEND` | Key Builder approach designed: decompose page → identify each element into defined buckets → quality gate → organize → store ALL. Unidentified stored, not discarded. Key reusable for Talent Flow monthly checks. LBB: pending |
+| 2026-04-03 | v0.3 | Sonnet Runner | `AMEND` | key_builder_constants.py written: 7 buckets, ~60 position constants, strict name rules (reject navigation/company words). Snap-On Tool — reusable by any page-parsing process. LBB: pending |
+| 2026-04-03 | v0.4 | Sonnet Runner | `AMEND` | First run (100 pages): 89 fetched, 84 with people (94%), 4,841 people found. Identification rate 39% — "Edit Profile" and "Leadership Team" passing as person names. NAME_REJECT_WORDS tightened. Re-run needed. LBB: pending |
+| 2026-04-03 | v0.5 | Dave Barton | `AMEND` | KEY INSIGHT: Each page gets its own key. Store the key per URL — reusable. Talent Flow monthly checks = fetch page + apply stored key + diff values. LBB: pending |
+| 2026-04-03 | v0.6 | Dave Barton | `AMEND` | KEY INSIGHT: Key Builder IS a Snap-On Tool. If current rules insufficient, use sub-hub 27 (Vendor Scout) to find a better driver. Unidentified pile is the funnel — each pass tightens. LBB: pending |
+| 2026-04-29 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation. PROCESS-UT.md, DOCTRINE.md, orbt.yaml written. CLAUDE.md and PROCESS.md moved to _archived-fragments/. Locked shape applied. LBB: pending |
+| 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+
+^[ROW-2026-04-03a]: 2026-04-03 | PROC-301 created via 060 altitude descent. Station added between 300-recon and 200-people. 14-section PROCESS.md, heir.yaml, CLAUDE.md created. 7 comparators defined. | 54f035e9
+^[ROW-2026-04-03b]: 2026-04-03 | Key Builder approach designed: decompose page → identify each element into defined buckets → quality gate → organize → store ALL. Unidentified stored, not discarded. Key reusable for Talent Flow monthly checks. | pending
+^[ROW-2026-04-03c]: 2026-04-03 | key_builder_constants.py written: 7 buckets, ~60 position constants, strict name rules (reject navigation/company words). Snap-On Tool — reusable by any page-parsing process. | pending
+^[ROW-2026-04-03d]: 2026-04-03 | First run (100 pages): 89 fetched, 84 with people (94%), 4,841 people found. Identification rate 39% — "Edit Profile" and "Leadership Team" passing as person names. NAME_REJECT_WORDS tightened. Re-run needed. | pending
+^[ROW-2026-04-03e]: 2026-04-03 | KEY INSIGHT (Dave): Each page gets its own key. Store the key per URL — reusable. Talent Flow monthly checks = fetch page + apply stored key + diff values. | pending
+^[ROW-2026-04-03f]: 2026-04-03 | KEY INSIGHT (Dave): Key Builder IS a Snap-On Tool. If current rules insufficient, use sub-hub 27 (Vendor Scout) to find a better driver. Unidentified pile is the funnel — each pass tightens. | pending
+^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation (Wave 1). PROCESS-UT.md, DOCTRINE.md, orbt.yaml written. CLAUDE.md and PROCESS.md moved to _archived-fragments/. Locked shape applied. | pending
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-03 |
-| Last Modified | 2026-04-29 |
-| Version | 2.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | v2.0.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |
