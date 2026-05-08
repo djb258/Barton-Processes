@@ -33,17 +33,17 @@
 | Process ID | PROC-060 |
 | Name | Run Dyno — FCE End-to-End Operator Runbook |
 | Species | UT-Body (Book Law v1.5.0) |
-| Version | 1.0.0 |
+| Version | 1.1.0 |
 | Status | BUILD |
 | Created | 2026-05-05 |
-| Last Modified | 2026-05-05 |
+| Last Modified | 2026-05-08 |
 | Authority | Dave Barton (sovereign) |
 | Owner | Dave Barton (fixes at 2 AM) |
 | ctb_node | `barton-enterprises/imo-creator/processes/060-run-dyno` |
 | BAR Reference | BAR-FCE-RUN-060-PLANNER |
 | Companion YAML | `Barton-Processes/factory/imo-creator/060-run-dyno/run-dyno.yaml` |
 | services | fce-run, r2-workbench, openrouter-model-loop, d1-vault, lbb-memory, fce-library |
-| acceptance_criteria | PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.0.0 + run-dyno.yaml v1.0.0) pass Codex G01-G16 audit. All 15 FCE steps FCE-00...FCE-14 present and identical in both. All 18 invariants encoded. us.py + up.py untouched. D1 vault-only confirmed. R2 workbench-only confirmed. |
+| acceptance_criteria | PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.1.0 + run-dyno.yaml v1.1.0) pass Codex G01-G16 audit. All 16 FCE steps PLN-00 + FCE-00...FCE-14 present and identical in both. All 21 invariants encoded. us.py + up.py untouched. D1 vault-only confirmed. R2 workbench-only confirmed. |
 | Locked Constants Used | FCE.md (#3), us.py (#7), up.py (#8), UT_CHECKLIST.md (#11), FOUR_BRAIN_AVIATION.md (#16), BS_LAW.md (#17) |
 | ORBT | BUILD |
 
@@ -219,9 +219,10 @@ FCE-specific terms:
 
 | Step | ID | Action | Owner | Inputs | Outputs | Guard Rails |
 |------|----|--------|-------|--------|---------|-------------|
+| PLN-00 | PLN-00 | Planner gate — substrate-awareness validation of FCE intake YAML | Operator + planner.py (Sonnet, tactical scope) | Filled FCE intake YAML; FCE_DESCRIPTION_GUIDANCE 7-item checklist | PASS: validated intake → engine inbox; FAIL: structured failure report → operator | Determinism-first (mechanical checks before LLM); role-lock per FOUR_BRAIN_AVIATION; engine internals never touched |
 | 0 | FCE-00 | Pre-flight — verify env, secrets, CLI, input shape | Operator | Shell session | Four env vars confirmed; domain string written; P=1 written | STOP if any env var missing; STOP if domain string malformed (no em-dash); STOP if P=1 undefined |
 | 1 | FCE-01 | Name domain — declare topic, description, domain_string, fce_id, family | Operator | Domain knowledge; `atlas/manifests/fce-registry.yaml` (uniqueness check) | Locked input manifest (domain_string, fce_id, family) | STOP if fce-id not unique in registry; domain string = `"<topic> — <description>"` using em-dash separator; never two CLI args |
-| 2 | FCE-02 | Open R2 intake record — first landing; R2 workbench path created | `run_fce.py` | Locked inputs from FCE-01 | R2 path `r2://svg-files/dyno-runs/{sovereign_id}/` initialized | R2 = live workbench; **DO NOT write to D1 yet**; this is the first artifact landing zone |
+| 2 | FCE-02 | Open R2 intake record — first landing; R2 workbench path created | `run_fce.py` | Locked inputs from FCE-01; `sovereign_id` passed via `--sovereign-id <uuid>` (minted by inbox dispatcher at intake claim per INV-19) | R2 path `r2://svg-files/dyno-runs/{sovereign_id}/` initialized | R2 = live workbench; **DO NOT write to D1 yet**; sovereign_id is the durable run identity — minted at dispatcher claim, not here (INV-19) |
 | 3 | FCE-03 | Name UP tolerance — operator declares domain-specific UP stop condition | Operator | Domain knowledge; P=1 definition | UP tolerance declared (written, not inferred) | UP tolerance is domain-specific and human-declared; **NOT the same as US P=1**; must be declared explicitly before US loop starts |
 | 4 | FCE-04 | Lock model set — confirm exactly three OpenRouter expensive-tier models | Operator / `run_fce.py` | OpenRouter API; Doppler OPENROUTER_API_KEY | Three model IDs confirmed; logged to R2 manifest | Expensive models only; **no cheap-tier rotation**; exactly three per cycle |
 | 5 | FCE-05 | Start R2/OpenRouter workbench loop — fire three models in parallel for US discovery | `run_fce.py` | Locked inputs + model set | `runs/discover-{slug}/` artifacts in R2; US raw outputs per model | R2 = live workbench during all loop iterations; D1 write forbidden here; sigma tracking begins |
@@ -338,9 +339,9 @@ domain string + P=1 + UP tolerance
 
 ---
 
-## §5a NON-DRIFT INVARIANTS (INV-01…INV-18)
+## §5a NON-DRIFT INVARIANTS (INV-01…INV-21)
 
-These 18 invariants must hold at every step. Violation = STOP condition.
+These 21 invariants must hold at every step. Violation = STOP condition.
 
 | ID | Invariant | Enforced At |
 |----|-----------|-------------|
@@ -362,6 +363,9 @@ These 18 invariants must hold at every step. Violation = STOP condition.
 | INV-16 | FCE library registration occurs ONLY after BOTH Codex PASS AND D1 INSERT are confirmed. Not before. Both conditions required simultaneously. | FCE-14 |
 | INV-17 | LBB row is written at every role transition (planner, foreman, mechanic, auditor) and at FCE-14 CERTIFY on Codex PASS. Append-only. Subject = `processes`. | All transitions + FCE-14 |
 | INV-18 | DMJ does NOT appear inside the single-run path (FCE-00 through FCE-14). DMJ is deferred at N=1. DMJ is queued and runs only at N≥2 same family. DMJ gets its own separate process number (confirmed Plan Book §15 Q-01). DMJ output returns to D1. | FCE-14 |
+| INV-19 | sovereign_id (UUIDv4) is minted by the inbox dispatcher at the moment the work-packet YAML is claimed from `inbox/` to `inbox/processing/`. This is the FIRST action of the run. The dispatcher passes sovereign_id to `run_fce.py` via `--sovereign-id <uuid>`. All cycle artifacts, phase verdicts, R2 paths, D1 row keys, and LBB records derive from this single sovereign_id. The engine's internal run_id is sealed bookkeeping and is NOT used as the durable identifier. | Dispatcher claim (mint), FCE-02 (R2 init), every PHASE_VERDICT.json, FCE-13 (D1 insert), FCE-14 (LBB record) |
+| INV-20 | Each FCE phase produces a self-contained artifact set in its own folder under `runs/{sovereign_id}/fce-NN-<name>/` plus a `PHASE_VERDICT.json` readable independently of any other phase. Codex audits each phase by reading only that phase's folder. No phase may write artifacts outside its own folder. | FCE-05, FCE-07, FCE-08, FCE-09, FCE-10, FCE-13, FCE-14 |
+| INV-21 | A `RUN_VERDICT.json` is written at `runs/{sovereign_id}/` and updated after each phase completes. It is the single source of truth for "which phases of this run passed, which failed, which are pending." | Every phase completion |
 
 ---
 
@@ -589,10 +593,10 @@ When the first run completes, verify:
 | Book Law | v1.5.0 |
 | BS Law | v1.5.0 |
 | Four-Brain Aviation | v1.2.0 |
-| Atlas | v2.2.7 |
+| Atlas | v2.3.0 |
 | Created | 2026-05-05 |
-| Last Modified | 2026-05-05 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-08 |
+| Version | 1.1.0 |
 | Status | BUILD |
 | BAR | BAR-FCE-RUN-060-PLANNER |
 | Companion YAML | `Barton-Processes/factory/imo-creator/060-run-dyno/run-dyno.yaml` |
@@ -605,4 +609,5 @@ When the first run completes, verify:
 
 | Date | Version | Change | Author |
 |------|---------|--------|--------|
-| 2026-05-05 | 1.0.0 | Initial creation — full UT-Body v1.0.0 per UT v2.8.0 + UT_CHECKLIST v1.3.1. FCE-00 through FCE-14 operator sequence per BAR-FCE-RUN-060-PLANNER Plan Book §7 locked step spine. All 18 invariants INV-01…INV-18 encoded. BS Law v1.5.0 Y-junction conformant. Companion YAML: run-dyno.yaml. | Sonnet (Mechanic — BAR-FCE-RUN-060-PLANNER) |
+| 2026-05-05 | 1.0.0 | Initial creation — full UT-Body v1.0.0 per UT v2.8.0 + UT_CHECKLIST v1.3.1. FCE-00 through FCE-14 operator sequence per BAR-FCE-RUN-060-PLANNER Plan Book §7 locked step spine. All 18 invariants `INV-01…INV-18` encoded. BS Law v1.5.0 Y-junction conformant. Companion YAML: run-dyno.yaml. | Sonnet (Mechanic — BAR-FCE-RUN-060-PLANNER) |
+| 2026-05-08 | 1.1.0 | Absorb `AMENDMENT-PHASE-BARRIERS-AND-SOVEREIGN-ID.md`. Add PLN-00 (Planner gate) at step 0. Add INV-19 (sovereign_id at intake), INV-20 (phase barriers), INV-21 (run verdict rollup). Bump Atlas pin v2.2.7 → v2.3.0. Lock-stepped with run-dyno.yaml v1.1.0. | Sonnet (Mechanic — BAR-PROC-060-V1-1-0-PHASE-BARRIERS) |

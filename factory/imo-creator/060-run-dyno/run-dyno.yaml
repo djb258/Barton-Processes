@@ -10,15 +10,15 @@
 # =============================================================================
 
 name: run-dyno
-version: "1.0.0"
-last_modified: "2026-05-05"
+version: "1.1.0"
+last_modified: "2026-05-08"
 
 # =============================================================================
 # INHERITS — atlas + schema version pins
 # =============================================================================
 
 inherits:
-  atlas: v2.2.7
+  atlas: v2.3.0
   ut_schema: UT_v2.8.0
   ut_checklist: UT_CHECKLIST_v1.3.1
   bs_law: v1.5.0
@@ -49,11 +49,11 @@ outside:
       - lbb-memory
       - fce-library
     acceptance_criteria: |
-      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.0.0 + run-dyno.yaml v1.0.0)
-      pass Codex G01-G16 audit. All 15 FCE steps FCE-00...FCE-14 present and
-      identical in both. All 18 invariants encoded. us.py + up.py untouched.
+      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.1.0 + run-dyno.yaml v1.1.0)
+      pass Codex G01-G16 audit. All 16 FCE steps PLN-00 + FCE-00...FCE-14 present and
+      identical in both. All 21 invariants encoded. us.py + up.py untouched.
       D1 vault-only confirmed. R2 workbench-only confirmed.
-    last_modified: "2026-05-05"
+    last_modified: "2026-05-08"
   orbt:
     library_state: BUILD
     last_indexed_at: "2026-05-05T00:00:00Z"
@@ -68,8 +68,8 @@ outside:
 inside:
   heir:
     process_id: PROC-060
-    version: "1.0.0"
-    last_modified: "2026-05-05"
+    version: "1.1.0"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/imo-creator/060-run-dyno/PROCESS-UT.md
     services:
       - fce-run
@@ -80,9 +80,9 @@ inside:
       - fce-library
     secrets_provider: doppler
     acceptance_criteria: |
-      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.0.0 + run-dyno.yaml v1.0.0)
-      pass Codex G01-G16 audit. All 15 FCE steps FCE-00...FCE-14 present and
-      identical in both. All 18 invariants encoded. us.py + up.py untouched.
+      PROC-060 P=1: Both artifacts (PROCESS-UT.md v1.1.0 + run-dyno.yaml v1.1.0)
+      pass Codex G01-G16 audit. All 16 FCE steps PLN-00 + FCE-00...FCE-14 present and
+      identical in both. All 21 invariants encoded. us.py + up.py untouched.
       D1 vault-only confirmed. R2 workbench-only confirmed.
     aviation_model:
       mechanic: sonnet
@@ -106,12 +106,15 @@ inside:
 
 description: |
   PROC-060 — Run Dyno: End-to-End FCE Operator Runbook.
-  15 mandatory steps FCE-00...FCE-14.
+  16 mandatory steps PLN-00 + FCE-00...FCE-14.
+  PLN-00: Operator drops FCE intake YAML into planner-queue; Planner validates
+  against 7-item substrate-awareness checklist before engine inbox claim.
+  PASS → intake lands in atlas/dyno/inbox/ with sovereign_id minted.
+  FAIL → structured failure report returned; engine never fires.
   R2 + OpenRouter is the live workbench (FCE-02 through FCE-12).
   D1 is the completed-run vault only (FCE-13 after Codex PASS).
   us.py (locked constant #7) and up.py (locked constant #8) are read-only sealed engines.
   DMJ is deferred at N=1; queued only at N>=2 same family under separate process number.
-  Mission Control wiring deferred to follow-on BAR (TBD) per Plan Book §15 Q-03.
 
 # =============================================================================
 # SCHEDULE
@@ -203,6 +206,8 @@ data:
         gate: codex_pass_required
         rows_per_run: 1
         schema_source: mission-control-api/migrations/0018_dyno_run.sql
+        imo_bundle_migration: imo-creator-v2/migrations/0001-fce-imo-bundle.sql
+        imo_bundle_columns: [intake_yaml, workbench_pointer, intake_validated_at, planner_verdict]
       - name: dyno_run_cycle
         insert_at: FCE-13
         gate: codex_pass_required
@@ -216,6 +221,39 @@ data:
 # =============================================================================
 
 nodes:
+
+  - id: PLN-00
+    step_name: Planner gate (substrate-awareness validation)
+    owner: operator + planner.py (Sonnet, tactical scope)
+    action: >
+      Operator drops a filled FCE intake YAML into
+      atlas/dyno/planner/planner-queue/processing/.
+      planner.py validates against the 7-item substrate-awareness checklist
+      (FCE_DESCRIPTION_GUIDANCE.md): Things named, Flows named, Changes named,
+      intent in p1_definition not braided, no solutions or methods pre-loaded,
+      no Connection-as-4th-primitive, substantive length.
+      Mechanical checks run first (determinism-first). LLM judgment runs only
+      if mechanical checks pass.
+      PASS: intake YAML is dropped into atlas/dyno/inbox/ for dispatch.
+      FAIL: structured failure report with operator_fixes returned; engine never fires.
+      Role-lock: once dropped to engine inbox, Planner cannot touch.
+    inputs:
+      - filled FCE intake YAML (operator-authored)
+      - FCE_DESCRIPTION_GUIDANCE.md (7-item checklist)
+      - atlas/dyno/planner/planner-queue/processing/
+    outputs:
+      - PASS: validated intake in atlas/dyno/inbox/ → FCE-00 begins
+      - FAIL: structured failure report in planner-queue/failed/; run stops
+    guard_rails:
+      - Planner is Sonnet (tactical scope); not Opus (strategic) or engine models
+      - Determinism-first: mechanical block fires before any LLM call
+      - Role-lock: Planner cannot modify artifacts after inbox drop (FOUR_BRAIN_AVIATION §16)
+      - Engine internals (us.py, up.py, dyno_engine.py) are sealed — Planner never touches
+      - No Connection-as-4th-primitive in intake (INV: Three Primitives only)
+    stop_conditions:
+      - intake YAML fails any mechanical check (missing fields, em-dash absent, placeholder tokens)
+      - LLM judgment returns FAIL on any substrate-awareness criterion
+      - Planner returns operator_fixes; operator must revise and resubmit
 
   - id: FCE-00
     step_name: Pre-flight (env/secrets/CLI)
@@ -255,15 +293,18 @@ nodes:
     step_name: Open R2 intake record (first landing)
     owner: run_fce.py
     action: >
-      Initialize R2 workbench path. Create the first artifact landing zone.
+      Workbench path uses sovereign_id minted by inbox dispatcher at intake claim
+      (INV-19), not at FCE-13. Initialize R2 path r2://svg-files/dyno-runs/{sovereign_id}/.
       DO NOT write to D1 at this step.
     inputs:
       - locked inputs from FCE-01
+      - sovereign_id passed via --sovereign-id <uuid> from inbox dispatcher (INV-19)
     outputs:
       - R2 path r2://svg-files/dyno-runs/{sovereign_id}/ initialized
     guard_rails:
       - R2 is the live workbench — not the vault
       - D1 writes are FORBIDDEN at this step
+      - sovereign_id is the durable run identity — minted at dispatcher claim, not here
       - This is the first artifact landing zone
 
   - id: FCE-03
@@ -602,6 +643,32 @@ invariants:
       DMJ gets its own separate process number (confirmed Plan Book Q-01).
       DMJ output returns to D1.
     enforced_at: [FCE-14]
+
+  - id: INV-19
+    text: >
+      sovereign_id (UUIDv4) is minted by the inbox dispatcher at the moment the
+      work-packet YAML is claimed from inbox/ to inbox/processing/. This is the
+      FIRST action of the run. The dispatcher passes sovereign_id to run_fce.py
+      via --sovereign-id <uuid>. All cycle artifacts, phase verdicts, R2 paths,
+      D1 row keys, and LBB records derive from this single sovereign_id.
+      The engine's internal run_id is sealed bookkeeping and is NOT used as
+      the durable identifier.
+    enforced_at: [dispatcher-claim, FCE-02, all-PHASE_VERDICT, FCE-13, FCE-14]
+
+  - id: INV-20
+    text: >
+      Each FCE phase produces a self-contained artifact set in its own folder
+      under runs/{sovereign_id}/fce-NN-<name>/ plus a PHASE_VERDICT.json readable
+      independently of any other phase. Codex audits each phase by reading only
+      that phase's folder. No phase may write artifacts outside its own folder.
+    enforced_at: [FCE-05, FCE-07, FCE-08, FCE-09, FCE-10, FCE-13, FCE-14]
+
+  - id: INV-21
+    text: >
+      A RUN_VERDICT.json is written at runs/{sovereign_id}/ and updated after
+      each phase completes. It is the single source of truth for which phases
+      of this run passed, which failed, which are pending.
+    enforced_at: [every-phase-completion]
 
 # =============================================================================
 # GATES — Codex audit gate set (G01 through G16)
