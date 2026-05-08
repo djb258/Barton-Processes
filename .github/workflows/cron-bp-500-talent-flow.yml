@@ -1,0 +1,55 @@
+name: cron-bp-500-talent-flow
+
+on:
+  schedule:
+    - cron: "0 8 1 * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies (if requirements.txt exists)
+        run: |
+          if [ -f factory/outreach/500-talent-flow/requirements.txt ]; then
+            pip install -r factory/outreach/500-talent-flow/requirements.txt
+          fi
+
+      - name: Run talent flow
+        env:
+          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
+        run: python factory/outreach/500-talent-flow/src/talent-flow.py
+
+      - name: Post LBB success log
+        if: success()
+        env:
+          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
+        run: |
+          curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
+            -H "Authorization: Bearer $LBB_API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: github-actions/bp.500" \
+            -d '{"title":"bp.500 talent-flow run SUCCESS","subject_id":"svg-outreach-proc","orbt_mode":"OPERATE","content":"Monthly cron run completed successfully.","source_type":"cron","source_name":"cron-bp-500-talent-flow"}'
+
+      - name: Post LBB failure log
+        if: failure()
+        env:
+          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
+        run: |
+          curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
+            -H "Authorization: Bearer $LBB_API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: github-actions/bp.500" \
+            -d '{"title":"bp.500 talent-flow run FAILURE","subject_id":"svg-outreach-proc","orbt_mode":"REPAIR","content":"Monthly cron run failed. Check GitHub Actions logs.","source_type":"cron","source_name":"cron-bp-500-talent-flow"}'
+
+      - name: Always exit 0 (Aviation Model — squawk logged, do not block)
+        if: always()
+        run: exit 0

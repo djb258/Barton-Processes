@@ -22,7 +22,7 @@ inside:
   heir:
     process_id: bp.301
     species: UT-Body
-    version: "1.0.1"
+    version: "2.0.2"
     last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
   orbt:
@@ -59,6 +59,18 @@ Section placeholder — content to be filled by process owner.
 
 ## §9 OBSERVABILITY
 Section placeholder — content to be filled by process owner.
+
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-monthly
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 0 1 * *` (monthly — 1st of month, midnight UTC)
+**Implementation:** GitHub Actions cron
+**Trigger source (if event-driven):** N/A
+
+---
 
 ## §10 LBB SUBJECTS
 Section placeholder — content to be filled by process owner.
@@ -594,6 +606,7 @@ No logbook during BUILD.
 | 2026-04-03 | v0.6 | Dave Barton | `AMEND` | KEY INSIGHT: Key Builder IS a Snap-On Tool. If current rules insufficient, use sub-hub 27 (Vendor Scout) to find a better driver. Unidentified pile is the funnel — each pass tightens. LBB: pending |
 | 2026-04-29 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation. PROCESS-UT.md, DOCTRINE.md, orbt.yaml written. CLAUDE.md and PROCESS.md moved to _archived-fragments/. Locked shape applied. LBB: pending |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-monthly `0 0 1 * *` GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl 2.0.1, then bumped to 2.0.2 in all 3 locations. |
 
 ^[ROW-2026-04-03a]: 2026-04-03 | PROC-301 created via 060 altitude descent. Station added between 300-recon and 200-people. 14-section PROCESS.md, heir.yaml, CLAUDE.md created. 7 comparators defined. | 54f035e9
 ^[ROW-2026-04-03b]: 2026-04-03 | Key Builder approach designed: decompose page → identify each element into defined buckets → quality gate → organize → store ALL. Unidentified stored, not discarded. Key reusable for Talent Flow monthly checks. | pending
@@ -609,7 +622,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-03 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.1 |
+| Version | v2.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

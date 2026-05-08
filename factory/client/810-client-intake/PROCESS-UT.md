@@ -20,7 +20,7 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "1.0.1"
+    version: "2.1.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
@@ -441,6 +441,18 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 
 Rule: at least one live gauge row must be checked before BUILD can move to OPERATE.
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** EVENT-DRIVEN
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** N/A — event-driven
+**Implementation:** HTTP-triggered
+**Trigger source (if event-driven):** Client onboarding — benefits data submission via HTTP POST
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -554,6 +566,7 @@ No logbook during BUILD.
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md written from CLAUDE.md + PROCESS.md + heir.yaml; DOCTRINE.md extracted; orbt.yaml created; fragments archived. LBB: pending |
 | 2026-05-06 | v2.1.0 | Sonnet Mechanic (BAR-810-CONFORM-WIRE) | `REPAIR` | BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms. LBB: pending |
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on client benefits data submission. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 
 ^[ROW-2026-03-19]: 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none
@@ -566,7 +579,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.1.1 |
+| Version | v2.1.2 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

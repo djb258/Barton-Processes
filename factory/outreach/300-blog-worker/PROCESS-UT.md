@@ -20,7 +20,7 @@ inside:
   heir:
     process_id: bp.300
     species: UT-Body
-    version: "1.0.1"
+    version: "1.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/300-blog-worker/PROCESS-UT.md
   orbt:
@@ -472,6 +472,18 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 | Proxy reachable (ports 11000+) | §3 Components | DataImpulse ping | `curl -x http://${PROXY_USER}:${PROXY_PASS}@${PROXY_HOST}:11000 https://www.startpage.com -o /dev/null -s -w "%{http_code}"` | [ ] | TBV | TBV |
 | Movement flag is binary 0 or 1 | §7 Constants (D-300-02) | blog-indicators JSONL | `cat src/output/blog-indicators-*.jsonl \| python3 -c "import sys,json; rows=[json.loads(l) for l in sys.stdin]; assert all(r['movement'] in [0,1] for r in rows)"` | [ ] | TBV | TBV |
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-daily
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 6 * * *` (daily 6am UTC / 2am ET)
+**Implementation:** GitHub Actions cron
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS
 
 ### 10a. Metrics
@@ -603,6 +615,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 | 2026-04-02 | v0.7 | Sonnet Runner | `AMEND` | DATA GAP: about_url (69K pages) never scraped. recon_result_urls (93K) never re-parsed. BAR-197 created. LBB: 54f035e9 |
 | 2026-04-28 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. Source fragments archived. UT v2.7.0 standard. LBB: pending |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped 1.0.0→1.0.1 across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` GitHub Actions cron. Version bumped in 3 locations. |
 
 ^[ROW-2026-03-29]: 2026-03-29 | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design | none
 ^[ROW-2026-04-01]: 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none
@@ -619,7 +632,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 |-------|-------|
 | Created | 2026-04-28 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

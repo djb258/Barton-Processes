@@ -20,7 +20,7 @@ inside:
   heir:
     process_id: bp.010
     species: UT-Body
-    version: "1.0.1"
+    version: "1.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/010-seed-d1/PROCESS-UT.md
   orbt:
@@ -70,7 +70,7 @@ inside:
 | Strikes | 0 |
 | BAR Reference | BAR-52 |
 | Related BARs | BAR-190 (SEED v2 national spine design) |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Created | 2026-03-25 |
 | Last Modified | 2026-05-08 |
 | Governance | See `DOCTRINE.md` at folder root |
@@ -393,6 +393,18 @@ All commands use Wrangler D1 execute against remote databases.
 
 ---
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-daily
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 4 * * *` (daily 4am UTC / midnight ET)
+**Implementation:** CF Worker cron
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### Metrics Table (Baseline 2026-04-01)
@@ -506,6 +518,7 @@ Run in this sequence to satisfy foreign key dependencies:
 |------|---------|--------|--------|-------|
 | 2026-04-29 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | Consolidated 7 fragments into UT v2.7.0 locked folder shape; PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml written; _archived-fragments/ created |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 4 * * *` CF Worker cron. Version bumped in 3 locations. |
 
 ^[ROW-2026-04-29]: Wave 1 UT Consolidation | Sonnet Runner consolidated 7 fragments (PROCESS.md, MASTER_DATA_CTB.md, SEED_AUDIT.md, SEED_V2_DESIGN.md, NEON_COLUMN_INVENTORY.csv, MASTER_COLUMN_REGISTRY.json, UNDOCUMENTED_COLUMNS.json) into UT v2.7.0 locked folder shape | PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml written; _archived-fragments/ created
 
@@ -517,7 +530,7 @@ Run in this sequence to satisfy foreign key dependencies:
 |-------|-------|
 | Process ID | PROC-010 |
 | UT Version | v2.7.0 |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Created | 2026-04-29 |
 | Last Modified | 2026-05-08 |
 | Consolidated By | Sonnet Runner (Wave 1) |

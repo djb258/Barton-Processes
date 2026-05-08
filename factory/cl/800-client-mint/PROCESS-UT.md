@@ -12,7 +12,7 @@ outside:
 inside:
   heir:
     process_id: bp.800
-    version: "1.0.1"
+    version: "2.0.2"
     last_modified: "2026-05-08"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
@@ -400,6 +400,18 @@ npx wrangler worker route delete <route_id>
 | Migration 002 applied | §5 | Neon schema | `psql $NEON_URL -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='clnt'"` | [ ] | TBV | TBV |
 | Open error count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status \| jq .open_errors` | [ ] | TBV | TBV |
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** EVENT-DRIVEN
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** N/A — event-driven
+**Implementation:** HTTP-triggered
+**Trigger source (if event-driven):** CL company promoted to client status (manual or pipeline trigger)
+
+---
+
 ## §10. ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -505,6 +517,7 @@ No logbook during BUILD.
 | 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented |
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on CL company promotion. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.0.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -515,7 +528,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.1 |
+| Version | v2.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

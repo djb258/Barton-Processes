@@ -28,7 +28,7 @@ outside:
 inside:
   heir:
     process_id: bp.201
-    version: "1.0.1"
+    version: "1.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
     aviation_model:
@@ -477,6 +477,18 @@ python3 src/find-email.py --resume --limit N
 
 Rule: at least one live gauge row is required before BUILD can move to OPERATE.
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-daily
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 7 * * *` (daily 7am UTC / 3am ET)
+**Implementation:** GitHub Actions cron
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -588,6 +600,7 @@ No logbook during BUILD.
 | 2026-04-02 | v0.0.4 | legacy-session | `AMEND` | recon_emails (7.5K) identified as unused; Branch 1 database join fix queued (LBB: 54f035e9) |
 | 2026-04-29 | v1.0.0 | claude-sonnet-4-6 | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments. FP-201-01 captured in §13. |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 7 * * *` GitHub Actions cron. Version bumped in 3 locations. |
 
 ^[ROW-2026-04-02a]: Initial PROCESS.md created (v2.0.0 format) | LBB: none
 ^[ROW-2026-04-02b]: Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections | LBB: none
@@ -601,7 +614,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-02 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

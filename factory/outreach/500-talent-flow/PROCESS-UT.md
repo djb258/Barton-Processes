@@ -20,7 +20,7 @@ inside:
   heir:
     process_id: bp.500
     species: UT-Body
-    version: "1.0.1"
+    version: "2.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
   orbt:
@@ -388,6 +388,18 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | Movement detection query returns results | §4 Middle Step 2 | people.linkedin_snapshots | `python3 src/talent-flow.py --dry-run` | [ ] | TBV | TBV |
 | Monthly run completes without HALT | §8 stop conditions | script stdout | `python3 src/talent-flow.py --month YYYY-MM` | [ ] | TBV | TBV |
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-monthly
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 8 1 * *` (monthly — 1st of month, 8am UTC / 4am ET)
+**Implementation:** GitHub Actions cron
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -495,6 +507,7 @@ No logbook during BUILD.
 | 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md written from CLAUDE.md + source code + heir.yaml |
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — all fragments consolidated into PROCESS-UT.md + DOCTRINE.md; orbt.yaml written; fragments archived. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-monthly `0 8 1 * *` GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl 2.0.1, then bumped to 2.0.2 in all 3 locations. |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from CLAUDE.md + source code + heir.yaml | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — all fragments consolidated into PROCESS-UT.md + DOCTRINE.md; orbt.yaml written; fragments archived | pending
@@ -505,7 +518,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.1 |
+| Version | v2.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

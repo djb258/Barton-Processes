@@ -20,7 +20,7 @@ inside:
   heir:
     process_id: bp.200
     species: UT-Body
-    version: "1.0.1"
+    version: "1.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
   orbt:
@@ -471,6 +471,18 @@ wrangler cron triggers delete --name people-worker-200 --cron "0 6 * * *"
 | DOL records in D1 | §5 | PROCESS.md (MANIFEST) | `wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM outreach_dol WHERE filing_present=1"` | [ ] | 2026-03-24 | ~27,464 |
 | 356-row quarantine from process 100 REPAIR | §13 | svg-d1-outreach-ops slot_workbench | `wrangler d1 execute svg-d1-outreach-ops --remote --command "SELECT COUNT(*) FROM slot_workbench WHERE person_email_verified=1 AND has_verified_email=0"` | [ ] | 2026-04-28 | TBV (investigate FP-200-01) |
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-daily
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 6 * * *` (daily 6am UTC / 2am ET)
+**Implementation:** CF Worker cron
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -586,6 +598,7 @@ No logbook during BUILD/REPAIR.
 | 2026-04-02 | v0.0.5 | legacy-session | `AMEND` | Math engine added (6 comparators); Gate A updated to recon_organized_people; funnel built; DOL 5500 signer match (LBB: a65dd7b1, 5db86e97, 54f035e9) |
 | 2026-04-28 | v1.0.0 | Claude Code | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived; FP-200-01 added; ORBT → REPAIR (Strike 1) |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` CF Worker cron. Version bumped in 3 locations. |
 
 ^[ROW-2026-03-19]: Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (87-95% LinkedIn hit rate) | LBB Record: processes/Session 2026-03-19
 ^[ROW-2026-03-24]: MANIFEST.md written, documentation chain created | LBB Record: session/2026-03-24-full-session-final
@@ -600,7 +613,7 @@ No logbook during BUILD/REPAIR.
 |-------|-------|
 | Created | 2026-03-19 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

@@ -13,23 +13,23 @@ outside:
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
   orbt:
-    library_state: TROUBLESHOOT_TRAIN
-    last_indexed_at: "2026-05-06T00:00:00Z"
+    library_state: RETIRED
+    last_indexed_at: "2026-05-08T00:00:00Z"
     indexed_by: sonnet-mechanic
 inside:
   heir:
     process_id: bp.600
     species: UT-Body
-    version: "2.0.1"
+    version: "2.0.2"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
   orbt:
-    library_state: TROUBLESHOOT_TRAIN
+    library_state: RETIRED
 ---
 
 # BIT Scoring (Buyer Intent Tracker)
 ## Cross-hub signal aggregation engine that assigned authorization bands 0-5 per company — RETIRED 2026-03-25; replaced by direct data-completeness checks in the LCS compiler.
-### Status: TROUBLESHOOT_TRAIN
+### Status: RETIRED
 ### Medium: process
 ### Business: svg-agency
 
@@ -60,7 +60,7 @@ inside:
 | Medium | process |
 | Business Silo | svg-agency |
 | CTB Position | barton-enterprises → svg-agency → outreach → factory → 600-bit-scoring (leaf) |
-| ORBT | TROUBLESHOOT_TRAIN |
+| ORBT | RETIRED |
 | Strikes | 0 |
 | Authority | inherited - parent doctrine / svg-agency sovereign / imo-creator-v2 |
 | Last Modified | 2026-05-08 |
@@ -396,6 +396,18 @@ Single key: outreach_id. No cross-database joins.
 | LCS compiler does not reference outreach_bit_scores | §5 | barton-outreach-core/src/compiler-v2.ts | `grep -r "outreach_bit_scores" barton-outreach-core/src/` | [ ] | TBV | TBV |
 | Process folder root has exactly 5 entries | §1 | filesystem | `ls factory/outreach/600-bit-scoring/` | [ ] | 2026-04-29 | 5 entries (G25 target) |
 
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RETIRED
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** N/A — RETIRED
+**Implementation:** N/A — process retired 2026-03-25
+**Trigger source (if event-driven):** N/A
+
+---
+
 ## §10 ANALYTICS {#sec-10-analytics}
 
 ### 10a. Metrics
@@ -487,6 +499,7 @@ Single key: outreach_id. No cross-database joins.
 | 2026-03-29 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS.md written to document retirement rationale |
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — all fragments archived, PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
+| 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RETIRED — process retired 2026-03-25. ORBT changed from TROUBLESHOOT_TRAIN to RETIRED in frontmatter (both arms), §1 Identity, and header. Version bumped in 3 locations. |
 
 ^[ROW-2026-03-24]: 2026-03-24 | Manifest written from heir.yaml + brain knowledge | none
 ^[ROW-2026-03-25]: 2026-03-25 | Process retired during LCS compiler v2 architecture review | none
@@ -499,7 +512,7 @@ Single key: outreach_id. No cross-database joins.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.1 |
+| Version | v2.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

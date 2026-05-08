@@ -11,8 +11,8 @@
 # - D-050-05: Weekly drift check is itself a registered cron (last entry below)
 # - D-050-06: Registry edits require sovereign sign-off
 
-version: "1.0.1-live-index"
-last_full_audit: "2026-05-03"
+version: "1.1.0-fleet-classified-2026-05-08"
+last_full_audit: "2026-05-08"
 audit_authority: "BAR-378 live file introspection (Codex)"
 mechanic_to_populate_post_dispatch: false
 
@@ -141,88 +141,76 @@ crons:
     binding: cf-worker-cron  # SEED runs from lcs-hub per heir.yaml
     repo: Barton-Processes
     path: factory/outreach/010-seed-d1/wrangler.toml  # OR lcs-hub merged
-    schedule: ["0 4 * * *"]  # PROPOSED per Decision Sheet A1
+    schedule: ["0 4 * * *"]  # daily 4am UTC
     timezone: UTC
     purpose: "Daily SEED — Neon → D1 (32,702 ±20% companies)"
-    orbt: PROPOSED  # awaits sovereign sign-off + Mechanic dispatch
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; actual deploy needed before OPERATE
     last_verified: null
     on_failure: "HALT on D-010-XX trip"
     ai_on_spine: false
 
   - id: bp.201.email-discovery
     process: bp.201
-    binding: cf-worker-cron
+    binding: github-actions-cron  # Python script; CF Worker cron not applicable
     repo: Barton-Processes
-    path: factory/outreach/201-email-discovery/wrangler.toml
-    schedule: ["0 7 * * *"]  # PROPOSED Decision Sheet A3
+    path: .github/workflows/cron-bp-201-email-discovery.yml
+    schedule: ["0 7 * * *"]  # daily 7am UTC; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
     purpose: "Daily email discovery — pattern-derive + MillionVerifier + Hunter waterfall"
-    orbt: PROPOSED
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; GitHub Actions workflow created
     last_verified: null
     on_failure: "halt on vendor error > 10% or budget exhaustion"
     ai_on_spine: false
 
   - id: bp.202.linkedin-discovery
     process: bp.202
-    binding: cf-worker-cron
+    binding: github-actions-cron  # Python script; CF Worker cron not applicable
     repo: Barton-Processes
-    path: factory/outreach/202-linkedin-discovery/wrangler.toml
-    schedule: ["0 7 * * *"]  # PROPOSED Decision Sheet A4
+    path: .github/workflows/cron-bp-202-linkedin-discovery.yml
+    schedule: ["0 7 * * *"]  # daily 7am UTC; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
     purpose: "Daily LinkedIn discovery — 3-gate waterfall recon→Hunter→Startpage"
-    orbt: PROPOSED
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; GitHub Actions workflow created
     last_verified: null
     on_failure: "halt on rate-limit or gate-3 failure rate > 50%"
     ai_on_spine: false
 
   - id: bp.300.blog-worker
     process: bp.300
-    binding: cf-worker-cron
+    binding: github-actions-cron  # Python script; CF Worker cron not applicable
     repo: Barton-Processes
-    path: factory/outreach/300-blog-worker/wrangler.toml
-    schedule: ["0 9 1 * *"]  # PROPOSED Decision Sheet A5
+    path: .github/workflows/cron-bp-300-blog-worker.yml
+    schedule: ["0 0 6 * *"]  # daily 6am UTC; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
-    purpose: "Monthly blog content scan + signal classification"
-    orbt: PROPOSED
+    purpose: "Daily blog content scan + signal classification (was monthly; promoted to daily)"
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; GitHub Actions workflow created
     last_verified: null
     on_failure: "halt on proxy error > 10%"
     ai_on_spine: false
 
   - id: bp.301.page-parser
     process: bp.301
-    binding: cf-worker-cron  # OR event-driven webhook from bp.300
+    binding: github-actions-cron  # Python script; CF Worker cron not applicable
     repo: Barton-Processes
-    path: factory/outreach/301-page-parser/wrangler.toml
-    schedule: ["0 8 * * *"]  # PROPOSED Decision Sheet A6
+    path: .github/workflows/cron-bp-301-page-parser.yml
+    schedule: ["0 0 1 * *"]  # monthly 1st day midnight UTC; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
-    purpose: "Daily management page parsing — fills CEO/CFO/HR slots from leadership pages"
-    orbt: PROPOSED
+    purpose: "Monthly management page parsing — fills CEO/CFO/HR slots from leadership pages"
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; GitHub Actions workflow created
     last_verified: null
     on_failure: "halt on parser confidence avg < 60%"
     ai_on_spine: false
 
-  - id: bp.400.dol-views.refresh
-    process: bp.400
-    binding: neon-pg-cron  # Neon-side, NOT CF Worker
-    repo: (Neon-side — not in a wrangler.toml)
-    path: "Neon: pg_cron OR scheduled function in dol_views schema"
-    schedule: ["0 5 * * *"]  # PROPOSED Decision Sheet A7
-    timezone: UTC
-    purpose: "Daily materialized view refresh for 6 DOL views"
-    orbt: PROPOSED  # views OPERATE; refresh schedule needs Mechanic confirmation
-    last_verified: null
-    on_failure: "halt on refresh failure"
-    ai_on_spine: false
 
   - id: bp.500.talent-flow
     process: bp.500
-    binding: cf-worker-cron
+    binding: github-actions-cron  # Python script; CF Worker cron not applicable
     repo: Barton-Processes
-    path: factory/outreach/500-talent-flow/wrangler.toml
-    schedule: ["0 8 1 * *"]  # PROPOSED Decision Sheet A8
+    path: .github/workflows/cron-bp-500-talent-flow.yml
+    schedule: ["0 8 1 * *"]  # monthly 1st day 8am UTC; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
     purpose: "Monthly talent movement detection (snapshot diff on people_slots)"
-    orbt: PROPOSED
+    orbt: BUILD  # classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08; GitHub Actions workflow created
     last_verified: null
     on_failure: "alert on zero detections for 2 cycles"
     ai_on_spine: false
@@ -232,10 +220,11 @@ crons:
     binding: cf-worker-cron
     repo: Barton-Processes
     path: factory/outreach/700-campaign-engine/wrangler.toml
-    schedule: ["0 13 * * 1-5"]  # PROPOSED Decision Sheet A9
+    schedule: ["0 13 * * 1-5"]  # weekdays 9am ET; classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
     timezone: UTC
     purpose: "Weekday cadence sequencing — 9am ET, 1h before bp.100 daily fire"
-    orbt: PROPOSED
+    orbt: PROPOSED  # BLOCKED — HeyReach + Composio deps not resolved; do not promote until unblocked
+    blocked_reason: "Missing HeyReach campaign assignment + Composio action mapping; classified 2026-05-08 BAR-MONDAY-16-FLEET-GREEN"
     last_verified: null
     on_failure: "halt on Composio error rate > 10%"
     ai_on_spine: false
@@ -253,57 +242,6 @@ crons:
     on_failure: "HALT on bounce > 5% mid-run"
     ai_on_spine: false  # critical — Codex audits the migration
 
-  - id: bp.800.client-mint
-    process: bp.800
-    binding: cf-worker-cron + event-driven
-    repo: Barton-Processes
-    path: factory/cl/800-client-mint/wrangler.toml
-    schedule: ["0 4 * * *"]  # PROPOSED Decision Sheet A12 (reconcile)
-    timezone: UTC
-    purpose: "Daily reconcile + per-event on final_outcome=CLIENT flips"
-    orbt: PROPOSED
-    last_verified: null
-    on_failure: "halt on duplicate client_id detection"
-    ai_on_spine: false
-
-  - id: bp.810.client-intake
-    process: bp.810
-    binding: cf-worker-cron + http
-    repo: Barton-Processes
-    path: factory/client/810-client-intake/wrangler.toml
-    schedule: ["0 5 * * *"]  # PROPOSED Decision Sheet A13 (reconcile)
-    timezone: UTC
-    purpose: "HTTP intake event-driven + daily reconcile for staged-but-not-promoted"
-    orbt: PROPOSED
-    last_verified: null
-    on_failure: "halt on validation error rate > 5% or vault sync > 1h lag"
-    ai_on_spine: false
-
-  - id: bp.830.client-portal.cache-warm
-    process: bp.830
-    binding: cf-worker-cron
-    repo: Barton-Processes
-    path: factory/client/830-client-portal/wrangler.toml
-    schedule: ["0 6 * * *"]  # PROPOSED Decision Sheet A15
-    timezone: UTC
-    purpose: "Daily cache-warm + access log rollup"
-    orbt: PROPOSED
-    last_verified: null
-    on_failure: "halt on 5xx > 2%"
-    ai_on_spine: false
-
-  - id: bp.900.sales-portal.reconcile
-    process: bp.900
-    binding: cf-worker-cron
-    repo: Barton-Processes
-    path: factory/sales/900-sales-portal/wrangler.toml
-    schedule: ["0 6 * * *"]  # PROPOSED Decision Sheet A16
-    timezone: UTC
-    purpose: "Daily reconcile — promote completed-Fact-Finder, flag stalled, trigger bp.800 on CLIENT flips"
-    orbt: PROPOSED
-    last_verified: null
-    on_failure: "halt on stage skip"
-    ai_on_spine: false
 
   # ===========================================================================
   # META — the registry's own drift cron
@@ -335,6 +273,78 @@ crons:
     on_failure: "RED squawk if any D1 unreachable; ORANGE squawk on drift > 10%"
     ai_on_spine: false
 
+event_driven_processes:
+  # ===========================================================================
+  # EVENT-DRIVEN — no cron schedule; triggered by upstream events or SQL views
+  # Classified BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+  # ===========================================================================
+
+  - id: bp.400.dol-views.refresh
+    process: bp.400
+    binding: neon-pg-cron  # Neon SQL views — refresh triggered by pg_cron or upstream data events
+    repo: (Neon-side — not in a wrangler.toml)
+    path: "Neon: pg_cron OR scheduled function in dol_views schema"
+    trigger_source: "Neon SQL views — DOL data load events"
+    trigger_type: sql-view-refresh
+    purpose: "Materialized view refresh for 6 DOL views — event-driven on data load"
+    orbt: BUILD  # classified EVENT-DRIVEN BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+    last_verified: null
+    on_failure: "halt on refresh failure"
+    ai_on_spine: false
+
+  - id: bp.800.client-mint
+    process: bp.800
+    binding: event-driven  # fires on final_outcome=CLIENT flip in LCS pipeline
+    repo: Barton-Processes
+    path: factory/cl/800-client-mint/
+    trigger_source: "bp.100 LCS pipeline — final_outcome=CLIENT state flip"
+    trigger_type: pipeline-event
+    purpose: "Per-event client record mint on final_outcome=CLIENT flips + daily reconcile"
+    orbt: BUILD  # classified EVENT-DRIVEN BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+    last_verified: null
+    on_failure: "halt on duplicate client_id detection"
+    ai_on_spine: false
+
+  - id: bp.810.client-intake
+    process: bp.810
+    binding: http  # HTTP-triggered intake; daily reconcile for staged-but-not-promoted
+    repo: Barton-Processes
+    path: factory/client/810-client-intake/
+    trigger_source: "HTTP POST from CRM / sales flow; bp.900 sales-portal reconcile"
+    trigger_type: http-event
+    purpose: "HTTP intake event-driven + reconcile for staged-but-not-promoted"
+    orbt: BUILD  # classified EVENT-DRIVEN BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+    last_verified: null
+    on_failure: "halt on validation error rate > 5% or vault sync > 1h lag"
+    ai_on_spine: false
+
+  - id: bp.830.client-portal.cache-warm
+    process: bp.830
+    binding: event-driven  # triggered on client record creation / portal access events
+    repo: Barton-Processes
+    path: factory/client/830-client-portal/
+    trigger_source: "bp.810 client-intake completion + portal access events"
+    trigger_type: pipeline-event
+    purpose: "Cache-warm + access log rollup on client intake completion"
+    orbt: BUILD  # classified EVENT-DRIVEN BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+    last_verified: null
+    on_failure: "halt on 5xx > 2%"
+    ai_on_spine: false
+
+  - id: bp.900.sales-portal.reconcile
+    process: bp.900
+    binding: event-driven  # triggered on Fact-Finder completion events
+    repo: Barton-Processes
+    path: factory/sales/900-sales-portal/
+    trigger_source: "Fact-Finder completion webhook; stall detection from LCS pipeline"
+    trigger_type: pipeline-event
+    purpose: "Promote completed Fact-Finder, flag stalled, trigger bp.800 on CLIENT flips"
+    orbt: BUILD  # classified EVENT-DRIVEN BAR-MONDAY-16-FLEET-GREEN 2026-05-08
+    last_verified: null
+    on_failure: "halt on stage skip"
+    ai_on_spine: false
+
+retired_processes:
   # ===========================================================================
   # RETIRED
   # ===========================================================================
@@ -355,12 +365,15 @@ crons:
     ai_on_spine: false
 
 # Summary (refresh on every Mechanic introspection)
+# Updated BAR-MONDAY-16-FLEET-GREEN 2026-05-08 — fleet classification complete
 summary:
-  active_count: 7      # file-verified 2026-05-03, includes mission-control-api BAR-331 routine cron
-  disabled_count: 1    # mission-control-api COS
-  proposed_count: 15   # awaiting Decision Sheet sign-off + Mechanic dispatch
-  retired_count: 1     # bp.600
-  total: 24
+  active_count: 7       # OPERATE state; file-verified 2026-05-01
+  disabled_count: 1     # mission-control-api COS
+  build_count: 12       # bp.010/201/202/300/301/500/820 in crons[] + 5 in event_driven_processes[]
+  proposed_count: 4     # bp.700 (BLOCKED) + bp.100.lcs-fire-daily + 2 governance crons
+  event_driven_count: 5 # bp.400/800/810/830/900 — moved to event_driven_processes[]
+  retired_count: 1      # bp.600 — in retired_processes[]
+  total: 30             # crons[] active+disabled+build+proposed + event_driven + retired
 
   unaddressed_processes: []  # populated by Mechanic on introspection — any process WITHOUT a registry row gets logged here
   ai_on_spine_violations: 0  # MUST be 0 — Codex audits weekly

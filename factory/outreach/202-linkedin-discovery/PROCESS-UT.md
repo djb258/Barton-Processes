@@ -22,7 +22,7 @@ inside:
   heir:
     process_id: bp.202
     species: UT-Body
-    version: "1.0.1"
+    version: "1.0.2"
     last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
   orbt:
@@ -59,6 +59,18 @@ Section placeholder — content to be filled by process owner.
 
 ## §9 OBSERVABILITY
 Section placeholder — content to be filled by process owner.
+
+## §10 Operations / Schedule {#sec-10-operations}
+
+**Cron classification:** RECURRING-daily
+**Decision date:** 2026-05-08
+**Decision authority:** Sovereign (Dave Barton, BAR-MONDAY-16-FLEET-GREEN)
+
+**Schedule:** `0 7 * * *` (daily 7am UTC / 3am ET)
+**Implementation:** GitHub Actions cron
+**Trigger source (if event-driven):** N/A
+
+---
 
 ## §10 LBB SUBJECTS
 Section placeholder — content to be filled by process owner.
@@ -600,6 +612,7 @@ No logbook during BUILD.
 | 2026-04-02 | v0.0.4 | legacy-session | `AMEND` | Gate A+B ran all 10,786 slots: 941+124 = 1,065 LinkedIn URLs filled. 999 slots → FULL, 66 → REACHABLE. (LBB: 5db86e97) |
 | 2026-04-29 | v1.0.0 | claude-sonnet-4-6 | `CREATE` | UT v2.7.0 consolidation: PROCESS-UT.md written from fragments. DOCTRINE.md extracted (10 rules). orbt.yaml created. heir.yaml updated to 8-field standard. Fragments archived. |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
+| 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 7 * * *` GitHub Actions cron. Version bumped in 3 locations. |
 
 ^[ROW-2026-04-01a]: Process doc created (v2.0.0, old format) | LBB: none
 ^[ROW-2026-04-01b]: Rewritten to PROCESS_TEMPLATE v4.0.0 (14 sections) | LBB: none
@@ -613,7 +626,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-01 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.1 |
+| Version | v1.0.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |
