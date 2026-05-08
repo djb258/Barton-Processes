@@ -3,11 +3,13 @@ name: cron-bp-300-blog-worker
 on:
   schedule:
     - cron: "0 6 * * *"
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   run:
     runs-on: ubuntu-latest
+    env:
+      DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,36 +19,40 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Doppler CLI
+        run: |
+          curl -Ls https://cli.doppler.com/install.sh | sh -s -- --no-package-manager
+          echo "$HOME/.doppler/bin" >> $GITHUB_PATH
+
       - name: Install dependencies
         run: pip install -r factory/outreach/300-blog-worker/requirements.txt
 
       - name: Run blog worker
-        env:
-          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
-        run: python factory/outreach/300-blog-worker/src/blog-monitor-v2.py
+        run: doppler run --token "$DOPPLER_TOKEN" -- python factory/outreach/300-blog-worker/src/blog-monitor-v2.py
+        continue-on-error: true
+        id: run_script
 
       - name: Post LBB success log
-        if: success()
-        env:
-          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
+        if: steps.run_script.outcome == 'success'
         run: |
-          curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
-            -H "Authorization: Bearer $LBB_API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: github-actions/bp.300" \
-            -d '{"title":"bp.300 blog-worker run SUCCESS","subject_id":"svg-outreach-proc","orbt_mode":"OPERATE","content":"Cron run completed successfully.","source_type":"cron","source_name":"cron-bp-300-blog-worker"}'
+          doppler run --token "$DOPPLER_TOKEN" -- bash -c '
+            curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
+              -H "Authorization: Bearer $LBB_API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: github-actions/bp.300" \
+              -d '"'"'{"title":"bp.300 blog-worker run SUCCESS","subject_id":"svg-outreach-proc","orbt_mode":"OPERATE","content":"Cron run completed successfully.","source_type":"cron","source_name":"cron-bp-300-blog-worker"}'"'"'
+          '
 
-      - name: Post LBB failure log
-        if: failure()
-        env:
-          LBB_API_KEY: ${{ secrets.LBB_API_KEY }}
+      - name: Post LBB failure squawk
+        if: steps.run_script.outcome == 'failure'
         run: |
-          curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
-            -H "Authorization: Bearer $LBB_API_KEY" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: github-actions/bp.300" \
-            -d '{"title":"bp.300 blog-worker run FAILURE","subject_id":"svg-outreach-proc","orbt_mode":"REPAIR","content":"Cron run failed. Check GitHub Actions logs. Note: FP-300-01 version sprawl unresolved — blog-monitor-v2.py used as canonical pending sovereign pick.","source_type":"cron","source_name":"cron-bp-300-blog-worker"}'
+          doppler run --token "$DOPPLER_TOKEN" -- bash -c '
+            curl -s -X POST "https://lbb.svg-outreach.workers.dev/ingest" \
+              -H "Authorization: Bearer $LBB_API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: github-actions/bp.300" \
+              -d '"'"'{"title":"bp.300 blog-worker run FAILURE","subject_id":"svg-outreach-proc","orbt_mode":"REPAIR","content":"Cron run failed. Check GitHub Actions logs. Note: FP-300-01 version sprawl unresolved — blog-monitor-v2.py used as canonical pending sovereign pick.","source_type":"cron","source_name":"cron-bp-300-blog-worker"}'"'"'
+          '
 
       - name: Always exit 0 (Aviation Model — squawk logged, do not block)
-        if: always()
         run: exit 0
