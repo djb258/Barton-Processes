@@ -1,0 +1,259 @@
+# =============================================================================
+# plan-book.yaml — Plan-Body manifest companion to PLAN-BOOK.md
+# BAR-MONDAY-16-FLEET-GREEN — 16 production processes to GREEN by Monday 2026-05-11
+# BS Law v1.3.0 Y-junction syntactic separation (outside / inside as distinct top-level maps)
+# BS Law v1.5.0 universal paired-artifact pattern — parity zone matches PLAN-BOOK.md frontmatter
+# Book Law v1.5.0 Plan-Body species
+# =============================================================================
+
+species: Plan-Body
+bar_id: BAR-MONDAY-16-FLEET-GREEN
+sovereign_ref: barton-processes
+version: "1.0.0"
+last_modified: "2026-05-08"
+created: "2026-05-08"
+authority: "Sovereign-authorized 2026-05-08 (Dave Barton)"
+planner_engine: opus-4.7
+foreman_engine: opus-4.7
+mechanic_engine: sonnet
+auditor_engine: codex
+
+# ---------------------------------------------------------------------------
+# Y-JUNCTION (BS Law v1.3.0 — outside.heir, outside.orbt, inside.heir, inside.orbt
+#  as syntactically distinct top-level maps)
+# ---------------------------------------------------------------------------
+
+outside:
+  heir:
+    sovereign_ref: barton-processes
+    hub_id: bar-monday-16-fleet-green
+    ctb_placement: branch
+    ctb_node: barton-enterprises/svg-agency/bars/monday-16-fleet-green
+    imo_topology: hub
+    cc_layer: CC-01
+    services: [opus-4.7, sonnet, codex, lbb, d1-mission-control, cf-workers]
+    secrets_provider: doppler
+    acceptance_criteria: |
+      All 16 production processes pass Codex audit (P=1) against Atlas v2.3.0
+      conformance gates. Cron fleet definitively classified per process. Every
+      OPERATE-eligible process has fire-proof + LBB row per fire by Monday AM.
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-08T00:00:00Z"
+    indexed_by: opus-4.7-planner
+
+inside:
+  heir:
+    process_id: bar.monday-16-fleet-green
+    species: Plan-Body
+    version: "1.0.0"
+    last_modified: "2026-05-08"
+    companion_manifest: docs/plans/BAR-MONDAY-16-FLEET-GREEN/PLAN-BOOK.md
+  orbt:
+    library_state: BUILD
+    runtime_state: PLANNING
+
+# ---------------------------------------------------------------------------
+# PARITY ZONE — these fields MUST match PLAN-BOOK.md frontmatter
+# Verified by scripts/atlas-pair-verify.sh at commit time.
+# ---------------------------------------------------------------------------
+
+parity_zone:
+  - bar_id: BAR-MONDAY-16-FLEET-GREEN
+  - version: "1.0.0"
+  - last_modified: "2026-05-08"
+  - sovereign_ref: barton-processes
+  - species: Plan-Body
+  - planner_engine: opus-4.7
+  - mechanic_engine: sonnet
+  - auditor_engine: codex
+  - acceptance_criteria_hash: "sha256:tbd-on-first-commit"
+
+# ---------------------------------------------------------------------------
+# WORK-ORDER BLOCKS — 16 process work-orders + master conformance contract
+# ---------------------------------------------------------------------------
+
+work_orders:
+
+  - id: master-conformance
+    type: planner
+    actor: opus-4.7
+    inputs:
+      - atlas/ATLAS.md@v2.3.0
+      - atlas/constants/UNIFIED_TEMPLATE.md@v2.8.0
+      - atlas/constants/UT_CHECKLIST.md@v1.3.1
+      - atlas/constants/BS_LAW.md@v1.4.0
+      - atlas/constants/BOOK_LAW.md@v1.5.0
+      - atlas/constants/BARTON_ENTERPRISES_CTB.md
+    outputs:
+      - this Plan Book
+      - paired-artifacts.yaml registry append (master + 16)
+      - pending-atlas-updates/BAR-MONDAY-16-FLEET-GREEN.yaml (§7.3a + §14 queue)
+
+  - id: bar-orbt-4state-atlas-sync
+    type: queue-sovereign
+    actor: opus-4.7
+    inputs:
+      - Atlas §1.5.3 ORBT enum still describes 6 states
+      - Sovereign Decision A 2026-05-08 reverted to 4-state
+    outputs:
+      - pending-atlas-updates/BAR-ORBT-4STATE-ATLAS-SYNC.yaml
+
+  - id: codex-baseline-audit
+    type: auditor
+    actor: codex
+    run_in_background: true
+    inputs:
+      - 16 × factory/<branch>/<NNN>-*/PROCESS-UT.md
+      - 16 × factory/<branch>/<NNN>-*/workflow.yaml
+      - atlas/ATLAS.md@v2.3.0 (conformance gates)
+    outputs:
+      - 16 × MECHANIC-INPUT-GAPS-bp-NNN.md (per-process gap delta)
+      - master baseline-audit summary table
+
+  - id: sovereign-cron-classification
+    type: queue-sovereign
+    actor: opus-4.7
+    inputs:
+      - 12 PROPOSED processes from cron_registry.yaml
+      - Each process's UT §10 + §6 (cron rationale + trigger spec)
+    outputs:
+      - foreman decision sheet for Dave (single batch reply unblocks all 12)
+
+  - id: sonnet-batch-1
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    parallel_batch_size: 4
+    inputs:
+      - MECHANIC-INPUT-GAPS-bp-{010,100,200,201}.md
+    outputs:
+      - 4 × PROCESS-UT.md amendments (literal old_string/new_string triples)
+      - 4 × workflow.yaml amendments (parity zone + Y-junction)
+      - 4 × wrangler.toml [triggers] adds OR removes (per sovereign classification)
+
+  - id: sonnet-batch-2
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    parallel_batch_size: 4
+    inputs:
+      - MECHANIC-INPUT-GAPS-bp-{202,300,301,400}.md
+    outputs:
+      - 4 × PROCESS-UT.md amendments
+      - 4 × workflow.yaml amendments
+      - 4 × wrangler.toml [triggers] adds OR removes
+
+  - id: sonnet-batch-3
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    parallel_batch_size: 4
+    inputs:
+      - MECHANIC-INPUT-GAPS-bp-{500,600,700,800}.md
+    outputs:
+      - 4 × PROCESS-UT.md amendments
+      - bp.600 RETIRED stamp confirmed
+      - 4 × workflow.yaml amendments
+
+  - id: sonnet-batch-4
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    parallel_batch_size: 4
+    inputs:
+      - MECHANIC-INPUT-GAPS-bp-{810,820,830,900}.md
+    outputs:
+      - 4 × PROCESS-UT.md amendments
+      - 4 × workflow.yaml amendments
+      - 4 × wrangler.toml [triggers] adds OR removes
+
+  - id: codex-recertify
+    type: auditor
+    actor: codex
+    run_in_background: true
+    inputs:
+      - 16 × repaired pairs (post-Sonnet)
+    outputs:
+      - 16 × CERTIFY rows OR Strike-1 squawks
+      - LBB ingest per certification
+
+  - id: live-fire-monday
+    type: operator
+    actor: dave-or-foreman
+    inputs:
+      - Every OPERATE-eligible worker
+    outputs:
+      - wrangler cron triggers list output per worker
+      - LBB row-per-fire confirmation per scheduled cron
+      - Final BAR closure ingest
+
+# ---------------------------------------------------------------------------
+# GATES — 12 conformance gates per process (Codex audit checklist)
+# ---------------------------------------------------------------------------
+
+gates:
+  total_gates: 12
+  gate_ids: [G01, G02, G03, G04, G05, G06, G07, G08, G09, G10, G11, G12]
+  gate_specs:
+    G01: "UT v2.8.0 14 sections present (§1..§14)"
+    G02: "UT_CHECKLIST v1.3.1 13-item pre-flight populated"
+    G03: "HEIR 8 fields populated in PROCESS-UT.md frontmatter"
+    G04: "ORBT 4-state stamped (BUILD/OPERATE/REPAIR/TROUBLESHOOT_TRAIN)"
+    G05: "ctb_node declared on BE trunk"
+    G06: "§9b mandatory gauge installed (Atlas §1.6 typology)"
+    G07: "6D complete (WHO/WHAT/WHEN/WHERE/WHY/HOW)"
+    G08: "§14 Logbook present and append-only"
+    G09: "workflow.yaml BS Law v1.3.0 Y-junction syntactic separation"
+    G10: "workflow.yaml Book Law v1.5.0 Workflow-Body 11 blocks"
+    G11: "BS Law v1.5.0 SHA256 parity zone matches PROCESS-UT.md"
+    G12: "Registered in paired-artifacts.yaml as pair #N"
+
+# ---------------------------------------------------------------------------
+# OUT OF SCOPE (explicit carve-out — does not block this BAR)
+# ---------------------------------------------------------------------------
+
+out_of_scope:
+  - mc-api.routines AI-on-spine RED finding (BAR-375 — separate sovereign call)
+  - ProcessShelf.tsx UI render (BAR-MC-WIRE-16 follow-on)
+  - Trunk restructure (real estate / personal finance branches — sovereign deferred 2026-05-08)
+  - Atlas §1.5.3 ORBT 6→4 state drift fix (queued separately as BAR-ORBT-4STATE-ATLAS-SYNC)
+
+# ---------------------------------------------------------------------------
+# LBB INGEST CONTRACT (post-flight per Four-Brain G06)
+# ---------------------------------------------------------------------------
+
+lbb:
+  subject_id: system
+  subject_alt: processes
+  ingest_on:
+    - plan-book-creation
+    - codex-baseline-audit-completion
+    - per-mechanic-batch-completion
+    - per-codex-recertify
+    - live-fire-monday
+    - bar-closure
+  record_template:
+    sovereign_ref: barton-processes
+    hub_id: bar-monday-16-fleet-green
+    cc_layer: CC-01
+    ctb_placement: branch
+    orbt_mode: BUILD
+    tags: ["bar-monday-16-fleet-green", "16-process-conformance", "atlas-v2.3.0", "session-2026-05-08"]
+
+# ---------------------------------------------------------------------------
+# DOCUMENT CONTROL (matches PLAN-BOOK.md §14 logbook)
+# ---------------------------------------------------------------------------
+
+document_control:
+  created: "2026-05-08"
+  last_modified: "2026-05-08"
+  version: "1.0.0"
+  status: BUILD
+  authority: "Dave Barton (sovereign)"
+  ctb_node: "barton-enterprises/svg-agency/bars/monday-16-fleet-green"
+  audit_trail:
+    - codex_baseline_pending
+    - sonnet_repairs_pending
+    - codex_recertify_pending
+    - live_fire_pending
