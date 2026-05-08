@@ -10,7 +10,7 @@
 # =============================================================================
 
 name: run-dyno
-version: "1.1.0"
+version: "1.1.1"
 last_modified: "2026-05-08"
 
 # =============================================================================
@@ -68,7 +68,7 @@ outside:
 inside:
   heir:
     process_id: PROC-060
-    version: "1.1.0"
+    version: "1.1.1"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/imo-creator/060-run-dyno/PROCESS-UT.md
     services:
@@ -199,20 +199,99 @@ data:
     - action: second_fce_run_process_outside_proc_060
       reason: PROC-060 is the single FCE run process. PROC-080 is reference fill logic. INV-01.
   d1:
-    binding: D1_MISSION_CONTROL
+    database_name: mission-control
+    database_id: "9f01c45a-a7f8-4173-83ac-afa666e86609"
+    binding: MC_DB
     tables:
       - name: dyno_run
         insert_at: FCE-13
         gate: codex_pass_required
         rows_per_run: 1
-        schema_source: mission-control-api/migrations/0018_dyno_run.sql
-        imo_bundle_migration: imo-creator-v2/migrations/0001-fce-imo-bundle.sql
-        imo_bundle_columns: [intake_yaml, workbench_pointer, intake_validated_at, planner_verdict]
+        schema_source:
+          - workers/mission-control-api/migrations/0018_dyno_run.sql
+          - workers/mission-control-api/migrations/0024_fce_imo_bundle.sql
+        columns:
+          - run_id
+          - domain
+          - p1_definition
+          - intent_mode
+          - phases
+          - status
+          - verdict
+          - r_x
+          - ut_doc
+          - diagnostic
+          - cycle_count
+          - models_used
+          - cost_usd
+          - r2_artifact_path
+          - health_report
+          - created_at
+          - completed_at
+          - intake_yaml
+          - workbench_pointer
+          - intake_validated_at
+          - planner_verdict
       - name: dyno_run_cycle
         insert_at: FCE-13
         gate: codex_pass_required
         rows_per_cycle: 3
-        schema_source: mission-control-api/migrations/0018_dyno_run.sql
+        schema_source:
+          - workers/mission-control-api/migrations/0018_dyno_run.sql
+        columns:
+          - cycle_id
+          - run_id
+          - phase
+          - model
+          - prompt_hash
+          - response_hash
+          - tokens_in
+          - tokens_out
+          - cost_usd
+          - duration_ms
+          - created_at
+
+# =============================================================================
+# R2 — Live workbench wiring (FCE-02 through FCE-12)
+# =============================================================================
+
+r2:
+  bucket_name: svg-files
+  binding: R2_SVG_FILES
+  path_pattern: "r2://svg-files/dyno-runs/{sovereign_id}/"
+  workbench_window: "FCE-02 through FCE-12"
+  cleanup_gate: D1 INSERT confirmed (after dyno_run row written — INV-10)
+  fallback: >
+    R2 artifacts are retained as fallback evidence if D1 INSERT fails.
+    R2 is NOT cleaned until D1 confirmation received.
+
+# =============================================================================
+# MISSION CONTROL API — proc060.ts route file
+# =============================================================================
+
+mission_control_api:
+  worker_name: mission-control-api
+  wrangler_config: workers/mission-control-api/wrangler.toml
+  route_file: workers/mission-control-api/src/routes/proc060.ts
+  endpoints:
+    - method: GET
+      path: /proc-060/queue
+      purpose: Planner queue — 4 buckets (incoming / processing / done / failed)
+    - method: GET
+      path: /proc-060/runs
+      purpose: "List dyno_run rows with intake metadata; limit param"
+    - method: GET
+      path: /proc-060/run/:id
+      purpose: Full run detail — phases, cycles, intake_yaml, workbench_pointer
+    - method: POST
+      path: /proc-060/intake
+      purpose: "Submit new FCE intake; creates dyno_run row in pending state"
+    - method: POST
+      path: /proc-060/retry/:id
+      purpose: "Re-submit failed run; new dyno_run row with same intake_yaml"
+    - method: POST
+      path: /proc-060/cancel/:id
+      purpose: "Cancel pending/running run; sets status=cancelled"
 
 # =============================================================================
 # NODES — 15-node DAG: FCE-00 through FCE-14
@@ -717,9 +796,9 @@ lbb:
 # =============================================================================
 
 mission_control:
-  status: deferred
-  reason: MC wiring deferred to follow-on BAR per Plan Book Q-03
-  when_wired_must_surface:
+  status: wired (BUILD)
+  page: workers/mission-control/src/pages/RunDyno.tsx
+  surfaces:
     - run list with domain / verdict / status
     - sovereign_id per run with R2 workbench status panel
     - dyno_run_cycle rows per model per cycle (three-model visibility)

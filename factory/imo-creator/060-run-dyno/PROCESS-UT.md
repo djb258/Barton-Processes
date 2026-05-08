@@ -33,7 +33,7 @@
 | Process ID | PROC-060 |
 | Name | Run Dyno — FCE End-to-End Operator Runbook |
 | Species | UT-Body (Book Law v1.5.0) |
-| Version | 1.1.0 |
+| Version | 1.1.1 |
 | Status | BUILD |
 | Created | 2026-05-05 |
 | Last Modified | 2026-05-08 |
@@ -154,18 +154,20 @@ P=1 when:
 | `atlas/dyno/dyno_engine.py` | runner | 🟢 | Mechanical runner — calls us.py + up.py; gated, not locked |
 | `atlas/dyno/run_fce.py` | orchestrator | 🟢 | Full-pipeline orchestrator (FCE-00 → FCE-14); gated |
 | OpenRouter API | external service | 🟢 | Three expensive-tier models per cycle; OPENROUTER_API_KEY via Doppler |
-| Cloudflare R2 (`svg-files`) | storage | 🟢 | **Live workbench ONLY** during run (FCE-02 through FCE-12); path `r2://svg-files/dyno-runs/{sovereign_id}/` |
-| D1 (`mission-control`) | database | 🟢 | **Completed-run vault ONLY**; tables `dyno_run` + `dyno_run_cycle`; schema: `0018_dyno_run.sql` |
+| Cloudflare R2 (`svg-files`) | storage | 🟢 | **Live workbench ONLY** during run (FCE-02 through FCE-12); bucket `svg-files`, binding `R2_SVG_FILES`, path `r2://svg-files/dyno-runs/{sovereign_id}/` |
+| D1 (`mission-control`) | database | 🟢 | **Completed-run vault ONLY**; name `mission-control`, id `9f01c45a-a7f8-4173-83ac-afa666e86609`, binding `MC_DB`; tables `dyno_run` (20 cols) + `dyno_run_cycle`; migrations `0018_dyno_run.sql` + `0024_fce_imo_bundle.sql` |
 | LBB API | logging | 🟢 | Role-transition + CERTIFY rows; subject `processes` |
 | Doppler (`imo-creator/dev`) | secrets | 🟢 | OPENROUTER_API_KEY, CLOUDFLARE_API_TOKEN, LBB_API_KEY |
-| Mission Control UI | dashboard | 🟡 | **N/A until MC wiring BAR (TBD)** — follow-on BAR per Q-03 |
+| Mission Control UI | dashboard | 🟢 | `workers/mission-control/src/pages/RunDyno.tsx` — queue view + intake form (BUILD) |
+| Mission Control API | api | 🟢 | `workers/mission-control-api/src/routes/proc060.ts` — 6 routes (BUILD) |
 
 ### BARs Referenced
 
 | BAR ID | Subject | Status |
 |--------|---------|--------|
 | BAR-FCE-RUN-060-PLANNER | This process — Plan Book | PLAN_BOOK_SIGNED |
-| MC wiring BAR (TBD) | Mission Control runtime wiring | Not yet issued |
+| BAR-345 | D1 dyno_run schema base (migration 0018) | CLOSED |
+| BAR-393 | Fire-and-forget wrapper (dyno-run-fce.yaml) | CLOSED |
 
 ### LBB Subjects Fed
 
@@ -180,12 +182,91 @@ None — PROC-060 IS the FCE runner. FCE runs produced by this process are store
 
 ### Live Dashboard
 
-**N/A until MC wiring BAR (TBD).** When wired, Mission Control must surface:
+Mission Control surfaces PROC-060 runs via `workers/mission-control/src/pages/RunDyno.tsx` (queue view + intake form). API routes in `workers/mission-control-api/src/routes/proc060.ts`.
+
+Surfaces:
 - Sovereign ID per run
 - R2 workbench status panel (working folder, cycle artifact list)
 - `dyno_run_cycle` rows per model per cycle (three-model visibility)
 - Audit/vault/library state badges: R2 → audit → D1 → library
 - DMJ readiness flag per family (N count)
+
+---
+
+## §3a CONCRETE WIRING
+
+### D1 Database
+
+| Field | Value |
+|-------|-------|
+| database_name | `mission-control` |
+| database_id | `9f01c45a-a7f8-4173-83ac-afa666e86609` |
+| binding | `MC_DB` |
+| wrangler.toml | `workers/mission-control-api/wrangler.toml` |
+
+#### Table: `dyno_run` — 20 columns total
+
+16 original columns (migration `0018_dyno_run.sql`):
+`run_id`, `domain`, `p1_definition`, `intent_mode`, `phases`, `status`, `verdict`,
+`r_x`, `ut_doc`, `diagnostic`, `cycle_count`, `models_used`, `cost_usd`,
+`r2_artifact_path`, `health_report`, `created_at`, `completed_at`
+
+4 IMO bundle columns (migration `0024_fce_imo_bundle.sql`):
+`intake_yaml`, `workbench_pointer`, `intake_validated_at`, `planner_verdict`
+
+#### Table: `dyno_run_cycle` — 10 columns
+
+`cycle_id`, `run_id` (FK → dyno_run), `phase`, `model`, `prompt_hash`,
+`response_hash`, `tokens_in`, `tokens_out`, `cost_usd`, `duration_ms`, `created_at`
+
+#### Migrations (applied order)
+
+| File | Contents |
+|------|----------|
+| `workers/mission-control-api/migrations/0018_dyno_run.sql` | CREATE dyno_run + dyno_run_cycle + indexes (BAR-345 base — 16 columns) |
+| `workers/mission-control-api/migrations/0024_fce_imo_bundle.sql` | ALTER dyno_run: +4 IMO bundle columns + backfill |
+
+### R2 Bucket
+
+| Field | Value |
+|-------|-------|
+| bucket_name | `svg-files` |
+| binding | `R2_SVG_FILES` |
+| path pattern | `r2://svg-files/dyno-runs/{sovereign_id}/` |
+| workbench window | FCE-02 through FCE-12 |
+| cleanup gate | D1 INSERT confirmed (INV-10) |
+| fallback | R2 stays intact if D1 fails |
+
+### Mission Control API Endpoints (proc060.ts)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/proc-060/queue` | Planner queue — 4 buckets (incoming / processing / done / failed) |
+| GET | `/api/proc-060/runs` | List dyno_run rows with intake metadata; `limit` param |
+| GET | `/api/proc-060/run/:id` | Full run detail — phases, cycles, intake_yaml, workbench_pointer |
+| POST | `/api/proc-060/intake` | Submit new FCE intake; creates dyno_run row in `pending` state |
+| POST | `/api/proc-060/retry/:id` | Re-submit failed run; new dyno_run row with same intake_yaml |
+| POST | `/api/proc-060/cancel/:id` | Cancel pending/running run; sets status=`cancelled` |
+
+### Mission Control UI
+
+| File | Role |
+|------|------|
+| `workers/mission-control/src/pages/RunDyno.tsx` | Run Dyno page — queue view + intake form |
+| `workers/mission-control/src/components/Shell.tsx` | Route registered here |
+| `workers/mission-control/src/navigation.ts` | Nav node added (heirId: `proc-060`) |
+
+### Planner + Dispatcher (local Python)
+
+| File | Role |
+|------|------|
+| `imo-creator-v2/atlas/dyno/planner/planner.py` | Planner: polls D1 for pending rows, runs BS Law lens, queues to intake |
+| `imo-creator-v2/atlas/dyno/planner/planner-queue/incoming/` | Drop zone for new FCE intake YAMLs |
+| `imo-creator-v2/atlas/dyno/planner/planner-queue/processing/` | In-flight planner validation |
+| `imo-creator-v2/atlas/dyno/planner/planner-queue/done/` | Passed validation — moved to inbox |
+| `imo-creator-v2/atlas/dyno/planner/planner-queue/failed/` | Failed validation — structured failure report |
+| `imo-creator-v2/atlas/dyno/dispatch_fce.py` v1.2.0 | Dispatcher: fires Dyno engine with domain + P=1 from intake_yaml |
+| `imo-creator-v2/atlas/dyno/inbox/` | Inbox queue — validated YAMLs land here before engine claim |
 
 ---
 
@@ -335,7 +416,7 @@ domain string + P=1 + UP tolerance
 | "Show cycles for run X" | D1 `dyno_run_cycle` table — filter by run_id |
 | "Get raw artifacts for run X" | R2 path `r2://svg-files/dyno-runs/{sovereign_id}/` |
 | "What FCEs are registered?" | `atlas/manifests/fce-registry.yaml` |
-| "Show in Mission Control" | Deferred — MC wiring pending follow-on BAR (TBD) per Q-03 |
+| "Show in Mission Control" | `workers/mission-control/src/pages/RunDyno.tsx` — queue view + run list via `/api/proc-060/runs` |
 
 ---
 
@@ -414,7 +495,7 @@ These 21 invariants must hold at every step. Violation = STOP condition.
 | `dyno_run` | One per FCE run | run_id (UUID / sovereign_id), domain, p1_definition, status='completed', verdict, r2_artifact_path, cost_usd, cycle_count, models_used, completed_at |
 | `dyno_run_cycle` | Three per cycle (one per model) — all cycles | cycle_id, run_id, phase, model, prompt_hash, response_hash, tokens_in, tokens_out, cost_usd, duration_ms |
 
-Schema source: `mission-control-api/migrations/0018_dyno_run.sql`
+Schema source: `workers/mission-control-api/migrations/0018_dyno_run.sql` (16 cols) + `workers/mission-control-api/migrations/0024_fce_imo_bundle.sql` (4 IMO bundle cols)
 
 ### LBB Records
 
@@ -430,7 +511,7 @@ Schema source: `mission-control-api/migrations/0018_dyno_run.sql`
 | R2 + OpenRouter | Live workbench + active model loop | FCE-02 → FCE-12 |
 | D1 (`dyno_run`, `dyno_run_cycle`) | Completed-run vault | FCE-13 only, after Codex PASS |
 | R2 cleanup | Reset workbench | FCE-13, after D1 vault write success |
-| Mission Control | Operator visibility (MC wiring deferred — follow-on BAR TBD) | Continuous when wired |
+| Mission Control | Operator visibility — RunDyno.tsx + proc060.ts (BUILD) | Continuous |
 | FCE library | Certified shelf | FCE-14 only (PASS path) |
 | LBB | Role-transition + closeout memory | Every transition |
 | GitHub | Versioned source | After audited file changes |
@@ -562,7 +643,7 @@ When the first run completes, verify:
 | Item | Reason | Owner When It Lands |
 |------|--------|---------------------|
 | DMJ across multiple FCE runs | Deferred at N=1; separate process number confirmed (Plan Book §15 Q-01) | Dave Barton / follow-on BAR |
-| Mission Control wiring | Deferred to follow-on BAR (Plan Book §15 Q-03). When wired, MC must surface: run list with domain/verdict/status, cycle detail drill-down, cost totals, R2 artifact links, three-model visibility, DMJ readiness flag. | Dave Barton / MC-BAR TBD |
+| Mission Control wiring | Wired — see §3a. RunDyno.tsx + proc060.ts live. MC surfaces: run list with domain/verdict/status, cycle detail drill-down, cost totals, R2 artifact links, three-model visibility, DMJ readiness flag. | Dave Barton |
 | Domain-specific fill instructions | Handled by PROC-080 FCE-Fill (absorbed reference only; not a second runtime) | PROC-080 |
 | Family-level aggregation | Post-DMJ concern; out of PROC-060 scope | DMJ process (TBD number) |
 | Cross-FCE comparison / analytics | Post-DMJ + MC wiring concern | Follow-on processes |
@@ -596,7 +677,7 @@ When the first run completes, verify:
 | Atlas | v2.3.0 |
 | Created | 2026-05-05 |
 | Last Modified | 2026-05-08 |
-| Version | 1.1.0 |
+| Version | 1.1.1 |
 | Status | BUILD |
 | BAR | BAR-FCE-RUN-060-PLANNER |
 | Companion YAML | `Barton-Processes/factory/imo-creator/060-run-dyno/run-dyno.yaml` |
@@ -611,3 +692,4 @@ When the first run completes, verify:
 |------|---------|--------|--------|
 | 2026-05-05 | 1.0.0 | Initial creation — full UT-Body v1.0.0 per UT v2.8.0 + UT_CHECKLIST v1.3.1. FCE-00 through FCE-14 operator sequence per BAR-FCE-RUN-060-PLANNER Plan Book §7 locked step spine. All 18 invariants `INV-01…INV-18` encoded. BS Law v1.5.0 Y-junction conformant. Companion YAML: run-dyno.yaml. | Sonnet (Mechanic — BAR-FCE-RUN-060-PLANNER) |
 | 2026-05-08 | 1.1.0 | Absorb `AMENDMENT-PHASE-BARRIERS-AND-SOVEREIGN-ID.md`. Add PLN-00 (Planner gate) at step 0. Add INV-19 (sovereign_id at intake), INV-20 (phase barriers), INV-21 (run verdict rollup). Bump Atlas pin v2.2.7 → v2.3.0. Lock-stepped with run-dyno.yaml v1.1.0. | Sonnet (Mechanic — BAR-PROC-060-V1-1-0-PHASE-BARRIERS) |
+| 2026-05-08 | 1.1.1 | Documentation update — concrete wiring captured in §3a (D1 db id 9f01c45a, binding MC_DB; R2 bucket svg-files, binding R2_SVG_FILES; migrations 0018+0024; MC API proc060.ts; MC UI RunDyno.tsx; Planner + Dispatcher paths). No doctrine changes. Pairs with imo-creator-v2 commit a7403355. | Sonnet (Mechanic) |
