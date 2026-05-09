@@ -1,18 +1,27 @@
 ---
 outside:
   heir:
-    sovereign_ref: svg-outreach
-    hub_id: 800-client-mint
-    ctb_placement: barton-enterprises/svg-agency/client/800-client-mint
-    imo_topology: hub
+    sovereign_ref: imo-creator-v2
+    hub_id: client-mint-800
+    ctb_placement: Leaf
+    ctb_node: barton-enterprises/svg-agency/factory/cl/800-client-mint
+    imo_topology: middle
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - neon-via-hyperdrive
+      - d1-client-mint-800
+      - doppler
+    secrets_provider: doppler
+    acceptance_criteria: "Receives CL sovereign_id via POST /mint → mints client_id in D1 client table linked to sovereign_id; duplicate sovereign_id detection halts with DUPLICATE_SOVEREIGN error; SOVEREIGN_NOT_FOUND halts when cl.company_identity has no matching record; vault promotion via POST /vault writes certified client to Neon clnt.client; errors written to D1 client_error; GET /status returns accurate counts (total, vaulted, unvaulted, open_errors); cl.* Neon tables are READ ONLY."
   orbt:
     library_state: BUILD
     indexed_by: codex
 inside:
   heir:
     process_id: bp.800
-    version: "2.0.2"
+    species: UT-Body
+    version: "2.0.3"
     last_modified: "2026-05-08"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
@@ -518,6 +527,7 @@ No logbook during BUILD.
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on CL company promotion. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.0.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
+| 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | G03 HEIR repair: frontmatter outside.heir populated — sovereign_ref corrected to imo-creator-v2; hub_id corrected to client-mint-800; ctb_placement set to Leaf enum; ctb_node added (barton-enterprises/svg-agency/factory/cl/800-client-mint); imo_topology corrected from hub to middle; services, secrets_provider, acceptance_criteria added from canonical §1/§2 context; inside.heir.species added. Version bumped 2.0.2 → 2.0.3. |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -528,7 +538,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.2 |
+| Version | v2.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

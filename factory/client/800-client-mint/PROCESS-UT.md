@@ -17,22 +17,27 @@ outside:
     secrets_provider: doppler
     acceptance_criteria: "CSV row resolves to exactly one cl_company_identity row via deterministic match; multiple matches → REJECT to ambiguous queue; no match → REJECT to needs-CL-intake queue; address-normalized dedup index prevents duplicate mints; idempotent on company_unique_id; write-once trigger on cl_company_identity.client_id; operational record in client-hub.client carries sovereign_id + client_id; three-sink routing: FAILED → client_mint_error; NO_MATCH_QUEUED → client_mint_no_match_queue; AMBIGUOUS_QUEUED → client_mint_ambiguous_queue."
   orbt:
-    library_state: BUILD
+    library_state: RETIRED
     last_indexed_at: "2026-04-30T00:00:00Z"
     indexed_by: sonnet-mechanic
 inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "1.5.4"
+    version: "1.5.5"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/client/800-client-mint/PROCESS-UT.md
   orbt:
-    library_state: BUILD
+    library_state: RETIRED
 ---
+> **RETIRED — DUPLICATE PATH**
+> This file (`factory/client/800-client-mint/PROCESS-UT.md`) is a retired duplicate. The canonical UT Book for bp.800 Client Mint is at:
+> **`factory/cl/800-client-mint/PROCESS-UT.md`** (artifact_id: proc-800-client-mint)
+> Retired: 2026-05-08 by Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN). Do not update this file. Do not audit this file. All future work targets the canonical path.
+
 # Client Mint
 ## Promotes a CL-resident company (sovereign_id) into an svg-agency client by minting a client_id, writing the operational record to D1 client-hub, and back-stamping the write-once client_id pointer onto cl_company_identity. Address-aware dedup pre-check prevents duplicate mints.
-### Status: BUILD
+### Status: RETIRED
 ### Medium: process
 ### Business: svg-agency
 
@@ -693,6 +698,7 @@ No logbook during BUILD.
 | 2026-04-30 | v1.5.3 | Sonnet Runner | `REPAIR` | Repair pass 9 (round 9): §5 Forbidden Paths DELETE ban extended to all three CQRS sinks; §3e LBB no_match queue events added. |
 | 2026-04-30 | v1.5.3 | Sonnet Runner | `CERTIFY` | Round-10 close — Codex audit single LOW residual (LBB Subjects Fed frequency). CERTIFIED-WITH-RESIDUAL; FP-800-07 logged. |
 | 2026-05-08 | v1.5.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: YAML frontmatter added (outside.heir: sovereign_ref, hub_id, ctb_placement=Leaf, ctb_node, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria; inside.heir: process_id=bp.800, species, version, last_modified; orbt blocks). §14 migrated from 3-column to 5-column canonical format. Version bumped in 2 locations (frontmatter + DocCtrl; no §1 Version row). |
+| 2026-05-08 | v1.5.5 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `RETIRE` | Stamped RETIRED — duplicate path. Canonical is factory/cl/800-client-mint/PROCESS-UT.md (proc-800-client-mint). Both orbt.library_state fields set to RETIRED. Redirect notice block inserted at top of §1. Version bumped 1.5.4 → 1.5.5 in frontmatter + DocCtrl. |
 
 ## Document Control
 
@@ -700,7 +706,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-30 |
 | Last Modified | 2026-05-08 |
-| Version | 1.5.4 |
+| Version | 1.5.5 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | N/A — internal pipeline doc, no new structure discovery (per sovereign decision 2026-04-30) |
