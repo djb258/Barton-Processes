@@ -2,14 +2,14 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.500 Talent Flow — Monthly Executive Movement Detection
 # ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow
-# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-06
+# Species: Workflow-Body | Version: 1.0.1 | Last Modified: 2026-05-08
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: bp-500-talent-flow
-version: "1.0.0"
-last_modified: "2026-05-06"
+version: "1.0.1"
+last_modified: "2026-05-08"
 
 # Block 2 — inherits
 inherits:
@@ -55,8 +55,8 @@ inside:
   heir:
     process_id: bp.500
     species: Workflow-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -83,13 +83,16 @@ inside:
 # Block 7 — description
 description: "Monthly movement detection engine for bp.500 Talent Flow. Diffs people_slots history snapshots (current vs prior period), classifies executive movement (title change, departure, new hire), writes to talent_movement table, and emits TALENT signals into lcs_signal_queue for downstream bp.100 LCS Pipeline and bp.700 Campaign Engine. No AI — pure snapshot diff."
 
-# Block 8 — schedule
+# Block 8 — inputs (Book Law v1.5.0 — 11 mandatory blocks)
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+
+# Block 9 — schedule
 schedule:
   - cron: "0 8 1 * *"
     label: monthly-talent-scan
     dependency: bp.200-must-have-two-consecutive-snapshots
 
-# Block 9 — data
+# Block 10 — data
 data:
   reads:
     - people.linkedin_snapshots
@@ -104,7 +107,7 @@ data:
     - skip_bp_200_snapshot_gate
     - modify_locked_doctrine
 
-# Block 10 — nodes
+# Block 11 — nodes
 nodes:
   - { id: preflight, brain: deterministic, action: verify-bp200-two-consecutive-snapshots }
   - { id: snapshot-diff, brain: deterministic, action: diff-current-vs-prior-period }
@@ -114,7 +117,7 @@ nodes:
   - { id: stop-check, brain: deterministic, action: zero-detections-two-cycles-check }
   - { id: lbb-mc-closeout, brain: deterministic, depends_on: [emit-signals] }
 
-# Block 11 — gates + lbb
+# Block 12 — gates + lbb
 gates:
   cron_exists: "monthly cron 0 8 1 * * declared and registered"
   cron_firing: "recent fire or verified operator-trigger record exists"

@@ -2,14 +2,14 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.600 BIT Scoring (Buyer Intent Tracker) — TROUBLESHOOT_TRAIN (retired 2026-03-25)
 # ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring
-# Species: Workflow-Body | Version: 2.0.0 | Last Modified: 2026-05-06
+# Species: Workflow-Body | Version: 2.0.1 | Last Modified: 2026-05-08
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: bp-600-bit-scoring
-version: "2.0.0"
-last_modified: "2026-05-06"
+version: "2.0.1"
+last_modified: "2026-05-08"
 
 # Block 2 — inherits
 inherits:
@@ -55,8 +55,8 @@ inside:
   heir:
     process_id: bp.600
     species: Workflow-Body
-    version: "2.0.0"
-    last_modified: "2026-05-06"
+    version: "2.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -83,16 +83,19 @@ inside:
 # Block 7 — description
 description: "UT-local workflow for bp.600 BIT Scoring. Encodes T/T or formal retirement path; no blind repair after Strike 3."
 
-# Block 8 — schedule
+# Block 8 — inputs (Book Law v1.5.0 — 11 mandatory blocks)
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+
+# Block 9 — schedule
 schedule: []
 
-# Block 9 — data
+# Block 10 — data
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
   writes: [docs/audit/process-runs/bp-600/inventory-bp-600.md, docs/audit/process-runs/bp-600/live-state-bp-600.md, docs/audit/process-runs/bp-600/diff-bp-600.md, docs/audit/process-runs/bp-600/audit-bp-600.md]
   forbidden: [llm_on_schedule_spine, fourth_repair_after_strike_3, promote_without_sovereign_resolution]
 
-# Block 10 — nodes
+# Block 11 — nodes
 nodes:
   - { id: inventory, brain: gemini }
   - { id: live-introspection, brain: sonnet }
@@ -101,7 +104,7 @@ nodes:
   - { id: audit, brain: codex }
   - { id: lbb-mc-closeout, brain: deterministic }
 
-# Block 11 — gates + lbb
+# Block 12 — gates + lbb
 gates:
   cron_exists: "disabled/retired/T/T schedule state is explicit"
   cron_firing: "no unintended scoring cron fires"

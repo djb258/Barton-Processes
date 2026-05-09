@@ -21,7 +21,7 @@ inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.0.3"
+    version: "2.0.4"
     last_modified: "2026-05-08"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
@@ -399,6 +399,8 @@ npx wrangler worker route delete <route_id>
 
 ## 9b. Live Verification Log {#sec-9b-live-verification}
 
+> **NOT YET DEPLOYED** — gauge spec defined; all live values pending first production run.
+
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
 | Worker health endpoint responds | §3 | GET /health | `curl https://client-mint-800.svg-outreach.workers.dev/health` | [ ] | TBV | TBV — worker not deployed |
@@ -528,6 +530,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on CL company promotion. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.0.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | G03 HEIR repair: frontmatter outside.heir populated — sovereign_ref corrected to imo-creator-v2; hub_id corrected to client-mint-800; ctb_placement set to Leaf enum; ctb_node added (barton-enterprises/svg-agency/factory/cl/800-client-mint); imo_topology corrected from hub to middle; services, secrets_provider, acceptance_criteria added from canonical §1/§2 context; inside.heir.species added. Version bumped 2.0.2 → 2.0.3. |
+| 2026-05-08 | v2.0.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `REPAIR` | G06 closed: NOT YET DEPLOYED stamp added to §9b — all-TBV gauge rows now carry explicit deployment status declaration. Version bumped 2.0.3 → 2.0.4. |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -538,7 +541,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.3 |
+| Version | v2.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

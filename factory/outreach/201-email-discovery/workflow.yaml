@@ -2,14 +2,14 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.201 Email Discovery — SVG Outreach 201 Email Discovery
 # ctb_node: barton-enterprises/svg-agency/factory/outreach/201-email-discovery
-# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-06
+# Species: Workflow-Body | Version: 1.0.1 | Last Modified: 2026-05-08
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: bp-201-email-discovery
-version: "1.0.0"
-last_modified: "2026-05-06"
+version: "1.0.1"
+last_modified: "2026-05-08"
 
 # Block 2 — inherits
 inherits:
@@ -55,8 +55,8 @@ inside:
   heir:
     process_id: bp.201
     species: Workflow-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -83,16 +83,19 @@ inside:
 # Block 7 — description
 description: "UT-local workflow for bp.201 Email Discovery. Builds/validates email enrichment from slot_workbench slots with deterministic vendor calls (pattern, Hunter, Startpage) and LBB/MC visibility."
 
-# Block 8 — schedule
+# Block 8 — inputs (Book Law v1.5.0 — 11 mandatory blocks)
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+
+# Block 9 — schedule
 schedule: []
 
-# Block 9 — data
+# Block 10 — data
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
   writes: [docs/audit/process-runs/bp-201/inventory-bp-201.md, docs/audit/process-runs/bp-201/live-state-bp-201.md, docs/audit/process-runs/bp-201/diff-bp-201.md, docs/audit/process-runs/bp-201/audit-bp-201.md]
   forbidden: [llm_on_schedule_spine, email_write_without_verification_flag, skip_bp_200_gate]
 
-# Block 10 — nodes
+# Block 11 — nodes
 nodes:
   - { id: inventory, brain: gemini, output: inventory-bp-201.md }
   - { id: live-introspection, brain: sonnet, output: live-state-bp-201.md }
@@ -101,7 +104,7 @@ nodes:
   - { id: audit, brain: codex, output: audit-bp-201.md }
   - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
 
-# Block 11 — gates + lbb
+# Block 12 — gates + lbb
 gates:
   cron_exists: "cron or explicit upstream-trigger policy declared"
   cron_firing: "recent deterministic run evidence exists"

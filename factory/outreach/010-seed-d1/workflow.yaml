@@ -2,14 +2,14 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.010 SEED D1 — SVG Outreach D1 Spine Seed
 # ctb_node: barton-enterprises/svg-agency/outreach-intelligence/010-seed-d1
-# Species: Workflow-Body | Version: 1.0.0 | Last Modified: 2026-05-06
+# Species: Workflow-Body | Version: 1.0.1 | Last Modified: 2026-05-08
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: bp-010-seed-d1
-version: "1.0.0"
-last_modified: "2026-05-06"
+version: "1.0.1"
+last_modified: "2026-05-08"
 
 # Block 2 — inherits
 inherits:
@@ -55,8 +55,8 @@ inside:
   heir:
     process_id: bp.010
     species: Workflow-Body
-    version: "1.0.0"
-    last_modified: "2026-05-06"
+    version: "1.0.1"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/010-seed-d1/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -83,16 +83,19 @@ inside:
 # Block 7 — description
 description: "UT-local workflow for bp.010 SEED D1. Inventory PROCESS-UT, inspect live D1, verify cron/trigger reality, audit 10 gates, and log to LBB/MC."
 
-# Block 8 — schedule
+# Block 8 — inputs (Book Law v1.5.0 — 11 mandatory blocks)
+inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml }
+
+# Block 9 — schedule
 schedule: []
 
-# Block 9 — data
+# Block 10 — data
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml]
   writes: [docs/audit/process-runs/bp-010/inventory-bp-010.md, docs/audit/process-runs/bp-010/live-state-bp-010.md, docs/audit/process-runs/bp-010/diff-bp-010.md, docs/audit/process-runs/bp-010/audit-bp-010.md]
   forbidden: [llm_on_schedule_spine, reverse_write_to_neon, modify_locked_doctrine]
 
-# Block 10 — nodes
+# Block 11 — nodes
 nodes:
   - { id: inventory, brain: gemini, output: inventory-bp-010.md }
   - { id: live-introspection, brain: sonnet, output: live-state-bp-010.md }
@@ -101,7 +104,7 @@ nodes:
   - { id: audit, brain: codex, output: audit-bp-010.md }
   - { id: lbb-mc-closeout, brain: deterministic, depends_on: [audit] }
 
-# Block 11 — gates + lbb
+# Block 12 — gates + lbb
 gates:
   cron_exists: "declared cycle or registered on-demand trigger is documented"
   cron_firing: "recent fire or verified operator-trigger record exists"
