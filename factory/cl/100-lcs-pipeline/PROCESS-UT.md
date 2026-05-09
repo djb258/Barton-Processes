@@ -29,7 +29,7 @@ inside:
   heir:
     process_id: bp.100
     species: UT-Body
-    version: "1.0.3"
+    version: "1.0.4"
     last_modified: "2026-05-08"
     companion_manifest: PROCESS-UT.md
     aviation_model:
@@ -93,7 +93,7 @@ bs_law_conformance:
 | ORBT | REPAIR |
 | Strikes | 2 |
 | Authority | inherited — sovereign imo-creator-v2; Barton-Processes parent; company-lifecycle-cl blueprint |
-| Version | v1.0.3 |
+| Version | v1.0.4 |
 | Last Modified | 2026-05-08 |
 | BAR Reference | BAR-131, BAR-132, BAR-37, BAR-48, BAR-152 |
 | Owner | Dave Barton |
@@ -642,6 +642,7 @@ No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR 
 | 2026-04-29 | v1.0.1 | Claude Code | `CREATE` | UT consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 7 * * *` CF Worker cron. Version bumped in 3 locations. |
+| 2026-05-08 | v1.0.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `REPAIR` | G10: companion workflow.yaml restructured — `description/inputs/schedule/data/nodes/gates/lbb` promoted from `inside.workflow:` nesting to syntactically distinct top-level keys per BS Law v1.3.0 Y-junction + Book Law v1.5.0 Workflow-Body 11-block spec. `name:` and `inherits:` blocks added at file top. workflow.yaml version bumped to v1.0.2. |
 
 ^[ROW-2026-03-23]: v1 smoke test; compiler architecture defined; fetchCompanyData fixed to D1 | LBB: TBV
 ^[ROW-2026-03-24]: v2 build + deploy; process extracted to Barton-Processes; MANIFEST/OSAM/ERD/PRD written | LBB: TBV
@@ -655,7 +656,7 @@ No logbook during REPAIR. Logbook entry required after auditor certifies REPAIR 
 |-------|-------|
 | Created | 2026-04-29 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.3 |
+| Version | v1.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

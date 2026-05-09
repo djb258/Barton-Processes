@@ -10,6 +10,9 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/400-dol-views
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - neon-postgresql
+      - svg-d1-outreach-ops
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; verify-only OPERATE DOL views"
   orbt:
@@ -20,7 +23,7 @@ inside:
   heir:
     process_id: bp.400
     species: UT-Body
-    version: "2.0.2"
+    version: "2.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/400-dol-views/PROCESS-UT.md
   orbt:
@@ -535,6 +538,7 @@ No logbook during BUILD. This process is in OPERATE — logbook promoted from PR
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — PROCESS.md + CLAUDE.md archived; PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN SQL view refresh (no cron). Version bumped in 3 locations. |
+| 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [neon-postgresql, svg-d1-outreach-ops] (sourced from §1 Identity services row). Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-19]: 2026-03-19 | 6 SQL views created in Neon against DOL schema | none
 ^[ROW-2026-03-25]: 2026-03-25 | 171,040 rows seeded to D1 via Process 010; OPERATE state reached | session/2026-03-25
@@ -547,7 +551,7 @@ No logbook during BUILD. This process is in OPERATE — logbook promoted from PR
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.2 |
+| Version | v2.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

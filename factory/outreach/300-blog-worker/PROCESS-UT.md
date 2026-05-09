@@ -10,6 +10,12 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/300-blog-worker
     imo_topology: spoke
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - svg-d1-outreach-ops
+      - neon-via-hyperdrive
+      - composio-firecrawl
+      - composio-scraperapi
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; blog source discovery gates green"
   orbt:
@@ -20,7 +26,7 @@ inside:
   heir:
     process_id: bp.300
     species: UT-Body
-    version: "1.0.2"
+    version: "1.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/300-blog-worker/PROCESS-UT.md
   orbt:
@@ -616,6 +622,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 | 2026-04-28 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. Source fragments archived. UT v2.7.0 standard. LBB: pending |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped 1.0.0→1.0.1 across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` GitHub Actions cron. Version bumped in 3 locations. |
+| 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, svg-d1-outreach-ops, neon-via-hyperdrive, composio-firecrawl, composio-scraperapi]. Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-29]: 2026-03-29 | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design | none
 ^[ROW-2026-04-01]: 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none
@@ -632,7 +639,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 |-------|-------|
 | Created | 2026-04-28 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.2 |
+| Version | v1.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

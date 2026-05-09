@@ -11,6 +11,7 @@ outside:
     imo_topology: hub
     cc_layer: CC-04
     secrets_provider: doppler
+    services: [lcs-hub, svg-d1-outreach-ops, svg-d1-spine, neon-postgresql]
     acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; verify-only OPERATE"
   orbt:
     library_state: BUILD
@@ -20,7 +21,7 @@ inside:
   heir:
     process_id: bp.010
     species: UT-Body
-    version: "1.0.2"
+    version: "1.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/010-seed-d1/PROCESS-UT.md
   orbt:
@@ -36,21 +37,23 @@ inside:
 
 ---
 
-## PRE-FLIGHT CHECKLIST (13 Items — UT v2.7.0)
+## 📋 UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
 
-- [ ] 1. Process ID declared and matches heir.yaml `hub_id`
-- [ ] 2. HEIR all 8 fields populated (no blanks)
-- [ ] 3. ORBT state declared and matches orbt.yaml
-- [ ] 4. Hyperdrive binding `HD_NEON` confirmed active in lcs-hub
-- [ ] 5. Coverage filter `v_service_agent_coverage_zips` confirmed available in Neon
-- [ ] 6. Column inventory snapshot current (NEON_COLUMN_INVENTORY.csv or equivalent < 7 days old)
-- [ ] 7. All INSERT statements confirmed as `INSERT OR REPLACE` (no bare INSERT)
-- [ ] 8. D1.batch() confirmed for all bulk write paths
-- [ ] 9. Materialized views `v_agent_blog` and `v_agent_fill_rates` refreshed
-- [ ] 10. Target D1 databases confirmed: svg-d1-outreach-ops (73a285b8) and svg-d1-spine (641a9a1e)
-- [ ] 11. Neon seed_views schema confirmed available (8 views)
-- [ ] 12. SEED run has defined table scope and offset range (not open-ended)
-- [ ] 13. Stop condition thresholds reviewed: >10% D1 write error = HALT, <95% join integrity = HALT, >20% company count drop = HALT
+| # | Check | Status | Location |
+|---|-------|--------|----------|
+| 1 | PRD — what / why / who / scope / out-of-scope / success metric | ☑ | §2 |
+| 2 | OSAM — READ / WRITE / Process Composition / Join Chain / Forbidden / Query Routing filled | ☑ | §5 |
+| 3 | Component Status — every dep 🟢 / 🟡 / 🔴 with 1-line state | ☐ | §3 |
+| 4 | Owner — human who fixes this at 2 AM | ☑ | §1 |
+| 5 | Live Dashboard — URL or explicit "N/A" | ☐ | §3 |
+| 6 | Kill Switch — exact command to stop the process | ☑ | §8 |
+| 7 | Logbook — last audit verdict + date (after certification only) | ☐ | §12 |
+| 8 | FCEs Attached — which FCE runs structurally back this doc | ☐ | §3c |
+| 9 | BARs Referenced — every BAR this doc touches, with status | ☐ | §3d |
+| 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☐ | §3e |
+| 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☑ | §9b |
+| 13 | ctb_node — declared path to this doc's position on the Barton Enterprises CTB trunk | ☑ | §1 Identity |
 
 ---
 
@@ -70,7 +73,7 @@ inside:
 | Strikes | 0 |
 | BAR Reference | BAR-52 |
 | Related BARs | BAR-190 (SEED v2 national spine design) |
-| Version | v1.0.2 |
+| Version | v1.0.3 |
 | Created | 2026-03-25 |
 | Last Modified | 2026-05-08 |
 | Governance | See `DOCTRINE.md` at folder root |
@@ -519,6 +522,7 @@ Run in this sequence to satisfy foreign key dependencies:
 | 2026-04-29 | v1.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | Consolidated 7 fragments into UT v2.7.0 locked folder shape; PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml written; _archived-fragments/ created |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 4 * * *` CF Worker cron. Version bumped in 3 locations. |
+| 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN doc-conformance batch) | `AMEND` | G02: §2 PRE-FLIGHT CHECKLIST converted from bullet checkboxes to canonical 13-item TABLE format per UT_CHECKLIST.md v1.3.1. G03: `services` field added to outside.heir frontmatter. |
 
 ^[ROW-2026-04-29]: Wave 1 UT Consolidation | Sonnet Runner consolidated 7 fragments (PROCESS.md, MASTER_DATA_CTB.md, SEED_AUDIT.md, SEED_V2_DESIGN.md, NEON_COLUMN_INVENTORY.csv, MASTER_COLUMN_REGISTRY.json, UNDOCUMENTED_COLUMNS.json) into UT v2.7.0 locked folder shape | PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml written; _archived-fragments/ created
 
@@ -530,7 +534,7 @@ Run in this sequence to satisfy foreign key dependencies:
 |-------|-------|
 | Process ID | PROC-010 |
 | UT Version | v2.7.0 |
-| Version | v1.0.2 |
+| Version | v1.0.3 |
 | Created | 2026-04-29 |
 | Last Modified | 2026-05-08 |
 | Consolidated By | Sonnet Runner (Wave 1) |

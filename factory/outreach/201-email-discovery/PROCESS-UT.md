@@ -10,7 +10,8 @@ outside:
     sovereign_ref: svg-outreach
     hub_id: 201-email-discovery
     cc_layer: CC-04
-    ctb_placement: barton-enterprises/svg-agency/factory/outreach/201-email-discovery
+    ctb_placement: leaf
+    ctb_node: barton-enterprises/svg-agency/outreach/201-email-discovery
     imo_topology: middle
     secrets_provider: doppler
     species: Workflow-Body
@@ -28,7 +29,7 @@ outside:
 inside:
   heir:
     process_id: bp.201
-    version: "1.0.2"
+    version: "1.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
     aviation_model:
@@ -601,6 +602,7 @@ No logbook during BUILD.
 | 2026-04-29 | v1.0.0 | claude-sonnet-4-6 | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md written from fragments. FP-201-01 captured in §13. |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 7 * * *` GitHub Actions cron. Version bumped in 3 locations. |
+| 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: ctb_placement corrected from full path string to canonical enum value `leaf`; ctb_node added to outside.heir with path `barton-enterprises/svg-agency/outreach/201-email-discovery`. |
 
 ^[ROW-2026-04-02a]: Initial PROCESS.md created (v2.0.0 format) | LBB: none
 ^[ROW-2026-04-02b]: Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections | LBB: none
@@ -614,7 +616,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-02 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.2 |
+| Version | v1.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

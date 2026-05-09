@@ -10,6 +10,9 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/500-talent-flow
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - python3-script
+      - neon-via-hyperdrive
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; 10 BAR-377 gates green; monthly cron verified; zero-detection squawk live"
   orbt:
@@ -20,7 +23,7 @@ inside:
   heir:
     process_id: bp.500
     species: UT-Body
-    version: "2.0.2"
+    version: "2.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
   orbt:
@@ -388,6 +391,8 @@ people.linkedin_snapshots (person_id, run_month = target, movement_detected = tr
 | Movement detection query returns results | §4 Middle Step 2 | people.linkedin_snapshots | `python3 src/talent-flow.py --dry-run` | [ ] | TBV | TBV |
 | Monthly run completes without HALT | §8 stop conditions | script stdout | `python3 src/talent-flow.py --month YYYY-MM` | [ ] | TBV | TBV |
 
+NOT YET DEPLOYED — gauge spec defined; all live values pending first production run. Queries and tolerance thresholds locked above; populate at OPERATE promotion.
+
 ## §10 Operations / Schedule {#sec-10-operations}
 
 **Cron classification:** RECURRING-monthly
@@ -508,6 +513,7 @@ No logbook during BUILD.
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — all fragments consolidated into PROCESS-UT.md + DOCTRINE.md; orbt.yaml written; fragments archived. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-monthly `0 8 1 * *` GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl 2.0.1, then bumped to 2.0.2 in all 3 locations. |
+| 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [python3-script, neon-via-hyperdrive]. G06: §9b NOT YET DEPLOYED stamp added — all 5 gauge rows remain TBV pending first production run. Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from CLAUDE.md + source code + heir.yaml | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — all fragments consolidated into PROCESS-UT.md + DOCTRINE.md; orbt.yaml written; fragments archived | pending
@@ -518,7 +524,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.2 |
+| Version | v2.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

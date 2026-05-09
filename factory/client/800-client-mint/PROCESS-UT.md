@@ -1,3 +1,35 @@
+---
+species: UT-Body
+companion_yaml: Barton-Processes/factory/client/800-client-mint/workflow.yaml
+certification_label: provisional-runtime
+outside:
+  heir:
+    sovereign_ref: imo-creator-v2
+    hub_id: client-mint-800
+    ctb_placement: Leaf
+    ctb_node: barton-enterprises/insurance-informatics/svg-agency/client/800-client-mint
+    imo_topology: middle
+    cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - svg-d1-spine
+      - client-hub-d1
+    secrets_provider: doppler
+    acceptance_criteria: "CSV row resolves to exactly one cl_company_identity row via deterministic match; multiple matches → REJECT to ambiguous queue; no match → REJECT to needs-CL-intake queue; address-normalized dedup index prevents duplicate mints; idempotent on company_unique_id; write-once trigger on cl_company_identity.client_id; operational record in client-hub.client carries sovereign_id + client_id; three-sink routing: FAILED → client_mint_error; NO_MATCH_QUEUED → client_mint_no_match_queue; AMBIGUOUS_QUEUED → client_mint_ambiguous_queue."
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-04-30T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: bp.800
+    species: UT-Body
+    version: "1.5.4"
+    last_modified: "2026-05-08"
+    companion_manifest: Barton-Processes/factory/client/800-client-mint/PROCESS-UT.md
+  orbt:
+    library_state: BUILD
+---
 # Client Mint
 ## Promotes a CL-resident company (sovereign_id) into an svg-agency client by minting a client_id, writing the operational record to D1 client-hub, and back-stamping the write-once client_id pointer onto cl_company_identity. Address-aware dedup pre-check prevents duplicate mints.
 ### Status: BUILD
@@ -648,26 +680,27 @@ No logbook during BUILD.
 
 ## 14. SESSION LOG {#sec-14-session-log}
 
-| Date | What Was Done | LBB Record |
-|------|---------------|-----------|
-| 2026-04-30 | PROCESS-UT.md drafted from sibling 810 format + locked architecture decisions (D1=operational, Neon=vault, CL spine canonical, BAR-CL-ADDR foundation in place) | pending session ingest |
-| 2026-04-30 | Repair pass 2 (Codex round 2 findings): (1) HIGH-1: replaced `client-hub.client` SQL notation in §9 verification step 4 with narrative form; §5 D1 Binding Notation block confirms SQL convention. (2) HIGH-2: Step 3 dual-check + Step 3a PARTIAL_RECOVERY path already in §4 from round 1; FP-800-04 updated to RESOLVED; §10a partial-recovery metric target updated to reflect Step 3a handles the path. (3) MEDIUM: §2 SUCCESS METRIC + §9 step 8 already using `sovereign_id` from round 1 — confirmed clean. Version bumped to 1.2.0. | pending session ingest |
-| 2026-04-30 | Repair pass 3 (Codex round 3 findings — 3 new residuals): (1) MEDIUM-1: replaced "single transaction per row" with "per-row sequenced write (non-atomic across D1 databases — see Step 3a recovery path)" in §2 SCOPE; clarified write order and PARTIAL_RECOVERY failure semantics explicitly. (2) MEDIUM-2: promoted PARTIAL_RECOVERY to full fourth branch across §2 SCOPE, §2 SUCCESS METRIC, §4 step 8 tally, §4 Output JSON schema, §5 WRITE (client_mint_batch schema), §6a DMJ key, §7 Constants, §4 terminal queues. (3) LOW: replaced all occurrences of `PARTIAL_RECOVERABLE` with `PARTIAL_RECOVERY` (canonical enum form); added naming convention block to §2 SUCCESS METRIC distinguishing PARTIAL_RECOVERY (enum/status) from partial_recovery (field/column/JSON-key). Version bumped to 1.3.0. | pending session ingest |
-| 2026-04-30 | Repair pass 4 (Codex round 4 — 2 residuals): (1) MEDIUM-1: §4 Step 5 "Begin transaction. INSERT into `client` via client-hub binding" → "Begin sequenced write. INSERT into the `client` table via client-hub binding"; §4 paragraph below Step 6 "The two-D1 transaction (step 5 + step 6) is not atomic..." → "The sequenced two-write flow (step 5 → step 6) is not atomic across D1 databases (CF D1 has no cross-DB transactions)". (2) MEDIUM-2: §6a DMJ-800-11 per-batch counts list appended `partial_recovery` (was missing from round 3 propagation). Version bumped to 1.3.1. | pending session ingest |
-| 2026-04-30 | Repair pass 5 (Codex round 5 — semantic model clarification): Introduced Two-Axis ROW OUTCOME MODEL in §2 SUCCESS METRIC distinguishing Axis 1 (Match outcome: MATCHED / NO_MATCH / AMBIGUOUS — Step 2 result only, not terminal) from Axis 2 (Terminal row outcome: MINTED / SKIPPED / PARTIAL_RECOVERY / NO_MATCH_QUEUED / AMBIGUOUS_QUEUED / FAILED — final batch state). Updated throughout: §2 SCOPE (four-branch → three-branch match, PARTIAL_RECOVERY footnote added), §2 SUCCESS METRIC (two-axis block + naming convention extension), §4 Output JSON (six Terminal fields replacing mixed axes), §4 Step 8 Tally (six Terminal aggregations), §5 WRITE client_mint_batch schema (six Terminal counts), §6a DMJ-800-05 split into DMJ-800-05a (Axis 1, 3 values) and DMJ-800-05b (Axis 2, 6 values), §6a DMJ-800-11 (Axis 2 label added), §7 Constants (Three Match outcomes distinct from Six Terminal outcomes), §11 Execution Trace status enum (six Axis 2 values). Version bumped to 1.4.0. | pending session ingest |
-| 2026-04-30 | Repair pass 6 (round-6 propagation — error-vs-queue split): Codified that `client_mint_error` is FAILED-only. NO_MATCH_QUEUED and AMBIGUOUS_QUEUED are valid Terminal outcomes (not failures) — they persist to dedicated queue tables, not the error table. Changes: (1) MEDIUM-1: §2 SCOPE line updated to list six Axis 2 Terminal outcomes with correct labels (minted / skipped (idempotent) / partial_recovery / no_match_queued / ambiguous_queued / failed). (2) MEDIUM-2: §4 Step 7 rewritten to distinguish three sinks (FAILED → client_mint_error; NO_MATCH_QUEUED → client_mint_no_match_queue; AMBIGUOUS_QUEUED → client_mint_ambiguous_queue); §4 Output JSON extended with no_match_queue_url and ambiguous_queue_url; §5 WRITE access table adds two new queue tables (each: queue_id, batch_id, source_row_hash, csv_row_data JSON, reason, queued_at; append-only); §6a DMJ-800-08 rephrased to declare three-sink routing explicitly; §3 Component Status adds two red rows (FP-800-05, FP-800-06); §9 verification steps 4-5 corrected to expect queue tables, not client_mint_error; §13 adds FP-800-05 and FP-800-06 OPEN. Version bumped to 1.5.0. | pending session ingest |
-| 2026-04-30 | Repair pass 7 (round-7 surgical fixes — 2 mandatory + 2 propagation catches): (1) MEDIUM-1: §1b HEIR acceptance_criteria item 8 updated from stale single-sink "Errors write to client_mint_error" to three-sink model: FAILED → client_mint_error; NO_MATCH_QUEUED → client_mint_no_match_queue; AMBIGUOUS_QUEUED → client_mint_ambiguous_queue; all append-only with source_row_hash traceability. (2) MEDIUM-2: §9b verification table extended with two new existence-check rows for client_mint_no_match_queue and client_mint_ambiguous_queue (FP-800-05 / FP-800-06 coverage). Propagation fixes: (3) §9 Three Primitives Thing-check updated to reference all three CQRS sink tables instead of only client_mint_error. (4) §11 back-propagation row "Single-table CQRS error pattern" updated to "Three-sink CQRS routing pattern" reflecting the correct three-sink model. Version bumped to 1.5.1. | pending session ingest |
-| 2026-04-30 | Repair pass 8 (round-8 peripheral three-sink propagation cleanup — 1 medium + 2 low + 1 propagation catch): (1) MEDIUM-1: §3 Dependencies table — added two missing precondition rows: `client_mint_no_match_queue table migration` (FP-800-05) and `client_mint_ambiguous_queue table migration` (FP-800-06). (2) LOW-1: §5 D1 Binding Notation block extended to cover `client_mint_no_match_queue` and `client_mint_ambiguous_queue` — same `client-hub` binding convention, never SQL-prefix form. (3) LOW-2a: §3 Live Dashboard Mission Control row updated from "error queue, ambiguous queue" to "error queue (FAILED), no_match queue (NO_MATCH_QUEUED), ambiguous queue (AMBIGUOUS_QUEUED)" — three-sink language. (4) LOW-2b: §4 Circle text changed from "operator reviews error queues" to "operator reviews three sinks: error queue (real failures), no_match queue (rows needing upstream CL intake), ambiguous queue (rows needing human disambiguation)". Propagation catch: §7 Constants append-only list extended from two entries (batch log + error log) to four (adds no_match queue + ambiguous queue). Version bumped to 1.5.2. | pending session ingest |
-| 2026-04-30 | Repair pass 9 (round-9 final two surgical fixes): (1) MEDIUM: §5 Forbidden Paths — expanded DELETE ban from `client_mint_error` only to all three CQRS sinks (`client_mint_error`, `client_mint_no_match_queue`, `client_mint_ambiguous_queue`) — all three are append-only by doctrine — D-800-05. (2) LOW: §3e svg-client subject — added "no_match queue events" to the declared LBB output alongside "ambiguous queue events" (was missing). Version bumped to 1.5.3. | pending session ingest |
-| 2026-04-30 | 2026-04-30 round-10 close — Codex audit returned single LOW finding (LBB Subjects Fed frequency metadata). Foreman ships v1.5.3 CERTIFIED-WITH-RESIDUAL; FP-800-07 logged for future patch. 10 audit rounds, severity converged. | pending session ingest |
+| Date | Version | Author | Action | Scope |
+|------|---------|--------|--------|-------|
+| 2026-04-30 | v1.0.0 | Sonnet Runner | `CREATE` | PROCESS-UT.md drafted from sibling 810 format + locked architecture decisions (D1=operational, Neon=vault, CL spine canonical, BAR-CL-ADDR foundation in place). |
+| 2026-04-30 | v1.2.0 | Sonnet Runner | `REPAIR` | Repair pass 2 (Codex round 2): HIGH-1 client-hub.client SQL notation fix; HIGH-2 PARTIAL_RECOVERY path confirmed in §4; MEDIUM sovereign_id usage confirmed. Version bumped to 1.2.0. |
+| 2026-04-30 | v1.3.0 | Sonnet Runner | `REPAIR` | Repair pass 3 (Codex round 3): MEDIUM-1 non-atomic write semantics; MEDIUM-2 PARTIAL_RECOVERY promoted as full fourth branch across §2/§4/§5/§6a/§7; LOW PARTIAL_RECOVERABLE → PARTIAL_RECOVERY rename. |
+| 2026-04-30 | v1.3.1 | Sonnet Runner | `REPAIR` | Repair pass 4 (Codex round 4): MEDIUM-1 §4 Step 5 transaction language fix; MEDIUM-2 §6a DMJ-800-11 partial_recovery count added. |
+| 2026-04-30 | v1.4.0 | Sonnet Runner | `REPAIR` | Repair pass 5 (Codex round 5): Two-Axis ROW OUTCOME MODEL introduced (Axis 1=Match, Axis 2=Terminal). Updated §2/§4/§5/§6a/§7/§11 throughout. |
+| 2026-04-30 | v1.5.0 | Sonnet Runner | `REPAIR` | Repair pass 6 (round 6): Three-sink routing codified (FAILED→error; NO_MATCH→no_match_queue; AMBIGUOUS→ambiguous_queue). §3/§4/§5/§6a/§9/§13 updated; FP-800-05/06 added. |
+| 2026-04-30 | v1.5.1 | Sonnet Runner | `REPAIR` | Repair pass 7 (round 7): §1b acceptance_criteria three-sink update; §9b two new existence-check rows; §9 Three Primitives + §11 back-prop updated to three-sink model. |
+| 2026-04-30 | v1.5.2 | Sonnet Runner | `REPAIR` | Repair pass 8 (round 8): §3 Dependencies two new rows (FP-800-05/06); §5 D1 Binding Notation extended; §3 Live Dashboard + §4 Circle three-sink language; §7 Constants extended to four entries. |
+| 2026-04-30 | v1.5.3 | Sonnet Runner | `REPAIR` | Repair pass 9 (round 9): §5 Forbidden Paths DELETE ban extended to all three CQRS sinks; §3e LBB no_match queue events added. |
+| 2026-04-30 | v1.5.3 | Sonnet Runner | `CERTIFY` | Round-10 close — Codex audit single LOW residual (LBB Subjects Fed frequency). CERTIFIED-WITH-RESIDUAL; FP-800-07 logged. |
+| 2026-05-08 | v1.5.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: YAML frontmatter added (outside.heir: sovereign_ref, hub_id, ctb_placement=Leaf, ctb_node, imo_topology, cc_layer, services, secrets_provider, acceptance_criteria; inside.heir: process_id=bp.800, species, version, last_modified; orbt blocks). §14 migrated from 3-column to 5-column canonical format. Version bumped in 2 locations (frontmatter + DocCtrl; no §1 Version row). |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-30 |
-| Last Modified | 2026-04-30 |
-| Version | 1.5.3 |
+| Last Modified | 2026-05-08 |
+| Version | 1.5.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | N/A — internal pipeline doc, no new structure discovery (per sovereign decision 2026-04-30) |

@@ -10,6 +10,9 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/700-campaign-engine
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - neon-via-hyperdrive
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; campaign routing deterministic before bp.100"
   orbt:
@@ -20,7 +23,7 @@ inside:
   heir:
     process_id: bp.700
     species: UT-Body
-    version: "2.1.2"
+    version: "2.1.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/700-campaign-engine/PROCESS-UT.md
   orbt:
@@ -438,6 +441,8 @@ npx wrangler cron delete --name lcs-hub-campaign-scanner
 | HeyReach API key set | §3 | Doppler imo-creator/dev | `doppler secrets get HEYREACH_API_KEY --project imo-creator --config dev` | [ ] | TBV | TBV (PENDING) |
 | Suppression check enforced (D-700-04) | §7 | D1 spine | `SELECT COUNT(*) FROM campaign_queue q JOIN suppression_list s ON q.recipient_id = s.contact_id WHERE q.status != 'SUPPRESSED'` | [ ] | TBV | TBV |
 
+NOT YET DEPLOYED — gauge spec defined; all live values pending first production run. Queries and tolerance thresholds locked above; populate at OPERATE promotion.
+
 ## §10 Operations / Schedule {#sec-10-operations}
 
 **Cron classification:** RECURRING-daily
@@ -557,6 +562,7 @@ No logbook during BUILD.
 | 2026-05-06 | v2.1.0 | Sonnet Mechanic (BAR-700-CONFORM-WIRE) | `REPAIR` | BS Law Y-junction conformance pass. YAML frontmatter added. Section headers converted to §N format. workflow.yaml rewritten to Y-junction spec. certification_label: provisional-runtime. LBB: pending |
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily 0 8 * * * GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
+| 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, neon-via-hyperdrive] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 8 gauge rows remain TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. | none
 ^[ROW-2026-04-28]: 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/ | pending
@@ -568,7 +574,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.1.2 |
+| Version | v2.1.3 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

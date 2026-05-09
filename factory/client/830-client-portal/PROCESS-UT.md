@@ -10,6 +10,9 @@ outside:
     ctb_node: barton-enterprises/svg-agency/client/830-client-portal
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - client-hub-d1
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
   orbt:
@@ -20,7 +23,7 @@ inside:
   heir:
     process_id: bp.830
     species: UT-Body
-    version: "2.1.2"
+    version: "2.1.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
   orbt:
@@ -415,6 +418,8 @@ npx wrangler delete --name client-portal-830
 | BAR-82 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
 | BAR-178 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
 
+NOT YET DEPLOYED — gauge spec defined; all live values pending first production run. Queries and tolerance thresholds locked above; populate at OPERATE promotion.
+
 ## §10 Operations / Schedule {#sec-10-operations}
 
 **Cron classification:** EVENT-DRIVEN
@@ -540,6 +545,7 @@ No logbook during BUILD.
 | 2026-05-06 | v2.1.0 | sonnet-mechanic (BAR-830-CONFORM-WIRE) | `REPAIR` | Atlas conformance pass. BS Law Y-junction applied to workflow.yaml. YAML frontmatter added to PROCESS-UT.md. Section headers updated to §N format. Gate-runner verified P=1. |
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical (UT v2.8.0 / Atlas v2.3.0); verbatim footnotes preserved |
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on client portal page request. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
+| 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, client-hub-d1] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 8 gauge rows TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Initial PROCESS.md created. Documented IMO, OSAM, C&V, dependencies, known issues. BUILD state. | none
 ^[ROW-2026-04-22]: 2026-04-22 | Skeleton wrangler.toml and src/ updated; all routes render with mock data. | none
@@ -552,7 +558,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.1.2 |
+| Version | v2.1.3 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

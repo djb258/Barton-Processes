@@ -10,6 +10,10 @@ outside:
     ctb_node: barton-enterprises/svg-agency/client/810-client-intake
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - neon-via-hyperdrive
+      - svg-d1-census
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; intake staging and validation gates green"
   orbt:
@@ -20,7 +24,7 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "2.1.2"
+    version: "2.1.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
@@ -439,6 +443,8 @@ If any fails → that's the break. Run the Troubleshooting Loop (Bedrock §6). D
 | D1 CENSUS_DB binding resolves | §3 Resources | wrangler.toml | `wrangler d1 info census` (database_id c7b63950) | [ ] | TBV | TBV |
 | Worker health endpoint responds | §8 Kill Switch | CF Workers dashboard | `curl https://client-intake-810.svg-outreach.workers.dev/health` | [ ] | TBV (not deployed) | TBV |
 
+NOT YET DEPLOYED — gauge spec defined; all live values pending first production run. Queries and tolerance thresholds locked above; populate at OPERATE promotion.
+
 Rule: at least one live gauge row must be checked before BUILD can move to OPERATE.
 
 ## §10 Operations / Schedule {#sec-10-operations}
@@ -567,6 +573,7 @@ No logbook during BUILD.
 | 2026-05-06 | v2.1.0 | Sonnet Mechanic (BAR-810-CONFORM-WIRE) | `REPAIR` | BS Law Y-junction conformance; YAML frontmatter added; section headers converted to §N format; workflow.yaml restructured to outside/inside top-level arms. LBB: pending |
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on client benefits data submission. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
+| 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, neon-via-hyperdrive, svg-d1-census] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 7 gauge rows TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-19]: 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none
@@ -579,7 +586,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.1.2 |
+| Version | v2.1.3 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

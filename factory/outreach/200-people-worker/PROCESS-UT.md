@@ -10,6 +10,11 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/200-people-worker
     imo_topology: spoke
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - svg-d1-outreach-ops
+      - svg-d1-spine
+      - doppler
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; people_slots leak diagnosed; 10 BAR-377 gates green"
   orbt:
@@ -20,7 +25,7 @@ inside:
   heir:
     process_id: bp.200
     species: UT-Body
-    version: "1.0.2"
+    version: "1.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
   orbt:
@@ -599,6 +604,7 @@ No logbook during BUILD/REPAIR.
 | 2026-04-28 | v1.0.0 | Claude Code | `CREATE` | UT v2.7.0 consolidation — PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; fragments archived; FP-200-01 added; ORBT → REPAIR (Strike 1) |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` CF Worker cron. Version bumped in 3 locations. |
+| 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, svg-d1-outreach-ops, svg-d1-spine, doppler]. |
 
 ^[ROW-2026-03-19]: Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (87-95% LinkedIn hit rate) | LBB Record: processes/Session 2026-03-19
 ^[ROW-2026-03-24]: MANIFEST.md written, documentation chain created | LBB Record: session/2026-03-24-full-session-final
@@ -613,7 +619,7 @@ No logbook during BUILD/REPAIR.
 |-------|-------|
 | Created | 2026-03-19 |
 | Last Modified | 2026-05-08 |
-| Version | v1.0.2 |
+| Version | v1.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

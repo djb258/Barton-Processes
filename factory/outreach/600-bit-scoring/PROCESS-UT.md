@@ -10,6 +10,9 @@ outside:
     ctb_node: barton-enterprises/svg-agency/outreach/600-bit-scoring
     imo_topology: hub
     cc_layer: CC-04
+    services:
+      - cloudflare-worker
+      - neon-via-hyperdrive
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; formal retirement/TROUBLESHOOT_TRAIN path, not blind repair"
   orbt:
@@ -20,7 +23,7 @@ inside:
   heir:
     process_id: bp.600
     species: UT-Body
-    version: "2.0.2"
+    version: "2.0.3"
     last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
   orbt:
@@ -500,6 +503,7 @@ Single key: outreach_id. No cross-database joins.
 | 2026-04-29 | v2.0.0 | Sonnet Runner (Wave 1 UT Consolidation) | `CREATE` | UT v2.7.0 consolidation — all fragments archived, PROCESS-UT.md + DOCTRINE.md + orbt.yaml written. LBB: pending |
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RETIRED — process retired 2026-03-25. ORBT changed from TROUBLESHOOT_TRAIN to RETIRED in frontmatter (both arms), §1 Identity, and header. Version bumped in 3 locations. |
+| 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, neon-via-hyperdrive] (sourced from §1 Identity services row — CF Worker planned, never deployed). Version bumped in 2 locations (no §1 Version row). |
 
 ^[ROW-2026-03-24]: 2026-03-24 | Manifest written from heir.yaml + brain knowledge | none
 ^[ROW-2026-03-25]: 2026-03-25 | Process retired during LCS compiler v2 architecture review | none
@@ -512,7 +516,7 @@ Single key: outreach_id. No cross-database joins.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-08 |
-| Version | v2.0.2 |
+| Version | v2.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |
