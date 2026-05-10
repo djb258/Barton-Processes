@@ -26,7 +26,7 @@ inside:
   heir:
     process_id: bp.300
     species: UT-Body
-    version: "1.0.4"
+    version: "1.0.5"
     last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/300-blog-worker/PROCESS-UT.md
     rim_gate_adoption:
@@ -74,6 +74,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 2 (FP-301 RESOLVED, FP-302 RESOLVED) |
 | Authority | inherited — imo-creator-v2 (sovereign) + Barton-Processes (parent) |
+| Version | v1.0.5 |
 | Last Modified | 2026-05-10 |
 | BAR Reference | BAR-52, BAR-187, BAR-193, BAR-197 |
 | Owner | TBV — no named human owner in source fragments |
@@ -630,6 +631,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` GitHub Actions cron. Version bumped in 3 locations. |
 | 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, svg-d1-outreach-ops, neon-via-hyperdrive, composio-firecrawl, composio-scraperapi]. Version bumped in 2 locations (no §1 Version row). |
 | 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE → THROUGHPUT-CONTROL adoption declared this dispatch (WO-3). Composio firecrawl + scraperapi rims. Promoted from monthly to daily per registry. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
+| 2026-05-10 | `v1.0.5` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | v1-v3 script iterations: Neon→D1 rewire, Startpage proxy fix, direct fetch design | none
 ^[ROW-2026-04-01]: 2026-04-01 | v4 design session: query pattern locked, 24-worker config, port spacing, parse scripts | none
@@ -646,7 +648,7 @@ No logbook during BUILD. Certification pending — auditor sign-off required.
 |-------|-------|
 | Created | 2026-04-28 |
 | Last Modified | 2026-05-10 |
-| Version | v1.0.4 |
+| Version | v1.0.5 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

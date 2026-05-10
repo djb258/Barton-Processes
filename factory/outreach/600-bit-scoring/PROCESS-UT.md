@@ -23,7 +23,7 @@ inside:
   heir:
     process_id: bp.600
     species: UT-Body
-    version: "2.0.4"
+    version: "2.0.5"
     last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/600-bit-scoring/PROCESS-UT.md
   orbt:
@@ -66,6 +66,7 @@ inside:
 | ORBT | RETIRED |
 | Strikes | 0 |
 | Authority | inherited - parent doctrine / svg-agency sovereign / imo-creator-v2 |
+| Version | v2.0.5 |
 | Last Modified | 2026-05-10 |
 | BAR Reference | BAR-131 (Gate 8 wire — DONE; process itself retired) |
 | Owner | Dave Barton |
@@ -505,6 +506,7 @@ Single key: outreach_id. No cross-database joins.
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RETIRED — process retired 2026-03-25. ORBT changed from TROUBLESHOOT_TRAIN to RETIRED in frontmatter (both arms), §1 Identity, and header. Version bumped in 3 locations. |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, neon-via-hyperdrive] (sourced from §1 Identity services row — CF Worker planned, never deployed). Version bumped in 2 locations (no §1 Version row). |
 | 2026-05-10 | `v2.0.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RETIRED (BAR-131, 2026-03-25). Audit confirmed clean retirement. No resurrection risk. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
+| 2026-05-10 | `v2.0.5` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 
 ^[ROW-2026-03-24]: 2026-03-24 | Manifest written from heir.yaml + brain knowledge | none
 ^[ROW-2026-03-25]: 2026-03-25 | Process retired during LCS compiler v2 architecture review | none
@@ -517,7 +519,7 @@ Single key: outreach_id. No cross-database joins.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-10 |
-| Version | v2.0.4 |
+| Version | v2.0.5 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

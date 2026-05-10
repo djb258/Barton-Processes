@@ -23,7 +23,7 @@ inside:
   heir:
     process_id: bp.700
     species: UT-Body
-    version: "2.1.4"
+    version: "2.1.5"
     last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/700-campaign-engine/PROCESS-UT.md
     rim_gate_adoption:
@@ -71,6 +71,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — parent doctrine imo-creator-v2 sovereign + Barton-Processes |
+| Version | v2.1.5 |
 | Last Modified | 2026-05-10 |
 | BAR Reference | BAR-175, BAR-177 |
 | Owner | Dave Barton |
@@ -570,6 +571,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily 0 8 * * * GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, neon-via-hyperdrive] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 8 gauge rows remain TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 | 2026-05-10 | `v2.1.4` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE → THROUGHPUT-CONTROL adoption declared this dispatch (WO-3) for when activated. Currently BLOCKED: no `src/`, no wrangler. UNKNOWN #3 (stub policy: keep placeholder or delete until unblocked). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
+| 2026-05-10 | `v2.1.5` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Process doc written from heir.yaml + CLAUDE.md contract. Template v2.0.0 format. | none
 ^[ROW-2026-04-28]: 2026-04-28 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md (10 rules), orbt.yaml, heir.yaml updated with hub_id; fragments archived to _archived-fragments/ | pending
@@ -581,7 +583,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-10 |
-| Version | v2.1.4 |
+| Version | v2.1.5 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
