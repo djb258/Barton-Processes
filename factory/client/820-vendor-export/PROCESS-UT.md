@@ -22,9 +22,16 @@ inside:
   heir:
     process_id: bp.820
     species: UT-Body
-    version: "1.0.2"
-    last_modified: "2026-05-08"
+    version: "1.0.3"
+    last_modified: "2026-05-10"
     companion_manifest: PROCESS-UT.md
+    rim_gate_adoption:
+      template: tpl.rim-gate
+      specialization: tpl.rim-gate.partner-relay
+      reference: imo-creator-v2/atlas/templates/rim-gate/partner-relay/UT.md (PLACEHOLDER — specialization not yet authored)
+      adoption_status: declared-with-specialization-pending
+      first_runtime_audit_due: post-specialization-authoring
+      sovereign_note: "PARTNER-RELAY specialization differs from THROUGHPUT-CONTROL — partner reputation + delivery confirmation semantics, not rate-limit + bounce. Authoring queued."
   orbt:
     library_state: BUILD
 ---
@@ -65,7 +72,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-38, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/820-vendor-export |
@@ -546,6 +553,7 @@ No logbook during BUILD.
 | 2026-05-04 | v1.0.0 | Codex (BAR-377) | `REPAIR` | BAR-377 repair: live Cloudflare bindings wired, source schema aligned, export tables created, Codex repair audit P=1 |
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical (UT v2.8.0 / Atlas v2.3.0); verbatim footnotes preserved |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily 0 9 * * * CF Worker cron. Version bumped in 3 locations (frontmatter + DocCtrl; §1 Identity has no Version row). |
+| 2026-05-10 | `v1.0.3` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE adoption declared this dispatch (WO-3) but with NEW specialization PARTNER-RELAY (placeholder, not THROUGHPUT-CONTROL — partner reputation semantics differ from rate-limited vendor APIs). svg-d1-client (5443887b) wired. Daily 05:00 UTC cron. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0 — all infra TODO | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -556,8 +564,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-29 |
-| Last Modified | 2026-05-08 |
-| Version | v1.0.2 |
+| Last Modified | 2026-05-10 |
+| Version | v1.0.3 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

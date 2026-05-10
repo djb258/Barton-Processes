@@ -22,8 +22,8 @@ inside:
   heir:
     process_id: bp.301
     species: UT-Body
-    version: "2.0.4"
-    last_modified: "2026-05-08"
+    version: "2.0.5"
+    last_modified: "2026-05-10"
     companion_manifest: PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -124,7 +124,7 @@ Section placeholder — content to be filled by process owner.
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-197 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/factory/301-page-parser |
@@ -618,6 +618,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-monthly `0 0 1 * *` GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl 2.0.1, then bumped to 2.0.2 in all 3 locations. |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | G06: §9b NOT YET DEPLOYED stamp added — all 7 gauge rows remain TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 | 2026-05-08 | v2.0.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `REPAIR` | G07 closed: §8 KILL SWITCH placeholder replaced with executable kill commands — `kill $(pgrep -f "page-parser.py")` + D1 partial-write verification query. Version bumped 2.0.3 → 2.0.4. |
+| 2026-05-10 | `v2.0.5` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Monthly cron bp-301. Scraper rim (HTTP fetch). Parser confidence floor not visible in audited code. Candidate for future rim-gate specialization. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-04-03a]: 2026-04-03 | PROC-301 created via 060 altitude descent. Station added between 300-recon and 200-people. 14-section PROCESS.md, heir.yaml, CLAUDE.md created. 7 comparators defined. | 54f035e9
 ^[ROW-2026-04-03b]: 2026-04-03 | Key Builder approach designed: decompose page → identify each element into defined buckets → quality gate → organize → store ALL. Unidentified stored, not discarded. Key reusable for Talent Flow monthly checks. | pending
@@ -632,8 +633,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-03 |
-| Last Modified | 2026-05-08 |
-| Version | v2.0.4 |
+| Last Modified | 2026-05-10 |
+| Version | v2.0.5 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

@@ -25,8 +25,8 @@ inside:
   heir:
     process_id: bp.200
     species: UT-Body
-    version: "1.0.3"
-    last_modified: "2026-05-08"
+    version: "1.0.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/200-people-worker/PROCESS-UT.md
   orbt:
     library_state: REPAIR
@@ -68,7 +68,7 @@ inside:
 | ORBT | REPAIR |
 | Strikes | 1 |
 | Authority | Inherited from imo-creator-v2 (sovereign) + Barton-Processes (parent) |
-| Last Modified | 2026-04-29 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-52 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/200-people-worker |
@@ -605,6 +605,7 @@ No logbook during BUILD/REPAIR.
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 6 * * *` CF Worker cron. Version bumped in 3 locations. |
 | 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [cloudflare-worker, svg-d1-outreach-ops, svg-d1-spine, doppler]. |
+| 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Active Strike 1 (50% slot fill leak per registry). Two D1s wired (svg-d1-outreach-ops 73a285b8 + svg-d1-spine 641a9a1e). Internal-only, no rim crossing. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-19]: Full build + deploy — CF Worker, 35K companies seeded, SearchEngineProxy pattern proven (87-95% LinkedIn hit rate) | LBB Record: processes/Session 2026-03-19
 ^[ROW-2026-03-24]: MANIFEST.md written, documentation chain created | LBB Record: session/2026-03-24-full-session-final
@@ -618,8 +619,8 @@ No logbook during BUILD/REPAIR.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-19 |
-| Last Modified | 2026-05-08 |
-| Version | v1.0.3 |
+| Last Modified | 2026-05-10 |
+| Version | v1.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

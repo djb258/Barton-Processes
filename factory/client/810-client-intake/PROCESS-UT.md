@@ -24,8 +24,8 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "2.1.3"
-    last_modified: "2026-05-08"
+    version: "2.1.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -67,7 +67,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — Barton-Processes/factory + imo-creator-v2 sovereign |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-38, BAR-178 |
 | Owner | TBV |
 | ctb_node | TBV — barton-enterprises/svg-agency/client/810-client-intake |
@@ -574,6 +574,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on client benefits data submission. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, neon-via-hyperdrive, svg-d1-census] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 7 gauge rows TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
+| 2026-05-10 | `v2.1.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Primary D1 binding empty (`client-intake-810` id blank); census D1 wired (c7b63950). UNKNOWN #4. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-19]: 2026-03-19 | Initial scaffold — index.ts, validate.ts, stage.ts, promote.ts, vault.ts, D1 migration 001 created | none
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from template v2.0.0; known issues documented | none
@@ -585,8 +586,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-08 |
-| Version | v2.1.3 |
+| Last Modified | 2026-05-10 |
+| Version | v2.1.4 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

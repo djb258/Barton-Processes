@@ -25,8 +25,8 @@ inside:
   heir:
     process_id: bp.900
     species: UT-Body
-    version: "2.0.3"
-    last_modified: "2026-05-08"
+    version: "2.0.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/sales/900-sales-portal/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -68,7 +68,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-39, BAR-133, BAR-179 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/sales/900-sales-portal |
@@ -572,6 +572,7 @@ Gaps from TABLES-AUDIT.md (2026-04-16) captured here before archiving per runner
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical (UT v2.8.0 / Atlas v2.3.0); verbatim footnotes preserved |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on sales rep portal page request. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.0.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G06: §9b NOT YET DEPLOYED stamp added — 6 of 7 gauge rows remain TBV pending first production run; 1 real value row (TABLES-AUDIT gaps, 2026-04-29) already present. Gauge spec and queries locked. Version bumped in 2 locations (frontmatter + DocCtrl). |
+| 2026-05-10 | `v2.0.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Empty `database_id = ""` in wrangler. UNKNOWN #4. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created v1.1.0 — full IMO, OSAM, C&V, dependencies, smoke test, schema | none
 ^[ROW-2026-04-16]: 2026-04-16 | TABLES-AUDIT.md created — live D1 audit against svg-d1-sales; 8 schema gaps found; next_migration.sql written | none
@@ -582,8 +583,8 @@ Gaps from TABLES-AUDIT.md (2026-04-16) captured here before archiving per runner
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-08 |
-| Version | v2.0.3 |
+| Last Modified | 2026-05-10 |
+| Version | v2.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

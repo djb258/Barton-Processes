@@ -23,8 +23,8 @@ inside:
   heir:
     process_id: bp.500
     species: UT-Body
-    version: "2.0.3"
-    last_modified: "2026-05-08"
+    version: "2.0.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/500-talent-flow/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -66,7 +66,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited — barton-outreach-core + imo-creator-v2 sovereign |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-50 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/outreach/talent-flow |
@@ -514,6 +514,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical shape (UT v2.8.0 / Atlas v2.3.0). Version bumped across frontmatter + §1 + Document Control. |
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-monthly `0 8 1 * *` GitHub Actions cron. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl 2.0.1, then bumped to 2.0.2 in all 3 locations. |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir frontmatter: [python3-script, neon-via-hyperdrive]. G06: §9b NOT YET DEPLOYED stamp added — all 5 gauge rows remain TBV pending first production run. Version bumped in 2 locations (no §1 Version row). |
+| 2026-05-10 | `v2.0.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Monthly cron bp-500. Internal Neon-via-hyperdrive. Zero-detection squawk wiring referenced in acceptance criteria, not verified in code. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md written from CLAUDE.md + source code + heir.yaml | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — all fragments consolidated into PROCESS-UT.md + DOCTRINE.md; orbt.yaml written; fragments archived | pending
@@ -523,8 +524,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-08 |
-| Version | v2.0.3 |
+| Last Modified | 2026-05-10 |
+| Version | v2.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

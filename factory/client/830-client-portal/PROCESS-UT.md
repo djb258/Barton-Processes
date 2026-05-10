@@ -23,8 +23,8 @@ inside:
   heir:
     process_id: bp.830
     species: UT-Body
-    version: "2.1.3"
-    last_modified: "2026-05-08"
+    version: "2.1.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -66,7 +66,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-38, BAR-82, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/client-portal |
@@ -546,6 +546,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.1.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to 5-column canonical (UT v2.8.0 / Atlas v2.3.0); verbatim footnotes preserved |
 | 2026-05-08 | v2.1.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on client portal page request. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.1.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, client-hub-d1] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 8 gauge rows TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
+| 2026-05-10 | `v2.1.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Wrangler `main = `, all D1 blocks, all routes COMMENTED OUT. Non-functional shell. UNKNOWN #5 (sovereign decision: restore or reset). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Initial PROCESS.md created. Documented IMO, OSAM, C&V, dependencies, known issues. BUILD state. | none
 ^[ROW-2026-04-22]: 2026-04-22 | Skeleton wrangler.toml and src/ updated; all routes render with mock data. | none
@@ -557,8 +558,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-08 |
-| Version | v2.1.3 |
+| Last Modified | 2026-05-10 |
+| Version | v2.1.4 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

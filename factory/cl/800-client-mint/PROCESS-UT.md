@@ -21,8 +21,8 @@ inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.0.4"
-    last_modified: "2026-05-08"
+    version: "2.0.5"
+    last_modified: "2026-05-10"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -67,7 +67,7 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/cl/800-client-mint |
@@ -531,6 +531,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: EVENT-DRIVEN — HTTP-triggered on CL company promotion. Frontmatter version corrected from 1.0.1 to match §1/DocCtrl, then bumped to 2.0.2. Version bumped in 2 locations (frontmatter + DocCtrl). |
 | 2026-05-08 | v2.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | G03 HEIR repair: frontmatter outside.heir populated — sovereign_ref corrected to imo-creator-v2; hub_id corrected to client-mint-800; ctb_placement set to Leaf enum; ctb_node added (barton-enterprises/svg-agency/factory/cl/800-client-mint); imo_topology corrected from hub to middle; services, secrets_provider, acceptance_criteria added from canonical §1/§2 context; inside.heir.species added. Version bumped 2.0.2 → 2.0.3. |
 | 2026-05-08 | v2.0.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `REPAIR` | G06 closed: NOT YET DEPLOYED stamp added to §9b — all-TBV gauge rows now carry explicit deployment status declaration. Version bumped 2.0.3 → 2.0.4. |
+| 2026-05-10 | `v2.0.5` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Empty `database_id = ""` in wrangler — cannot deploy. UNKNOWN #4 (sovereign D1 provisioning approval needed). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -540,8 +541,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-08 |
-| Version | v2.0.4 |
+| Last Modified | 2026-05-10 |
+| Version | v2.0.5 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

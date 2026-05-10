@@ -21,8 +21,8 @@ inside:
   heir:
     process_id: bp.010
     species: UT-Body
-    version: "1.0.3"
-    last_modified: "2026-05-08"
+    version: "1.0.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/010-seed-d1/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -73,9 +73,9 @@ inside:
 | Strikes | 0 |
 | BAR Reference | BAR-52 |
 | Related BARs | BAR-190 (SEED v2 national spine design) |
-| Version | v1.0.3 |
+| Version | v1.0.4 |
 | Created | 2026-03-25 |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | Governance | See `DOCTRINE.md` at folder root |
 
 ### HEIR
@@ -523,6 +523,7 @@ Run in this sequence to satisfy foreign key dependencies:
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 4 * * *` CF Worker cron. Version bumped in 3 locations. |
 | 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN doc-conformance batch) | `AMEND` | G02: §2 PRE-FLIGHT CHECKLIST converted from bullet checkboxes to canonical 13-item TABLE format per UT_CHECKLIST.md v1.3.1. G03: `services` field added to outside.heir frontmatter. |
+| 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Wrangler host ambiguous — registry says "factory/outreach/010-seed-d1/wrangler.toml OR lcs-hub merged"; neither resolved in repo. Flagged as Sovereign Walkthrough UNKNOWN #2. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 
 ^[ROW-2026-04-29]: Wave 1 UT Consolidation | Sonnet Runner consolidated 7 fragments (PROCESS.md, MASTER_DATA_CTB.md, SEED_AUDIT.md, SEED_V2_DESIGN.md, NEON_COLUMN_INVENTORY.csv, MASTER_COLUMN_REGISTRY.json, UNDOCUMENTED_COLUMNS.json) into UT v2.7.0 locked folder shape | PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml written; _archived-fragments/ created
 
@@ -534,9 +535,9 @@ Run in this sequence to satisfy foreign key dependencies:
 |-------|-------|
 | Process ID | PROC-010 |
 | UT Version | v2.7.0 |
-| Version | v1.0.3 |
+| Version | v1.0.4 |
 | Created | 2026-04-29 |
-| Last Modified | 2026-05-08 |
+| Last Modified | 2026-05-10 |
 | Consolidated By | Sonnet Runner (Wave 1) |
 | Source Fragments | 7 files → _archived-fragments/ |
 | Gates G21-G30 | Self-check — pending Codex Auditor Stage 3 |

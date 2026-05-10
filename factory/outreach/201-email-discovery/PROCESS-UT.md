@@ -29,9 +29,15 @@ outside:
 inside:
   heir:
     process_id: bp.201
-    version: "1.0.3"
-    last_modified: "2026-05-08"
+    version: "1.0.4"
+    last_modified: "2026-05-10"
     companion_manifest: Barton-Processes/factory/outreach/201-email-discovery/PROCESS-UT.md
+    rim_gate_adoption:
+      template: tpl.rim-gate
+      specialization: tpl.rim-gate.throughput-control
+      reference: imo-creator-v2/atlas/templates/rim-gate/throughput-control/UT.md
+      adoption_status: declared
+      first_runtime_audit_due: post-Monday-first-fire
     aviation_model:
       planner: opus-4.7
       mechanic: sonnet
@@ -79,7 +85,7 @@ inside:
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Last Modified | 2026-04-02 |
+| Last Modified | 2026-05-10 |
 | BAR Reference | BAR-52, BAR-191 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/outreach/201-email-discovery |
@@ -603,6 +609,7 @@ No logbook during BUILD.
 | 2026-05-08 | v1.0.1 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `MIGRATE` | §14 column format migrated to canonical 5-column shape per Atlas v2.3.0 / UT v2.8.0 / UT_CHECKLIST v1.3.1. Original 3-column rows preserved as table rows where possible; original verbatim text preserved as footnotes when reshaping lost content. |
 | 2026-05-08 | v1.0.2 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `STAMP` | §10 Operations/Schedule stamped: RECURRING-daily `0 7 * * *` GitHub Actions cron. Version bumped in 3 locations. |
 | 2026-05-08 | v1.0.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: ctb_placement corrected from full path string to canonical enum value `leaf`; ctb_node added to outside.heir with path `barton-enterprises/svg-agency/outreach/201-email-discovery`. |
+| 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE → THROUGHPUT-CONTROL adoption declared this dispatch (WO-3). MillionVerifier + Hunter rims. GH Actions cron-bp-201 present. Vendor-budget cap enforcement TBV. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
 
 ^[ROW-2026-04-02a]: Initial PROCESS.md created (v2.0.0 format) | LBB: none
 ^[ROW-2026-04-02b]: Rewritten to PROCESS_TEMPLATE v4.0.0 — all 14 sections | LBB: none
@@ -615,8 +622,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-02 |
-| Last Modified | 2026-05-08 |
-| Version | v1.0.3 |
+| Last Modified | 2026-05-10 |
+| Version | v1.0.4 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |
