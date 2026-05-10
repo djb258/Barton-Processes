@@ -1,0 +1,19 @@
+name = "dyno-engine"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "a1dd98c646e8d2f4ae6f1ca6c0b79653"
+
+# NO public routes — service binding only
+workers_dev = false
+
+# R2 — workbench for raw artifacts
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "svg-files"
+
+# D1 — structured metadata
+[[d1_databases]]
+binding = "DB"
+database_name = "mission-control"
+database_id = "9f01c45a-a7f8-4173-83ac-afa666e86609"
