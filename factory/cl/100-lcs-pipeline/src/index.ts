@@ -32,11 +32,14 @@ export default {
     try {
       // 1. Find all pending signals grouped by company
       const pending = await env.D1.prepare(`
-        SELECT sovereign_company_id, GROUP_CONCAT(signal_id) as signal_ids, COUNT(*) as signal_count
-        FROM signal_queue
-        WHERE status = 'pending'
-          AND (expires_at IS NULL OR expires_at > datetime('now'))
-        GROUP BY sovereign_company_id
+        SELECT sq.sovereign_company_id, GROUP_CONCAT(sq.signal_id) as signal_ids, COUNT(*) as signal_count
+        FROM signal_queue sq
+        JOIN company c ON c.sovereign_company_id = sq.sovereign_company_id
+        WHERE sq.status = 'pending'
+          AND (sq.expires_at IS NULL OR sq.expires_at > datetime('now'))
+          AND c.assigned_agent IS NOT NULL
+          AND c.assigned_agent != ''
+        GROUP BY sq.sovereign_company_id
         ORDER BY signal_count DESC
         LIMIT 50
       `).all<{
