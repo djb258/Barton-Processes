@@ -324,6 +324,20 @@ export async function deliverMid(
       return;
     }
 
+    // 2b. Re-check suppression at MID-deliver (recipient may have unsubscribed since SID-design)
+    if (sidRow.target_email && await isSuppressed(env.D1, 'email', sidRow.target_email)) {
+      await env.D1.prepare(
+        "UPDATE sid SET status = 'stopped', updated_at = datetime('now') WHERE sid_id = ?"
+      ).bind(sidId).run();
+      await logEvent(env.D1, {
+        sovereign_company_id: sidRow.sovereign_company_id,
+        sid_id: sidId,
+        event_type: 'mid_suppressed',
+        event_data: { recipient_email: sidRow.target_email },
+      });
+      return;
+    }
+
     // 3. Build message package
     const midId = `MID-${sidId.slice(4)}-${String(nextSeq).padStart(2, '0')}-${nextMessage.channel}`;
     const pkg: MessagePackage = {
@@ -659,16 +673,16 @@ function getCampaignBody(
   // Message 1 — always the opener
   if (seq === 1) {
     if (path === 'cfo_ceo_money') {
-      return `${name},\n\nDave Barton. I do insurance informatics — 25 years in benefits plus the data systems to actually manage cost.\n\n10% of your employees cause 85% of your claims cost. Your broker manages products. I manage that 10%.\n\nI built a system that watches your data 365 days a year. Not once at renewal. Every day.\n\nIf you want to see it, I'll show you the dashboard. Takes 15 minutes.\n\nDave Barton\nSVG Agency`;
+      return `${name},\n\nDave Barton. I do insurance informatics — 25 years in benefits plus the data systems to actually manage cost.\n\n10% of your employees cause 85% of your claims cost. Your broker manages products. I manage that 10%.\n\nI built a system that watches your data 365 days a year. Not once at renewal. Every day.\n\nIf you want to see it, I'll show you the dashboard. Takes 15 minutes.\n\nhttps://book.insuranceinformatics.com\n\nDave Barton\nSVG Agency`;
     }
-    return `${name},\n\nDave Barton. I run insurance informatics at SVG Agency.\n\nI built a system that handles enrollment, vendor management, tickets, and renewals — so HR doesn't have to. Your team gets a portal. I handle the 10% of employees that cause 85% of the headaches.\n\nIf that sounds useful, I'll show you what the portal looks like. 15 minutes.\n\nDave Barton\nSVG Agency`;
+    return `${name},\n\nDave Barton. I run insurance informatics at SVG Agency.\n\nI built a system that handles enrollment, vendor management, tickets, and renewals — so HR doesn't have to. Your team gets a portal. I handle the 10% of employees that cause 85% of the headaches.\n\nIf that sounds useful, I'll show you what the portal looks like. 15 minutes.\n\nhttps://book.insuranceinformatics.com\n\nDave Barton\nSVG Agency`;
   }
 
   // Subsequent messages — shorter, different angle
   if (path === 'cfo_ceo_money') {
-    return `${name},\n\nFollowing up. The data on your group is worth looking at — most employers in your size range are overpaying because nobody's managing the 10% that drives 85% of cost.\n\nI'm not selling a product. I manage the problem. Lead, follow, or get out of the way.\n\n15 minutes. That's all I need.\n\nDave Barton\nSVG Agency`;
+    return `${name},\n\nFollowing up. The data on your group is worth looking at — most employers in your size range are overpaying because nobody's managing the 10% that drives 85% of cost.\n\nI'm not selling a product. I manage the problem. Lead, follow, or get out of the way.\n\n15 minutes. That's all I need.\n\nhttps://book.insuranceinformatics.com\n\nDave Barton\nSVG Agency`;
   }
-  return `${name},\n\nQuick follow-up. The system I built takes benefits admin off HR's plate completely — enrollment, tickets, vendor exports, renewal tracking. All in one portal.\n\nYour current broker isn't doing this. Nobody is. I built it because it didn't exist.\n\n15 minutes to see it.\n\nDave Barton\nSVG Agency`;
+  return `${name},\n\nQuick follow-up. The system I built takes benefits admin off HR's plate completely — enrollment, tickets, vendor exports, renewal tracking. All in one portal.\n\nYour current broker isn't doing this. Nobody is. I built it because it didn't exist.\n\n15 minutes to see it.\n\nhttps://book.insuranceinformatics.com\n\nDave Barton\nSVG Agency`;
 }
 
 function determinPathType(sidRow: any): 'WARM' | 'COLD' {

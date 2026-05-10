@@ -27,6 +27,9 @@ export interface Env {
   MAILGUN_DOMAIN: string;
   // HeyReach
   HEYREACH_API_KEY: string;
+  // Send safety controls (BAR-MONDAY-FIRSTFIRE)
+  DRY_RUN?: string;
+  MAX_SENDS_PER_DAY?: string;
 }
 
 // ── Spoke IN: Standard Signal Format ────────────────────────

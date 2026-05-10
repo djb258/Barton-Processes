@@ -17,9 +17,10 @@ name = "lcs-hub"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
-# Cron — producer scans for new signals daily at 7am UTC
+# Cron — DISABLED for controlled Monday first-fire (BAR-MONDAY-FIRSTFIRE 2026-05-09).
+# First send is manual via workflow_dispatch / curl /run-pipeline. Re-enable after live-fire success.
 [triggers]
-crons = ["0 7 * * *"]
+crons = []
 
 # D1 — LCS working database (edge)
 [[d1_databases]]
@@ -49,6 +50,11 @@ IMO_BRAIN_URL = "https://imo-brain.svg-outreach.workers.dev"
 COMPOSIO_BASE_URL = "https://backend.composio.dev"
 # Mailgun domain
 MAILGUN_DOMAIN = "mg.insuranceinformatics.com"
+# Send safety controls (BAR-MONDAY-FIRSTFIRE 2026-05-09)
+# DRY_RUN: "true" to skip Mailgun calls and log mid_dryrun events instead. Default false.
+DRY_RUN = "true"
+# MAX_SENDS_PER_DAY: hard ceiling on Mailgun sends per UTC day. Empty/0 = no cap.
+MAX_SENDS_PER_DAY = "100"
 
 # Secrets (set via `wrangler secret put <NAME>`):
 #   NEON_URL            — Neon vault connection (OUTREACH_DATABASE_URL from Doppler)

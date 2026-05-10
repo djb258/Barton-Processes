@@ -29,6 +29,7 @@ async function deliverMailgun(
   try {
     const form = new FormData();
     form.append('from', `Dave Barton <dave@${env.MAILGUN_DOMAIN}>`);
+    form.append('h:Reply-To', 'dave@svg.agency');
     form.append('to', pkg.recipient_email);
     form.append('subject', pkg.subject);
     form.append('text', pkg.body_plain);
@@ -119,6 +120,40 @@ export async function deliver(
   env: Env,
   pkg: MessagePackage,
 ): Promise<DeliveryResult> {
+  // ── Send caps + dry-run gate ──
+  if (env.DRY_RUN === 'true') {
+    await logEvent(env.D1, {
+      sovereign_company_id: pkg.sovereign_company_id,
+      cid_id: pkg.cid_id,
+      sid_id: pkg.sid_id,
+      mid_id: pkg.mid_id,
+      event_type: 'mid_dryrun',
+      event_data: { channel: pkg.channel, recipient_email: pkg.recipient_email },
+    });
+    return { success: true, provider_id: 'DRY_RUN', error: null };
+  }
+
+  if (pkg.channel === 'MG' && env.MAX_SENDS_PER_DAY) {
+    const cap = parseInt(env.MAX_SENDS_PER_DAY, 10);
+    if (Number.isFinite(cap) && cap > 0) {
+      const todayCount = await env.D1.prepare(
+        "SELECT COUNT(*) as cnt FROM mid WHERE channel = 'MG' AND delivery_status = 'sent' AND date(sent_at) = date('now')"
+      ).first<{ cnt: number }>();
+      const sentToday = todayCount?.cnt ?? 0;
+      if (sentToday >= cap) {
+        await logEvent(env.D1, {
+          sovereign_company_id: pkg.sovereign_company_id,
+          cid_id: pkg.cid_id,
+          sid_id: pkg.sid_id,
+          mid_id: pkg.mid_id,
+          event_type: 'mid_capped',
+          event_data: { sent_today: sentToday, cap },
+        });
+        return { success: false, provider_id: null, error: `Daily send cap reached (${sentToday}/${cap})` };
+      }
+    }
+  }
+
   const result = pkg.channel === 'MG'
     ? await deliverMailgun(env, pkg)
     : await deliverHeyReach(env, pkg);
