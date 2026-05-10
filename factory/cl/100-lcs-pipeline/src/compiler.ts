@@ -374,8 +374,8 @@ export async function deliverMid(
     // 6. Update MID status
     const newStatus = result.success ? 'sent' : 'failed';
     await env.D1.prepare(
-      `UPDATE mid SET delivery_status = ?, sent_at = datetime('now'), updated_at = datetime('now') WHERE mid_id = ?`
-    ).bind(newStatus, midId).run();
+      `UPDATE mid SET delivery_status = ?, sender_domain = ?, sent_at = datetime('now'), updated_at = datetime('now') WHERE mid_id = ?`
+    ).bind(newStatus, result.sender_domain ?? null, midId).run();
 
     // 7. If failed, check strike count
     if (!result.success) {

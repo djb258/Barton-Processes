@@ -189,10 +189,65 @@ export default {
 
         const auth = `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`;
         const checks = await Promise.all(domains.map(async (d) => {
+          // Per-domain rolling stats from local mid table (24h + 7d)
+          const localStatsPromise = (async () => {
+            try {
+              const [stats24, stats7d] = await Promise.all([
+                env.D1.prepare(
+                  `SELECT
+                     COUNT(*) as total,
+                     SUM(CASE WHEN delivery_status = 'sent' THEN 1 ELSE 0 END) as sent,
+                     SUM(CASE WHEN delivery_status = 'bounced' THEN 1 ELSE 0 END) as bounced,
+                     SUM(CASE WHEN delivery_status = 'failed' THEN 1 ELSE 0 END) as failed
+                   FROM mid
+                   WHERE sender_domain = ?
+                     AND created_at > datetime('now', '-1 day')`
+                ).bind(d).first<{ total: number; sent: number; bounced: number; failed: number }>(),
+                env.D1.prepare(
+                  `SELECT
+                     COUNT(*) as total,
+                     SUM(CASE WHEN delivery_status = 'sent' THEN 1 ELSE 0 END) as sent,
+                     SUM(CASE WHEN delivery_status = 'bounced' THEN 1 ELSE 0 END) as bounced,
+                     SUM(CASE WHEN delivery_status = 'failed' THEN 1 ELSE 0 END) as failed
+                   FROM mid
+                   WHERE sender_domain = ?
+                     AND created_at > datetime('now', '-7 days')`
+                ).bind(d).first<{ total: number; sent: number; bounced: number; failed: number }>(),
+              ]);
+              const total24 = stats24?.total ?? 0;
+              const total7d = stats7d?.total ?? 0;
+              const bounced24 = stats24?.bounced ?? 0;
+              const bounced7d = stats7d?.bounced ?? 0;
+              return {
+                sent_24h: stats24?.sent ?? 0,
+                bounced_24h: bounced24,
+                failed_24h: stats24?.failed ?? 0,
+                bounce_rate_24h: total24 > 0 ? bounced24 / total24 : 0,
+                sent_7d: stats7d?.sent ?? 0,
+                bounced_7d: bounced7d,
+                bounce_rate_7d: total7d > 0 ? bounced7d / total7d : 0,
+              };
+            } catch (err) {
+              return {
+                error: err instanceof Error ? err.message : String(err),
+                sent_24h: 0,
+                bounced_24h: 0,
+                failed_24h: 0,
+                bounce_rate_24h: 0,
+                sent_7d: 0,
+                bounced_7d: 0,
+                bounce_rate_7d: 0,
+              };
+            }
+          })();
+
           try {
-            const resp = await fetch(`https://api.mailgun.net/v4/domains/${encodeURIComponent(d)}`, {
-              headers: { Authorization: auth },
-            });
+            const [resp, local_stats] = await Promise.all([
+              fetch(`https://api.mailgun.net/v4/domains/${encodeURIComponent(d)}`, {
+                headers: { Authorization: auth },
+              }),
+              localStatsPromise,
+            ]);
             if (!resp.ok) {
               const body = await resp.text();
               return {
@@ -200,6 +255,7 @@ export default {
                 ok: false,
                 status: resp.status,
                 error: body.slice(0, 200),
+                local_stats,
               };
             }
             const data = await resp.json<any>();
@@ -220,17 +276,25 @@ export default {
                 name: r.name,
                 valid: r.valid,
               })),
+              local_stats,
             };
           } catch (err) {
+            const local_stats = await localStatsPromise;
             return {
               domain: d,
               ok: false,
               error: err instanceof Error ? err.message : String(err),
+              local_stats,
             };
           }
         }));
 
-        const failing = checks.filter((c) => !c.ok || c.state !== 'active' || c.sending_dns_valid === false);
+        const failing = checks.filter((c) =>
+          !c.ok ||
+          c.state !== 'active' ||
+          c.sending_dns_valid === false ||
+          ((c.local_stats?.bounce_rate_24h ?? 0) > 0.05)
+        );
         return json({
           status: failing.length === 0 ? 'all_green' : 'has_issues',
           checked: checks.length,

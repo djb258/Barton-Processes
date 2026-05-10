@@ -31,6 +31,7 @@ export interface DeliveryResult {
   success: boolean;
   provider_id: string | null;
   error: string | null;
+  sender_domain?: string;
 }
 
 /** Deliver via Mailgun (email) */
@@ -42,8 +43,9 @@ async function deliverMailgun(
     return { success: false, provider_id: null, error: 'No recipient email' };
   }
 
+  let sendDomain: string | undefined;
   try {
-    const sendDomain = pickMailgunDomain(env);
+    sendDomain = pickMailgunDomain(env);
     const form = new FormData();
     form.append('from', `Dave Barton <dave@${sendDomain}>`);
     form.append('h:Reply-To', 'dave@svg.agency');
@@ -75,16 +77,17 @@ async function deliverMailgun(
 
     if (!resp.ok) {
       const body = await resp.text();
-      return { success: false, provider_id: null, error: `Mailgun ${resp.status}: ${body}` };
+      return { success: false, provider_id: null, error: `Mailgun ${resp.status}: ${body}`, sender_domain: sendDomain };
     }
 
     const data = await resp.json<{ id?: string }>();
-    return { success: true, provider_id: data.id ?? null, error: null };
+    return { success: true, provider_id: data.id ?? null, error: null, sender_domain: sendDomain };
   } catch (err) {
     return {
       success: false,
       provider_id: null,
       error: err instanceof Error ? err.message : String(err),
+      sender_domain: sendDomain,
     };
   }
 }
@@ -188,6 +191,7 @@ export async function deliver(
       path_type: pkg.path_type,
       provider_id: result.provider_id,
       error: result.error,
+      sender_domain: result.sender_domain ?? null,
     },
   });
 
