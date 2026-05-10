@@ -1,0 +1,371 @@
+# =============================================================================
+# plan-book.yaml — Plan-Body manifest companion to PLAN-BOOK.md
+# BAR-FLEET-OVERNIGHT — overnight 16-process readiness sweep for sovereign morning walkthrough
+# BS Law v1.3.0 Y-junction syntactic separation (outside / inside as distinct top-level maps)
+# BS Law v1.5.0 universal paired-artifact pattern — parity zone matches PLAN-BOOK.md frontmatter
+# Book Law v1.5.0 Workflow-Body 11-block manifestation
+# =============================================================================
+
+species: Plan-Body
+bar_id: BAR-FLEET-OVERNIGHT
+sovereign_ref: barton-processes
+version: "1.0.0"
+last_modified: "2026-05-10"
+created: "2026-05-10"
+authority: "Sovereign-authorized 2026-05-10 (Dave Barton)"
+planner_engine: opus-4.7
+foreman_engine: opus-4.7
+mechanic_engine: sonnet
+auditor_engine: codex
+companion_md: PLAN-BOOK.md
+certification_label: provisional-runtime
+
+# ---------------------------------------------------------------------------
+# Y-JUNCTION (BS Law v1.3.0 — outside.heir, outside.orbt, inside.heir, inside.orbt
+#  as syntactically distinct top-level maps)
+# ---------------------------------------------------------------------------
+
+outside:
+  heir:
+    sovereign_ref: barton-enterprises
+    hub_id: bar-fleet-overnight
+    ctb_placement: doctrine
+    imo_topology: plan
+    cc_layer: CC-04
+    subject_id: processes
+    ctb_node: barton-enterprises/svg-agency/outreach/fleet-overnight-prep
+    services:
+      - barton-processes
+      - imo-creator-v2-mission-control
+      - lbb
+    secrets_provider: doppler
+    acceptance_criteria: |
+      audit captured + 5 work_orders enumerated + 12 unknowns surfaced
+      + Codex audit P=1 on assembled bundle after WO-1, WO-2, WO-3 land.
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-10"
+    indexed_by: opus-4.7-planner
+
+inside:
+  heir:
+    sovereign_ref: barton-enterprises
+    plan_id: BAR-FLEET-OVERNIGHT
+    species: Plan-Body
+    version: "1.0.0"
+    last_modified: "2026-05-10"
+    companion_manifest: PLAN-BOOK.md
+    ctb_placement: doctrine
+    ctb_node: barton-enterprises/svg-agency/outreach/fleet-overnight-prep
+    imo_topology: plan
+    cc_layer: CC-04
+    services:
+      - barton-processes
+      - imo-creator-v2-mission-control
+      - lbb
+    secrets_provider: doppler
+    acceptance_criteria: "5 WOs dispatched + 12 unknowns documented + sovereign morning walkthrough ready"
+    aviation_model:
+      planner: opus-4.7
+      foreman: opus-4.7
+      mechanic: sonnet
+      auditor: codex
+    determinism_gate: ai_on_spine_forbidden
+  orbt:
+    library_state: BUILD
+    runtime_state: BUILD
+    strikes: 0
+    last_transition_at: "2026-05-10"
+    last_transition_reason: "Initial draft per sovereign overnight directive"
+    flipped_by: opus-4.7-planner
+    promotion_gate: codex_audit_pass + sovereign_walkthrough_complete
+
+# ---------------------------------------------------------------------------
+# BS LAW CONFORMANCE BLOCK
+# ---------------------------------------------------------------------------
+
+bs_law_conformance:
+  version: BS_LAW_v1.3.0
+  y_junction: true
+  outside_arm: outside
+  inside_arm: inside
+  syntactic_separation: two_distinct_top_level_keys
+  certification_label: provisional-runtime
+  auditor: codex
+  bar_id: BAR-FLEET-OVERNIGHT
+
+# ---------------------------------------------------------------------------
+# PARITY ZONE — these fields MUST match PLAN-BOOK.md frontmatter
+# ---------------------------------------------------------------------------
+
+parity_zone:
+  - bar_id: BAR-FLEET-OVERNIGHT
+  - version: "1.0.0"
+  - last_modified: "2026-05-10"
+  - sovereign_ref: barton-processes
+  - species: Plan-Body
+  - planner_engine: opus-4.7
+  - mechanic_engine: sonnet
+  - auditor_engine: codex
+  - ctb_node: "barton-enterprises/svg-agency/outreach/fleet-overnight-prep"
+  - acceptance_criteria_hash: "sha256:tbd-on-first-commit"
+
+# ---------------------------------------------------------------------------
+# BOOK LAW v1.5.0 WORKFLOW-BODY 11-BLOCK MANIFESTATION
+# (block 1 = name, 2 = inherits, 3 = outside, 4 = inside, 5 = description,
+#  6 = inputs, 7 = schedule, 8 = data, 9 = nodes, 10 = gates, 11 = lbb)
+# ---------------------------------------------------------------------------
+
+name: BAR-FLEET-OVERNIGHT
+inherits:
+  - atlas/ATLAS.md
+  - atlas/constants/UNIFIED_TEMPLATE.md@v2.8.0
+  - atlas/constants/UT_CHECKLIST.md@v1.3.1
+  - atlas/constants/BS_LAW.md@v1.4.0
+  - atlas/constants/BOOK_LAW.md@v1.5.0
+  - atlas/constants/BARTON_ENTERPRISES_CTB.md
+  - atlas/constants/FOUR_BRAIN_AVIATION.md@v1.2.0
+
+description: |
+  Overnight 16-process readiness sweep. Authored 2026-05-10 by Opus 4.7
+  Planner under sovereign directive. Captures audit verdict (UT-Body 16/16
+  GREEN, drift in 3 sub-layers documented). Enumerates 5 sequential WOs
+  (MC nav + UT logbooks + RIM-GATE adoption + Codex audit + LBB ingest).
+  Surfaces 12 sovereign-only unknowns for morning walkthrough decision batch.
+
+inputs:
+  prior_bars:
+    - BAR-MONDAY-16-FLEET-GREEN  # closed 2026-05-08 (16/16 UT-Body certified provisional-runtime)
+    - BAR-RIM-GATE-DRAFT          # closed 2026-05-10, Codex PROVISIONAL on commit 91570756
+  prior_commits:
+    - imo-creator-v2@1a1066b2     # MC RimGateTile + nav entry deployed
+    - barton-processes@96fbff7    # LCS-100 patch
+    - barton-processes@b2185fc    # LCS-100 patch
+    - barton-processes@1c78a58    # LCS-100 patch
+    - barton-processes@d55015b    # LCS-100 patch
+    - barton-processes@91570756   # RIM-GATE adoption on bp.100
+  doppler_state:
+    - imo-creator/dev/MAILGUN_DOMAINS (15 insurance-aligned domains populated)
+  fleet_state:
+    - 16 PROCESS-UT.md files (all UT v2.8.0 conformant)
+    - 16 workflow.yaml companion files (Y-junction conformant)
+    - 4 D1 binding gaps (bp.800, bp.810-primary, bp.900, bp.830-entirely-commented)
+    - 2 implementation gaps (bp.010 namespace collision, bp.700 UT-only)
+    - 6 RIM-GATE adoption candidates (bp.100 already adopted, 5 pending)
+
+schedule:
+  type: one-shot
+  cron: null
+  trigger: sovereign-overnight-directive
+  duration_estimate: overnight (8-12 hours wall clock)
+  wo_sequencing:
+    - WO-1 + WO-2 can run parallel
+    - WO-3 depends on WO-2 (version bumps must land first)
+    - WO-4 depends on WO-1 + WO-2 + WO-3 (audits assembled bundle)
+    - WO-5 depends on WO-4 P=1 verdict
+
+data:
+  read:
+    - atlas/ATLAS.md
+    - atlas/constants/UNIFIED_TEMPLATE.md
+    - atlas/constants/UT_CHECKLIST.md
+    - atlas/constants/BS_LAW.md
+    - atlas/constants/BOOK_LAW.md
+    - atlas/constants/BARTON_ENTERPRISES_CTB.md
+    - 16 × factory/<branch>/<NNN>-*/PROCESS-UT.md
+    - 16 × factory/<branch>/<NNN>-*/workflow.yaml
+    - imo-creator-v2/workers/mission-control/src/data/navigation.ts
+    - imo-creator-v2/atlas/manifests/paired-artifacts.yaml
+    - imo-creator-v2/fleet/specializations/throughput-control/SPECIALIZATION.md
+  write:
+    - imo-creator-v2/workers/mission-control/src/data/navigation.ts (14 nav entries appended)
+    - 16 × factory/<branch>/<NNN>-*/PROCESS-UT.md (§14 logbook + 3-location version bump)
+    - 6 × factory/<branch>/<NNN>-*/PROCESS-UT.md (inside.heir.implements: appended)
+    - imo-creator-v2/atlas/manifests/paired-artifacts.yaml (conditional append)
+    - imo-creator-v2/fleet/specializations/throughput-control/SPECIALIZATION.md (PARTNER-RELAY placeholder)
+    - docs/plans/BAR-FLEET-OVERNIGHT/audits/codex-audit-YYYYMMDD-HHMM.md (audit verdict)
+    - LBB record (subject_id=system, tags=[bar-fleet-overnight, ...])
+
+nodes:
+
+  - id: master-conformance
+    type: planner
+    actor: opus-4.7
+    inputs:
+      - prior BARs (BAR-MONDAY-16-FLEET-GREEN, BAR-RIM-GATE-DRAFT)
+      - audit Sonnet output (a57f0f541e0d0b5cd)
+    outputs:
+      - this Plan Book (PLAN-BOOK.md + plan-book.yaml)
+
+  - id: WO-1-mc-nav-wiring
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    target_repo: imo-creator-v2
+    target_files:
+      - workers/mission-control/src/data/navigation.ts
+    inputs:
+      - 14 process IDs (all 16 minus bp.100 + bp.600)
+      - ctb_node mapping per process
+    outputs:
+      - +14 nav entries
+      - MC built + deployed (wrangler pages deploy)
+    verification:
+      - grep -c "id: 'bp\." workers/mission-control/src/data/navigation.ts (+14 over baseline)
+    schedule: post-Plan-Book
+
+  - id: WO-2-ut-logbook-updates
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    target_repo: Barton-Processes
+    target_files:
+      - 16 × factory/<branch>/<NNN>-*/PROCESS-UT.md
+    inputs:
+      - audit findings per process (Tables 1-4 from §3)
+    outputs:
+      - 16 × §14 logbook row appended (date=2026-05-10, BAR=BAR-FLEET-OVERNIGHT)
+      - 16 × 3-location version bump (frontmatter + §1 Identity + §13 Document Control)
+      - 16 × Last Modified updated to 2026-05-10 in all 3 locations
+    verification:
+      - git diff --stat factory/*/PROCESS-UT.md (16 files modified)
+    schedule: post-Plan-Book
+
+  - id: WO-3-rim-gate-adoption
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    target_repo: Barton-Processes
+    depends_on: WO-2
+    target_files:
+      - factory/cl/100-lcs-pipeline/PROCESS-UT.md
+      - factory/outreach/201-email-discovery/PROCESS-UT.md
+      - factory/outreach/202-linkedin-discovery/PROCESS-UT.md
+      - factory/outreach/300-blog-worker/PROCESS-UT.md
+      - factory/outreach/700-campaign-engine/PROCESS-UT.md
+      - factory/client/820-vendor-export/PROCESS-UT.md
+    inputs:
+      - 6 RIM-GATE adoption candidates (Table 3 from §3)
+    outputs:
+      - 5 × inside.heir.implements = "rim-gate/throughput-control" (bp.100, 201, 202, 300, 700)
+      - 1 × inside.heir.implements = "rim-gate/partner-relay" (bp.820)
+      - 1 × PARTNER-RELAY placeholder in throughput-control SPECIALIZATION.md
+      - paired-artifacts.yaml conditional append (if new pair rows)
+    verification:
+      - grep -rl "implements: rim-gate" factory/ (6 files)
+    schedule: post-WO-2
+
+  - id: WO-4-codex-audit
+    type: auditor
+    actor: codex
+    run_in_background: true
+    depends_on:
+      - WO-1
+      - WO-2
+      - WO-3
+    inputs:
+      - git diff of changed files from WO-1, WO-2, WO-3
+    outputs:
+      - docs/plans/BAR-FLEET-OVERNIGHT/audits/codex-audit-YYYYMMDD-HHMM.md
+      - P=1 or P=0 verdict with per-gate diagnostic
+    verify:
+      - BS Law v1.3.0 Y-junction on all modified Books
+      - Book Law 11-block on companion YAMLs
+      - 3-location version bumps consistent on each UT
+      - 17 locked constants untouched (`git diff HEAD` empty)
+      - RIM-GATE adoption syntactically correct
+      - §14 logbook rows append-only
+    schedule: post-build
+
+  - id: WO-5-lbb-ingest
+    type: mechanic
+    actor: sonnet
+    run_in_background: true
+    depends_on: WO-4 (P=1 only)
+    target: https://lbb.svg-outreach.workers.dev
+    inputs:
+      - audit verdict from WO-4
+      - 5-WO completion log
+      - 12-unknown walkthrough queue
+    outputs:
+      - 1 × LBB record (subject_id=system, tags=[bar-fleet-overnight, 16-process-sweep, session-2026-05-10])
+    verification:
+      - curl LBB records endpoint shows BAR-FLEET-OVERNIGHT row at top
+    schedule: last
+
+gates:
+  total_gates: 6
+  gate_ids: [G01, G02, G03, G04, G05, G06]
+  gate_specs:
+    G01: "WO-1 lands — 14 MC nav entries deployed + verified in MC live"
+    G02: "WO-2 lands — 16 §14 logbook rows appended + 3-location version bumps applied"
+    G03: "WO-3 lands — 6 implements: declarations applied + paired-artifacts.yaml conditionally updated"
+    G04: "WO-4 returns P=1 — Codex audits bundle and certifies"
+    G05: "WO-5 ingests — LBB row written under subject_id=system"
+    G06: "Sovereign walkthrough — Dave reads §11 unknowns + issues decision batch"
+  gate_failure_protocol:
+    strike_1: "repair + re-audit"
+    strike_2: "escalate to Opus 4.7 mechanic"
+    strike_3: "Troubleshoot/Train — not another repair"
+
+# ---------------------------------------------------------------------------
+# OUT OF SCOPE (explicit carve-out — does not block this BAR)
+# ---------------------------------------------------------------------------
+
+out_of_scope:
+  - D1 binding canonical decision for lcs-hub (sovereign-only — unknown #12)
+  - bp.NNN namespace collision resolution (audit finding, deferred to next BAR)
+  - bp.700 implementation scaffolding (UT exists, no src/ — out of overnight scope)
+  - bp.830 wrangler.toml uncomment + redeploy (sovereign call required, unknown #5)
+  - Trunk restructure (sovereign deferred multiple sessions)
+  - mc-api.routines AI-on-spine RED (BAR-375, separate scope)
+  - PARTNER-RELAY specialization formal authoring (placeholder only this BAR; full spec next BAR after sovereign approval, unknown #8)
+
+# ---------------------------------------------------------------------------
+# LBB INGEST CONTRACT
+# ---------------------------------------------------------------------------
+
+lbb:
+  subject_id: system
+  subject_alt: processes
+  ingest_on:
+    - plan-book-creation
+    - wo-1-completion
+    - wo-2-completion
+    - wo-3-completion
+    - wo-4-audit-verdict
+    - wo-5-self-ingest
+    - bar-closure
+  record_template:
+    sovereign_ref: barton-enterprises
+    hub_id: bar-fleet-overnight
+    cc_layer: CC-04
+    ctb_placement: doctrine
+    orbt_mode: BUILD
+    tags:
+      - bar-fleet-overnight
+      - 16-process-sweep
+      - rim-gate-adoption
+      - session-2026-05-10
+      - sovereign-walkthrough-queue
+
+# ---------------------------------------------------------------------------
+# DOCUMENT CONTROL (matches PLAN-BOOK.md §13)
+# ---------------------------------------------------------------------------
+
+document_control:
+  created: "2026-05-10"
+  last_modified: "2026-05-10"
+  version: "1.0.0"
+  status: BUILD
+  authority: "Dave Barton (sovereign)"
+  ctb_node: "barton-enterprises/svg-agency/outreach/fleet-overnight-prep"
+  certification_label: provisional-runtime
+  audit_trail:
+    - plan-book-authored: 2026-05-10
+    - wo-1-pending: scheduled
+    - wo-2-pending: scheduled
+    - wo-3-pending: scheduled-post-wo-2
+    - wo-4-pending: scheduled-post-build
+    - wo-5-pending: scheduled-last
+    - sovereign-walkthrough-pending: morning-2026-05-11
