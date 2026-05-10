@@ -50,6 +50,9 @@ IMO_BRAIN_URL = "https://imo-brain.svg-outreach.workers.dev"
 COMPOSIO_BASE_URL = "https://backend.composio.dev"
 # Mailgun domain
 MAILGUN_DOMAIN = "mg.insuranceinformatics.com"
+# MAILGUN_DOMAINS: comma-separated list for rotation (Patch 8). If empty/unset,
+# delivery.ts falls back to single MAILGUN_DOMAIN above. Set in Doppler/wrangler secrets,
+# NOT inline here.
 # Send safety controls (BAR-MONDAY-FIRSTFIRE 2026-05-09)
 # DRY_RUN: "true" to skip Mailgun calls and log mid_dryrun events instead. Default false.
 DRY_RUN = "true"

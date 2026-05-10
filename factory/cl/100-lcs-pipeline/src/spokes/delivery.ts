@@ -11,6 +11,22 @@
 import type { Env, MessagePackage } from '../types';
 import { logEvent, logError } from '../utils';
 
+/**
+ * Pick a Mailgun domain for the next send.
+ * Reads MAILGUN_DOMAINS env var (comma-separated list). Random pick.
+ * Falls back to single MAILGUN_DOMAIN if list unset or empty.
+ */
+export function pickMailgunDomain(env: Env): string {
+  const list = (env.MAILGUN_DOMAINS ?? '')
+    .split(',')
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0);
+  if (list.length === 0) {
+    return env.MAILGUN_DOMAIN;
+  }
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 export interface DeliveryResult {
   success: boolean;
   provider_id: string | null;
@@ -27,8 +43,9 @@ async function deliverMailgun(
   }
 
   try {
+    const sendDomain = pickMailgunDomain(env);
     const form = new FormData();
-    form.append('from', `Dave Barton <dave@${env.MAILGUN_DOMAIN}>`);
+    form.append('from', `Dave Barton <dave@${sendDomain}>`);
     form.append('h:Reply-To', 'dave@svg.agency');
     form.append('to', pkg.recipient_email);
     form.append('subject', pkg.subject);
@@ -38,6 +55,7 @@ async function deliverMailgun(
     form.append('o:tag', pkg.path_type);
     form.append('o:tag', `seq-${pkg.sequence_num}`);
     form.append('o:tag', pkg.sid_id);
+    form.append('o:tag', `domain-${sendDomain}`);
     // Custom variables for webhook tracing
     form.append('v:mid_id', pkg.mid_id);
     form.append('v:sid_id', pkg.sid_id);
@@ -45,7 +63,7 @@ async function deliverMailgun(
     form.append('v:sovereign_company_id', pkg.sovereign_company_id);
 
     const resp = await fetch(
-      `https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`,
+      `https://api.mailgun.net/v3/${sendDomain}/messages`,
       {
         method: 'POST',
         headers: {

@@ -16,6 +16,7 @@
 import type { Env, PipelineJob } from './types';
 import { ingestSignal, ingestSignalBatch } from './spokes/signal-intake';
 import { compileCid, designSid, deliverMid } from './compiler';
+import { pickMailgunDomain } from './spokes/delivery';
 import { logEvent, logError } from './utils';
 
 export default {
@@ -165,6 +166,104 @@ export default {
           signals: signalCount?.cnt ?? 0,
           cids: cidCount?.cnt ?? 0,
           timestamp: new Date().toISOString(),
+        }, corsHeaders);
+      }
+
+      // ── Health: Mailgun domains (verified + DNS state per domain) ──
+      if (path === '/health/mailgun') {
+        const list = (env.MAILGUN_DOMAINS ?? '')
+          .split(',')
+          .map((d) => d.trim())
+          .filter((d) => d.length > 0);
+        const fallback = env.MAILGUN_DOMAIN;
+        const domains = list.length > 0 ? list : (fallback ? [fallback] : []);
+
+        if (domains.length === 0) {
+          return json({
+            status: 'NO_DOMAINS_CONFIGURED',
+            checked: 0,
+            domains: [],
+            message: 'Set MAILGUN_DOMAINS (comma-separated) or MAILGUN_DOMAIN in Doppler/wrangler secrets',
+          }, corsHeaders, 503);
+        }
+
+        const auth = `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`;
+        const checks = await Promise.all(domains.map(async (d) => {
+          try {
+            const resp = await fetch(`https://api.mailgun.net/v4/domains/${encodeURIComponent(d)}`, {
+              headers: { Authorization: auth },
+            });
+            if (!resp.ok) {
+              const body = await resp.text();
+              return {
+                domain: d,
+                ok: false,
+                status: resp.status,
+                error: body.slice(0, 200),
+              };
+            }
+            const data = await resp.json<any>();
+            const dom = data.domain ?? data;
+            const dns = data.receiving_dns_records ?? [];
+            const sending = data.sending_dns_records ?? [];
+            const allValid = (records: any[]) => records.every((r: any) => r.valid === 'valid');
+            return {
+              domain: d,
+              ok: true,
+              state: dom.state ?? null,
+              type: dom.type ?? null,
+              created_at: dom.created_at ?? null,
+              receiving_dns_valid: allValid(dns),
+              sending_dns_valid: allValid(sending),
+              sending_records_summary: sending.map((r: any) => ({
+                record_type: r.record_type,
+                name: r.name,
+                valid: r.valid,
+              })),
+            };
+          } catch (err) {
+            return {
+              domain: d,
+              ok: false,
+              error: err instanceof Error ? err.message : String(err),
+            };
+          }
+        }));
+
+        const failing = checks.filter((c) => !c.ok || c.state !== 'active' || c.sending_dns_valid === false);
+        return json({
+          status: failing.length === 0 ? 'all_green' : 'has_issues',
+          checked: checks.length,
+          failing_count: failing.length,
+          domains: checks,
+          checked_at: new Date().toISOString(),
+        }, corsHeaders, failing.length === 0 ? 200 : 207);
+      }
+
+      // ── Health: Rotation distribution test (no Mailgun calls, exercises picker) ──
+      if (path === '/health/rotation-test') {
+        const nParam = url.searchParams.get('n') ?? '100';
+        const n = Math.min(Math.max(parseInt(nParam, 10) || 100, 1), 10000);
+        const counts: Record<string, number> = {};
+        for (let i = 0; i < n; i++) {
+          const d = pickMailgunDomain(env);
+          counts[d] = (counts[d] ?? 0) + 1;
+        }
+        const histogram = Object.entries(counts)
+          .map(([domain, count]) => ({ domain, count, pct: Math.round((count / n) * 1000) / 10 }))
+          .sort((a, b) => b.count - a.count);
+        const distinct = histogram.length;
+        const expected = Math.round(n / Math.max(distinct, 1));
+        const max = histogram[0]?.count ?? 0;
+        const min = histogram[histogram.length - 1]?.count ?? 0;
+        return json({
+          n,
+          distinct_domains: distinct,
+          expected_per_domain: expected,
+          max,
+          min,
+          spread: max - min,
+          histogram,
         }, corsHeaders);
       }
 

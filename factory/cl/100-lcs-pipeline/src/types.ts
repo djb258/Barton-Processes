@@ -25,6 +25,7 @@ export interface Env {
   // Mailgun
   MAILGUN_API_KEY: string;
   MAILGUN_DOMAIN: string;
+  MAILGUN_DOMAINS?: string;
   // HeyReach
   HEYREACH_API_KEY: string;
   // Send safety controls (BAR-MONDAY-FIRSTFIRE)
