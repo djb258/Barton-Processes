@@ -15,17 +15,17 @@ outside:
     secrets_provider: doppler
     acceptance_criteria: "Receives CL sovereign_id via POST /mint → mints client_id in D1 svg-d1-client.clients table linked to sovereign_id; duplicate sovereign_id detection halts with DUPLICATE_SOVEREIGN error; SOVEREIGN_NOT_FOUND halts when cl.company_identity has no matching record; errors written to D1 clients_error; GET /status returns accurate counts (total, onboarding, active, errors_total); cl.* Neon tables are READ ONLY — never written. Single-tier model: no Neon vault promotion."
   orbt:
-    library_state: BUILD
+    library_state: OPERATE
     indexed_by: codex
 inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.2.0"
+    version: "2.2.1"
     last_modified: "2026-05-12"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
-    library_state: BUILD
+    library_state: OPERATE
 certification_label: provisional-runtime
 species: UT-Body
 companion_yaml: factory/cl/800-client-mint/workflow.yaml
@@ -33,27 +33,27 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 
 # Client Mint
 ## Converts a CL sovereign company into a formal client record — the birth certificate for every client relationship in SVG Agency.
-### Status: BUILD
+### Status: OPERATE
 ### Medium: process
 ### Business: svg-agency
 
-## UT Checklist (Pre-Flight - per law/UT_CHECKLIST.md v1.2.0)
+## 📋 UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
-| 1 | PRD - what / why / who / scope / out-of-scope / success metric | [x] | §2 |
-| 2 | OSAM - READ / WRITE / Process Composition / Join Chain / Forbidden Paths / Query Routing filled | [x] | §5 |
-| 3 | Component Status - every dep has green / yellow / red with 1-line state | [x] | §3 |
-| 4 | Owner - human who fixes this at 2 AM | [x] | §1 |
-| 5 | Live Dashboard - URL or explicit "N/A" | [x] | §3 |
-| 6 | Kill Switch - exact command to stop the process | [x] | §8 |
-| 7 | Logbook - last audit verdict + date (after certification only) | [ ] | §12 |
-| 8 | FCEs Attached - which FCE runs structurally back this doc | [ ] | §3c |
-| 9 | BARs Referenced - every BAR this doc touches, with status | [x] | §3d |
-| 10 | LBB Subjects Fed - which LBB subject(s) this doc's session logs go to | [x] | §3e |
-| 11 | Geometry - CTB position + Hub-Spoke role + Altitude | [x] | §1b |
-| 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b |
-| 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
+| 1 | PRD — what / why / who / scope / out-of-scope / success metric | ☑ | §2 |
+| 2 | OSAM — READ / WRITE / Process Composition / Join Chain / Forbidden / Query Routing filled | ☑ | §5 |
+| 3 | Component Status — every dep 🟢 / 🟡 / 🔴 with 1-line state | ☑ | §3 |
+| 4 | Owner — human who fixes this at 2 AM | ☑ | §1 |
+| 5 | Live Dashboard — URL or explicit "N/A" | ☑ | §3 |
+| 6 | Kill Switch — exact command to stop the process | ☑ | §8 |
+| 7 | Logbook — last audit verdict + date (after certification only) | ☐ | §12 |
+| 8 | FCEs Attached — which FCE runs structurally back this doc | ☑ | §3c — N/A predates FCE adoption |
+| 9 | BARs Referenced — every BAR this doc touches, with status | ☑ | §3d |
+| 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☑ | §3e |
+| 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☑ | §9b |
+| 13 | ctb_node — declared path to this doc's position on the Barton Enterprises CTB trunk (e.g., `barton-enterprises/svg-agency/outreach/lcs-runbook`) | ☑ | §1 Identity |
 
 ## §1. IDENTITY {#sec-1-identity}
 
@@ -64,10 +64,10 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | Medium | process |
 | Business Silo | svg-agency |
 | CTB Position | barton-enterprises/svg-agency/factory/cl/800-client-mint |
-| ORBT | BUILD |
+| ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v2.2.0 |
+| Version | v2.2.1 |
 | Last Modified | 2026-05-12 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
@@ -135,12 +135,12 @@ Operated by Dave Barton or a delegated SVG Agency operator. Documentation consum
 
 Required doctrine references for every process UT:
 
-- `law/UNIFIED_TEMPLATE.md`
-- `law/UT_CHECKLIST.md`
-- `law/doctrine/PROCESS_FILL_INSTRUCTIONS.md`
-- `law/doctrine/HOW_TO_BUILD_ANYTHING.md` (repair manual)
-- `law/doctrine/BARTON_ENTERPRISES_WORLD_ATLAS.md` (Atlas System bundle)
-- `law/doctrine/KEY.md`
+- `atlas/constants/UNIFIED_TEMPLATE.md`
+- `atlas/constants/UT_CHECKLIST.md`
+- `atlas/PROCESS_FILL_INSTRUCTIONS.md`
+- `atlas/constants/HOW_TO_BUILD_ANYTHING.md` (repair manual)
+- `atlas/ATLAS.md` (World Atlas + Three Layers Spine)
+- `atlas/constants/KEY.md`
 
 ### Component Status Grid
 
@@ -484,7 +484,7 @@ npx wrangler worker route delete <route_id>
 
 ## §12. LOGBOOK (After Certification Only) {#sec-12-logbook}
 
-No logbook during BUILD.
+No auditor certification on file — worker is OPERATE (deployed and live) but formal audit sign-off is pending. Logbook entry required once auditor runs certification pass.
 
 ### Birth Certificate
 
@@ -525,6 +525,7 @@ No logbook during BUILD.
 | 2026-05-10 | `v2.0.5` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Empty `database_id = ""` in wrangler — cannot deploy. UNKNOWN #4 (sovereign D1 provisioning approval needed). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 | 2026-05-10 | `v2.0.6` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 | 2026-05-12 | `v2.2.0` | Sonnet Mechanic (bp.800 single-tier dispatch) | `AMEND` | Single-tier model adoption — rewrote mint.ts (CL read-only, D1 canonical), removed vault promotion path, /vault 410 Gone, updated §1–§11 throughout to reflect deployed single-tier reality. Worker live at client-mint-800.svg-outreach.workers.dev (version 3e6237ce). Smoke test passed. Version bumped v2.0.6 → v2.2.0 (3 locations). | All body sections + Document Control |
+| 2026-05-12 | `v2.2.1` | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | `CONFORM` | UT checklist block updated to atlas/constants/UT_CHECKLIST.md v1.3.1; full-doc conformance + sense pass; exemplar-ready. Stale `law/` doc refs → `atlas/` paths; Template Version 2.7.0 → 2.8.0; ORBT BUILD → OPERATE (worker live); frontmatter library_state BUILD → OPERATE (both outside and inside); §12 logbook note updated to reflect deployed reality. | All header sections + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -535,8 +536,8 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-12 |
-| Version | v2.2.0 |
-| Template Version | 2.7.0 |
+| Version | v2.2.1 |
+| Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
-| Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |
+| Governing Engine | atlas/constants/FOUNDATIONAL_BEDROCK.md + atlas/constants/DMJ.md |

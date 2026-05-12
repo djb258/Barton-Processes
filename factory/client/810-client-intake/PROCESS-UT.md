@@ -24,7 +24,7 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "3.0.0"
+    version: "3.0.1"
     last_modified: "2026-05-12"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
@@ -37,23 +37,23 @@ inside:
 ### Medium: process
 ### Business: svg-agency
 
-## UT Checklist (Pre-Flight — per law/UT_CHECKLIST.md v1.3.1)
+## 📋 UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
-| 1 | PRD - what / why / who / scope / out-of-scope / success metric | [x] | §2 |
-| 2 | OSAM - READ / WRITE / Process Composition / Join Chain / Forbidden Paths / Query Routing filled | [x] | §5 |
-| 3 | Component Status - every dep has green / yellow / red with 1-line state | [x] | §3 |
-| 4 | Owner - human who fixes this at 2 AM | [x] | §1 — Dave Barton |
-| 5 | Live Dashboard - URL or explicit "N/A" | [x] | §3 — deployed and verified |
-| 6 | Kill Switch - exact command to stop the process | [x] | §8 |
-| 7 | Logbook - last audit verdict + date (after certification only) | [x] | §12 |
-| 8 | FCEs Attached - which FCE runs structurally back this doc | [ ] | §3c — TBV |
-| 9 | BARs Referenced - every BAR this doc touches, with status | [x] | §3d |
-| 10 | LBB Subjects Fed - which LBB subject(s) this doc's session logs go to | [x] | §3e |
-| 11 | Geometry - CTB position + Hub-Spoke role + Altitude | [x] | §1b |
-| 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b — verified 2026-05-12 |
-| 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 — barton-enterprises/svg-agency/client/810-client-intake |
+| 1 | PRD — what / why / who / scope / out-of-scope / success metric | ☑ | §2 |
+| 2 | OSAM — READ / WRITE / Process Composition / Join Chain / Forbidden / Query Routing filled | ☑ | §5 |
+| 3 | Component Status — every dep 🟢 / 🟡 / 🔴 with 1-line state | ☑ | §3 |
+| 4 | Owner — human who fixes this at 2 AM | ☑ | §1 |
+| 5 | Live Dashboard — URL or explicit "N/A" | ☑ | §3 |
+| 6 | Kill Switch — exact command to stop the process | ☑ | §8 |
+| 7 | Logbook — last audit verdict + date (after certification only) | ☑ | §12 |
+| 8 | FCEs Attached — which FCE runs structurally back this doc | ☑ | §3c — N/A predates FCE adoption |
+| 9 | BARs Referenced — every BAR this doc touches, with status | ☑ | §3d |
+| 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☑ | §3e |
+| 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☑ | §9b |
+| 13 | ctb_node — declared path to this doc's position on the Barton Enterprises CTB trunk (e.g., `barton-enterprises/svg-agency/outreach/lcs-runbook`) | ☑ | §1 Identity |
 
 ## §1 IDENTITY {#sec-1-identity}
 
@@ -67,7 +67,7 @@ inside:
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited — Barton-Processes/factory + imo-creator-v2 sovereign |
-| Version | v3.0.0 |
+| Version | v3.0.1 |
 | Last Modified | 2026-05-12 |
 | BAR Reference | BAR-38, BAR-178, BAR-810-FLAT-SPOKE (2026-05-12) |
 | Owner | Dave Barton |
@@ -586,6 +586,7 @@ If any fails → Troubleshooting Loop (Bedrock §6). Do not patch. Do not guess.
 | 2026-05-10 | v2.1.4 | BAR-FLEET-OVERNIGHT WO-2 Sonnet Mechanic | `AUDIT_LOGBOOK` | Overnight 16-process readiness sweep; D1 binding empty flagged |
 | 2026-05-10 | v2.1.5 | BAR-FLEET-OVERNIGHT Strike-1 repair Sonnet Mechanic | `AMEND` | §1 Identity Version row added for Codex G-VERSION-3-LOCATIONS gate |
 | 2026-05-12 | v3.0.0 | Sonnet Mechanic (BAR-810-FLAT-SPOKE) | `REWRITE` | Full rewrite to flat spoke model. Discarded: normalized schema (intake_record, enrollment_intake, plan, plan_quote, person, election, vendor, external_identity_map, invoice, service_request), Neon vault, /vault write path. New: client_staging_intake + 5 canonical spoke tables + 5 error tables. wrangler.toml: svg-d1-client (5443887b). Zod discriminatedUnion on spoke field. Deployed Version af52f605. OPERATE state. |
+| 2026-05-12 | v3.0.1 | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | `CONFORM` | UT checklist block synced to atlas/constants/UT_CHECKLIST.md v1.3.1 — header path corrected, [x]/[ ] → ☑/☐, hyphens → em-dashes, item text canonical, item 8 FCEs → N/A predates FCE adoption. |
 
 ## Document Control
 
@@ -593,7 +594,7 @@ If any fails → Troubleshooting Loop (Bedrock §6). Do not patch. Do not guess.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-12 |
-| Version | v3.0.0 |
+| Version | v3.0.1 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |
