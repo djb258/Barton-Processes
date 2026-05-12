@@ -1,17 +1,45 @@
 orbt:
-  state: BUILD
+  state: REPAIR
   strikes: 0
-  last_transition_at: "2026-04-29T00:00:00Z"
-  last_transition_reason: "UT consolidation — UT v2.7.0 standardization Wave 1 Packet 14"
+  last_transition_at: "2026-05-12T00:00:00Z"
+  last_transition_reason: >-
+    BAR-bp820 — doc conformance pass complete; deploy + live D1 schema verification
+    + KV blueprint load BLOCKED on wrangler access in the mechanic session;
+    deferred to a follow-up dispatch
 
 state_history:
   - state: BUILD
     at: "2026-04-29T00:00:00Z"
     reason: "Initial state — process not yet deployed (D1/KV IDs not provisioned)"
+  - state: REPAIR
+    at: "2026-05-04T00:00:00Z"
+    reason: "BAR-377 — wrangler bound to live svg-d1-client + EGRESS_KV; src/ realigned to live flat-spoke client schema; export tracking migration applied; Codex repair audit P=1 (repair-scope, not OPERATE)"
+  - state: REPAIR
+    at: "2026-05-12T00:00:00Z"
+    reason: "BAR-bp820 — PROCESS-UT.md + DOCTRINE.md aligned to live flat-spoke schema; PROCESS-MAP-820 authored; workflow.yaml synced; runtime ORBT explicitly REPAIR pending RP-820-DEPLOY"
+
+repairs:
+  - id: RP-820-DEPLOY
+    opened_at: "2026-05-12T00:00:00Z"
+    opened_by: "Claude Sonnet (Mechanic, BAR-bp820)"
+    status: open
+    blocked_on: "no wrangler/Cloudflare credentials in the doc-conformance mechanic session"
+    summary: >-
+      Worker not deployed. Everything below requires a follow-up dispatch with
+      wrangler/Cloudflare access.
+    work_remaining:
+      - "`wrangler deploy` (or `npx wrangler deploy`) from factory/client/820-vendor-export/ — assigns the worker URL"
+      - "register the cron trigger `0 5 * * *` (happens via deploy with [triggers] in wrangler.toml; confirm with `wrangler triggers list`)"
+      - "load vendor blueprints into EGRESS_KV under `blueprint:{vendor_id}` keys (currently zero keys); confirm with `wrangler kv key list --namespace-id 66e6c7bec8c1479ba708c0bcbb6a0e23 --prefix blueprint:`"
+      - "if any secrets become required, `wrangler secret put <NAME>` (none defined yet — §3 Secrets is empty)"
+      - "smoke test: GET /health, GET /status, POST /export {client_id, vendor_id} against a known client+vendor with a loaded blueprint; confirm export_log row written; test BLUEPRINT_NOT_FOUND + MISSING_EXTERNAL_ID error paths"
+      - "live D1 schema verification post-deploy: confirm worker can SELECT clients / client_employees / client_vendors / client_employee_vendor_ids and INSERT export_log / export_error against svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244)"
+      - "update PROCESS-UT.md §3 Component Status + §3 Live Dashboard (worker URL) + §9b Live Verification Log (replace PENDING-DEPLOY rows with actual values); flip ORBT toward OPERATE only after 3 clean runs + Codex audit P=1"
 
 notes:
-  - "D1 database_id empty in wrangler.toml — requires wrangler d1 create vendor-export-820"
-  - "KV namespace id empty in wrangler.toml — requires wrangler kv namespace create vendor-export-820"
-  - "No delivery mechanism implemented for generated export files"
-  - "Depends on 810-client-intake reaching OPERATE state before this process can promote"
-  - "Promote to OPERATE only after: D1+KV provisioned, vendor blueprints loaded, 810 OPERATE confirmed"
+  - "Canonical D1 = svg-d1-client (database_id 5443887b-ba8a-4da5-9f54-6a9c2cfb1244) — shared with bp.810. D-820-11."
+  - "EGRESS_KV namespace id = 66e6c7bec8c1479ba708c0bcbb6a0e23. Bound in wrangler.toml; blueprint keys not yet loaded."
+  - "Audit tables (export_log, export_error, export_schedule) created in svg-d1-client 2026-05-04 via 001_d1_export_tables.sql."
+  - "src/ reads the live flat-spoke schema: clients, client_employees, client_vendors, client_employee_vendor_ids (NOT the formerly speculative person/election/plan/external_identity_map)."
+  - "No delivery mechanism implemented for generated export files (FP-820-03). No endpoint auth (FP-820-05)."
+  - "Promote to OPERATE only after: deploy + cron registered + vendor blueprints loaded + bp.810 OPERATE confirmed (already true) + 3 clean export runs + Codex audit P=1 — see RP-820-DEPLOY."
