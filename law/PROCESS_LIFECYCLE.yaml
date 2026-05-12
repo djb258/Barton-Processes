@@ -1,0 +1,242 @@
+# =============================================================================
+# PROCESS_LIFECYCLE.yaml — THE DEFINED PROCESS
+# How any Barton process gets built / remediated / kept current — the same way, every time.
+# =============================================================================
+# This is the workflow the PLANNER reads to know "build it the way we want."
+# It runs through the Four-Brain pipeline: Planner intakes → Foreman dispatches →
+# Mechanic builds → Auditor certifies. Every process — 010, 100, 200, 600, ... —
+# walks these stages, in order, producing the same artifact set.
+#
+# Companion template: law/PROCESS_MAP_TEMPLATE.yaml (the per-process representation
+# every process fills — hub · sub-hub · IMO · circle). This file is the WORKFLOW;
+# that file is the SHAPE.
+#
+# First worked example: Process 100 (LCS email pipeline) — BAR-417. Everything done
+# there (the /fire-batch endpoint, the MV-strict gate fix, the bounce monitor, the
+# SA-page wiring, the process-map.yaml fill) is one pass through these stages.
+#
+# Authority: imo-creator-v2 (Garage). Sovereign sign-off required to amend.
+# Created: 2026-05-12. Status: DRAFT (pending sovereign lock).
+# =============================================================================
+
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: barton-processes
+    ctb_placement: "Branch — Barton-Processes/law (governance template)"
+    species: Workflow-Body
+  orbt:
+    library_state: BUILD
+
+inside:
+  heir:
+    process_id: PROCESS_LIFECYCLE
+    version: 0.1.0
+  orbt:
+    runtime_state: "DRAFT — first instance running on PROC-100"
+
+# =============================================================================
+# THE FOUR BRAINS — who owns what
+# =============================================================================
+four_brain:
+  planner:   "Locks scope, boundary, HEIR identity. Intakes the remediation. Refuses if ambiguous. Owns INTAKE + REPRESENT."
+  foreman:   "Breaks the intake into work orders, dispatches to Mechanic, tracks. Owns dispatch across BUILD/WIRE/DOCUMENT."
+  mechanic:  "Executes: code, gates, crons, monitors, wiring, docs. Owns BUILD + WIRE + DOCUMENT execution."
+  auditor:   "Certifies or rejects. MUST be a different inference engine than the builder (Aviation Model: mechanic ≠ inspector). Owns AUDIT + CERTIFY."
+
+# =============================================================================
+# THE STAGES — in order, every process walks all eight
+# =============================================================================
+stages:
+
+  - id: 1-INTAKE
+    owner: planner
+    purpose: "Declare which process, what triggered the remediation, and what P=1 looks like."
+    inputs:
+      - "A Planner intake (type: process_remediation — see intake_types below)"
+      - "The process's current registry entry (law/process-registry.yaml)"
+    outputs:
+      - "A scoped intake doc (boundary, HEIR identity, trigger, desired O)"
+      - "A BAR (the remediation ticket) in Linear / Barton Garage"
+    gates:
+      - "Two-Question Intake answered: what triggers this? how do we get it?"
+      - "Boundary declared (without it, I and O are undefined)"
+      - "HEIR identity confirmed (8 fields, never changes)"
+      - "If anything ambiguous → HALT, ask the human. ASK > INFER."
+
+  - id: 2-DISCOVER
+    owner: planner   # runs US (Universal Structure) before building anything
+    purpose: "Map the live reality — what the process actually IS right now, and every gap vs doctrine. Logbook read FIRST."
+    inputs:
+      - "The scoped intake"
+      - "The live system: deployed worker source(s), /health, /status, wrangler.toml, the D1 schema it touches (law/D1_DATA_DICTIONARY.md), the LBB"
+    outputs:
+      - "An expert dossier: what it is · what feeds it (upstream processes) · what it writes · current ORBT state · the deployed-source location (and any source drift) · the gap list vs the artifact checklist below"
+    gates:
+      - "No mystery sources — the deployed code is located, named, and matched to the registry (flag source drift as a dependency BAR)"
+      - "Every gap named, nothing waved off"
+      - "If the deployed code is materially different from the canonical UT-local source → that's a reconciliation sub-task, scoped here (don't build on the wrong copy)"
+
+  - id: 3-REPRESENT
+    owner: planner   # UP — structure it
+    purpose: "Fill the process's process-map.yaml off PROCESS_MAP_TEMPLATE.yaml — the hub · sub-hub · IMO · circle picture. This is the troubleshooting map."
+    inputs:
+      - "The expert dossier"
+      - "law/PROCESS_MAP_TEMPLATE.yaml"
+    outputs:
+      - "factory/<silo>/<NNN-name>/process-map.yaml (filled)"
+      - "Generated views: .canvas + mermaid (derived from the yaml, never hand-drawn)"
+    gates:
+      - "Every sub-hub has: imo (input/middle/output), its own circle (loop/stop conditions), parts tagged {automation | ai | human}"
+      - "The circle has a SETPOINT (the reference value for 'correct')"
+      - "Each step IMO-tagged + colored per the convention (I=cyan, M=yellow, O=green; red=broken, purple=feedback-edge, orange=the-brake)"
+      - "Gauges defined: live-signal-vs-setpoint per hub, green/yellow/red"
+
+  - id: 4-BUILD
+    owner: mechanic   # Foreman dispatches
+    purpose: "Fix/build the executable: worker code, gates, crons, monitors."
+    inputs:
+      - "The process-map + the dossier gap list"
+    outputs:
+      - "Deployed worker (in Barton-Processes/factory/<silo>/<NNN-name>/src/ — the canonical home; reconcile any drift)"
+      - "wrangler.toml with crons = [...] if the process is scheduled — the cron lives WITH the process, in this repo"
+      - "Gates fixed to gate on the TRUTH column, never a loose/derived flag (e.g. PROC-100: email_verification_source='MillionVerifier', not has_verified_email — the 19.6%-bounce root cause)"
+      - "A health/error monitor + an auto-halt where the process can do damage at scale (e.g. PROC-100: rolling-24h bounce >2% → auto-pause)"
+    gates:
+      - "Compiles (tsc --noEmit clean on the touched files)"
+      - "Deploys"
+      - "Dry-run / preview mode exists and returns sane output"
+      - "A small live test passes end-to-end (e.g. PROC-100: limit=2 through the real pipeline) — if it fails, the failure is understood and fixed before scaling"
+
+  - id: 5-WIRE
+    owner: mechanic
+    purpose: "Connect the process's outputs to where they need to flow — visibility, operators, evidence, the catalog, the squawk spine."
+    inputs:
+      - "The deployed process"
+    outputs:
+      - "Mission Control tile / layer for the process (live /health + key metrics)"
+      - "Operator / front-line pages wired (e.g. PROC-100: agent-pages — per-SA sent/delivered/bounced panel reading lcs_mid_sequence_state on agent_number; downloadable contact list with emails AND phones; verified-export on the MV-strict gate, not the loose flag)"
+      - "LBB evidence hooks (a logbook-able record per run/batch)"
+      - "D1_DATA_DICTIONARY.md entries for the tables the process owns (auto, via imo-creator-v2/doc-engine — BAR-434)"
+      - "Squawk routes: errors → master_error table + a Linear issue"
+    gates:
+      - "Data visibly flows end-to-end — you can trace one event (a send) → the store → MC → the operator page"
+      - "No silent outputs (every output crosses a boundary somewhere observable)"
+
+  - id: 6-DOCUMENT
+    owner: mechanic   # Auditor will check it
+    purpose: "Bring the shelf manual current."
+    inputs:
+      - "Everything above"
+    outputs:
+      - "factory/<silo>/<NNN-name>/PROCESS-UT.md — 14 sections, current"
+      - "Updated INDEX.md + law/process-registry.yaml entry"
+      - "heir.yaml + orbt.yaml current"
+    gates:
+      - "The 13-item pre-flight checklist passes (per atlas UT_CHECKLIST)"
+      - "Live Verification: every numeric count, cron, URL, command, BAR status in the UT grounded against the actual system"
+
+  - id: 7-AUDIT
+    owner: auditor
+    purpose: "Certify or reject — by a different inference engine than the builder."
+    inputs:
+      - "The PROCESS-UT + the live evidence + the audit template (law/PROCESS_AUDIT_TEMPLATE.md)"
+    outputs:
+      - "An audit verdict: P=1 (certified) or P=0 (rejected, with the diagnostic vector — which comparator failed, by how much)"
+    gates:
+      - "Builder ≠ auditor (Aviation Model — mechanic does not sign their own inspection)"
+      - "Minimum 3 completed runs before audit"
+      - "Human tolerance file exists"
+      - "Comparators are deviation/failure quantities — lower is better; no success rates in the decision equation"
+
+  - id: 8-CERTIFY-AND-OPERATE
+    owner: auditor   # then hands to operator
+    purpose: "On P=1: open the logbook, flip ORBT to OPERATE, arm the cron at the ramp-start cap."
+    inputs:
+      - "The P=1 audit verdict"
+    outputs:
+      - "LBB logbook record created (NO logbook until certified)"
+      - "orbt.yaml runtime_state = OPERATE"
+      - "Cron armed at the ramp-start cap (see cron_ladder for processes that ramp)"
+      - "The remediation BAR closed with the verdict + logbook id"
+    gates:
+      - "No logbook until certification (BUILD → auditor sign-off → logbook created)"
+      - "Cron re-arm gated on the process's ramp criteria — for the email pipeline: 3 clean supervised days + the truth-column gate deployed + the auto-halt monitor live"
+      - "Strike 3 on any subsequent run → Troubleshoot/Train (the 11-step loop), not another patch"
+
+# =============================================================================
+# CRON LADDER — for processes that ramp (the email pipeline being the archetype).
+# Re-arming a scheduled producer is the END of the ladder, never a switch you flip.
+# =============================================================================
+cron_ladder:
+  applies_to: "Any process whose scheduled run can do reputational/external damage at scale (PROC-100 email; future bulk-send/bulk-write processes)"
+  steps:
+    - day: 0
+      action: "Manual, supervised, small (e.g. PROC-100: /fire-batch limit=25, dry-run first then live). Watch the brake metric."
+    - days: "1-3"
+      action: "If the brake metric stays clean, ramp the manual batch (50 → 100 → ...). Still manual. Still on the strict-gated pool."
+    - day: "4+"
+      action: "After 3 clean days AND the truth-column gate deployed AND the auto-halt monitor live → arm the cron (crons = [...] in the worker's wrangler.toml, here in Barton-Processes), daily cap held LOW, ramps over further clean days."
+  invariant: "The auto-halt monitor must be live before any cron arm. The brake fires before a human notices."
+
+# =============================================================================
+# ARTIFACT CHECKLIST — what a fully-remediated process HAS (the Auditor checks this)
+# =============================================================================
+artifacts_per_remediated_process:
+  - "PROCESS-UT.md — 14 sections, current, 13-item pre-flight passed"
+  - "process-map.yaml — filled off PROCESS_MAP_TEMPLATE.yaml + generated .canvas/mermaid views"
+  - "heir.yaml + orbt.yaml — current"
+  - "src/ + wrangler.toml (with crons = [...] if scheduled) — for deployable processes; canonical home is here in Barton-Processes/factory/<silo>/<NNN-name>/"
+  - "Gates gate on the truth column, not loose/derived flags"
+  - "Health/error monitor + auto-halt where the process can damage at scale"
+  - "Mission Control tile/layer + operator-facing pages wired (with the data operators actually need to act)"
+  - "Entries in law/D1_DATA_DICTIONARY.md for the tables it owns (auto-maintained, BAR-434)"
+  - "Squawk routes: errors → master_error + Linear"
+  - "LBB logbook record (created at certification)"
+  - "The remediation BAR — closed, with the audit verdict + logbook id"
+  - "An audit verdict: P=1"
+
+# =============================================================================
+# INTAKE TYPES — what the Planner accepts
+# =============================================================================
+intake_types:
+
+  process_remediation:
+    description: "Fix an existing process — bring it up to the artifact checklist, run all 8 stages."
+    required_fields:
+      - process_number          # e.g. 100
+      - process_folder          # e.g. factory/cl/100-lcs-pipeline/
+      - trigger                 # what made this needed (e.g. "19.6% bounce, pipeline cut")
+      - desired_O               # what P=1 looks like (e.g. "supervised fire mechanism + MV-strict gate + auto-halt + SA-page wiring, certified")
+      - known_constraints       # e.g. "deployed source drifted to barton-outreach-core (BAR-377)"
+    routes_to: stages          # runs the 8 stages above
+
+  new_process_build:
+    description: "Build a process that doesn't exist yet — same 8 stages, but DISCOVER produces the design instead of mapping a current state."
+    required_fields:
+      - process_number_proposed
+      - silo
+      - trigger
+      - desired_O
+    routes_to: stages
+
+# =============================================================================
+# CURRENT INSTANCES (kept current as processes run through)
+# =============================================================================
+instances:
+  - process: 100-lcs-pipeline
+    bar: BAR-417
+    status: "BUILD — stages 1-4 substantially done (deployed /fire-batch + MV-strict gate + bounce monitor, 2-email live test surfaced a voice-frame content gap not a mechanism gap). Stages 5 (SA-page wiring) / 6 (PROCESS-UT refresh) / 7 (audit) / 8 (certify + cron arm) pending. Source-drift reconciliation (BAR-377) is a stage-2 sub-task."
+    process_map: "factory/cl/100-lcs-pipeline/process-map.yaml — TO BE FILLED (stage 3)"
+
+# =============================================================================
+# COMPANION DOCS
+# =============================================================================
+references:
+  - "law/PROCESS_MAP_TEMPLATE.yaml — the per-process representation template (the SHAPE)"
+  - "law/PROCESS_TEMPLATE.md — the 14-section UT shelf-manual template"
+  - "law/PROCESS_AUDIT_TEMPLATE.md — the audit template (stage 7)"
+  - "law/process-registry.yaml — the machine-readable process index"
+  - "law/D1_DATA_DICTIONARY.md — auto-generated schema catalog (BAR-434; imo-creator-v2/doc-engine)"
+  - "imo-creator-v2/factory/imo-creator/070-four-brain/ — the Four-Brain pipeline (Planner/Foreman/Mechanic/Auditor)"
+  - "imo-creator-v2/atlas/DOCUMENTATION_ERD_DOCTRINE.md + DBA_ENFORCEMENT_DOCTRINE.md — the doc-currency rules this lifecycle enforces"

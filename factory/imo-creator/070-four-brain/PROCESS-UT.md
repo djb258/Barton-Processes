@@ -20,8 +20,8 @@ inside:
   heir:
     process_id: bp.070-four-brain
     species: UT-Body
-    version: "1.3.1"
-    last_modified: "2026-05-06"
+    version: "1.3.3"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -64,10 +64,10 @@ inside:
 | Process ID | PROC-070 |
 | Name | Four-Brain Aviation Model — Callable Library Process |
 | Species | UT-Body (Book Law v1.5.0) |
-| Version | 1.3.0 |
+| Version | 1.3.3 |
 | Status | BUILD |
 | Created | 2026-05-04 |
-| Last Modified | 2026-05-06 |
+| Last Modified | 2026-05-08 |
 | Authority | Dave Barton (sovereign) |
 | Owner | Dave Barton (fixes at 2 AM) |
 | ctb_node | `barton-enterprises/imo-creator/processes/four-brain` |
@@ -76,7 +76,7 @@ inside:
 | services | mission-control D1 (four_brain_run, four_brain_transition, squawks), LBB worker (lbb.records, lbb.logbook), scripts/lbb-log.sh, Sonnet (Agent tool, model=sonnet), Codex (codex-dop exec), Opus 4.7 (Agent tool, model=opus, escalation only) |
 | acceptance_criteria | D-070-01: All 19 gates PASS (P=1 on each — G01-G12 + W-1..W-7). D-070-02: No-op BAR run produces exactly 4 LBB rows + 1 Audit Book on PASS. D-070-03: Atlas registry row 9 present in both paired-artifacts.yaml AND atlas/ATLAS.md §7.3a. D-070-04: No locked constants modified except atlas/ATLAS.md (verified by git diff HEAD). D-070-05: BS Law Y-junction conformant on the YAML companion. D-070-06: Mechanic != Auditor confirmed at every transition. |
 | Governing Constant | `atlas/constants/FOUR_BRAIN_AVIATION.md` v1.3.0 |
-| Aviation Roles | Planner: Opus 4.7 · Foreman: Opus 4.7 · Mechanic: Sonnet · Auditor: Codex |
+| Aviation Roles | Planner: Opus 4.7 · Foreman: Sonnet/default routing model (Opus escalation only) · Mechanic: Sonnet · Auditor: Codex |
 | Aviation Rule | Mechanic ≠ Auditor (different inference engines — Aviation Model invariant) |
 | ORBT | BUILD (no completed BAR run yet; STATUS → OPERATE after 3-run minimum + Codex CERTIFY + sovereign sign-off) |
 | Library ORBT State | BUILD |
@@ -147,19 +147,21 @@ HUB-SPOKE WIRING
 | `FOUR_BRAIN_AVIATION.md` v1.3.0 | 🟢 | Locked (16th constant). Source of pipeline doctrine. |
 | `four-brain-doctrine-gate.yaml` | 🟢 | GATED. Gate spec + LBB row schema source of truth. |
 | `atlas/manifests/paired-artifacts.yaml` row 9 | 🟢 | Appended in this BAR. |
-| `atlas/ATLAS.md` §7.3a row 9 | 🟢 | Appended in this BAR (v2.2.6). |
+| `atlas/ATLAS.md` §7.3a row 9 | 🟢 | Appended in this BAR (v2.2.7). |
 | `mission-control` D1 binding | 🟡 | `D1_MISSION_CONTROL` exists; new tables `four_brain_run` + `four_brain_transition` require migration (BAR-FOUR-BRAIN-CLI). |
 | LBB Worker | 🟢 | `https://lbb.svg-outreach.workers.dev` live. Auth via `LBB_API_KEY` (Doppler). |
 | `scripts/lbb-log.sh` | 🟡 | Referenced; existence confirmed if present in repo. Mechanic verifies at dispatch time. |
 | Sonnet (Agent tool) | 🟢 | Default mechanic model. `run_in_background=true`. |
 | Codex (`codex-dop exec`) | 🟢 | Default auditor. Different inference engine than Sonnet. |
 | Opus 4.7 | 🟢 | Reserved for Strike-2 escalation only. |
+| `atlas/dyno/planner/planner.py` (FCE Planner gate) | 🟢 | BUILT (BAR-FCE-PLANNER-GATE). Sonnet tactical scope; validates FCE intakes against 7-item substrate-awareness checklist before engine inbox. Determinism-first: mechanical gate fires before any LLM call. |
 
 ### BARs Referenced
 
 | BAR | Status | Notes |
 |-----|--------|-------|
 | BAR-PROC-070 | OPEN (this BAR) | Creates this process pair |
+| BAR-FCE-PLANNER-GATE | OPEN | Adds FCE Intake Planner gate (PLN-00 before FCE-00) + D1 IMO bundle columns |
 | BAR-FOUR-BRAIN-CLI | FUTURE | CLI runner + D1 migration (not this BAR) |
 | BAR-LOCK-01 | FUTURE | Hash manifest refresh after Atlas amendments |
 
@@ -191,7 +193,7 @@ Mission Control — URL TBD (BAR-FOUR-BRAIN-CLI creates dashboard routes). N/A u
 | Tune-up | Scheduled Four-Brain invocation (A/B/C/D-check + AD cadences); NOT a BAR per se | `FOUR_BRAIN_AVIATION.md` v1.3.0 §Two-Mode Dispatch |
 | Pressure Gauge | 4-signal composite health indicator (cron firing / LBB log presence / D1 anchor freshness / active errors) | `FOUR_BRAIN_AVIATION.md` v1.3.0 §Pressure Gauge |
 | HEIR | 8-field canonical identity stamp for every Library artifact | `atlas/constants/KEY.md` §HEIR |
-| ORBT | Operate / Repair / Build / Troubleshoot_Train — 4-state lifecycle | `atlas/constants/KEY.md` §ORBT |
+| ORBT | Operate / Repair / Build / Troubleshoot_Train / Retired / Disabled — 6-state lifecycle | `atlas/constants/KEY.md` §ORBT |
 | Y-junction | BS Law conformance point where Book structure + Spine content merge | `atlas/constants/BS_LAW.md` v1.5.0 |
 | Determinism-first | Architectural gate: LLM is tail arbitration only, never the spine | `FOUR_BRAIN_AVIATION.md` v1.3.0 + CLAUDE.md |
 
@@ -201,7 +203,13 @@ Inherits parent vocabulary from `atlas/constants/KEY.md` (10th locked constant).
 
 ## §4 MIDDLE — OPERATOR SEQUENCE
 
-Seven-step canonical runbook. Each step cites Atlas source.
+Seven-step canonical runbook. Each step cites Atlas source. FCE-domain BARs include a Step 0 Planner gate (tactical altitude) before Step 1.
+
+### Step 0 — FCE Planner Gate (FCE-domain BARs only — tactical altitude)
+
+For FCE-specific BARs, a tactical Planner gate runs **before** Step 1. The operator drops a filled FCE intake YAML into `atlas/dyno/planner/planner-queue/processing/`. `planner.py` (Sonnet model, tactical scope — not the strategic Opus Planner) validates the intake against the 7-item substrate-awareness checklist (`FCE_DESCRIPTION_GUIDANCE.md`): Things named, Flows named, Changes named, intent in `p1_definition` not braided, no solutions or methods pre-loaded, no Connection-as-4th-primitive, substantive length. Determinism-first: mechanical checks run before any LLM call. PASS → intake dropped to `atlas/dyno/inbox/` and Step 1 proceeds. FAIL → structured failure report with `operator_fixes` returned; operator revises and resubmits. Role-lock: once dropped to engine inbox, Planner cannot touch.
+
+*Atlas source: `PLANNER_GATE_BUILD_SPEC.yaml` v1.1.0 + `FCE_DESCRIPTION_GUIDANCE.md` + `FOUR_BRAIN_AVIATION.md` v1.3.0 §16 (role-lock).*
 
 ### Step 1 — Sovereign Authors Plan Book
 
@@ -308,7 +316,7 @@ Sovereign Plan Book (docs/plans/BAR-X.plan.md)
 |----------|----------------|
 | How many BAR runs completed? | `SELECT COUNT(*) FROM four_brain_run WHERE verdict='PASS'` |
 | What's the current strike count? | `SELECT strikes FROM four_brain_run WHERE run_id=?` |
-| Which LBB rows belong to a BAR? | `SELECT * FROM lbb_records WHERE bar_id=? AND subject_id='processes'` |
+| Which LBB rows belong to a BAR? (gate-audit transition rows) | `SELECT * FROM lbb_records WHERE bar_id=? AND subject_id='four-brain-gate-audit'` |
 | What gate verdicts did the last run produce? | `SELECT gate_verdicts FROM four_brain_transition WHERE run_id=? AND role='auditor'` |
 | What Atlas sections did the mechanic consult? | `SELECT atlas_sections_consulted FROM four_brain_transition WHERE run_id=? AND role='mechanic'` |
 | Are there unresolved squawks? | `SELECT * FROM squawks WHERE process_id='four-brain' AND resolved_at IS NULL` |
@@ -374,14 +382,16 @@ SELECT * FROM squawks WHERE process_id = 'four-brain' AND resolved_at IS NULL;
 ### LBB Query Patterns
 
 ```bash
-# All LBB rows for a BAR
+# Gate-audit transition rows for a BAR (four per-role rows; G08 queries this subject)
+# subject_id='four-brain-gate-audit' = per-role transition rows (planner/foreman/mechanic/auditor)
+# subject_id='processes' = Library shelf for terminal Audit Books (separate concern)
 curl -s -X POST "https://lbb.svg-outreach.workers.dev/query" \
   -H "Authorization: Bearer $LBB_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"query":"BAR-{id}","subject_id":"processes"}'
+  -d '{"query":"BAR-{id}","subject_id":"four-brain-gate-audit"}'
 
-# Count rows per BAR (gate G08 predicate: must be exactly 4)
-SELECT COUNT(*) FROM lbb_records WHERE bar_id='BAR-{id}' AND subject_id='processes';
+# Count gate-audit rows per BAR (gate G08 predicate: must be exactly 4)
+SELECT COUNT(*) FROM lbb_records WHERE bar_id='BAR-{id}' AND subject_id='four-brain-gate-audit';
 ```
 
 ### Pressure Gauge (4 Signals → GREEN / YELLOW / RED)
@@ -389,7 +399,7 @@ SELECT COUNT(*) FROM lbb_records WHERE bar_id='BAR-{id}' AND subject_id='process
 | Signal | Source | GREEN | YELLOW | RED |
 |--------|--------|-------|--------|-----|
 | 1. cron_firing | cron_registry.yaml | N/A (event-driven) | — | — |
-| 2. lbb_log_presence | `lbb_records WHERE bar_id=? AND subject_id='processes'` | COUNT == 4 | COUNT < 4 | COUNT == 0 |
+| 2. lbb_log_presence | `lbb_records WHERE bar_id=? AND subject_id='four-brain-gate-audit'` | COUNT == 4 | COUNT < 4 | COUNT == 0 |
 | 3. d1_anchor_freshness | `four_brain_run.last_completed_at` | Fresh per active BAR | Stale | NULL after expected completion |
 | 4. active_errors | `squawks WHERE process_id='four-brain' AND resolved_at IS NULL` | COUNT == 0 | COUNT > 0 | Any unresolved Strike-3 |
 
@@ -452,8 +462,8 @@ Each gate maps to an Atlas-cited predicate per the Plan Book §7. Gate failure i
 
 | Field | Value |
 |-------|-------|
-| Version | 1.3.0 |
-| Last Modified | 2026-05-06 |
+| Version | 1.3.3 |
+| Last Modified | 2026-05-08 |
 | Status | BUILD |
 | Authority | Dave Barton (sovereign) |
 | Created | 2026-05-04 |
@@ -469,3 +479,5 @@ Each gate maps to an Atlas-cited predicate per the Plan Book §7. Gate failure i
 |------|---------|-----|-------|--------|
 | 2026-05-04 | 1.0.0 | BAR-PROC-070 | Sonnet Mechanic | CREATE — Initial UT-Body build. 14 sections, 13-item checklist. Companion YAML: `four-brain.yaml`. Paired artifact row 9 registered in `atlas/manifests/paired-artifacts.yaml` + `atlas/ATLAS.md` §7.3a (v2.2.6). |
 | 2026-05-06 | 1.3.0 | REPAIR-AUDIT | Sonnet Mechanic | REPAIR — Runtime audit findings F-012/F-013/F-014 applied. All `FOUR_BRAIN_AVIATION.md v1.2.0` refs bumped to v1.3.0. Gate count updated from 10 (G01-G10) to 19 (G01-G12 + W-1..W-7) in all §2/§5/§9b/§10a sections. Mojibake encoding normalization. acceptance_criteria D-070-01 updated to 19 gates. |
+| 2026-05-08 | 1.3.2 | BAR-PROC-070 Pass 5 | Sonnet Mechanic | REPAIR — Pass 5 sync with current Atlas: (1) LBB gate-audit transition-row subject normalized to `four-brain-gate-audit` (manifest source of truth) with clarifier comments distinguishing it from Library shelving subject `processes`. (2) Foreman model updated: `Opus 4.7` → `Sonnet/default routing model (Opus escalation only)` per FOUR_BRAIN_AVIATION.md §Foreman Model Delegation Gate. (3) Atlas pin bumped v2.2.6 → v2.2.7. Version 1.3.2 + Last Modified 2026-05-08 in all 3 locations. |
+| 2026-05-08 | 1.3.3 | BAR-PROC-070 Pass 6 | Sonnet Mechanic | REPAIR — H-1: ORBT vocabulary corrected from 4-state to 6-state (`Operate / Repair / Build / Troubleshoot_Train / Retired / Disabled`) per `atlas/constants/KEY.md` §ORBT. Version 1.3.3 + Last Modified 2026-05-08 in all 3 locations. |

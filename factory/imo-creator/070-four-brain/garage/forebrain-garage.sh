@@ -30,6 +30,9 @@
 #
 # Atlas references: §4.5 Repair SOP, §6 Governance, §1.5 Aviation Model
 # Refactor: BAR-G-19-COMPLIANCE (2026-05-06)
+# Repair 5:  BAR-PASS4-H4 (2026-05-08) — Replace hardcoded locked-constant arrays
+#            with Atlas §7.3 runtime parse. Mission Control protection moved to
+#            MISSION_CONTROL_PROTECTED (W-6 authority, not locked-constant set).
 # =============================================================================
 
 set -euo pipefail
@@ -50,6 +53,32 @@ FOUR_BRAIN_D1_REQUIRED="${FOUR_BRAIN_D1_REQUIRED:-false}"
 FOUR_BRAIN_D1_DATABASE="${FOUR_BRAIN_D1_DATABASE:-mission-control}"
 MC_API_URL="${MC_API_URL:-}"
 CLAUDE_CODE_PS1="${CLAUDE_CODE_PS1:-C:\\Users\\CUSTOM PC\\AppData\\Roaming\\npm\\claude.ps1}"
+QUEUE_YAML="$GARAGE/queue.yaml"
+
+# M-5 fix: validate that hardcoded status strings in run_pipeline() and approve_bar()
+# exist in queue.yaml status_values list (queue.yaml:21-37). This satisfies the
+# "validate transitions centrally" requirement without restructuring routing logic.
+# Called once at startup when QUEUE_YAML is present.
+_validate_status_in_queue() {
+  local status="$1"
+  if [[ ! -f "$QUEUE_YAML" ]]; then return 0; fi
+  grep -q "^  - ${status}\$" "$QUEUE_YAML" || {
+    echo "WARN: status '${status}' not found in queue.yaml status_values — possible drift" >&2
+  }
+}
+
+_validate_all_pipeline_statuses() {
+  if [[ ! -f "$QUEUE_YAML" ]]; then return 0; fi
+  # run_pipeline() pickup statuses
+  _validate_status_in_queue "READY_FOR_PLANNER"
+  _validate_status_in_queue "PLAN_BOOK_SIGNED"
+  _validate_status_in_queue "FOREMAN_DISPATCHED"
+  _validate_status_in_queue "MECHANIC_DONE"
+  # approve_bar() transition targets
+  _validate_status_in_queue "FOREMAN_DISPATCHED"
+  _validate_status_in_queue "MECHANIC_DONE"
+  _validate_status_in_queue "CLOSED"
+}
 
 usage() {
   cat <<'USAGE'
@@ -272,6 +301,71 @@ ps_escape() {
   printf "%s" "$value" | sed "s/'/''/g"
 }
 
+# F-003-SUPPORT: _load_locked_constants
+# Parses Atlas §7.3 table at runtime to derive the 17 locked-constant paths.
+# Returns paths in LOCKED_CONSTANTS_PATHS array (caller must declare local).
+# Parse runs once per invocation; result is cached in __LOCKED_CONSTANTS_CACHE.
+#
+# Authority: imo-creator-v2/atlas/ATLAS.md §7.3
+# H-4 fix (BAR-PASS4-H4 2026-05-08): replaces formerly hardcoded path arrays.
+#
+# MISSION CONTROL FILES (atlas/constants/MISSION_CONTROL.md and
+# atlas/constants/mission-control.yaml) are NOT in the Atlas §7.3 locked-
+# constant table. Their protection is governed by W-6 (sovereign-only
+# amendment). They are tracked separately in MISSION_CONTROL_PROTECTED below.
+MISSION_CONTROL_PROTECTED=(
+  # W-6 authority: sovereign-only amendment to Mission Control skeleton.
+  # These are NOT locked constants — do not add them to LOCKED_CONSTANTS_PATHS.
+  "atlas/constants/MISSION_CONTROL.md"
+  "atlas/constants/mission-control.yaml"
+)
+
+__LOCKED_CONSTANTS_CACHE=()
+
+_load_locked_constants() {
+  # Returns cached result if already parsed this shell session.
+  if [[ "${#__LOCKED_CONSTANTS_CACHE[@]}" -gt 0 ]]; then
+    LOCKED_CONSTANTS_PATHS=("${__LOCKED_CONSTANTS_CACHE[@]}")
+    return 0
+  fi
+  local v2_root="$ROOT/../imo-creator-v2"
+  local atlas_file="$v2_root/atlas/ATLAS.md"
+  if [[ ! -f "$atlas_file" ]]; then
+    echo "[four-brain] ERROR: Atlas file not found at $atlas_file — cannot derive locked constants" >&2
+    return 1
+  fi
+  # Parse §7.3 table ONLY (stop before §7.3a). Row format is:
+  #   | N | `atlas/some/path.md` | description |
+  # Column 2 is backtick-wrapped relative path.
+  # We enter parse mode on the §7.3 heading line and exit on §7.3a or next
+  # heading at same/higher level (### or ##) — whichever comes first.
+  local paths=() in_section=0
+  while IFS= read -r line; do
+    # Enter section on the §7.3 heading
+    if [[ "$line" =~ ^###[[:space:]].*§7\.3[[:space:]]Cross-references ]]; then
+      in_section=1
+      continue
+    fi
+    # Exit section on any subsequent heading at same or higher level.
+    # The §7.3 heading is "### §7.3 ..."; stop on the next ### or ## heading.
+    if [[ "$in_section" -eq 1 && "$line" =~ ^##+ ]]; then
+      break
+    fi
+    if [[ "$in_section" -eq 1 ]]; then
+      # Match table data rows: "| digits | `atlas/...` | ..."
+      if [[ "$line" =~ ^\|[[:space:]]*[0-9]+[[:space:]]*\|[[:space:]]*\`(atlas/[^\`]+)\`[[:space:]]*\| ]]; then
+        local rel_path="${BASH_REMATCH[1]}"
+        [[ -n "$rel_path" ]] && paths+=("$v2_root/$rel_path")
+      fi
+    fi
+  done < "$atlas_file"
+  if [[ "${#paths[@]}" -ne 17 ]]; then
+    echo "[four-brain] WARNING: Atlas §7.3 parse yielded ${#paths[@]} paths (expected 17) — verify ATLAS.md §7.3 table format" >&2
+  fi
+  __LOCKED_CONSTANTS_CACHE=("${paths[@]}")
+  LOCKED_CONSTANTS_PATHS=("${paths[@]}")
+}
+
 # F-003: snapshot_forbidden_baseline
 # Called at the START of run_mechanic, before the Mechanic CLI runs.
 # Records SHA256 of each forbidden path so assert_no_locked_constants_touched
@@ -280,25 +374,16 @@ snapshot_forbidden_baseline() {
   local run_dir="$1"
   local v2_root="$ROOT/../imo-creator-v2"
   local baseline_file="$run_dir/.forbidden_baseline.sha256"
+  # Load Atlas §7.3 locked constants at runtime (H-4 fix: no more hardcoded list)
+  local LOCKED_CONSTANTS_PATHS=()
+  _load_locked_constants || return 1
+  # Also protect Mission Control skeleton files (W-6 authority — sovereign-only
+  # amendment — separate from the 17 locked constants)
+  local mc_root="$v2_root"
   local forbidden_paths=(
-    "$v2_root/atlas/constants/FOUNDATIONAL_BEDROCK.md"
-    "$v2_root/atlas/constants/DMJ.md"
-    "$v2_root/atlas/constants/FCE.md"
-    "$v2_root/atlas/skills/skill-creator/SKILL.md"
-    "$v2_root/atlas/manifests/STRUCTURE_MANIFEST.yaml"
-    "$v2_root/atlas/constants/UNIFIED_TEMPLATE.md"
-    "$v2_root/atlas/dyno/us.py"
-    "$v2_root/atlas/dyno/up.py"
-    "$v2_root/atlas/constants/HOW_TO_BUILD_ANYTHING.md"
-    "$v2_root/atlas/constants/KEY.md"
-    "$v2_root/atlas/constants/UT_CHECKLIST.md"
-    "$v2_root/atlas/constants/BARTON_ENTERPRISES_CTB.md"
-    "$v2_root/atlas/ATLAS.md"
-    "$v2_root/atlas/constants/THREE_LAYERS_SPINE.md"
-    "$v2_root/atlas/constants/BOOK_LAW.md"
-    "$v2_root/atlas/constants/FOUR_BRAIN_AVIATION.md"
-    "$v2_root/atlas/constants/BS_LAW.md"
-    "$v2_root/atlas/constants/mission-control.yaml"
+    "${LOCKED_CONSTANTS_PATHS[@]}"
+    "$mc_root/${MISSION_CONTROL_PROTECTED[0]}"
+    "$mc_root/${MISSION_CONTROL_PROTECTED[1]}"
   )
   # Clear and write fresh baseline hashes
   : > "$baseline_file"
@@ -322,25 +407,16 @@ snapshot_forbidden_baseline() {
 assert_no_locked_constants_touched() {
   local run_dir="${1:-}"
   local v2_root="$ROOT/../imo-creator-v2"
+  # Load Atlas §7.3 locked constants at runtime (H-4 fix: no more hardcoded list)
+  local LOCKED_CONSTANTS_PATHS=()
+  _load_locked_constants || return 1
+  # Also protect Mission Control skeleton files (W-6 authority — sovereign-only
+  # amendment — separate from the 17 locked constants)
+  local mc_root="$v2_root"
   local forbidden_paths=(
-    "$v2_root/atlas/constants/FOUNDATIONAL_BEDROCK.md"
-    "$v2_root/atlas/constants/DMJ.md"
-    "$v2_root/atlas/constants/FCE.md"
-    "$v2_root/atlas/skills/skill-creator/SKILL.md"
-    "$v2_root/atlas/manifests/STRUCTURE_MANIFEST.yaml"
-    "$v2_root/atlas/constants/UNIFIED_TEMPLATE.md"
-    "$v2_root/atlas/dyno/us.py"
-    "$v2_root/atlas/dyno/up.py"
-    "$v2_root/atlas/constants/HOW_TO_BUILD_ANYTHING.md"
-    "$v2_root/atlas/constants/KEY.md"
-    "$v2_root/atlas/constants/UT_CHECKLIST.md"
-    "$v2_root/atlas/constants/BARTON_ENTERPRISES_CTB.md"
-    "$v2_root/atlas/ATLAS.md"
-    "$v2_root/atlas/constants/THREE_LAYERS_SPINE.md"
-    "$v2_root/atlas/constants/BOOK_LAW.md"
-    "$v2_root/atlas/constants/FOUR_BRAIN_AVIATION.md"
-    "$v2_root/atlas/constants/BS_LAW.md"
-    "$v2_root/atlas/constants/mission-control.yaml"
+    "${LOCKED_CONSTANTS_PATHS[@]}"
+    "$mc_root/${MISSION_CONTROL_PROTECTED[0]}"
+    "$mc_root/${MISSION_CONTROL_PROTECTED[1]}"
   )
   local baseline_file="${run_dir:+$run_dir/.forbidden_baseline.sha256}"
   local violations=()
@@ -966,15 +1042,14 @@ The dispatch packet MUST contain:
 10. Foreman role declaration: "Foreman role: Sonnet/default routing"
 
 ==============================================================================
-RULES (verbatim role locks from FOUR_BRAIN_AVIATION.md §6 — Foreman Lock)
+RULES — cite, do not restate
 ==============================================================================
-- Do not build. Do not audit. Do not re-architect the Plan Book.
-- Convert the Plan Book into LITERAL Mechanic work orders. No interpretation, no creative additions.
-- Foreman NEVER flips an Auditor verdict. FAIL stays FAIL until the Auditor itself sees PASS on its own re-run. No "close enough." No human shortcut.
-- Foreman NEVER fixes code. Mechanic is the only repairer. On Strike-1, dispatch Mechanic. On Strike-2, escalate to Opus mechanic. On Strike-3, route to Troubleshoot/Train — NOT another repair dispatch.
-- Foreman cannot dispatch a BAR without a signed Plan Book. If the Plan Book is missing the mission_control_wiring section, mark BLOCKED and return — Planner-side defect (W-2). Do NOT improvise dispositions.
-- If the Plan Book is missing required sections (P=1, work orders, allowed write scope), mark BLOCKED and return — Planner re-runs.
-- Escalate ambiguity to the Planner; do not let it become a Mechanic problem.
+Role locks: see $v2_atlas/constants/FOUR_BRAIN_AVIATION.md §X (Atlas consultation table —
+Foreman reads §6 + paired-artifacts.yaml). Specifically:
+  - Foreman lock (routing only, no build/audit): FOUR_BRAIN_AVIATION.md §6 Foreman Lock
+  - Strike ladder: FOUR_BRAIN_AVIATION.md §STRIKE SYSTEM
+  - Verdict finality: FOUR_BRAIN_AVIATION.md §STRIKE SYSTEM (Foreman cannot override Auditor)
+  - Mission Control wiring orders: MISSION_CONTROL.md §10 + four-brain-doctrine-gate.yaml gate W-2
 PROMPT
   echo "$prompt"
 }
@@ -1052,16 +1127,14 @@ EXEMPT:
   -> No mission-control.yaml change.
 
 ==============================================================================
-RULES
+RULES — cite, do not restate
 ==============================================================================
-- Edit only inside the allowed write scope. Out-of-scope edits = Strike-1.
-- Do NOT touch any of the 17 sovereign-locked constants. Verify on each edit.
-- Idempotency: BEFORE editing, check if the file already conforms to acceptance criteria.
-  If yes, write MECHANIC-OUTPUT.md citing existing conformance and exit cleanly.
-- Run the checks the dispatch requests. Report what you ran, not what you wish you ran.
-- Pair version bumps: every Version change must update Last Modified in the same edit.
-  Version field appears in 3 locations (frontmatter, section 1 Identity, Document Control) — bump all 3.
-- Final action MUST be writing MECHANIC-OUTPUT.md. The runner keys completion on this file.
+Role locks: see $v2_atlas/constants/FOUR_BRAIN_AVIATION.md §X (Atlas consultation table —
+Mechanic reads §4.5 or §4 + Plan Book + spoke frontmatter). Specifically:
+  - Mechanic lock (build only, no self-audit): FOUR_BRAIN_AVIATION.md §6 Mechanic Lock
+  - Write scope + locked constants rules: FOUR_BRAIN_AVIATION.md §6 Mechanic Lock
+  - Idempotency + version-bump pairing: ATLAS.md §4 (build) or §4.5 (repair)
+  - LBB logging: FOUR_BRAIN_AVIATION.md §Y (action=edit, one row per file touched)
 
 ==============================================================================
 REQUIRED OUTPUT — MECHANIC-OUTPUT.md must contain
@@ -1141,14 +1214,34 @@ Process context:
 ==============================================================================
 STEP 1 — RUN THE DETERMINISTIC GATE RUNNER (mandatory, first action)
 ==============================================================================
-Invoke the runner against this BAR's artifacts:
+Per Atlas (BOOK_LAW.md "Front Cover Must Carry..." + BS_LAW.md Y-junction), the audit applies
+to LIBRARY ARTIFACTS (Books) only. Runtime telemetry files (run.yaml, *.jsonl logs,
+LBB-*-handoff.json scaffolds) are NOT Books and MUST NOT be passed to gate-runner.
+
+The Books produced by this BAR are:
+  - Plan Book (Plan-Body):     Barton-Processes/docs/plans/$bar_id/PLAN-BOOK.md
+                               + Barton-Processes/docs/plans/$bar_id/PLAN-BOOK.yaml (if paired)
+  - Mechanic Output Book (UT-Body cover sheet):
+                               <run_dir>/MECHANIC-OUTPUT.md
+                               + <run_dir>/MECHANIC-OUTPUT.yaml (if paired)
+  - The artifacts Mechanic actually produced/modified per its own MECHANIC-OUTPUT.md
+    "Files changed" section. Each is a Book and must be audited.
+
+Invoke the runner ONCE PER BOOK against the matched .yaml + .md pair:
 
   python "$gate_runner_ref" \\
     --bar-id "$bar_id" \\
-    --audited-yaml <path to .yaml under audit> \\
-    --audited-md <path to .md under audit> \\
+    --audited-yaml <Book yaml path> \\
+    --audited-md <Book md path> \\
     --output-format json \\
     --deterministic-only
+
+If a Book is .md-only (no paired .yaml), pass --audited-md only. If .yaml-only, pass
+--audited-yaml only. BS Law (Atlas atlas/constants/BS_LAW.md) applies universally to all
+structured durable artifacts including code files; the only carve-out is transient runtime
+ephemera (e.g., compiled artifacts, lock files, generated caches). Every file in
+MECHANIC-OUTPUT.md "Files changed" that is a structured durable artifact — including
+.py modules and .sql migrations — must pass the Rung ladder and any applicable BS Law gates.
 
 The runner reads predicates from four-brain-doctrine-gate.yaml, evaluates each gate by parse + compare (no LLM), and emits JSON:
   {
@@ -1203,17 +1296,14 @@ Body:
 - Strike target per FAIL (per AUDITOR_ROLE.md §7b — the runner emits this; carry forward)
 
 ==============================================================================
-RULES
+RULES — cite, do not restate
 ==============================================================================
-- Do NOT build. Do NOT modify any artifact. Audit-only.
-- You are a different inference engine than the Mechanic.
-- Predicates are evaluated by gate-runner.py. You do NOT re-evaluate them. (Atlas: ai_on_spine_forbidden — FOUR_BRAIN_AVIATION.md §75-94.)
-- W-7 is the only gate you arbitrate by judgment. All other gates: cite the runner.
-- Strike-1 (first FAIL) → Mechanic re-runs against corrected dispatch (or Planner re-drafts if W-2/W-7).
-- Strike-2 (second FAIL on same BAR) → escalate to Opus mechanic.
-- Strike-3 (third FAIL) → Troubleshoot/Train, NOT another repair. Plan Book is wrong; rewrite the blueprint.
-- Do not fix findings. Audit only.
-- P=1 requires runner=PASS AND W-7=PASS. P=0 if either fails.
+Role locks: see $v2_atlas/constants/FOUR_BRAIN_AVIATION.md §X (Atlas consultation table —
+Auditor reads gate spec from four-brain-doctrine-gate.yaml). Specifically:
+  - Auditor lock (verdict only, no repair/dispatch): FOUR_BRAIN_AVIATION.md §6 Auditor Lock + AUDITOR_ROLE.md
+  - Gate evaluation (determinism-first, W-7 tail only): FOUR_BRAIN_AVIATION.md §X + four-brain-doctrine-gate.yaml
+  - Strike handling: FOUR_BRAIN_AVIATION.md §STRIKE SYSTEM
+  - LBB logging: FOUR_BRAIN_AVIATION.md §Y (action=audit-verdict)
 PROMPT
   echo "$prompt"
 }
@@ -2101,9 +2191,11 @@ recover_bar() {
   archive_stale_artifact "$artifact"
   update_status "$intake_yaml" "$status" "$prev_status"
   log_transition "$bar_id" "$run_dir" "$role" "recover" "$status" "$prev_status" "" "" "done" "Forced rollback: $status -> $prev_status (no $artifact present)."
-  if ! write_lbb_transition "$bar_id" "$role" "recover" "$run_dir" "$defer_lbb" > "$run_dir/lbb-$role-recover-path.txt" 2>/dev/null; then
-    echo "LBB transition write skipped or unavailable; continuing." >&2
-  fi
+  # Sub-task D: LBB write is authoritative — soft-fail removed.
+  # If --defer-lbb was passed, write_lbb_transition handles the .lbb-deferred marker.
+  # On actual failure (key missing, HTTP error), abort so the recover is not silently incomplete.
+  write_lbb_transition "$bar_id" "$role" "recover" "$run_dir" "$defer_lbb" \
+    > "$run_dir/lbb-$role-recover-path.txt"
   write_stage_report "$bar_id" "$(current_status "$bar_id")" "$run_dir" > "$run_dir/stage-report-path.txt"
   echo "Recovered $bar_id: $status -> $prev_status. You may now re-run the $role stage."
 }
@@ -2422,6 +2514,9 @@ watch_queue() {
     sleep "$interval"
   done
 }
+
+# M-5 fix: validate hardcoded status strings against queue.yaml at startup
+_validate_all_pipeline_statuses
 
 cmd="${1:-}"
 case "$cmd" in

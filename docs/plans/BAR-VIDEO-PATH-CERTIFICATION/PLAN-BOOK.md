@@ -37,8 +37,8 @@ Per Process 070 §4 Step 1 (Sovereign authors Plan Book) and the intake's requir
 | `imo-creator-v2/atlas/ATLAS.md` | Parent legend, inheritance pattern, map-building SOP. Establishes that every child atlas page is a UT doc and inherits Atlas/UT rules. |
 | `imo-creator-v2/atlas/constants/KEY.md` | Vocabulary and K=C parity. Terms used in this Plan Book (HEIR, ORBT, CTB, BAR, Plan Book, UT Book, Audit Book, Strike, Pressure Gauge) all derive here. |
 | `imo-creator-v2/atlas/constants/UNIFIED_TEMPLATE.md` | UT-Body structure and pre-flight gates that each executable child UT (1710–1750) must conform to. |
-| `imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md` v1.2.0 | Planner / Foreman / Mechanic / Auditor role separation. "Mechanic ≠ Auditor" invariant. Planner Lock, Foreman Lock, Auditor Lock, Strike System, Three Books per BAR. |
-| `imo-creator-v2/atlas/constants/BS_LAW.md` v1.5.0 | Book + Spine Y-junction conformance for any durable structured artifact this BAR produces or repairs. |
+| `imo-creator-v2/atlas/constants/FOUR_BRAIN_AVIATION.md` v1.3.0 | Planner / Foreman / Mechanic / Auditor role separation. "Mechanic ≠ Auditor" invariant. Planner Lock, Foreman Lock, Auditor Lock, Strike System, Three Books per BAR. **v1.3.0 adds the Foreman Model Delegation Gate (7 checks) — a lesser Foreman model is permitted only with a signed Plan Book, dispatch-packet-only output, Atlas Step 0 citations incl. `atlas/manifests/paired-artifacts.yaml`, an LBB `handoff` row, Mechanic≠Auditor, Auditor review of the Foreman dispatch, and ambiguity routing back to Planner/Opus.** |
+| `imo-creator-v2/atlas/constants/BS_LAW.md` v1.4.0 | Book + Spine Y-junction conformance for any durable structured artifact this BAR produces or repairs. |
 | `imo-creator-v2/atlas/constants/BOOK_LAW.md` v1.5.0 | Species table (Plan-Body, UT-Body, Workflow-Body, Audit-Body) used by all artifacts in this BAR. |
 | `imo-creator-v2/atlas/manifests/STRUCTURE_MANIFEST.yaml` | CTB locked-constant verification surface for any Atlas touch (none expected; flag if Mechanic discovers a need). |
 
@@ -147,7 +147,7 @@ For each lane, Foreman emits **two work orders** — one per source-of-truth lay
 
 Foreman additionally emits:
 
-3. **Picker route binding work order** (lane 1750) covering `imo-creator-v2/workers/video-pipeline/scripts/route-video-job.ps1` so a script entering the system reaches the correct lane.
+3. **Fan-out conductor work order** (lane 1750) covering `imo-creator-v2/workers/video-pipeline/scripts/route-video-job.ps1` so a script (or source packet) entering the system fans out to **one or more operator-selected lanes** — each selected lane runs independently and emits its own artifact (§FAN-OUT below).
 4. **Smoke-test work order** per lane: minimal end-to-end run that exercises the runtime surface and emits one piece of provider evidence (job ID, manifest row, or explicit blocker).
 
 ### §6.1 Lane: `heygen_avatar` (1710)
@@ -194,27 +194,40 @@ Foreman additionally emits:
 | Executable child UT | `Barton-Processes/factory/content/1740-claude-code-sovereign/PROCESS-UT.md` |
 | Runtime surface | Claude Code + In Motion |
 | Required connector | Local toolchain (Claude Code session, In Motion installed) |
-| Foreman dispatch hint | Cite existing MP4 output evidence (`workers/video-pipeline/output/video-output-manifest.json`) as runtime proof; lane is the only one with prior live evidence — Mechanic should leverage that to set the OPERATE bar for the other four. |
-| Smoke-test goal | One additional MP4 manifest row OR explicit blocker. |
+| Sovereign scope (clarified 2026-05-12) | "Sovereign" = the *process* is Claude-controlled, repo-owned, and deterministic (script → templates → commands → output manifest). **Provider-assisted rendering (NotebookLM / InVideo-style) is permitted.** There is NO requirement to build a provider-independent local renderer (ffmpeg/Remotion/etc.) for this lane to certify. The existing 5 MP4s + `video-output-manifest.json` are valid certification evidence. This lane is the closest to OPERATE. |
+| Foreman dispatch hint | Cite existing MP4 output evidence (`workers/video-pipeline/output/video-output-manifest.json`) as runtime proof; lane is the only one with prior live evidence — Mechanic should leverage that to set the OPERATE bar for the other four. Do not dispatch a "build a deterministic local renderer" work order — out of scope per the sovereign clarification above. |
+| Smoke-test goal | One additional MP4 manifest row produced by the Claude-controlled process (provider-assisted OK) OR explicit blocker. |
 | Evidence expected | manifest row, MP4 path. |
 
-### §6.5 Lane: `video_picker` (1750)
+### §6.5 Lane: `video_picker` (1750) — the FAN-OUT CONDUCTOR
 
 | Field | Value |
 |-------|-------|
 | Blueprint UT | `imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-1750-PICKER.md` |
 | Executable child UT | `Barton-Processes/factory/content/1750-video-picker/PROCESS-UT.md` |
 | Runtime binding | `imo-creator-v2/workers/video-pipeline/scripts/route-video-job.ps1` |
-| Required connector | Local PowerShell + access to the four upstream lane runtimes |
-| Foreman dispatch hint | This lane is the **entry seam** described by INV-05. The Blueprint defines the routing contract (script-in → lane-out); the executable UT defines the operator runbook for invoking the picker; the route harness implements it. The three must not drift. |
-| Smoke-test goal | One end-to-end pick with a synthetic script that resolves to one of the four upstream lanes (or explicit blocker if none of the four can satisfy the smoke run). |
-| Evidence expected | route decision log, downstream lane evidence, output manifest row OR blocker. |
+| Required connector | Local PowerShell + access to ≥2 upstream lane runtimes (a fan-out smoke run needs ≥2 live targets) |
+| Role (clarified by sovereign 2026-05-12) | **Fan-out conductor, NOT a single-router.** A script (or source packet) + a set of operator-selected lanes goes in; the conductor emits one lane-specific job packet **per selected lane**, dispatches them, and collects all artifacts back into the output manifest under one parent `video_job_id`. The four production lanes (1710/1720/1730/1740) are unchanged — each is still a single-lane producer; the change is upstream, at the conductor. |
+| Foreman dispatch hint | This lane is the **entry seam** described by INV-05. The Blueprint defines the fan-out contract (script + selected-lane-set in → one job packet per lane out → N artifacts collected); the executable UT defines the operator runbook for invoking the conductor and selecting lanes; the route harness implements it. The three must not drift. **The 1750 executable UT title/spec currently says "route ... to exactly one ... path" — the Mechanic work order for this lane must rewrite it to the fan-out semantics above (1..N operator-selected lanes, one job packet per lane).** |
+| Smoke-test goal | One end-to-end fan-out with a synthetic script + ≥2 selected lanes (e.g. `notebooklm_source_video` + `elevenlabs_cinematic`, or `heygen_avatar` + `claude_code_sovereign`); each selected lane produces its own artifact and the manifest carries ≥2 rows under one parent job ID. (Or explicit blocker if <2 of the four can satisfy the smoke run.) |
+| Evidence expected | parent `video_job_id`, per-lane job packets, per-lane downstream evidence, ≥2 output manifest rows OR blocker. |
 
-### §6.6 Lane parallelism / dependency note (Foreman uses)
+### §6.6 — §FAN-OUT — Conductor semantics (LOCKED by sovereign 2026-05-12)
+
+| ID | Rule |
+|----|------|
+| FAN-01 | Input to the conductor = a script (or source packet) **plus** an operator-supplied set of one or more lane IDs drawn from {`heygen_avatar`, `notebooklm_source_video`, `elevenlabs_cinematic`, `claude_code_sovereign`}. The operator picks; the conductor does not auto-select. |
+| FAN-02 | For each selected lane, the conductor emits exactly one lane-specific job packet (the lane's existing input contract) and dispatches it. Selected lanes run **independently** — a failure in one does not block the others. |
+| FAN-03 | Each selected lane emits its **own** video artifact. One script → N artifacts (N = number of selected lanes). |
+| FAN-04 | All N artifacts are collected back into `workers/video-pipeline/output/video-output-manifest.json` under one **parent `video_job_id`**, each row tagged with its producing lane. |
+| FAN-05 | If the operator selects exactly one lane, the conductor degrades gracefully to single-lane dispatch — single-route is the N=1 case of fan-out, not a separate code path. |
+| FAN-06 | Ambiguity (zero lanes selected, or an unknown lane ID, or a selected lane whose runtime is unreachable) → the conductor returns a structured REPAIR result naming the problem; it never silently drops a selected lane or invents one. |
+
+### §6.7 Lane parallelism / dependency note (Foreman uses)
 
 - Lanes 1710, 1720, 1730 are **independent** and may be dispatched in parallel.
-- Lane 1740 is **independent** and has prior runtime evidence; its smoke test is the lowest-risk and should be dispatched first to set the OPERATE bar.
-- Lane 1750 (picker) **depends** on at least one upstream lane being smoke-test green; Foreman dispatches 1750 last unless explicitly told otherwise by the sovereign.
+- Lane 1740 is **independent**, has prior runtime evidence, and (per the §6.4 sovereign clarification) is the closest to OPERATE — its smoke test is the lowest-risk and should be dispatched first to set the OPERATE bar.
+- Lane 1750 (the fan-out conductor) **depends** on at least **two** upstream lanes being smoke-test green (FAN-01..06 require a ≥2-target fan-out smoke); Foreman dispatches 1750 last unless explicitly told otherwise by the sovereign.
 
 ---
 
@@ -302,7 +315,7 @@ This Plan Book reaches P=1 when:
 6. Plan Book names any blocked connector, credential, browser session, provider gate, or Linear/LBB gap instead of hiding it (§11).
 7. ForeBrain garage writes `FINAL-PRODUCT.yaml` pointing to the durable Plan Book.
 
-> **Aggregate BAR P=1** (downstream of this Plan Book): each of the five lanes reaches Codex `VERDICT: P=1` with Audit Book + CERTIFY row; the picker (1750) routes a script to a smoke-test-green lane end-to-end; Mission Control surfaces the lane as OPERATE-eligible OR records explicit blocker per §11.
+> **Aggregate BAR P=1** (downstream of this Plan Book): each of the five lanes reaches Codex `VERDICT: P=1` with Audit Book + CERTIFY row; **each of the four production lanes (1710/1720/1730/1740) demonstrates live runtime proof — it takes a script (or source packet) and emits a video artifact, not merely a conformant UT**; the picker (1750) **fans a script to ≥2 smoke-test-green lanes end-to-end and collects all artifacts** under one parent job ID; Mission Control surfaces each lane as OPERATE-eligible OR records explicit blocker per §11.
 
 ---
 
@@ -379,7 +392,7 @@ Adopted from intake §12 + common invariants. **Locked. Do not modify.**
 | INV-02 | Barton-Processes holds executable video Process UTs. |
 | INV-03 | Process 070 garage is the start surface for Planner work. |
 | INV-04 | `FINAL-PRODUCT.yaml` is the pickup ticket for the durable Plan Book. |
-| INV-05 | A script must be able to enter the system and route to the correct video lane after Foreman dispatches and Mechanic builds. |
+| INV-05 | A script (or source packet) must be able to enter the system and **fan out to one or more operator-selected video lanes** after Foreman dispatches and Mechanic builds; each selected lane runs independently and emits its own video artifact. The picker (1750) is a **fan-out conductor**, not a single-router (see §6.5 + §FAN-OUT FAN-01..06). Single-route is the N=1 case, not a separate path. *(Amended by sovereign 2026-05-12 — supersedes the v1.0.0 single-route wording.)* |
 | INV-COMMON-01 | The Planner owns the plan; the intake owns only desired outcome and constraints. |
 | INV-COMMON-02 | Foreman dispatches; Mechanic builds; Auditor certifies. |
 | INV-COMMON-03 | Mechanic cannot audit its own work. |
@@ -401,6 +414,9 @@ Per intake §8 fact-handling rule: brainstorming is input, not certification.
 | ForeBrain garage starts at `garage/inbox/BAR-{id}` and final pickup is `FINAL-PRODUCT.yaml`. | `Barton-Processes/factory/imo-creator/070-four-brain/garage/forebrain-garage.sh` (commands `new`, `run-once --execute`, `final`). |
 | Existing Claude Code + In Motion MP4 evidence exists. | `imo-creator-v2/workers/video-pipeline/output/video-output-manifest.json` (intake §7). |
 | Five video lanes are the scope: heygen_avatar, notebooklm_source_video, elevenlabs_cinematic, claude_code_sovereign, video_picker. | `planner-intake.yaml.filled_intake.lanes` (5 entries). |
+| 1740 "sovereign" = Claude-controlled deterministic *process* + output manifest; provider-assisted rendering permitted; no provider-independent local renderer required for certification. | Sovereign decision, Dave Barton, 2026-05-12 (this Plan Book v1.1.0 amendment). Supersedes the open question in `imo-creator-v2/docs/plans/VIDEO-PATHS-OPERATE-PUNCHLIST.md` §"PROC-1740 Claude Code Sovereign" ("whether this lane must still build a fully deterministic local renderer"). |
+| Target for this BAR (sovereign, 2026-05-12) = each of the four production lanes (1710/1720/1730/1740) reaches a state where it can take a script/source packet and emit a video artifact (live runtime proof), not merely a conformant UT. | Sovereign decision, Dave Barton, 2026-05-12. Reinforces the Aggregate BAR P=1 in §9. |
+| 1750 picker = a **fan-out conductor**, not a single-router: a script (or source packet) + an operator-selected set of one or more lanes goes in; each selected lane runs independently and emits its own artifact; one script → N video variants, all collected under one parent `video_job_id`. Single-route is the N=1 case. | Sovereign decision, Dave Barton, 2026-05-12 (this Plan Book v2.0.0 amendment). Drives the §6.5 rewrite, the §FAN-OUT FAN-01..06 rules, the §12 INV-05 rewrite, and the §9 aggregate-P=1 update. The 1750 executable UT title/spec (currently "route ... to exactly one ... path") and `route-video-job.ps1` must be rewritten to match. |
 
 ### §13.B Brainstorming claims left as ASSUMPTIONS (Mechanic to verify)
 
@@ -409,7 +425,7 @@ Per intake §8 fact-handling rule: brainstorming is input, not certification.
 | All five parent Blueprint UTs at `imo-creator-v2/docs/processes/video-blueprints/lanes/VIDEO-BP-17NN-*.md` exist and are UT-conformant. | Mechanic Step 0 read; build if missing. |
 | All five executable child UTs at `Barton-Processes/factory/content/17NN-*/PROCESS-UT.md` exist and are UT-conformant. | Mechanic Step 0 read; build/repair as discovered. |
 | HeyGen / ElevenLabs / Chrome MCP credentials are reachable. | Connector reachability check pre-smoke-test. |
-| `route-video-job.ps1` is the canonical picker entry point and accepts a script payload that resolves to one of the four lanes. | Mechanic reads file; confirms input contract or repairs to it. |
+| `route-video-job.ps1` is the canonical picker entry point. **Per the sovereign 2026-05-12 clarification it must accept a script payload + a set of one-or-more selected lane IDs and fan out to each (one job packet per lane); the existing single-lane example job JSONs become the N=1 case.** | Mechanic reads file; rewrites the input contract to the fan-out semantics (§6.5 + §FAN-OUT) or records a blocker. |
 | Linear BARs 388–392 are the in-flight tracker IDs for the lane work. | Mechanic pulls Linear; reconciles or block-notes. |
 
 ---
@@ -475,13 +491,23 @@ Per intake §11 and `Barton-Processes/factory/imo-creator/070-four-brain/garage/
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0.0 |
+| Version | 2.0.0 |
 | Created | 2026-05-05 |
-| Last Modified | 2026-05-05 |
-| Status | PLAN_BOOK_READY |
+| Last Modified | 2026-05-12 |
+| Status | PLAN_BOOK_READY (awaiting sovereign sign-off — §15 step 7) |
 | Authority | Dave Barton (sovereign) |
-| Authored By | Process 070 Planner (ForeBrain garage role) |
-| Conformance | Plan-Body species (Book Law v1.5.0); Atlas inheritance; Process 070 PROCESS-UT v1.0.0; intake YAML v1.0.0 |
+| Authored By | Process 070 Planner (ForeBrain garage role) — v1.0.0; v1.1.0 freshness amendment + v2.0.0 fan-out regeneration by Planner (Opus 4.7), acting in the `--planner-model opus` role per sovereign instruction 2026-05-12 (the garage Planner subprocess was credit-blocked; the garage intake at `garage/inbox/BAR-VIDEO-PATH-CERTIFICATION/` was recreated as part of this run). |
+| Conformance | Plan-Body species (Book Law v1.5.0); Atlas inheritance; Process 070 PROCESS-UT v1.0.0; intake YAML v2.0.0 thin-form; FOUR_BRAIN_AVIATION v1.3.0; BS Law v1.4.0; UT v2.8.0 + UT_CHECKLIST v1.3.1 |
 | Signed By | ☐ (sovereign signs at Process 070 §15 step 7) |
 | BAR | BAR-VIDEO-PATH-CERTIFICATION |
-| Garage Final Product Pointer | `Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-VIDEO-PATH-CERTIFICATION/FINAL-PRODUCT.yaml` (to be written by `forebrain-garage.sh final`) |
+| Garage Final Product Pointer | `Barton-Processes/factory/imo-creator/070-four-brain/garage/outbox/BAR-VIDEO-PATH-CERTIFICATION/FINAL-PRODUCT.yaml` (current: `final_status: REVIEW_PLAN_BOOK`, `next_owner: foreman` — to be re-stamped after sign-off) |
+
+### §17.1 Amendment Log
+
+| Version | Date | By | Change |
+|---------|------|-----|--------|
+| 1.0.0 | 2026-05-05 | Process 070 Planner (hand-authored — the garage Planner run `20260505T192132Z` aborted on "Credit balance too low"; see `PLANNER-BLOCKER.md`) | Initial Plan Book. |
+| 1.1.0 | 2026-05-12 | Planner (Opus 4.7), freshness pass per sovereign instruction | (1) §2 doctrine versions synced: `FOUR_BRAIN_AVIATION.md` v1.2.0→v1.3.0 (adds Foreman Model Delegation Gate, 7 checks); `BS_LAW.md` v1.5.0→v1.4.0 (correction). (2) §6.4 — added explicit sovereign-scope clarification for the 1740 lane: "sovereign" = Claude-controlled deterministic *process* + manifest; provider-assisted rendering permitted; no provider-independent local renderer required; existing 5 MP4s + manifest are valid certification evidence. (3) §13.A — promoted the 1740 scope clarification and the BAR target to cited facts. (4) §17 — version bump + this amendment log + garage-state note. **No structural changes; no doctrinal changes.** |
+| 2.0.0 | 2026-05-12 | Planner (Opus 4.7), fan-out regeneration per sovereign instruction | **Structural change — the picker (1750) is now a FAN-OUT CONDUCTOR, not a single-router.** A script (or source packet) + an operator-selected set of one-or-more lanes goes in; each selected lane runs independently and emits its own artifact; one script → N video variants under one parent `video_job_id`; single-route is the N=1 case. Changes: (1) §6 — work-order #3 reworded ("reaches the correct lane" → "fans out to one or more operator-selected lanes"). (2) §6.5 — 1750 lane table rewritten to the fan-out conductor role; the Mechanic work order for 1750 must rewrite the executable UT title/spec (currently "route ... to exactly one ... path") and `route-video-job.ps1` to the fan-out semantics. (3) §6.6 NEW — §FAN-OUT FAN-01..06 rules locked. (4) §6.7 — parallelism note: 1750 now depends on ≥2 upstream lanes green (a fan-out smoke needs ≥2 targets). (5) §9 — Aggregate BAR P=1 updated: each production lane shows live runtime proof; the picker fans to ≥2 green lanes and collects all artifacts. (6) §12 INV-05 — rewritten to the fan-out wording. (7) §13.A — added the fan-out clarification as a cited sovereign fact; §13.B — picker input-contract assumption updated. (8) §17 — v1.1.0→v2.0.0 + this row + Authored By note about the garage credit-block / intake recreation. **The locked §3 source-of-truth split, §7.1/§7.2 scope rules, §11 stop conditions, and the §13.A facts list (extended, not contradicted) are otherwise untouched. The four production lanes (1710/1720/1730/1740) are NOT changed by this amendment — the fan-out change is entirely upstream at the conductor.** |
+
+> **Open reconciliation (for the sovereign / Foreman at sign-off):** (a) the garage stage report (`runs/.../20260505T192132Z/STAGE-REPORT.md`) reads `Current status: PLAN_BOOK_SIGNED`, but this artifact's `Signed By` field is `☐` (unsigned) — sign-off should reconcile both (sign the artifact AND re-stamp the garage status). (b) The garage intake folder `garage/inbox/BAR-VIDEO-PATH-CERTIFICATION/` was archived in the G-19 cleanup (2026-05-06) and has been **recreated** in this run (v2.0.0 thin-form intake; `garage_status: REVIEW_PLAN_BOOK` — set directly to match reality, since the Plan Book already exists and awaits sign-off; the outbox `FINAL-PRODUCT.yaml` is re-stamped to the same status) so the garage trail is consistent. (c) The garage Planner subprocess (`forebrain-garage.sh run-pipeline --execute --planner-model opus`) is still credit-blocked per `PLANNER-BLOCKER.md` — this Plan Book was produced by an Opus 4.7 session acting in that role directly, not by the garage subprocess. If the sovereign wants the bash garage exercised end-to-end, the garage's Planner-subprocess must first be wired to the subscription OAuth token (`CLAUDE_CODE_OAUTH_TOKEN`) instead of an API key.

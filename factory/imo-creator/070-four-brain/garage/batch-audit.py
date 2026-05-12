@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
+# Last modified: 2026-05-08 — Repair 8 (Pass 4 H-5): rescoped as production-process
+# conformance driver; added --target flag; PROCESS_REGISTRY constant with migration note.
 """
-batch-audit.py — Run gate-runner.py against the canonical 16 production processes
-defined in EXECUTION_ORDER.md.
+batch-audit.py — Production-process conformance driver.
+
+Runs gate-runner.py against the 16 canonical Barton-Processes production processes
+(outreach, client/lcs, sales) registered below in PROCESS_REGISTRY.
+
+THIS IS NOT A FOREBRAIN CONFORMANCE TOOL.
+Forebrain conformance is audited by direct gate-runner.py invocation per the
+Process 070 audit pipeline (see PROCESS-UT.md and four-brain.yaml in
+factory/imo-creator/070-four-brain/).
+
+Migration note: PROCESS_REGISTRY is a static list. It should migrate to a
+paired-artifacts.yaml derivation in a follow-on dispatch once production-process
+pairs are registered in that manifest. See Forebrain audit Pass 4 H-5.
 
 Atlas authority: same as gate-runner.py. No LLM on spine.
 """
 
+import argparse
 import json
 import re
 import subprocess
@@ -16,8 +30,10 @@ ROOT = Path(__file__).resolve().parents[4]  # Barton-Processes root
 RUNNER = Path(__file__).parent / "gate-runner.py"
 FACTORY = ROOT / "factory"
 
-# The canonical 16 production processes per EXECUTION_ORDER.md
-CANONICAL_16 = [
+# Static list of the 16 canonical Barton-Processes production processes.
+# TODO: migrate to paired-artifacts.yaml derivation once production-process pairs
+# are registered there (follow-on dispatch — see Forebrain audit Pass 4 H-5).
+PROCESS_REGISTRY = [
     ("010-seed-d1",            "factory/outreach/010-seed-d1"),
     ("200-people-worker",      "factory/outreach/200-people-worker"),
     ("201-email-discovery",    "factory/outreach/201-email-discovery"),
@@ -54,7 +70,7 @@ def find_companion_yaml(md_path: Path) -> Path | None:
     return candidates[0]
 
 
-def audit(slug: str, proc_dir: Path) -> dict:
+def audit(slug: str, proc_dir: Path, deterministic_only: bool = True) -> dict:
     md = proc_dir / "PROCESS-UT.md"
     if not md.exists():
         return {"process": slug, "exists": False, "verdict": "FAIL", "p_value": 0,
@@ -73,9 +89,10 @@ def audit(slug: str, proc_dir: Path) -> dict:
         "--audited-yaml", str(yaml_c),
         "--audited-md", str(md),
         "--only", *DETERMINISTIC_GATES,
-        "--deterministic-only",
         "--output-format", "json",
     ]
+    if deterministic_only:
+        cmd.append("--deterministic-only")
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, encoding="utf-8")
         out = result.stdout.strip()
@@ -93,14 +110,55 @@ def audit(slug: str, proc_dir: Path) -> dict:
                 "gates_failed": [{"id": "EXEC", "evidence": str(e)[:200]}]}
 
 
-def main():
-    print(f"Auditing {len(CANONICAL_16)} canonical production processes")
+def build_target_list(target_slug: str | None) -> list[tuple[str, str]]:
+    """Return the process list to audit. If --target is given, filter to that slug only."""
+    if target_slug is None:
+        return PROCESS_REGISTRY
+    matches = [(s, r) for s, r in PROCESS_REGISTRY if s == target_slug]
+    if not matches:
+        valid = ", ".join(s for s, _ in PROCESS_REGISTRY)
+        print(f"ERROR: --target '{target_slug}' not found in PROCESS_REGISTRY.\n"
+              f"Valid slugs: {valid}", file=sys.stderr)
+        sys.exit(1)
+    return matches
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Production-process conformance driver. "
+            "Runs gate-runner.py against the canonical Barton-Processes production processes. "
+            "NOT a Forebrain conformance tool."
+        )
+    )
+    parser.add_argument(
+        "--target",
+        metavar="SLUG",
+        default=None,
+        help=(
+            "Audit a single process by slug (e.g. '010-seed-d1'). "
+            "Omit to audit all processes in PROCESS_REGISTRY."
+        ),
+    )
+    parser.add_argument(
+        "--no-llm",
+        "--deterministic-only",
+        dest="deterministic_only",
+        action="store_true",
+        default=True,
+        help="Pass --deterministic-only to gate-runner (default: on).",
+    )
+    args = parser.parse_args()
+
+    targets = build_target_list(args.target)
+
+    print(f"Auditing {len(targets)} production process(es)")
     print("=" * 80)
     results = []
     pass_count = 0
-    for slug, rel in CANONICAL_16:
+    for slug, rel in targets:
         proc_dir = ROOT / rel
-        rpt = audit(slug, proc_dir)
+        rpt = audit(slug, proc_dir, deterministic_only=args.deterministic_only)
         results.append(rpt)
         if rpt["verdict"] == "PASS":
             pass_count += 1
@@ -110,7 +168,7 @@ def main():
     print("=" * 80)
     print(f"SUMMARY: {pass_count}/{len(results)} processes PASS")
     print("=" * 80)
-    failure_counts = {}
+    failure_counts: dict[str, int] = {}
     for r in results:
         for f in r.get("gates_failed", []):
             failure_counts[f["id"]] = failure_counts.get(f["id"], 0) + 1

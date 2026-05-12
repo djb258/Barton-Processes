@@ -2,18 +2,18 @@
 # four-brain.yaml — Workflow-Body companion to PROCESS-UT.md
 # Four-Brain Aviation Model — Library-shelved callable Process Pair
 # ctb_node: barton-enterprises/imo-creator/processes/four-brain
-# Species: Workflow-Body | Version: 1.3.0 | Last Modified: 2026-05-06
+# Species: Workflow-Body | Version: 1.3.2 | Last Modified: 2026-05-08
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: four-brain
-version: "1.3.0"
-last_modified: "2026-05-06"
+version: "1.3.2"
+last_modified: "2026-05-08"
 
 # Block 2 — inherits (doctrine version pins per BOOK_LAW v1.5.0)
 inherits:
-  atlas: v2.2.6
+  atlas: v2.2.7
   ut_schema: UT_v2.8.0
   ut_checklist: UT_CHECKLIST_v1.3.1
   bs_law: v1.5.0
@@ -66,8 +66,8 @@ inside:
   heir:
     process_id: bp.070-four-brain
     species: Workflow-Body
-    version: "1.3.1"
-    last_modified: "2026-05-06"
+    version: "1.3.2"
+    last_modified: "2026-05-08"
     companion_manifest: Barton-Processes/factory/imo-creator/070-four-brain/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -91,7 +91,6 @@ inside:
       D-070-06: Mechanic != Auditor confirmed at every transition.
     determinism_gate: ai_on_spine_forbidden
   orbt:
-    library_state: BUILD
     runtime_state: BUILD
     strikes: 0
     last_transition_at: null
@@ -103,8 +102,9 @@ inside:
 # Block 7 — description
 description: |
   Four-Brain Aviation Model — Library-shelved as a callable Process.
-  Planner (Opus 4.7) authors Plan Book. Sovereign signs. Foreman (Opus 4.7)
-  dispatches BAR packets. Mechanic (Sonnet) builds UT Books + LBB-logs each
+  Planner (Opus 4.7) authors Plan Book. Sovereign signs. Foreman (Sonnet/default
+  routing model; Opus escalation only per FOUR_BRAIN_AVIATION.md §Foreman Model
+  Delegation Gate) dispatches BAR packets. Mechanic (Sonnet) builds UT Books + LBB-logs each
   role transition. Auditor (Codex) runs gate verdicts independently.
   PASS: Audit Book shelved to LBB + CERTIFY row + four_brain_run.verdict=PASS.
   FAIL: squawks row written + Strike ladder applied.
@@ -129,7 +129,7 @@ data:
     - source: atlas/constants/FOUR_BRAIN_AVIATION.md
     - source: atlas/manifests/four-brain-doctrine-gate.yaml
     - source: atlas/manifests/paired-artifacts.yaml
-    - source: "docs/plans/BAR-*.plan.md (sovereign-signed)"
+    - source: "docs/plans/BAR-{id}/PLAN-BOOK.md (sovereign-signed)"
     - source: scripts/lbb-log.sh
   write:
     - target: mission-control.four_brain_run
@@ -193,7 +193,9 @@ data:
         expectation: "N/A for event-driven BAR-dispatched runs; applies to tune-up cadences"
       - id: 2
         name: lbb_log_presence
-        source: "lbb_records WHERE bar_id=? AND subject_id='processes'"
+        # subject_id='four-brain-gate-audit' = the four per-role transition rows for gate audit (G08 queries this).
+        # subject_id='processes' = the Library shelf where terminal Audit Books are eventually filed (separate concern; see data.write target for lbb.records Audit Book row).
+        source: "lbb_records WHERE bar_id=? AND subject_id='four-brain-gate-audit'"
         expectation: "exactly 4 rows per no-op BAR (planner/foreman/mechanic/auditor)"
       - id: 3
         name: d1_anchor_freshness
@@ -207,7 +209,7 @@ data:
       ALL 4 GREEN -> OPERATE; any 1 YELLOW -> drift watch; signal 4 RED -> auto-RED.
       Per FOUR_BRAIN_AVIATION v1.3.0 "Pressure Gauge -- the Operational Read".
   join_chain: |-
-    Sovereign Plan Book (docs/plans/BAR-X.plan.md)
+    Sovereign Plan Book (docs/plans/BAR-{id}/PLAN-BOOK.md)
       -> Foreman dispatch
       -> Sonnet builds + lbb-log.sh writes 1 row per role transition
       -> Codex audit run
@@ -222,14 +224,14 @@ nodes:
     role: planner
     engine: opus-4.7
     atlas_step_0: "[§1, §4, §4.5, §6, §7.3, §7.3a]"
-    output: "docs/plans/BAR-{id}.plan.md (Plan-Body species)"
+    output: "docs/plans/BAR-{id}/PLAN-BOOK.md (Plan-Body species)"
     lbb_step_n: "scripts/lbb-log.sh --role planner --action dispatch --bar-id BAR-{id}"
     gate_check: G01
     next: 02-foreman
 
   - id: 02-foreman
     role: foreman
-    engine: opus-4.7
+    engine: "sonnet/default routing model (Opus escalation only)"
     atlas_step_0: "[§6, paired-artifacts.yaml]"
     output: dispatch packets (no Library artifact)
     lbb_step_n: "scripts/lbb-log.sh --role foreman --action handoff --bar-id BAR-{id}"
@@ -416,8 +418,10 @@ gates:
       failure_impact: BLOCK
 
 lbb:
-  subject_id: processes
-  subject_name: Four-Brain BAR Runs
+  # subject_id='four-brain-gate-audit' = the four per-role transition rows written at each gate transition (G08 queries this subject).
+  # Terminal Audit Books are separately shelved under subject_id='processes' (Library shelving — see data.write lbb.records Audit Book row).
+  subject_id: four-brain-gate-audit
+  subject_name: Four-Brain BAR Gate Audit Transitions
   ctb_level: leaf
   parent_subject: processes
   ingest_on:

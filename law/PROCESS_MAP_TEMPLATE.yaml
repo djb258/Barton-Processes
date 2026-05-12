@@ -1,0 +1,171 @@
+# =============================================================================
+# PROCESS-MAP TEMPLATE — represent ANY process as DATA:  hub · sub-hub · IMO · circle
+# =============================================================================
+# Generic. Fill one per process — an FCE pipeline, a data pipeline, an outreach
+# loop, a build pipeline, anything that has a central workbench/coordinator,
+# steps, loops, and a feedback circle. THE FILLED YAML IS THE SOURCE OF TRUTH;
+# a small generator script (pure automation, no AI) renders the views (.canvas,
+# mermaid) from it. Edit the YAML → the views regenerate. The picture is always
+# derived, never hand-drawn.
+#
+# Some blocks are OPTIONAL — marked. A plain linear pipeline won't have `axes`
+# or per-sub-hub `backprop`. An engine-style process (one axis processes, the
+# other verifies / back-propagates) will.
+#
+# BS Law Y-junction: `outside:` and `inside:` are syntactically distinct
+# top-level keys. A process map is a Library artifact — HEIR + ORBT both ways.
+#
+# If this form is right it graduates to atlas/templates/process-map-template.yaml.
+# =============================================================================
+
+name: "{{PROCESS_NAME}}"
+version: "{{VERSION}}"
+altitude: "{{ALTITUDE}}"                # 50K (whole process) | 30K (one sub-hub) | 10K (one step) | 5K (one operation)
+                                        # at 50K, a sub-hub may carry  drill_to:  a 30K map of itself
+
+# --- BS Law arm 1: where this map sits in the Library / CTB / Atlas ---
+outside:
+  heir:
+    sovereign_ref: "{{SOVEREIGN_REF}}"
+    hub_id: "{{MAP_ID}}"
+    ctb_placement: "{{CTB_NODE}}"
+    species: "Process-Map"              # per Book Law
+  orbt:
+    library_state: "{{BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN | RETIRED | DISABLED}}"
+
+# --- BS Law arm 2: this map's own runtime identity ---
+inside:
+  heir:
+    process_id: "{{PROCESS_ID}}"
+    version: "{{VERSION}}"
+  orbt:
+    runtime_state: "{{...}}"
+
+# =============================================================================
+# THE HUB — the one thing every sub-hub reads from and writes to: the shared
+# workbench / coordinator / state store. For some processes this is a storage
+# layer, for others a queue, a database, a controller, a message bus. Everything
+# bounces off it.
+# =============================================================================
+hub:
+  name: "{{HUB_NAME}}"
+  what_it_is: "{{...}}"
+  what_lives_here:                      # PROPERTIES of the hub, not steps
+    - "{{...}}"
+  role: "{{...}}"                       # e.g. dispatches out to a sub-hub → receives the output back → dispatches the next
+
+# =============================================================================
+# AXES — OPTIONAL. Only for processes that run on a two-axis structure: one axis
+# does the processing, the other verifies / back-propagates. If the process is a
+# plain linear pipeline, OMIT this whole block (or set it to null).
+# =============================================================================
+axes:
+  x:
+    name: "{{...}}"                     # the processing axis
+    what_it_does: "{{...}}"
+  y:
+    name: "{{...}}"                     # the verify / back-propagate axis
+    what_it_does: "{{...}}"
+
+# =============================================================================
+# THE CIRCLE — the whole process is one feedback loop
+# =============================================================================
+circle:
+  output: "{{...}}"                     # what the process produces
+  feedback_path: "{{...}}"              # how that output is observed / measured and fed back
+  back_to_input: "{{...}}"              # what the next cycle reuses
+  setpoint: "{{...}}"                   # what "correct" means — the reference the feedback corrects toward
+  states:
+    closed: "{{...}}"                   # the loop self-corrects
+    open:   "{{...}}"                   # output goes nowhere → no learning
+    broken: "{{...}}"                   # feedback fires but to the wrong place → degrades while looking fine
+
+# =============================================================================
+# RIM — where things enter and leave
+# =============================================================================
+rim:
+  in:  "{{...}}"
+  out: "{{...}}"
+
+# =============================================================================
+# SUB-HUBS — the steps / tests, in order. Each one is an IMO with its own circle.
+# =============================================================================
+sub_hubs:
+
+  - id: "{{ID}}"
+    name: "{{NAME}}"
+    sequence: 0                         # order in the flow (1, 2, 3, ...)
+    drill_to: null                      # path to a 30K map of this sub-hub, or null
+    imo:
+      input:  "{{...}}"                 # what it takes FROM the hub
+      middle: "{{...}}"                 # what it does — the transform / the loop body
+      output: "{{...}}"                 # what it writes BACK to the hub
+    circle:                             # this sub-hub's internal loop, if any (else null)
+      loop_condition: "{{...}}"
+      stop_condition: "{{...}}"
+    backprop: false                     # OPTIONAL — only meaningful if `axes` is present. does back-prop run inside this sub-hub?
+    hub_dependency: "{{...}}"
+    parts:                              # the pieces inside, each tagged — the determinism-first read (automation first, AI only when it must)
+      - { what: "{{...}}", kind: automation }   # deterministic — script / cron / file move / hash / vote count / DB write / templating
+      - { what: "{{...}}", kind: ai, note: "{{why irreducible, or how reducible — cache lookup / judgment→predicate / defer downstream}}" }
+      - { what: "{{...}}", kind: human }        # input or sign-off — not AI, not auto
+    guards: [ "{{...}}" ]               # stop conditions / invariants for this sub-hub
+    render: { color: "{{...}}", position: "{{...}}" }
+
+  # ── repeat one block per sub-hub, in `sequence` order ──
+
+# =============================================================================
+# EDGES — connections beyond "every sub-hub ↔ the hub" (which is implicit)
+# =============================================================================
+edges:
+  - { from: "{{...}}", to: "{{...}}", kind: sequence }
+  - { from: "{{...}}", to: "{{...}}", kind: feedback, label: "{{...}}" }
+
+# =============================================================================
+# RENDER HINTS — how the human wants to SEE this (drives the canvas / mermaid generator)
+# =============================================================================
+render:
+  hub_position: "left"
+  sub_hubs_layout: "stacked-right-down"
+  show: [ imo, circle, ai_tags, backprop ]
+  formats: [ canvas, mermaid ]
+
+# =============================================================================
+# WORKED EXAMPLE — a FILLED map for ONE specific process (the FCE pipeline / PROC-060).
+# This is NOT part of the template — it's here only to show the form filled concrete.
+# DELETE this whole block when you fill the template for your own process.
+# =============================================================================
+# name: "run-dyno"
+# altitude: "50K"
+# hub:
+#   name: "R2 (the workbench)"
+#   what_it_is: "the per-run workbench — r2://svg-files/dyno-runs/{sovereign_id}/, cleaned only after the D1 vault write"
+#   what_lives_here:
+#     - "back-propagation runs here, over the whole surface — load-bearing"
+#     - "the two-axis grid (see axes)"
+#   role: "dispatches to a sub-hub → sub-hub does its IMO → output back to R2 → dispatch the next"
+# axes:
+#   x: { name: "the P=1 equation", what_it_does: "evaluates each row to P=0 / P=1" }
+#   y: { name: "Tier 0", what_it_does: "back-propagation — lets a row go up and down to verify it" }
+# circle:
+#   output: "a certified FCE in the library (D1)"
+#   feedback_path: "the FCE lands in the library → next run does a cache lookup before any model call"
+#   back_to_input: "the library cache + DMJ join at N≥2"
+#   setpoint: "Codex PASS · K=C consensus clean · sealed files byte-identical · sigma tightening"
+# sub_hubs:
+#   - id: us
+#     name: "US — us.py"
+#     sequence: 2
+#     imo:
+#       input: "the domain"
+#       middle: "build cycle prompt → 3 expensive models → C&V classify → 2/3 vote = lock → back-prop → sigma → P=1?"
+#       output: "the locked M (the constant set / primitive dictionary)"
+#     circle:
+#       loop_condition: "P=1 not yet → loop another cycle"
+#       stop_condition: "all 4 columns at primitive → exit ; ALSO no-overlap-streak ≥ N → STOP"
+#     backprop: true
+#     hub_dependency: "reads the domain from R2; writes per-cycle artifacts + the locked M back to R2"
+#     parts:
+#       - { what: "the cycle loop, the 2/3 vote, back-prop, sigma, the P=1 check", kind: automation }
+#       - { what: "the 3 model calls per cycle (on cache-miss)", kind: ai, note: "irreducible for novel structure — a dumb spoke; cache in front → AI shrinks as the library fills" }
+#     guards: [ "expensive-tier models only", "2/3 majority = locked", "back-prop on every new lock" ]

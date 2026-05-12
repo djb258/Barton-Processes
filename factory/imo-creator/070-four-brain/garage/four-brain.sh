@@ -23,7 +23,16 @@
 #   list <role>
 #       Show what's in <role>'s inbox.
 #
-# Roles: planner | foreman | mechanic | auditor (also accepted: system)
+# Global flags (must appear BEFORE the command):
+#   --defer-lbb
+#       Skip the LBB write for this invocation (local dry-run mode).
+#       Writes a .lbb-deferred marker into agents/<role>/working/ when available.
+#       The run is NOT certifiable while deferred.  Requires that the caller
+#       set FOUR_BRAIN_LOCAL_DEV=true or explicitly understand the implications.
+#
+# Roles: planner | foreman | mechanic | auditor
+# NOTE: `system` is NOT a gate role (four-brain-doctrine-gate.yaml role enum: planner/foreman/mechanic/auditor).
+# System-level telemetry must use subject_id='system' with a separate D1/LBB write path, NOT role=system here.
 
 set -euo pipefail
 
@@ -39,8 +48,11 @@ if [[ -z "${LBB_API_KEY:-}" ]]; then
   LBB_API_KEY="$(doppler secrets get LBB_API_KEY --plain --project imo-creator --config dev 2>/dev/null || true)"
 fi
 LBB_URL="${LBB_URL:-https://lbb.svg-outreach.workers.dev}"
+# Sub-task D: global defer-lbb flag (set by --defer-lbb before command token).
+DEFER_LBB="${FOUR_BRAIN_DEFER_LBB:-false}"
 
-VALID_ROLES="planner foreman mechanic auditor system"
+# H-5 fix: removed 'system' — gate schema (four-brain-doctrine-gate.yaml) enumerates only planner/foreman/mechanic/auditor.
+VALID_ROLES="planner foreman mechanic auditor"
 
 usage() {
   sed -n '3,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -102,22 +114,45 @@ EOF
   else
     echo "$body"
   fi
-  # Mirror to LBB (subject_id='processes', per Atlas mandate). Best-effort.
-  post_lbb "$bar_id" "$role" "$action" "$artifact" "$notes" || true
+  # Mirror to LBB (subject_id='processes', per Atlas mandate).
+  # Sub-task D: no longer best-effort — failure aborts the transition.
+  post_lbb "$bar_id" "$role" "$action" "$artifact" "$notes"
 }
 
 # Mirror a transition to LBB so the logbook has the durable record.
-# Best-effort: failures are logged, not fatal — D1 is already the primary log.
+# Sub-task D hardening: LBB write is now authoritative, not best-effort.
+#   - If LBB_API_KEY is missing and not deferred  → abort with actionable hint.
+#   - If --defer-lbb is active                    → write .lbb-deferred marker, return 0.
+#   - If curl returns non-200                      → abort (no || true).
 post_lbb() {
   local bar_id="$1" role="$2" action="$3" artifact="${4:-}" notes="${5:-}"
-  if [[ -z "$LBB_API_KEY" ]]; then
+
+  # Deferred mode: mark run as non-certifiable and skip LBB write.
+  if [[ "$DEFER_LBB" == "true" ]]; then
+    local deferred_marker="$AGENTS_DIR/${role}/working/.lbb-deferred"
+    mkdir -p "$(dirname "$deferred_marker")" 2>/dev/null || true
+    printf 'deferred by --defer-lbb at %s\nbar_id=%s role=%s action=%s\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$bar_id" "$role" "$action" \
+      > "$deferred_marker" 2>/dev/null || true
+    echo "WARN: LBB write deferred (--defer-lbb). Run is NOT certifiable. Marker: $deferred_marker" >&2
     return 0
   fi
+
+  # Hard gate: key must be present.
+  if [[ -z "${LBB_API_KEY:-}" ]]; then
+    echo "ERROR: LBB_API_KEY is not set. Cannot write LBB transition row." >&2
+    echo "  Fix: run under 'doppler run --project imo-creator --config dev -- ...' to inject the key," >&2
+    echo "       or pass --defer-lbb for local dry-run mode (run will NOT be certifiable)." >&2
+    return 1
+  fi
+
   local title="four-brain ${role} ${action} ${bar_id}"
   local content="role=${role} action=${action} artifact=${artifact} notes=${notes}"
-  curl -s -o /dev/null -X POST "$LBB_URL/ingest" \
+  local resp http body
+  resp=$(curl -s -w "\n%{http_code}" -X POST "$LBB_URL/ingest" \
     -H "Authorization: Bearer $LBB_API_KEY" \
     -H "Content-Type: application/json" \
+    -H "User-Agent: four-brain.sh/1.0" \
     -d "$(cat <<EOF
 {
   "subject_id": "processes",
@@ -129,7 +164,14 @@ post_lbb() {
   "bar_id": "$bar_id"
 }
 EOF
-)" || true
+)")
+  http="${resp##*$'\n'}"
+  body="${resp%$'\n'*}"
+  if [[ "$http" != "200" && "$http" != "201" ]]; then
+    echo "ERROR: LBB ingest returned HTTP $http — aborting transition." >&2
+    echo "  Response: $body" >&2
+    return 1
+  fi
 }
 
 # Verify a packet's handoff_check before claiming. Returns 0 if pass, 1 if fail.
@@ -265,6 +307,20 @@ cmd_list() {
 }
 
 main() {
+  [[ $# -ge 1 ]] || usage
+
+  # Sub-task D: strip global flags before command dispatch.
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --defer-lbb)
+        DEFER_LBB="true"
+        shift
+        ;;
+      --) shift; break ;;
+      *) break ;;
+    esac
+  done
+
   [[ $# -ge 1 ]] || usage
   local cmd="$1"; shift
   case "$cmd" in

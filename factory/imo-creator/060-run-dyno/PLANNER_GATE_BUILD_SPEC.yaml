@@ -1,0 +1,272 @@
+# =============================================================================
+# Planner Gate + IMO Bundle Build Spec
+# Session 2026-05-08 design lock. Mirrors to:
+#   - dyno-engine/PLANNER_GATE_BUILD_SPEC.yaml (this file)
+#   - Barton-Processes/factory/imo-creator/060-run-dyno/PLANNER_GATE_BUILD_SPEC.yaml
+# LBB record: 49884652-bf36-4e05-b427-f4a25f45ab51
+# =============================================================================
+
+meta:
+  spec_id: BAR-PLANNER-GATE
+  version: "1.1.0"
+  status: DESIGN_LOCKED
+  created: "2026-05-08"
+  amended: "2026-05-08 — Four-Brain specialization framing locked"
+  sovereign: Dave Barton
+  pattern: four-brain (Planner -> Foreman -> Mechanic -> Auditor)
+  scope: FCE intake validation + IMO bundle traceability through entire pipeline
+
+# =============================================================================
+# FOUR-BRAIN POSITION
+# This is NOT a parallel/standalone agent. It is a SPECIALIZATION of the locked
+# Four-Brain Planner role for FCE intake gating. All role-lock principles from
+# FOUR_BRAIN_AVIATION.md (#16) and FOUR_BRAIN_ROUTING.md apply.
+# =============================================================================
+
+four_brain_position:
+  role_lineage: "Four-Brain Planner role, specialized for FCE intake gating"
+  doctrine_references:
+    - atlas/constants/FOUR_BRAIN_AVIATION.md  # locked constant #16
+    - atlas/FOUR_BRAIN_ROUTING.md  # role-lock contract
+  inheritance:
+    role: Planner
+    canonical_model: anthropic/claude-opus-4-7  # per project_four_brain_role_locks
+    specialization_model: anthropic/claude-sonnet-4-6  # this build
+    specialization_justification: |
+      Tactical per-intake checklist scope (binary verdicts, no strategic plan
+      authoring). Opus 4.7 reserved for strategic Plan Books at the BAR level
+      where intent + path selection are decided. Tactical Planner here only
+      validates a single intake YAML against a 7-item checklist — Sonnet is
+      sufficient and the per-intake cadence makes Opus 4.7 cost-prohibitive.
+  preserved_from_doctrine:
+    - "Role-lock: Planner cannot touch after dispatch to next role"
+    - "Plan Book artifact: produces validated package shipped to Library at audit time"
+    - "Governance lens: BS Law applied as substrate-awareness checklist (not engine work)"
+    - "Ethos: gates, never solves; never decomposes the domain itself"
+    - "Codex remains sole certifier (Auditor role unchanged)"
+  altitude_separation:
+    strategic_planner:
+      role: "Four-Brain Planner (Opus 4.7)"
+      output: "Plan Book per BAR (what to build, why, inventory check, path selection)"
+      cadence: "once per BAR"
+    tactical_planner:
+      role: "FCE Intake Planner (Sonnet) — this spec"
+      output: "validated intake package per FCE run"
+      cadence: "per FCE intake (potentially many per day)"
+    relationship: |
+      Tactical operates UNDER strategic. A BAR Plan Book authored by the
+      strategic Planner may specify "run an FCE on domain X" as one execution
+      path. The tactical Planner then gates each individual FCE intake against
+      substrate-awareness rules before the engine runs.
+
+# =============================================================================
+# THE GAP THIS FILLS
+# =============================================================================
+
+gap:
+  current_state: |
+    Operator writes intake YAML and drops it directly into the engine inbox.
+    No gate. Thin or jargon-heavy descriptions stall mid-cycle.
+    No mechanical link between intake (I), engine workbench (M), and final output (O)
+    in D1 — provenance is scattered.
+  problem:
+    - drift in description quality is operator-dependent
+    - sigma tracking impossible without preserved input per cycle
+    - no Plan Book exists for FCE runs (breaks four-brain pattern)
+    - Circle (output -> input feedback) is doctrinal, not mechanical
+
+# =============================================================================
+# PIECE 1 — PLANNER GATE
+# =============================================================================
+
+planner_gate:
+  role: "Validates intake YAML against substrate-awareness checklist BEFORE engine inbox claim"
+  locked_principle: "Once Planner drops Plan Book into engine inbox, Planner cannot touch (FOUR_BRAIN_ROUTING.md role-lock)"
+  inputs:
+    - operator's intake YAML (raw)
+    - FCE_DESCRIPTION_GUIDANCE.md (rules)
+  outputs:
+    on_pass: validated Plan Book package -> engine inbox
+    on_fail: structured failure report -> operator with specific fixes
+  checks:
+    mechanical:
+      - field separation (intent in p1_definition, NOT in domain_string)
+      - no "connection" pattern as 4th primitive
+      - substantive length (not single-word)
+      - em-dash format (existing validator)
+    llm_judgment:
+      - Things named (entities present)
+      - Flows named (movements/transfers)
+      - Changes named (state transitions)
+      - no solutions pre-loaded (descriptive vs prescriptive)
+      - structure visible under domain jargon
+  models:
+    primary: anthropic/claude-sonnet-4-6
+    role_class: planner
+    fallback: anthropic/claude-opus-4-7 on Strike 2
+  verdict_format:
+    pass:
+      planner_verdict: PASS
+      sovereign_id: null  # minted at engine inbox claim, not at Planner
+      validated_intake: <full intake YAML>
+      checks_run: <map of check -> PASS/FAIL>
+    fail:
+      planner_verdict: FAIL
+      checks_failed: <list of check IDs>
+      operator_fixes: <list of specific corrections needed>
+      retry_path: operator edits, re-submits to Planner queue
+
+# =============================================================================
+# PIECE 2 — IMO BUNDLE TRACEABILITY
+# =============================================================================
+
+imo_bundle:
+  principle: "One sovereign_id threads through I + M + O end-to-end"
+  i_input:
+    what: validated Plan Book from Planner
+    minted_when: engine inbox claim (existing — dispatch_fce.py v1.1.0)
+    storage: bundled into run from sovereign-ID mint forward
+  m_middle:
+    what: every engine stage's R2 evidence
+    storage: R2 workbench keyed by sovereign_id
+    contents:
+      - us.py output (01-us.json)
+      - K=C verdict (kc-audit.json)
+      - up.py stage outputs (02-define, 03-map, 04-join, 05-qc, 06-audit)
+      - phase verdicts (PHASE_VERDICT.json)
+      - run rollup (RUN_VERDICT.json)
+  o_output:
+    what: assembled final Book + audit cert
+    storage: D1 vault, keyed by sovereign_id
+    bundle_includes:
+      - validated intake template (I)
+      - reference to R2 workbench evidence (M)
+      - final Book (O)
+      - BS Law audit cert
+  d1_query_pattern: |
+    SELECT * FROM bundles WHERE sovereign_id = '<id>'
+    Returns: intake YAML + R2 evidence pointer + final Book + audit cert
+    Full provenance per record in one query.
+
+# =============================================================================
+# PIPELINE WITH PLANNER GATE INSERTED
+# =============================================================================
+
+pipeline:
+  before_planner_gate:
+    - operator: writes intake YAML
+    - operator: drops in Planner queue (NOT engine inbox)
+  planner_gate:
+    - planner: reads intake, runs checks
+    - planner: PASS -> drops Plan Book into engine inbox
+    - planner: FAIL -> returns failure report to operator
+  engine_run:
+    - dispatcher: claims intake from engine inbox, mints sovereign_id (existing)
+    - dispatcher: bundles intake template alongside sovereign_id (NEW)
+    - engine: runs us.py -> K=C -> up.py -> DMJ at R2 workbench keyed by sovereign_id
+    - auditor: certifies bundle (assembled Book + intake + workbench evidence + cert)
+    - bundle pushes to D1 with same sovereign_id
+  role_locks:
+    - planner: cannot modify intake after dispatch to engine inbox
+    - foreman: cannot flip auditor verdicts (existing memory)
+    - mechanic: produces work, never self-certifies (existing memory)
+    - auditor: codex-only certification (existing memory)
+
+# =============================================================================
+# BUILD SEQUENCE
+# =============================================================================
+
+build_steps:
+  step_1:
+    name: Planner agent skeleton
+    action: write planner.py in atlas/dyno/planner/ or similar
+    inputs: intake YAML path
+    outputs: validated Plan Book or failure report
+    estimate: 1-2 hour Sonnet dispatch
+    runs_via: Sonnet (background) per memory feedback_run_sonnet_in_background
+  step_2:
+    name: Planner queue infrastructure
+    action: planner-queue/ directory, claim/processing/done/failed pattern (mirrors inbox/)
+    estimate: <1 hour
+  step_3:
+    name: Wire intake bundling
+    action: extend dispatch_fce.py to bundle validated intake with sovereign_id
+    estimate: 1 hour
+  step_4:
+    name: Update D1 schema for IMO bundle
+    action: add intake_template field (or blob) to bundle row
+    estimate: schema migration
+  step_5:
+    name: Update R2 workbench layout
+    action: ensure intake template lives in R2 workbench dir keyed by sovereign_id
+    estimate: minor wrapper update
+  step_6:
+    name: Planner verdict logging
+    action: every Planner verdict (PASS/FAIL) logs to LBB row
+    estimate: <1 hour
+  step_7:
+    name: MC wiring
+    action: Mission Control dashboard surfaces Planner queue + verdicts + bundle state
+    estimate: separate BAR
+    deferred_per: existing run-dyno.yaml mission_control block
+
+# =============================================================================
+# ACCEPTANCE CRITERIA
+# =============================================================================
+
+acceptance:
+  - operator drops intake -> Planner runs -> verdict in <2 min
+  - PASS auto-bundles into engine inbox with traceable Plan Book
+  - FAIL returns specific operator fixes (not generic error)
+  - Planner cannot modify after dispatch (role-lock enforced)
+  - sovereign_id threads from inbox claim through R2 through D1
+  - D1 query by sovereign_id returns full I+M+O bundle in one row
+  - LBB row exists per Planner verdict
+  - existing engine internals untouched (Coca-Cola seal preserved)
+
+# =============================================================================
+# WHAT DOES NOT CHANGE
+# =============================================================================
+
+invariants_preserved:
+  - engine internals (us.py, up.py, K=C, DMJ) sealed - no edits
+  - sovereign-only amendment to 17 locked constants
+  - BS Law fires once at end of pipeline on assembled bundle
+  - K=C output stays plain JSON (NOT BS Law format) for up.py consumption
+  - foundation course completeness auto-satisfied by K=C running successfully
+  - higher-altitude completeness scope-driven (every cell accounted for)
+  - 3 primitives (Thing/Flow/Change) — Connection stays as FCE output column only
+
+# =============================================================================
+# DEPENDENCIES + REFERENCES
+# =============================================================================
+
+references:
+  doctrine:
+    - atlas/constants/FOUR_BRAIN_AVIATION.md (#16, role pattern)
+    - atlas/FOUR_BRAIN_ROUTING.md (role locks)
+    - atlas/constants/BS_LAW.md (#17, end-of-pipeline audit)
+    - atlas/constants/THREE_ALTITUDES.md (4x3 matrix)
+    - atlas/constants/FOUNDATIONAL_BEDROCK.md §1 (3 primitives)
+  code:
+    - atlas/dyno/dispatch_fce.py v1.1.0 (sovereign_id mint at inbox claim)
+    - atlas/dyno/run_fce.py (engine wrapper)
+    - atlas/dyno/dyno_engine.py (engine internals, sealed)
+    - Barton-Processes/factory/imo-creator/060-run-dyno/run-dyno.yaml (existing process)
+  guidance:
+    - dyno-engine/FCE_DESCRIPTION_GUIDANCE.md
+    - Barton-Processes/factory/imo-creator/060-run-dyno/FCE_DESCRIPTION_GUIDANCE.md
+  architecture:
+    - imo-creator-v2/UNIVERSAL_BUILD_STACK.md
+    - imo-creator-v2/UNIVERSAL_BUILD_STACK.yaml
+  lbb_record: "49884652-bf36-4e05-b427-f4a25f45ab51"
+
+# =============================================================================
+# ATLAS UPDATE PATH
+# =============================================================================
+
+atlas_handling:
+  rule: "LLMs do NOT edit Atlas directly. Sovereign queues amendments via pending-atlas-updates/."
+  current_state: this design captured here + LBB + memory only
+  if_doctrinally_significant: queue BAR via pending-atlas-updates/BAR-NNN.yaml
+  current_assessment: "design extends existing locked constants (#16, #17) operationally without changing them — no Atlas amendment required at this stage"

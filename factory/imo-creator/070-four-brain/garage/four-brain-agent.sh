@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Last modified: 2026-05-08 — Pass 4 Repairs 3+6: Foreman default → sonnet (H-1); terminal Auditor writes queue lifecycle transition before exit (C-2)
 #
 # four-brain-agent.sh — generic per-role agent runtime for Process 070.
 #
@@ -34,7 +35,11 @@ agent_config() {
       echo "model=opus next=foreman engine=claude artifact_name=PLAN-BOOK"
       ;;
     foreman)
-      echo "model=opus next=mechanic engine=claude artifact_name=FOREMAN-DISPATCH"
+      # Foreman default per FOUR_BRAIN_AVIATION.md §rank-table and FOUR_BRAIN_ROUTING.md §WHO:
+      # Sonnet/default routing model. Opus reserved for escalation cases (ambiguity,
+      # architectural judgment, Strike 2, or sovereign request). Mirrors forebrain-garage.sh
+      # line 99: "Foreman defaults to Sonnet/default routing model under FOUR_BRAIN_AVIATION v1.3.0."
+      echo "model=sonnet next=mechanic engine=claude artifact_name=FOREMAN-DISPATCH"
       ;;
     mechanic)
       echo "model=sonnet next=auditor engine=claude artifact_name=MECHANIC-OUTPUT"
@@ -166,12 +171,80 @@ main() {
   fi
   bash "$HELPERS" log "$basename" "$role" "artifact-saved" "$artifact_path"
 
-  # If terminal role (Auditor), no next packet — just record the verdict.
+  # If terminal role (Auditor), write queue lifecycle transition then exit.
+  # Contract mirrors forebrain-garage.sh run_auditor:
+  #   P=1 → garage_status: AUDITOR_RUNNING → REVIEW_AUDIT_VERDICT
+  #   P=0 → garage_status: AUDITOR_RUNNING → BLOCKED
+  # The agent does NOT increment strike_count directly; the orchestrator's
+  # reconcile path owns strike state (Aviation Model: mechanic ≠ orchestrator).
   if [[ "$next" == "DONE" ]]; then
     local verdict
     verdict="$(grep -m1 "^VERDICT:" "$artifact_path" || echo "VERDICT: UNKNOWN")"
-    bash "$HELPERS" log "$basename" "$role" "verdict" "$verdict"
-    echo "[$role] $verdict ($artifact_path)"
+
+    # Determine terminal status from verdict line.
+    local terminal_status
+    if echo "$verdict" | grep -q "P=1"; then
+      terminal_status="REVIEW_AUDIT_VERDICT"
+    else
+      terminal_status="BLOCKED"
+    fi
+
+    # Update garage_status in the working packet YAML so the queue
+    # record reflects the correct terminal state before this agent exits.
+    python - "$pkt_yaml_w" "$terminal_status" "$basename" "$artifact_path" "$SCRIPT_DIR/queue.yaml" <<'PYEOF'
+import sys, datetime, os
+try:
+    import yaml as Y
+except ImportError:
+    sys.stderr.write("ERROR: PyYAML required for terminal Auditor status update\n")
+    sys.exit(1)
+
+yaml_path, next_status, bar_id, artifact, queue_yaml_path = sys.argv[1:]
+
+# H-4 fix: load VALID_STATUSES from queue.yaml at runtime instead of hardcoding.
+# queue.yaml:status_values is the single source of truth per queue.yaml §status_values.
+if os.path.isfile(queue_yaml_path):
+    with open(queue_yaml_path, 'r', encoding='utf-8') as _qf:
+        _q = Y.safe_load(_qf) or {}
+    VALID_STATUSES = set(_q.get('status_values', []))
+else:
+    sys.stderr.write(f"WARN: queue.yaml not found at {queue_yaml_path}; skipping status validation\n")
+    VALID_STATUSES = set()
+
+if VALID_STATUSES and next_status not in VALID_STATUSES:
+    sys.stderr.write(
+        f"ERROR: terminal status '{next_status}' not in canonical enum.\n"
+    )
+    sys.exit(1)
+
+with open(yaml_path, 'r', encoding='utf-8') as f:
+    pkt = Y.safe_load(f) or {}
+
+g = pkt.setdefault('garage', {})
+prev_status = g.get('garage_status', 'AUDITOR_RUNNING')
+g['garage_status'] = next_status
+g['updated_at'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+trail = pkt.setdefault('handoff_trail', [])
+trail.append({
+    'from_role': 'auditor',
+    'to_role': 'DONE',
+    'artifact': artifact,
+    'from_status': prev_status,
+    'to_status': next_status,
+    'at': g['updated_at'],
+})
+
+with open(yaml_path, 'w', encoding='utf-8') as f:
+    Y.safe_dump(pkt, f, sort_keys=False, default_flow_style=False)
+PYEOF
+
+    # Log the verdict transition (D1 + LBB) with role=auditor action=audit-verdict.
+    bash "$HELPERS" log "$basename" "$role" "audit-verdict" \
+      "verdict=$verdict terminal_status=$terminal_status artifact=$artifact_path"
+
+    echo "[$role] $verdict → $terminal_status ($artifact_path)"
+    [[ "$terminal_status" == "REVIEW_AUDIT_VERDICT" ]] || exit 1
     exit 0
   fi
 
@@ -196,29 +269,64 @@ main() {
   } > "$next_md"
 
   # Carry the incoming YAML forward, then overlay role-specific edits in Python.
-  python - "$pkt_yaml_w" "$next_yaml" "$role" "$next" "$artifact_path" "$basename" <<'PYEOF'
-import sys, datetime
+  python - "$pkt_yaml_w" "$next_yaml" "$role" "$next" "$artifact_path" "$basename" "$SCRIPT_DIR/queue.yaml" <<'PYEOF'
+import sys, datetime, os
 try:
     import yaml as Y
 except ImportError:
     sys.stderr.write("ERROR: PyYAML required for handoff packet generation\n")
     sys.exit(1)
 
-src, dst, role, nxt, artifact, bar_id = sys.argv[1:]
+src, dst, role, nxt, artifact, bar_id, queue_yaml_path = sys.argv[1:]
 with open(src, 'r', encoding='utf-8') as f:
     pkt = Y.safe_load(f) or {}
 
-# Status mapping per role (status describes what just completed).
-status_after = {
-    'planner':  'PLAN_BOOK_READY',
+# H-4 fix: load VALID_STATUSES from queue.yaml at runtime instead of hardcoding.
+# queue.yaml:status_values is the single source of truth per queue.yaml §status_values.
+if os.path.isfile(queue_yaml_path):
+    with open(queue_yaml_path, 'r', encoding='utf-8') as _qf:
+        _q = Y.safe_load(_qf) or {}
+    VALID_STATUSES = set(_q.get('status_values', []))
+else:
+    sys.stderr.write(f"WARN: queue.yaml not found at {queue_yaml_path}; skipping status validation\n")
+    VALID_STATUSES = set()
+
+# H-4 fix: load approval_transitions from queue.yaml at runtime instead of hardcoding.
+# queue.yaml:review_gates.approval_transitions maps REVIEW_* → next state.
+_approval_transitions = {}
+if os.path.isfile(queue_yaml_path) and _q:
+    _approval_transitions = _q.get('review_gates', {}).get('approval_transitions', {})
+
+# Status mapping per role: scalar value looked up by role name.
+# Source: forebrain-garage.sh run_planner/run_foreman/run_mechanic/run_auditor
+#   planner  → REVIEW_PLAN_BOOK       (update_status PLANNER_RUNNING → REVIEW_PLAN_BOOK)
+#   foreman  → FOREMAN_DISPATCHED     (update_status FOREMAN_RUNNING → FOREMAN_DISPATCHED)
+#   mechanic → MECHANIC_DONE          (update_status MECHANIC_RUNNING → MECHANIC_DONE)
+#   auditor  → REVIEW_AUDIT_VERDICT   (update_status AUDITOR_RUNNING → REVIEW_AUDIT_VERDICT; always)
+STATUS_AFTER = {
+    'planner':  'REVIEW_PLAN_BOOK',
     'foreman':  'FOREMAN_DISPATCHED',
     'mechanic': 'MECHANIC_DONE',
-    'auditor':  'AUDIT_DONE',
-}.get(role, 'IN_FLIGHT')
+    'auditor':  'REVIEW_AUDIT_VERDICT',
+}
+
+if role not in STATUS_AFTER:
+    sys.stderr.write(f"ERROR: unknown role '{role}'; no status transition defined\n")
+    sys.exit(1)
+
+next_status = STATUS_AFTER[role]
+
+# Validate against canonical enum before writing (determinism gate).
+if VALID_STATUSES and next_status not in VALID_STATUSES:
+    sys.stderr.write(
+        f"ERROR: status '{next_status}' for role '{role}' is not in the canonical "
+        f"queue.yaml status_values enum. Halting to prevent corrupt packet state.\n"
+    )
+    sys.exit(1)
 
 # Update the garage block (filesystem is the queue, but status field is informational).
 g = pkt.setdefault('garage', {})
-g['garage_status'] = status_after
+g['garage_status'] = next_status
 g['bar_id'] = g.get('bar_id', bar_id)
 g['updated_at'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 

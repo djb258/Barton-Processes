@@ -18,13 +18,33 @@ purpose: >
 
 outside:
   bs_law_arm: outside_dewey
-  book_law_species: Workflow-Body
   heir:
     sovereign_ref: imo-creator
     hub_id: planner-intake-template
-    ctb_placement: barton-enterprises/imo-creator/processes/four-brain/planner-intake-template
-    imo_topology: input
     cc_layer: CC-02
+    subject_id: processes
+    ctb_node: barton-enterprises/imo-creator/processes/four-brain/planner-intake-template
+    species: Workflow-Body
+    owner: dave-barton
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-08"
+    indexed_by: sonnet-mechanic
+
+# =============================================================================
+# INSIDE — runtime identity
+# =============================================================================
+
+inside:
+  bs_law_arm: inside_fractal
+  heir:
+    process_id: bp.070-planner-intake-template
+    aviation_model:
+      planner: opus-4-7
+      foreman: sonnet
+      mechanic: sonnet
+      auditor: codex
+      rule: "mechanic != auditor"
     services:
       - Barton-Processes
       - imo-creator-v2 atlas
@@ -37,32 +57,7 @@ outside:
       four plain-language questions plus a conditional follow-up. The Planner
       can produce a Plan Book from the packet OR mark BLOCKED with a specific
       question back to the operator.
-    species: Workflow-Body
-  orbt:
-    library_state: BUILD
-    indexed_by: sonnet-mechanic
-
-# =============================================================================
-# INSIDE — runtime identity
-# =============================================================================
-
-inside:
-  bs_law_arm: inside_fractal
-  heir:
-    process_id: bp.070-planner-intake-template
-    parent_process: bp.070-four-brain
-    output_type: planner_intake_packet
-    aviation_model:
-      planner: opus-4-7
-      foreman: sonnet
-      mechanic: sonnet
-      auditor: codex
-      rule: "mechanic != auditor"
     determinism_gate: ai_on_spine_forbidden
-    determinism_gate_note: >
-      LLM is tail arbitration only — never the spine of any gate evaluation.
-      Planner translates operator plain-language answers into structured doctrine;
-      that translation is LLM-assisted but every gate predicate is deterministic.
   orbt:
     runtime_state: BUILD
     promotion_gate: "used successfully by 3+ BARs end-to-end with auditor P=1"

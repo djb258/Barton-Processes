@@ -1,5 +1,6 @@
 name: process-070-garage-queue
-version: "1.1.0"
+version: "1.3.1"
+last_modified: "2026-05-08"
 status: BUILD
 owner_process: bp.070-four-brain
 mission_control_exempt: true
@@ -18,7 +19,7 @@ paths:
   final_product_pointer: "factory/imo-creator/070-four-brain/garage/outbox/BAR-{id}/FINAL-PRODUCT.yaml"
 
 status_values:
-  - DRAFT
+  - DRAFT                # Initial pre-submit state; operator creates intake but has not submitted. Template enum begins at READY_FOR_PLANNER (operator-submitted state).
   - READY_FOR_PLANNER
   - PLANNER_RUNNING
   - REVIEW_PLAN_BOOK
@@ -66,7 +67,18 @@ handoff:
     - "Git commit or pushed SHA for repo changes"
 
 review_gates:
-  default_rule: "Pause at REVIEW_* unless --auto-continue is passed."
+  # review_gates — G-19 auto-advance contract
+  #
+  # Per MISSION_CONTROL.md §10.4 + FOUR_BRAIN_AVIATION.md, sovereign influence
+  # is restricted to template-drop boundary (input) and Auditor verdict boundary
+  # (output). Mid-pipeline gates (PLAN_BOOK_SIGNED, FOREMAN_DISPATCHED,
+  # MECHANIC_DONE) are artifact-existence checks ONLY. Content judgment is
+  # enforced by the deterministic gate set (gate-runner.py) and W-7 LLM tail
+  # arbitration at audit time, not by these mid-pipeline review_gates.
+  #
+  # `auto_continue: true` is the default per G-19. The legacy `approve` subcommand
+  # remains for opt-in manual review during debugging.
+  default_rule: "Auto-advance through REVIEW_* stages per G-19 (MISSION_CONTROL.md §10.4). Use --no-auto-continue or `approve` subcommand for opt-in manual review during debugging only."
   approval_transitions:
     REVIEW_PLAN_BOOK: "PLAN_BOOK_SIGNED"
     REVIEW_FOREMAN_DISPATCH: "FOREMAN_DISPATCHED"
@@ -78,18 +90,40 @@ review_gates:
     mechanic_to_auditor: "APPROVAL-CHECKLIST-MECHANIC_DONE.md"
   gate_rules:
     planner_to_foreman:
-      - "Plan Book exists and is READY-FOR-FOREMAN before signing."
-      - "Plan Book contains handoff, Mechanic dispatch requirements, Auditor packet requirements, P=1 definition, stop conditions, and sovereign decision table."
-      - "Approval command signs the Plan Book artifact and garage YAML together."
+      # Orchestrator gate: sign_plan_book_gate() in forebrain-garage.sh:1330-1374
+      # Mechanical check (artifact exists only). Auto-advances if Plan Book file
+      # exists at expected path. Blocked only if the file is absent.
+      - "Plan Book artifact exists at the expected path (docs/plans/BAR-{id}/PLAN-BOOK.md)."
+      - "If artifact exists → auto-advance PLANNER_RUNNING → PLAN_BOOK_SIGNED → FOREMAN_RUNNING per G-19."
+      - >
+        Plan Book content quality (Atlas citations, completeness of all required sections,
+        BS Law conformance, Mission Control wiring section) is the Auditor's responsibility
+        at the output boundary via W-7 + deterministic gate set G01-G12, W-1–W-6,
+        Rung-1–Rung-8. Content judgment does NOT occur at this mid-pipeline gate.
     foreman_to_mechanic:
-      - "Foreman dispatch exists and is not BLOCKED."
-      - "Dispatch cites Atlas/Step 0, addresses Mechanic, includes write scope, forbidden paths, work orders, acceptance/evidence gates, and preserves Mechanic != Auditor."
-      - "Dispatch does not make Foreman the builder."
+      # Orchestrator gate: approve_foreman_dispatch_gate() in forebrain-garage.sh:1376-1423
+      # Mechanical check (artifact exists only). Auto-advances if Foreman dispatch file
+      # exists at run_dir/FOREMAN-DISPATCH.md. Blocked only if the file is absent.
+      - "Foreman dispatch artifact exists at the expected run-dir path (FOREMAN-DISPATCH.md)."
+      - "If artifact exists → auto-advance FOREMAN_RUNNING → FOREMAN_DISPATCHED → MECHANIC_RUNNING per G-19."
+      - >
+        Foreman dispatch content quality (Atlas Step-0 citations, write scope declarations,
+        work order structure, forbidden paths, Aviation Model role separation) is the
+        Auditor's responsibility at the output boundary. Content judgment does NOT occur
+        at this mid-pipeline gate.
     mechanic_to_auditor:
-      - "Mechanic output exists with changed files, tests/validation, Plan Book reference, and Auditor handoff."
-      - "PROC-060 PROCESS-UT.md and companion workflow YAML exist."
-      - "Both artifacts contain FCE-00 through FCE-14 spine endpoints."
-      - "Locked us.py/up.py files remain clean when the blueprint repo is present."
+      # Orchestrator gate: approve_mechanic_output_gate() in forebrain-garage.sh:1425-1476
+      # Mechanical check (artifact exists only). Auto-advances if MECHANIC-OUTPUT.md
+      # exists at run_dir. Blocked only if the file is absent.
+      - "MECHANIC-OUTPUT.md exists in the run dir with status=completed."
+      - "If artifact exists → auto-advance MECHANIC_RUNNING → MECHANIC_DONE → AUDITOR_RUNNING per G-19."
+      - >
+        Mechanic output content quality (file change list, test/validation evidence,
+        Plan Book reference, Auditor handoff completeness) is the Auditor's responsibility
+        at the output boundary. Content judgment does NOT occur at this mid-pipeline gate.
+      - "All work orders in FOREMAN-DISPATCH.md §3 are addressed in MECHANIC-OUTPUT.md 'Files changed' or marked PLAN_BOOK_INCOMPLETE."
+      - "Mechanic edits stayed within the dispatch's allowed_write_scope and outside forbidden_paths."
+      - "Per Mission Control wiring protocol: each artifact's WIRE/EXEMPT/NEW_SLOT_NEEDED disposition was executed per Plan Book §7."
 
 foreman_delegation_gate:
   doctrine: "atlas/constants/FOUR_BRAIN_AVIATION.md v1.3.0"
