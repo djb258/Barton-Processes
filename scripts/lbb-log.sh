@@ -103,7 +103,7 @@ PYTHON_CMD=()
 if command -v python3 >/dev/null 2>&1; then
   PYTHON_CMD=(python3)
 elif command -v python >/dev/null 2>&1; then
-  PYTHON_CMD=(py -3 2>/dev/null || python)
+  PYTHON_CMD=(python)
 elif command -v py >/dev/null 2>&1; then
   PYTHON_CMD=(py -3)
 else
