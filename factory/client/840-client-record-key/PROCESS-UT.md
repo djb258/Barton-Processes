@@ -4,23 +4,23 @@
 ### Medium: doctrine
 ### Business: svg-agency
 
-## UT Checklist (Pre-Flight - per law/UT_CHECKLIST.md v1.2.0)
+## 📋 UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
-| 1 | PRD — what / why / who / scope / out-of-scope / success metric | [x] | §2 |
-| 2 | OSAM — READ / WRITE / Join Chain / Forbidden Paths / Query Routing filled | [x] | §5, §6, §9 |
-| 3 | Component Status — every dependency has light with 1-line state | [x] | §3 |
-| 4 | Owner — human who fixes this at 2 AM | [x] | §1 |
-| 5 | Live Dashboard — URL or explicit "N/A" | [x] | §3 |
-| 6 | Kill Switch — exact command to stop the process | [x] | §8 |
-| 7 | Logbook — last audit verdict + date (after certification only) | [ ] | §12 — N/A during BUILD |
-| 8 | FCEs Attached — which FCE runs structurally back this doc | [x] | §3c |
-| 9 | BARs Referenced — every BAR this doc touches, with status | [x] | §3d |
-| 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | [x] | §3e |
-| 11 | Geometry — CTB position + Hub-Spoke role + Altitude | [x] | §1b |
-| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded | [ ] | §9 — pending live DB verification |
-| 13 | ctb_node — declared path on Barton Enterprises CTB trunk | [x] | §1 |
+| 1 | PRD — what / why / who / scope / out-of-scope / success metric | ☑ | §2 |
+| 2 | OSAM — READ / WRITE / Process Composition / Join Chain / Forbidden / Query Routing filled | ☑ | §5, §6, §9 |
+| 3 | Component Status — every dep 🟢 / 🟡 / 🔴 with 1-line state | ☑ | §3 |
+| 4 | Owner — human who fixes this at 2 AM | ☑ | §1 |
+| 5 | Live Dashboard — URL or explicit "N/A" | ☑ | §3 |
+| 6 | Kill Switch — exact command to stop the process | ☑ | §8 |
+| 7 | Logbook — last audit verdict + date (after certification only) | ☐ | §12 — legitimately ☐ during BUILD |
+| 8 | FCEs Attached — which FCE runs structurally back this doc | ☑ | §3c |
+| 9 | BARs Referenced — every BAR this doc touches, with status | ☑ | §3d |
+| 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☑ | §3e |
+| 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☑ | §9b |
+| 13 | ctb_node — declared path to this doc's position on the Barton Enterprises CTB trunk | ☑ | §1 Identity |
 
 ---
 
@@ -38,8 +38,8 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | Sovereign (CC-01) — extends from law/doctrine/KEY.md |
-| Version | 2.0.0 |
-| Last Modified | 2026-04-30 |
+| Version | 2.1.0 |
+| Last Modified | 2026-05-12 |
 | BAR Reference | BAR-178 (DB-CLIENT origin) |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/insurance-informatics/svg-agency/hub:client/840-client-record-key |
@@ -74,7 +74,7 @@ flowchart LR
 | cc_layer | CC-03 |
 | services | none (doctrine doc — no infrastructure) |
 | secrets_provider | none |
-| acceptance_criteria | All 4 schemas inventoried, canonical field table complete (47 fields), sovereign_id declared as universal join key, ingest checklist with order enforcement, all new systems must register field mappings before going live |
+| acceptance_criteria | All 4 schemas inventoried, canonical field table complete (48 fields), sovereign_id declared as universal join key, ingest checklist with order enforcement, all new systems must register field mappings before going live |
 
 ---
 
@@ -175,7 +175,7 @@ As new systems are added (outreach, sales, TPA), they declare their field mappin
 
 ## 5. CONTRACT — Canonical Field Table
 
-_This is the vocabulary lock. 47 unique fields across all 4 schemas. Source of Truth declares ownership._
+_This is the vocabulary lock. 48 unique fields across all 4 schemas. Source of Truth declares ownership._
 
 ### 5a. HEIR / Identity Fields (present on all MC records)
 
@@ -223,6 +223,7 @@ _This is the vocabulary lock. 47 unique fields across all 4 schemas. Source of T
 | updated_at | — | updated_at (TEXT) | MC clients | YES (MC) | ISO-8601 | MC tracks update; CL spine is append-only |
 | onboarded_at | — | onboarded_at (TEXT) | MC clients | NO | ISO-8601 | When client became an active client |
 | last_pass_at | last_pass_at (TEXT) | — | CL Spine (D1) | NO | ISO-8601 | Last time LCS pipeline touched this row |
+| vaulted_at | — | vaulted_at (TEXT) | MC clients | NO | ISO-8601 | NULL until /vault promotes the row to Neon clnt.client; set by bp.800 vault.ts. Two-tier marker (D1 working ↔ Neon vault). |
 
 ### 5e. Internal System PKs (not part of canonical join — system-internal only)
 
@@ -263,7 +264,7 @@ _These fields exist on MC client_interactions. Included here for cross-schema co
 | contact_id_fk | MC client_interactions | NO | TEXT (FK) | FK to client_contacts — links interaction to the specific contact involved |
 | resolved | MC client_interactions | NO | INTEGER (0/1) | Whether the interaction requires follow-up |
 
-**Total unique fields across all 4 schemas: 47** (7 HEIR + 10 company identity + 6 lifecycle/op + 4 timestamps + 3 PKs + 8 contact-level + 9 interaction-level)
+**Total unique fields across all 4 schemas: 48** (7 HEIR + 10 company identity + 6 lifecycle/op + 5 timestamps + 3 PKs + 8 contact-level + 9 interaction-level)
 
 ---
 
@@ -491,11 +492,13 @@ WHERE client_id = 'CLIENT_ID';
 
 | Claim / Field | Section | Source of Truth | Verification Command | Verified? | Last Check | Value at Check |
 |---------------|---------|-----------------|----------------------|-----------|-----------|----------------|
-| cl_company_identity row count ~32,702 | §3 | svg-d1-spine | `SELECT COUNT(*) FROM cl_company_identity` | [ ] | — | — |
-| clients table exists in svg-d1-client | §3 | migration 0005 | `SELECT name FROM sqlite_master WHERE name='clients'` | [ ] | — | — |
-| client_contacts table exists | §3 | migration 0005 | `SELECT name FROM sqlite_master WHERE name='client_contacts'` | [ ] | — | — |
-| client_interactions table exists | §3 | migration 0005 | `SELECT name FROM sqlite_master WHERE name='client_interactions'` | [ ] | — | — |
-| sovereign_id FK present on clients table | §5 | migration 0005 | `SELECT sql FROM sqlite_master WHERE name='clients'` | [ ] | — | — |
+| cl_company_identity row count ~32,702 | §3 | svg-d1-spine | `SELECT COUNT(*) FROM cl_company_identity` | ☐ | — | — |
+| clients table exists in svg-d1-client | §3 | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE type='table' AND name='clients'` | ☑ | 2026-05-12 | Table exists; columns: client_id, sovereign_ref, hub_id, cc_layer, ctb_placement, company_name, company_domain, ein, sovereign_id, lifecycle_stage, industry, employee_count, notes, orbt_mode, strike_count, onboarded_at, created_at, updated_at |
+| client_contacts table exists | §3 | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE type='table' AND name='client_contacts'` | ☑ | 2026-05-12 | Table exists; full schema confirmed including title field (separate from role) |
+| client_interactions table exists | §3 | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE type='table' AND name='client_interactions'` | ☑ | 2026-05-12 | Table exists; has source_thread_id (not in §5g cross-ref — informational drift) |
+| clients_error table exists | §3 | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE type='table' AND name='clients_error'` | ☑ | 2026-05-12 | Table exists; columns: error_id, client_id, error_code, error_message, sender_email, raw_subject, payload_snapshot, created_at |
+| sovereign_id FK present on clients table | §5 | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE name='clients'` | ☑ | 2026-05-12 | sovereign_id TEXT column confirmed present |
+| vaulted_at column on clients table | §5d | svg-d1-client (live) | `SELECT sql FROM sqlite_master WHERE name='clients'` | ☑ | 2026-05-12 | Added via `ALTER TABLE clients ADD COLUMN vaulted_at TEXT` — Part B Step B1 |
 
 ### Verification Queries
 
@@ -535,9 +538,9 @@ WHERE client_id = 'CLIENT_ID';
 
 ### 10b. Sigma Tracking
 
-| Metric | v1.0.0 | v2.0.0 | Trend | Action |
+| Metric | v1.0.0 | v2.1.0 | Trend | Action |
 |--------|--------|--------|-------|--------|
-| Fields cataloged | 47 | 47 | STABLE | Lock when verified live |
+| Fields cataloged | 47 | 48 | STABLE | Lock when verified live |
 | Systems inventoried | 4 | 4 | STABLE | Add outreach/sales when live |
 
 ### 10c. ORBT Gate Rules
@@ -604,6 +607,7 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | 2026-04-30 | claude-sonnet-4-6 | REPAIR | Sentinel repair: added 4 missing §5 fields (is_billing, is_decision_maker, interaction_state, contact_id_fk); updated count 43→47 | HEIR: CLIENT_RECORD_KEY_v1.0.1 | pending |
 | 2026-04-30 | claude-sonnet-4-6 | REPAIR | Restored missing Document Control trailer; bumped version 1.0.1→1.0.2 | HEIR: CLIENT_RECORD_KEY_v1.0.2 | pending |
 | 2026-04-30 | claude-sonnet-4-6 | MIGRATE | v1.0.2 doctrine doc decomposed into Barton Process 840 (4-file pattern matching 810). DOCTRINE.md + heir.yaml + orbt.yaml + PROCESS-UT.md created in Barton-Processes/factory/client/840-client-record-key/. Version bumped to 2.0.0 (major — new artifact structure). ctb_node updated to barton-enterprises/insurance-informatics/svg-agency/hub:client/840-client-record-key. | HEIR: CLIENT_RECORD_KEY_v2.0.0; engine=K=C; mode=BUILD | pending |
+| 2026-05-12 | claude-sonnet-4-6 | EDIT | BAR-bp840 — verified §5 canonical field table against live svg-d1-client schema (2026-05-12 wrangler query). All 4 tables confirmed present. Added vaulted_at to §5d Timestamp Fields (two-tier D1↔Neon marker). Bumped field count 47→48 in §5 summary + §10b + §1 HEIR acceptance_criteria + heir.yaml. Updated UT Checklist from v1.2.0 to v1.3.1 format. Ticked items 3/5/8/12 against live DB results. Noted cross-ref drift (§5f: is_billing/is_decision_maker not in live client_contacts; §5g: source_thread_id in live but not cross-ref) — informational, not blocking (cross-ref sections explicitly "not owned by this KEY"). Version bumped 2.0.0→2.1.0. | svg-d1-client schema query 2026-05-12; vaulted_at ALTER TABLE done in Part B | pending |
 
 **Rules:**
 - Append-only. Do NOT edit or delete prior rows. Corrections go in as a new row referencing the prior row.
@@ -619,9 +623,9 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-30 |
-| Last Modified | 2026-04-30 |
-| Version | 2.0.0 |
-| Template Version | 2.7.0 |
+| Last Modified | 2026-05-12 |
+| Version | 2.1.0 |
+| Template Version | 2.8.0 |
 | Medium | doctrine |
 | US Validated | pending |
 | Governing Engine | law/doctrine/FOUNDATIONAL_BEDROCK.md + law/doctrine/DMJ.md |

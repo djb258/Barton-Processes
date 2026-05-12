@@ -25,7 +25,7 @@ acceptance_criteria:
   - "No cross-system JOIN may use any field other than sovereign_id without explicit exception declared here"
   - "client_id confirmed as MC-internal only — never a cross-system identifier"
   - "All new systems holding client data must register their field mappings against this KEY before going live"
-  - "All 47 canonical fields inventoried across 4 schemas with source-of-truth declared for each"
+  - "All 48 canonical fields inventoried across 4 schemas with source-of-truth declared for each"
   - "JOIN chain documented: cl_company_identity → clients → client_contacts → client_interactions"
   - "Ingest checklist present with step-by-step order enforcement"
 
