@@ -1,147 +1,194 @@
 /**
- * 810 — Client Data Intake: Promotion
+ * bp.810 — Client Intake: Promotion
+ * Flat spoke model — rewritten 2026-05-12
  *
- * Promotes staged records from intake_record to D1 canonical working tables.
- * Routes by spoke/table identifier.
+ * Reads raw payload from client_staging_intake by intake_id.
+ * Routes to the correct canonical spoke table.
+ * On failure: writes to spoke-specific *_error table with intake_id trace.
+ * Marks staging row processed=1 on success or failure.
  */
 
 import type { Env } from './stage';
+import type {
+  ContactPayload, EmployeePayload, VendorPayload, CompliancePayload, InteractionPayload,
+} from './validate';
 
 export interface PromoteResult {
-  promoted: number;
-  errors: number;
+  intake_id: number;
   spoke: string;
+  success: boolean;
+  error?: string;
 }
 
-export async function promoteRecords(env: Env, clientId: string, batchId: string): Promise<PromoteResult> {
-  // Read unpromoted records for this batch
-  const records = await env.D1.prepare(`
-    SELECT intake_record_id, spoke, raw_payload
-    FROM intake_record
-    WHERE enrollment_intake_id = ? AND client_id = ? AND promoted_at IS NULL
-  `).bind(batchId, clientId).all<{
-    intake_record_id: string;
-    spoke: string;
-    raw_payload: string;
-  }>();
-
-  if (!records.results || records.results.length === 0) {
-    return { promoted: 0, errors: 0, spoke: '' };
-  }
-
-  let promoted = 0;
-  let errors = 0;
-  const spoke = records.results[0].spoke;
-
-  for (const row of records.results) {
-    try {
-      const data = JSON.parse(row.raw_payload);
-      await insertCanonical(env.D1, clientId, row.spoke, data);
-
-      // Mark as promoted
-      await env.D1.prepare(
-        "UPDATE intake_record SET promoted_at = datetime('now') WHERE intake_record_id = ?"
-      ).bind(row.intake_record_id).run();
-
-      promoted++;
-    } catch (err) {
-      errors++;
-      const msg = err instanceof Error ? err.message : String(err);
-      await writeError(env.D1, clientId, row.spoke, row.intake_record_id, 'PROMOTE_FAILED', msg);
-    }
-  }
-
-  // Update batch status
-  await env.D1.prepare(
-    "UPDATE enrollment_intake SET status = 'completed' WHERE enrollment_intake_id = ?"
-  ).bind(batchId).run();
-
-  console.log(`[810] PROMOTE: batch=${batchId} spoke=${spoke} promoted=${promoted} errors=${errors}`);
-  return { promoted, errors, spoke };
-}
-
-async function insertCanonical(d1: D1Database, clientId: string, table: string, data: Record<string, unknown>): Promise<void> {
-  const id = crypto.randomUUID();
-
-  switch (table) {
-    case 'plan':
-      await d1.prepare(`
-        INSERT INTO plan (plan_id, client_id, benefit_type, carrier_id, effective_date, status, version, rate_ee, rate_es, rate_ec, rate_fam, employer_rate_ee, employer_rate_es, employer_rate_ec, employer_rate_fam, source_quote_id)
-        VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.benefit_type, data.carrier_id ?? null, data.effective_date ?? null, data.status ?? 'active', data.rate_ee ?? null, data.rate_es ?? null, data.rate_ec ?? null, data.rate_fam ?? null, data.employer_rate_ee ?? null, data.employer_rate_es ?? null, data.employer_rate_ec ?? null, data.employer_rate_fam ?? null, data.source_quote_id ?? null).run();
-      break;
-
-    case 'plan_quote':
-      await d1.prepare(`
-        INSERT INTO plan_quote (plan_quote_id, client_id, benefit_type, carrier_id, effective_year, rate_ee, rate_es, rate_ec, rate_fam, source, received_date, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.benefit_type, data.carrier_id, data.effective_year, data.rate_ee ?? null, data.rate_es ?? null, data.rate_ec ?? null, data.rate_fam ?? null, data.source ?? null, data.received_date ?? null, data.status ?? 'received').run();
-      break;
-
-    case 'person':
-      await d1.prepare(`
-        INSERT INTO person (person_id, client_id, first_name, last_name, ssn_hash, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.first_name, data.last_name, data.ssn_hash ?? null, data.status ?? 'active').run();
-      break;
-
-    case 'election':
-      await d1.prepare(`
-        INSERT INTO election (election_id, client_id, person_id, plan_id, coverage_tier, effective_date)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.person_id, data.plan_id, data.coverage_tier, data.effective_date).run();
-      break;
-
-    case 'vendor':
-      await d1.prepare(`
-        INSERT INTO vendor (vendor_id, client_id, vendor_name, vendor_type)
-        VALUES (?, ?, ?, ?)
-      `).bind(id, clientId, data.vendor_name, data.vendor_type ?? null).run();
-      break;
-
-    case 'external_identity_map':
-      await d1.prepare(`
-        INSERT INTO external_identity_map (external_identity_id, client_id, entity_type, internal_id, vendor_id, external_id_value, effective_date, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.entity_type, data.internal_id, data.vendor_id, data.external_id_value, data.effective_date ?? null, data.status ?? 'active').run();
-      break;
-
-    case 'invoice':
-      await d1.prepare(`
-        INSERT INTO invoice (invoice_id, client_id, vendor_id, invoice_number, amount, invoice_date, due_date, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(id, clientId, data.vendor_id, data.invoice_number, data.amount, data.invoice_date, data.due_date ?? null, data.status ?? 'received').run();
-      break;
-
-    case 'service_request':
-      await d1.prepare(`
-        INSERT INTO service_request (service_request_id, client_id, category, status)
-        VALUES (?, ?, ?, ?)
-      `).bind(id, clientId, data.category, data.status ?? 'open').run();
-      break;
-
-    default:
-      throw new Error(`Unknown table: ${table}`);
-  }
-}
-
-async function writeError(d1: D1Database, clientId: string, spoke: string, sourceId: string, errorCode: string, errorMessage: string): Promise<void> {
-  const errorTable = SPOKE_ERROR_TABLE[spoke] ?? 'client_error';
-  const pkCol = errorTable.replace('_error', '_error_id').replace('employee_error_id', 'employee_error_id');
-
-  await d1.prepare(`
-    INSERT INTO ${errorTable} (${errorTable}_id, client_id, source_entity, source_id, error_code, error_message)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(crypto.randomUUID(), clientId, spoke, sourceId, errorCode, errorMessage).run();
-}
+// Error table PK column names per spoke
+const SPOKE_ERROR_PK: Record<string, string> = {
+  contact: 'contact_error_id',
+  employee: 'employee_error_id',
+  vendor: 'vendor_error_id',
+  compliance: 'compliance_error_id',
+  interaction: 'interaction_error_id',
+};
 
 const SPOKE_ERROR_TABLE: Record<string, string> = {
-  plan: 'plan_error',
-  plan_quote: 'plan_error',
-  person: 'employee_error',
-  election: 'employee_error',
-  vendor: 'vendor_error',
-  external_identity_map: 'vendor_error',
-  invoice: 'vendor_error',
-  service_request: 'service_error',
+  contact: 'client_contacts_error',
+  employee: 'client_employees_error',
+  vendor: 'client_vendors_error',
+  compliance: 'client_compliance_error',
+  interaction: 'client_interactions_error',
 };
+
+export async function promoteFromStaging(env: Env, intakeId: number, spoke: string, clientId: string): Promise<PromoteResult> {
+  // Read the raw staging row
+  const row = await env.D1.prepare(
+    'SELECT raw_data FROM client_staging_intake WHERE intake_id = ?'
+  ).bind(intakeId).first<{ raw_data: string }>();
+
+  if (!row) {
+    return { intake_id: intakeId, spoke, success: false, error: 'STAGING_ROW_NOT_FOUND' };
+  }
+
+  const payload = JSON.parse(row.raw_data) as Record<string, unknown>;
+
+  try {
+    await insertCanonical(env.D1, clientId, spoke, payload);
+
+    // Mark staged row as processed
+    await env.D1.prepare(
+      "UPDATE client_staging_intake SET processed = 1 WHERE intake_id = ?"
+    ).bind(intakeId).run();
+
+    console.log(`[810] PROMOTED: intake_id=${intakeId} spoke=${spoke} client_id=${clientId}`);
+    return { intake_id: intakeId, spoke, success: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await writeError(env.D1, clientId, spoke, intakeId, 'PROMOTE_FAILED', msg);
+
+    // Still mark processed so we don't retry infinitely
+    await env.D1.prepare(
+      "UPDATE client_staging_intake SET processed = 1 WHERE intake_id = ?"
+    ).bind(intakeId).run();
+
+    console.error(`[810] PROMOTE_ERROR: intake_id=${intakeId} spoke=${spoke} error=${msg}`);
+    return { intake_id: intakeId, spoke, success: false, error: msg };
+  }
+}
+
+async function insertCanonical(d1: D1Database, clientId: string, spoke: string, data: Record<string, unknown>): Promise<void> {
+  const now = new Date().toISOString();
+
+  switch (spoke) {
+    case 'contact': {
+      const p = data as unknown as ContactPayload;
+      const id = (p.contact_id as string | undefined) ?? crypto.randomUUID();
+      await d1.prepare(`
+        INSERT INTO client_contacts
+          (contact_id, client_id, full_name, email, email_secondary, phone, role, title, is_primary, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id, clientId, p.full_name, p.email,
+        p.email_secondary ?? null, p.phone ?? null,
+        p.role ?? null, p.title ?? null,
+        p.is_primary ?? 0,
+        now, now,
+      ).run();
+      break;
+    }
+
+    case 'employee': {
+      const p = data as unknown as EmployeePayload;
+      const id = (p.employee_id as string | undefined) ?? crypto.randomUUID();
+      await d1.prepare(`
+        INSERT INTO client_employees
+          (employee_id, client_id, first_name, last_name, hire_date, employment_status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id, clientId, p.first_name, p.last_name,
+        p.hire_date ?? null,
+        p.employment_status ?? 'active',
+        now, now,
+      ).run();
+      break;
+    }
+
+    case 'vendor': {
+      const p = data as unknown as VendorPayload;
+      const id = (p.vendor_id as string | undefined) ?? crypto.randomUUID();
+      await d1.prepare(`
+        INSERT INTO client_vendors
+          (vendor_id, client_id, vendor_name, vendor_type, group_number, integration_type, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id, clientId, p.vendor_name,
+        p.vendor_type ?? null, p.group_number ?? null,
+        p.integration_type ?? null,
+        now, now,
+      ).run();
+      break;
+    }
+
+    case 'compliance': {
+      const p = data as unknown as CompliancePayload;
+      const id = (p.compliance_id as string | undefined) ?? crypto.randomUUID();
+      await d1.prepare(`
+        INSERT INTO client_compliance
+          (compliance_id, client_id, self_insured, erisa_applicable, aca_applicable,
+           fmla_state_rules, plan_year_start, plan_year_end, required_forms, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id, clientId,
+        p.self_insured ?? 0,
+        p.erisa_applicable ?? 1,
+        p.aca_applicable ?? 1,
+        p.fmla_state_rules ? JSON.stringify(p.fmla_state_rules) : null,
+        p.plan_year_start ?? null,
+        p.plan_year_end ?? null,
+        p.required_forms ? JSON.stringify(p.required_forms) : null,
+        now, now,
+      ).run();
+      break;
+    }
+
+    case 'interaction': {
+      const p = data as unknown as InteractionPayload;
+      const id = (p.interaction_id as string | undefined) ?? crypto.randomUUID();
+      await d1.prepare(`
+        INSERT INTO client_interactions
+          (interaction_id, client_id, contact_id, interaction_type, subject, body_snippet,
+           source_message_id, source_thread_id, direction, resolved, occurred_at, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id, clientId,
+        p.contact_id ?? null,
+        p.interaction_type, p.subject ?? null, p.body_snippet ?? null,
+        p.source_message_id ?? null, p.source_thread_id ?? null,
+        p.direction, p.resolved ?? 0, p.occurred_at,
+        now, now,
+      ).run();
+      break;
+    }
+
+    default:
+      throw new Error(`Unknown spoke: ${spoke}`);
+  }
+}
+
+async function writeError(
+  d1: D1Database,
+  clientId: string,
+  spoke: string,
+  intakeId: number,
+  errorCode: string,
+  errorMessage: string,
+): Promise<void> {
+  const table = SPOKE_ERROR_TABLE[spoke];
+  const pkCol = SPOKE_ERROR_PK[spoke];
+  if (!table || !pkCol) {
+    console.error(`[810] WRITE_ERROR_FAILED: no error table for spoke=${spoke}`);
+    return;
+  }
+
+  await d1.prepare(`
+    INSERT INTO ${table} (${pkCol}, client_id, source_entity, source_id, error_code, error_message, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(crypto.randomUUID(), clientId, spoke, String(intakeId), errorCode, errorMessage).run();
+}

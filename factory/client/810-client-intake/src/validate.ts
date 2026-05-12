@@ -1,137 +1,96 @@
-/**
- * 810 — Client Data Intake: Zod validation schemas per spoke
- *
- * Validates at boundary. Rejects malformed data before staging.
- * Derived from client blueprint column registry.
- */
-
 import { z } from 'zod';
 
-// ── S2: Plan ────────────────────────────────────────────────
+// ============================================================
+// bp.810 Client Intake — Zod boundary validation
+// Flat spoke model: spoke field routes to canonical table
+// Spoke values: contact | employee | vendor | compliance | interaction
+// Rewritten 2026-05-12 — OLD normalized schemas discarded
+// ============================================================
 
-export const planSchema = z.object({
-  benefit_type: z.string().min(1),
-  carrier_id: z.string().optional(),
-  effective_date: z.string().optional(),
-  status: z.string().default('active'),
-  rate_ee: z.number().optional(),
-  rate_es: z.number().optional(),
-  rate_ec: z.number().optional(),
-  rate_fam: z.number().optional(),
-  employer_rate_ee: z.number().optional(),
-  employer_rate_es: z.number().optional(),
-  employer_rate_ec: z.number().optional(),
-  employer_rate_fam: z.number().optional(),
+// --- Contact spoke ---
+export const ContactSchema = z.object({
+  spoke: z.literal('contact'),
+  client_id: z.string().min(1),
+  contact_id: z.string().min(1).optional(),
+  full_name: z.string().min(1),
+  email: z.string().email(),
+  email_secondary: z.string().email().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  role: z.string().optional().nullable(),
+  title: z.string().optional().nullable(),
+  is_primary: z.number().int().min(0).max(1).default(0),
 });
 
-export const planQuoteSchema = z.object({
-  benefit_type: z.string().min(1),
-  carrier_id: z.string().min(1),
-  effective_year: z.number().int(),
-  rate_ee: z.number().optional(),
-  rate_es: z.number().optional(),
-  rate_ec: z.number().optional(),
-  rate_fam: z.number().optional(),
-  source: z.string().optional(),
-  received_date: z.string().optional(),
-  status: z.enum(['received', 'presented', 'selected', 'rejected']).default('received'),
-});
-
-// ── S3: Employee ────────────────────────────────────────────
-
-export const personSchema = z.object({
+// --- Employee spoke ---
+export const EmployeeSchema = z.object({
+  spoke: z.literal('employee'),
+  client_id: z.string().min(1),
+  employee_id: z.string().min(1).optional(),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
-  ssn_hash: z.string().optional(),
-  status: z.string().default('active'),
+  hire_date: z.string().optional().nullable(),
+  employment_status: z.enum(['active', 'terminated', 'leave', 'suspended']).default('active'),
 });
 
-export const electionSchema = z.object({
-  person_id: z.string().uuid(),
-  plan_id: z.string().uuid(),
-  coverage_tier: z.enum(['EE', 'ES', 'EC', 'FAM']),
-  effective_date: z.string().min(1),
-});
-
-// ── S4: Vendor ──────────────────────────────────────────────
-
-export const vendorSchema = z.object({
+// --- Vendor spoke ---
+export const VendorSchema = z.object({
+  spoke: z.literal('vendor'),
+  client_id: z.string().min(1),
+  vendor_id: z.string().min(1).optional(),
   vendor_name: z.string().min(1),
-  vendor_type: z.string().optional(),
+  vendor_type: z.enum(['Carrier', 'TPA', 'PBM', 'Broker']).optional().nullable(),
+  group_number: z.string().optional().nullable(),
+  integration_type: z.enum(['API', 'SFTP', 'Portal', 'Manual']).optional().nullable(),
 });
 
-export const externalIdentityMapSchema = z.object({
-  entity_type: z.enum(['person', 'plan']),
-  internal_id: z.string().uuid(),
-  vendor_id: z.string().uuid(),
-  external_id_value: z.string().min(1),
-  effective_date: z.string().optional(),
-  status: z.string().default('active'),
+// --- Compliance spoke ---
+export const ComplianceSchema = z.object({
+  spoke: z.literal('compliance'),
+  client_id: z.string().min(1),
+  compliance_id: z.string().min(1).optional(),
+  self_insured: z.number().int().min(0).max(1).default(0),
+  erisa_applicable: z.number().int().min(0).max(1).default(1),
+  aca_applicable: z.number().int().min(0).max(1).default(1),
+  fmla_state_rules: z.record(z.unknown()).optional().nullable(),
+  plan_year_start: z.string().optional().nullable(),
+  plan_year_end: z.string().optional().nullable(),
+  required_forms: z.array(z.string()).optional().nullable(),
 });
 
-export const invoiceSchema = z.object({
-  vendor_id: z.string().uuid(),
-  invoice_number: z.string().min(1),
-  amount: z.number(),
-  invoice_date: z.string().min(1),
-  due_date: z.string().optional(),
-  status: z.enum(['received', 'approved', 'paid', 'disputed']).default('received'),
+// --- Interaction spoke ---
+export const InteractionSchema = z.object({
+  spoke: z.literal('interaction'),
+  client_id: z.string().min(1),
+  interaction_id: z.string().min(1).optional(),
+  contact_id: z.string().optional().nullable(),
+  interaction_type: z.enum(['email_inbound', 'email_outbound', 'call_inbound', 'call_outbound', 'meeting', 'note']),
+  subject: z.string().optional().nullable(),
+  body_snippet: z.string().optional().nullable(),
+  source_message_id: z.string().optional().nullable(),
+  source_thread_id: z.string().optional().nullable(),
+  direction: z.enum(['inbound', 'outbound', 'internal']),
+  resolved: z.number().int().min(0).max(1).default(0),
+  occurred_at: z.string().min(1), // ISO datetime string — required
 });
 
-// ── S5: Service ─────────────────────────────────────────────
+// --- Union discriminated by spoke ---
+export const IntakePayloadSchema = z.discriminatedUnion('spoke', [
+  ContactSchema,
+  EmployeeSchema,
+  VendorSchema,
+  ComplianceSchema,
+  InteractionSchema,
+]);
 
-export const serviceRequestSchema = z.object({
-  category: z.string().min(1),
-  status: z.string().default('open'),
-});
+export type IntakePayload =
+  | z.infer<typeof ContactSchema>
+  | z.infer<typeof EmployeeSchema>
+  | z.infer<typeof VendorSchema>
+  | z.infer<typeof ComplianceSchema>
+  | z.infer<typeof InteractionSchema>;
 
-// ── Schema Map ──────────────────────────────────────────────
-
-const SPOKE_SCHEMAS: Record<string, z.ZodSchema> = {
-  plan: planSchema,
-  plan_quote: planQuoteSchema,
-  person: personSchema,
-  election: electionSchema,
-  vendor: vendorSchema,
-  external_identity_map: externalIdentityMapSchema,
-  invoice: invoiceSchema,
-  service_request: serviceRequestSchema,
-};
-
-export interface ValidationError {
-  index: number;
-  errors: z.ZodIssue[];
-}
-
-export interface ValidRecord {
-  data: Record<string, unknown>;
-}
-
-export interface ValidationResult {
-  valid: ValidRecord[];
-  errors: ValidationError[];
-}
-
-export function validateIntake(table: string, data: unknown[]): ValidationResult {
-  const schema = SPOKE_SCHEMAS[table];
-  if (!schema) {
-    return {
-      valid: [],
-      errors: data.map((_, i) => ({ index: i, errors: [{ code: 'custom', message: `Unknown table: ${table}`, path: [] }] as z.ZodIssue[] })),
-    };
-  }
-
-  const valid: ValidRecord[] = [];
-  const errors: ValidationError[] = [];
-
-  for (let i = 0; i < data.length; i++) {
-    const result = schema.safeParse(data[i]);
-    if (result.success) {
-      valid.push({ data: result.data as Record<string, unknown> });
-    } else {
-      errors.push({ index: i, errors: result.error.issues });
-    }
-  }
-
-  return { valid, errors };
-}
+export type ContactPayload = z.infer<typeof ContactSchema>;
+export type EmployeePayload = z.infer<typeof EmployeeSchema>;
+export type VendorPayload = z.infer<typeof VendorSchema>;
+export type CompliancePayload = z.infer<typeof ComplianceSchema>;
+export type InteractionPayload = z.infer<typeof InteractionSchema>;

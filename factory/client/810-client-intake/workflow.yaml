@@ -2,14 +2,15 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.810 CLIENT INTAKE — Client Data Intake
 # ctb_node: barton-enterprises/svg-agency/client/810-client-intake
-# Species: Workflow-Body | Version: 1.0.1 | Last Modified: 2026-05-08
+# Species: Workflow-Body | Version: 2.0.0 | Last Modified: 2026-05-12
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
+# FLAT SPOKE MODEL 2026-05-12: No Neon vault. /vault → 410 Gone.
 # =============================================================================
 
 # Block 1 — name
 name: bp-810-client-intake
-version: "1.0.1"
-last_modified: "2026-05-08"
+version: "2.0.0"
+last_modified: "2026-05-12"
 
 # Block 2 — inherits
 inherits:
@@ -37,14 +38,15 @@ outside:
     species: Workflow-Body
     owner: dave-barton
     services:
-      - client-intake
-      - cloudflare-d1
+      - cloudflare-worker
+      - svg-d1-client
+      - svg-d1-census
       - lbb
       - mission-control
-    acceptance_criteria: "UT-local Workflow-Body; intake staging and validation gates green"
+    acceptance_criteria: "Flat spoke model OPERATE; /health 200; /vault 410; POST /intake stages + promotes to correct spoke table"
   orbt:
     library_state: BUILD
-    last_indexed_at: "2026-05-06T00:00:00Z"
+    last_indexed_at: "2026-05-12T00:00:00Z"
     indexed_by: sonnet-mechanic
 
 # =============================================================================
@@ -64,24 +66,25 @@ inside:
       auditor: codex
       rule: mechanic != auditor
     services:
-      - client-intake
-      - cloudflare-d1
+      - cloudflare-worker
+      - svg-d1-client
+      - svg-d1-census
       - lbb
       - mission-control
     secrets_provider: doppler
-    acceptance_criteria: "UT-local Workflow-Body; intake staging and validation gates green"
+    acceptance_criteria: "Flat spoke model OPERATE; /health 200; /vault 410; POST /intake stages + promotes to correct spoke table"
     determinism_gate: ai_on_spine_forbidden
   orbt:
     library_state: BUILD
-    runtime_state: BUILD
+    runtime_state: OPERATE
     strikes: 0
-    last_transition_at: "2026-05-06"
-    last_transition_reason: BAR-810-CONFORM-WIRE Atlas conformance pass
+    last_transition_at: "2026-05-12"
+    last_transition_reason: "Flat spoke model rewrite; deployed OPERATE 2026-05-12T23:07:04Z; /health 200; /vault 410 verified"
     flipped_by: sonnet-mechanic
     promotion_gate: codex_10_gate_pass
 
 # Block 7 — description
-description: "UT-local workflow for bp.810 Client Intake. Validates intake staging and promotes client data deterministically via Zod → D1 → Neon vault pipeline."
+description: "UT-local workflow for bp.810 Client Intake. Flat spoke model (2026-05-12): Zod validates at boundary → pre-exist gate (clients table) → stage to client_staging_intake → promote to canonical spoke table (contact/employee/vendor/compliance/interaction). No Neon vault. /vault → 410 Gone. Single-tier D1 svg-d1-client is canonical."
 
 # Block 8 — inputs (Book Law v1.5.0 — 11 mandatory blocks)
 inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }

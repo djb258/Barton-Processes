@@ -1,53 +1,45 @@
 /**
- * 810 — Client Data Intake: Staging
+ * bp.810 — Client Intake: Staging
+ * Flat spoke model — rewritten 2026-05-12
  *
- * Writes validated data to D1 staging tables.
- * intake_record is INSERT-only (immutable).
+ * All intake writes land in client_staging_intake FIRST (immutable audit trail).
+ * Returns the autoincrement intake_id for downstream promotion.
  */
 
 export interface Env {
   D1: D1Database;
-  NEON_URL: string;
+  CENSUS_DB: D1Database;
 }
 
 export interface StageResult {
-  batch_id: string;
-  staged: number;
+  intake_id: number;
+  intake_type: string;
   spoke: string;
 }
 
-export async function stageRecords(
-  env: Env, clientId: string, table: string, records: { data: Record<string, unknown> }[],
+/**
+ * stageIntakeRaw — inserts one raw payload into client_staging_intake.
+ * intake_type: 'company' (org-level records) | 'employee' (person-level records)
+ * spoke maps to the eventual canonical table.
+ */
+export async function stageIntakeRaw(
+  env: Env,
+  payload: Record<string, unknown>,
+  source: string,
 ): Promise<StageResult> {
-  const batchId = crypto.randomUUID();
+  const spoke = payload['spoke'] as string;
+  // company-level spokes: vendor, compliance, contact, interaction
+  // employee-level spokes: employee
+  const intakeType = spoke === 'employee' ? 'employee' : 'company';
 
-  // Create enrollment_intake batch header
-  await env.D1.prepare(`
-    INSERT INTO enrollment_intake (enrollment_intake_id, client_id, status)
-    VALUES (?, ?, 'pending')
-  `).bind(batchId, clientId).run();
+  const result = await env.D1.prepare(`
+    INSERT INTO client_staging_intake (intake_type, raw_data, source)
+    VALUES (?, ?, ?)
+  `).bind(intakeType, JSON.stringify(payload), source).run();
 
-  // Write each record to intake_record (immutable)
-  let staged = 0;
-  for (const record of records) {
-    await env.D1.prepare(`
-      INSERT INTO intake_record (intake_record_id, client_id, enrollment_intake_id, spoke, raw_payload)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(
-      crypto.randomUUID(),
-      clientId,
-      batchId,
-      table,
-      JSON.stringify(record.data),
-    ).run();
-    staged++;
-  }
+  // D1 returns meta.last_row_id for autoincrement
+  const intakeId = (result.meta as { last_row_id?: number }).last_row_id ?? 0;
 
-  // Update batch status
-  await env.D1.prepare(
-    "UPDATE enrollment_intake SET status = 'staged' WHERE enrollment_intake_id = ?"
-  ).bind(batchId).run();
-
-  console.log(`[810] STAGE: batch=${batchId} table=${table} staged=${staged}`);
-  return { batch_id: batchId, staged, spoke: table };
+  console.log(`[810] STAGED: intake_id=${intakeId} spoke=${spoke} type=${intakeType}`);
+  return { intake_id: intakeId, intake_type: intakeType, spoke };
 }

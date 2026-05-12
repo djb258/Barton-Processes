@@ -4,13 +4,10 @@ compatibility_date = "2024-12-01"
 
 [[d1_databases]]
 binding = "D1"
-database_name = "client-intake-810"
-database_id = ""  # TODO: wrangler d1 create client-intake-810
+database_name = "svg-d1-client"
+database_id = "5443887b-ba8a-4da5-9f54-6a9c2cfb1244"
 
 [[d1_databases]]
 binding = "CENSUS_DB"
 database_name = "census"
 database_id = "c7b63950-ad08-426f-a07b-f30f1b9fc0bf"
-
-[vars]
-# NEON_URL set via wrangler secret put
