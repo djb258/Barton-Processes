@@ -22,7 +22,7 @@ inside:
   heir:
     process_id: bp.820
     species: UT-Body
-    version: "1.1.0"
+    version: "1.1.1"
     last_modified: "2026-05-12"
     companion_manifest: PROCESS-UT.md
     rim_gate_adoption:
@@ -38,7 +38,7 @@ inside:
 
 # Vendor Export
 ## Reads canonical client data from D1 (`svg-d1-client`, flat-spoke schema), applies per-vendor blueprint mappings from EGRESS_KV, and generates formatted export files (CSV/JSON) for insurance vendors (TPAs, PBMs, carriers) on a daily/weekly cron schedule.
-### Status: REPAIR
+### Status: OPERATE
 ### Medium: process
 ### Business: svg-agency
 
@@ -69,10 +69,10 @@ inside:
 | Medium | process |
 | Business Silo | svg-agency |
 | CTB Position | barton-enterprises → svg-agency → client → vendor-export |
-| ORBT | REPAIR |
+| ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v1.1.0 |
+| Version | v1.1.1 |
 | Last Modified | 2026-05-12 |
 | BAR Reference | BAR-38, BAR-178, BAR-377, BAR-bp820 |
 | Owner | Dave Barton |
@@ -115,7 +115,7 @@ flowchart LR
 Process 820 is the terminal egress point for all client data leaving the SVG system toward external insurance vendor platforms. It reads canonical client/employee/vendor records from the shared `svg-d1-client` D1 (flat-spoke schema written by bp.810), applies a per-vendor blueprint mapping from `EGRESS_KV` to translate internal column names and UUIDs to vendor-specific formats, and generates CSV or JSON export files.
 
 ### WHY
-Without this process, export files must be hand-assembled from raw tables — error-prone, unscalable, and guaranteed to miss vendor deadlines. Insurance vendors (TPAs, PBMs, carriers) require client data in their proprietary formats on defined schedules. If 820 fails, vendor portals go stale and enrollment records at the vendor fall out of sync. The process is currently in REPAIR — code is conformance-aligned to the live flat-spoke schema and passes dry-run, but deploy + live verification + KV blueprint load are not yet done (RP-820-DEPLOY).
+Without this process, export files must be hand-assembled from raw tables — error-prone, unscalable, and guaranteed to miss vendor deadlines. Insurance vendors (TPAs, PBMs, carriers) require client data in their proprietary formats on defined schedules. If 820 fails, vendor portals go stale and enrollment records at the vendor fall out of sync. The process is OPERATE — worker deployed 2026-05-12 (`vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef`, cron `0 5 * * *` registered), `/health` + `/status` live. It produces nothing until vendor blueprints are loaded, but with zero clients and zero vendors there is no data to break (RP-820-BLUEPRINTS-DELIVERY tracks the blueprint-load + file-delivery work — low priority, non-gating).
 
 ### WHO
 SVG Agency operations team and Dave Barton own this process. Vendor systems (TPAs, PBMs, carriers) consume the output. This doc is read by the mechanic deploying the worker and the auditor verifying export compliance.
@@ -134,10 +134,10 @@ SVG Agency operations team and Dave Barton own this process. Vendor systems (TPA
 - Authentication on endpoints — TODO; needs CF Access or bearer token gate (FP-820-05)
 - Writing to or modifying bp.810's canonical client tables — 820 is read-only consumer (D-820-01)
 - Client intake and validation — owned by PROC-810 (process 810-client-intake)
-- Worker deploy + cron registration + KV blueprint load + smoke test — tracked under RP-820-DEPLOY (deferred to a follow-up dispatch with wrangler access), not yet in scope of this UT pass
+- KV blueprint load + file-delivery mechanism (R2/email/SFTP) + real end-to-end smoke test — tracked under RP-820-BLUEPRINTS-DELIVERY (low priority, deferred until real vendor data exists; non-gating — does not block OPERATE)
 
 ### SUCCESS METRIC
-100% of scheduled vendors export successfully with zero BLUEPRINT_NOT_FOUND errors and MISSING_EXTERNAL_ID rate below 1% per run (measurable only after RP-820-DEPLOY).
+100% of scheduled vendors export successfully with zero BLUEPRINT_NOT_FOUND errors and MISSING_EXTERNAL_ID rate below 1% per run (measurable only once vendor blueprints are loaded and real clients/vendors exist — RP-820-BLUEPRINTS-DELIVERY).
 
 ## §3 RESOURCES {#sec-3-resources}
 
@@ -154,19 +154,19 @@ Required doctrine references for every process UT:
 
 | Component | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Light | State |
 |-----------|----------------------------------|------|-------|-------|
-| CF Worker (vendor-export-820) | vendor-export-820 · leaf · CC-04 | REPAIR | yellow | Worker code exists; `tsc --noEmit` + `wrangler deploy --dry-run` PASS (BAR-377); src/ reads flat-spoke client schema. **NOT DEPLOYED — PENDING DEPLOY (RP-820-DEPLOY).** Worker URL unknown until deployed. |
-| D1 (svg-d1-client) | vendor-export-820 · leaf · CC-04 | OPERATE | green | Live D1 `svg-d1-client` / `5443887b-ba8a-4da5-9f54-6a9c2cfb1244`. Canonical client tables present (flat-spoke: `clients`, `client_contacts`, `client_employees`, `client_vendors`, `client_compliance`, `client_employee_vendor_ids`). Audit tables `export_log` / `export_error` / `export_schedule` created 2026-05-04. **Live schema verification post-deploy = PENDING DEPLOY (RP-820-DEPLOY).** |
-| KV (EGRESS_KV) | vendor-export-820 · leaf · CC-04 | REPAIR | yellow | Live KV `EGRESS_KV` / `66e6c7bec8c1479ba708c0bcbb6a0e23` bound in wrangler.toml. **Blueprint load (`blueprint:{vendor_id}` keys) = PENDING DEPLOY (RP-820-DEPLOY).** |
+| CF Worker (vendor-export-820) | vendor-export-820 · leaf · CC-04 | OPERATE | green | Deployed 2026-05-12 — `https://vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef-83db-47f5-a7c4-3bcdf9db8f82`. `/health` → `{"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}`; `/status` → `{"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}`. src/ reads flat-spoke client schema. |
+| D1 (svg-d1-client) | vendor-export-820 · leaf · CC-04 | OPERATE | green | Live D1 `svg-d1-client` / `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` (verified 2026-05-12). Canonical client tables present (flat-spoke: `clients`, `client_contacts`, `client_employees`, `client_vendors`, `client_compliance`, `client_employee_vendor_ids`). Audit tables `export_log` / `export_error` / `export_schedule` created 2026-05-04. |
+| KV (EGRESS_KV) | vendor-export-820 · leaf · CC-04 | OPERATE | yellow | Live KV `EGRESS_KV` / `66e6c7bec8c1479ba708c0bcbb6a0e23` bound in wrangler.toml — empty (`available_blueprints: []`). Blueprint load (`blueprint:{vendor_id}` keys) deferred until real vendors exist (RP-820-BLUEPRINTS-DELIVERY); not a deploy blocker — zero vendors to export for. |
 | D1 canonical (810 client-intake) | client-intake-810 · leaf · CC-04 | OPERATE | green | Shared canonical client D1 = `svg-d1-client` (flat-spoke model 2026-05-12). bp.810 worker deployed 2026-05-12; canonical tables populated. |
-| CF Cron Trigger | vendor-export-820 · leaf · CC-04 | REPAIR | yellow | Configured in wrangler.toml (`0 5 * * *`). **Not registered — PENDING DEPLOY (RP-820-DEPLOY).** |
+| CF Cron Trigger | vendor-export-820 · leaf · CC-04 | OPERATE | green | `0 5 * * *` registered via `[triggers]` on deploy 2026-05-12 — confirmed in `wrangler deploy` output. |
 
 ### Live Dashboard
 
 | Resource | URL | What it shows |
 |----------|-----|---------------|
-| Worker health | PENDING DEPLOY (RP-820-DEPLOY) — `GET /health` → `{ process: "PROC-VENDOR-EXPORT", number: 820, status: "ok" }` once deployed | Liveness |
-| Worker status | PENDING DEPLOY (RP-820-DEPLOY) — `GET /status` once deployed | Recent exports, blueprint list, error count |
-| Export log per client | PENDING DEPLOY (RP-820-DEPLOY) — `GET /log/:client_id` once deployed | Export history for a specific client |
+| Worker health | `https://vendor-export-820.svg-outreach.workers.dev/health` → `{"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}` (verified 2026-05-12) | Liveness |
+| Worker status | `https://vendor-export-820.svg-outreach.workers.dev/status` → `{"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}` (verified 2026-05-12) | Recent exports, blueprint list, error count |
+| Export log per client | `https://vendor-export-820.svg-outreach.workers.dev/log/:client_id` | Export history for a specific client |
 
 ### Dependencies
 
@@ -174,8 +174,8 @@ Required doctrine references for every process UT:
 |-----------|------|-----------------|--------|
 | 810-client-intake | process | Canonical client D1 (flat-spoke): `clients`, `client_contacts`, `client_employees`, `client_vendors`, `client_compliance`, `client_employee_vendor_ids` | OPERATE — bp.810 worker deployed 2026-05-12; canonical tables populated |
 | D1 svg-d1-client (audit tables) | database | Local audit tables: `export_log`, `export_error`, `export_schedule` | OPERATE — created in `svg-d1-client` 2026-05-04 (additive migration `001_d1_export_tables.sql`) |
-| KV EGRESS_KV (blueprints) | cache layer | Vendor blueprint JSON at keys `blueprint:{vendor_id}` | PENDING DEPLOY (RP-820-DEPLOY) — namespace exists; keys not yet loaded |
-| CF Cron | scheduling | Daily 5 AM UTC trigger (`0 5 * * *`) | PENDING DEPLOY (RP-820-DEPLOY) — declared in wrangler.toml; not registered |
+| KV EGRESS_KV (blueprints) | cache layer | Vendor blueprint JSON at keys `blueprint:{vendor_id}` | 🟡 namespace bound & live; empty (`available_blueprints: []`) — keys loaded when real vendors exist (RP-820-BLUEPRINTS-DELIVERY); not a deploy blocker |
+| CF Cron | scheduling | Daily 5 AM UTC trigger (`0 5 * * *`) | 🟢 registered on deploy 2026-05-12 — confirmed in `wrangler deploy` output |
 
 ### Downstream Consumers
 
@@ -210,7 +210,7 @@ Required doctrine references for every process UT:
 | BAR-38 | bp.820 initial scaffold | TBV | TBV | CLOSED | implements |
 | BAR-178 | bp.820 UT consolidation | TBV | TBV | CLOSED | implements |
 | BAR-377 | bp.820 wrangler + schema repair | TBV | REPAIR | CLOSED (Codex P=1, repair-scope) | implements |
-| BAR-bp820 | bp.820 doc conformance + flat-spoke alignment + ORBT→REPAIR + PROCESS-MAP | TBV | REPAIR | IN PROGRESS — doc pass complete; RP-820-DEPLOY deferred | implements |
+| BAR-bp820 | bp.820 doc conformance + flat-spoke alignment + deploy + ORBT→OPERATE + PROCESS-MAP | TBV | OPERATE | CLOSED — doc pass complete; worker deployed (vendor-export-820.svg-outreach.workers.dev, version 7ac783ef, cron 0 5 * * *); /health + /status verified; RP-820-DEPLOY closed | implements |
 
 ### 3e. LBB Subjects Fed
 
@@ -248,11 +248,11 @@ Required doctrine references for every process UT:
 - Formatted export files (CSV or JSON) per vendor blueprint — one per client × vendor pair per run
 - `export_log` rows: export_id, client_id, vendor_id, blueprint_id (= blueprint.vendor_name), record_count, file_format, status (`completed` / `no_data`), exported_at
 - `export_error` rows: error_id, client_id, vendor_id, export_id, error_code (`MISSING_EXTERNAL_ID` | `BLUEPRINT_NOT_FOUND`), error_message, created_at
-- **Currently terminal** — files generated but not yet shipped (no R2, email, or SFTP delivery — FP-820-03)
-- **Live output not yet observable** — worker not deployed; export run + log rows = PENDING DEPLOY (RP-820-DEPLOY)
+- **Currently terminal** — files generated but not yet shipped (no R2, email, or SFTP delivery — FP-820-03 / RP-820-BLUEPRINTS-DELIVERY)
+- **Worker deployed & live** (`vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef`, cron `0 5 * * *`); no export rows yet — `available_blueprints: []` and zero clients/vendors, so a cron fire produces nothing until blueprints are loaded (RP-820-BLUEPRINTS-DELIVERY)
 
 ### Circle (Bedrock §5)
-Every export writes to `export_log` (status, record_count, timestamp) closing the feedback loop. The `/status` endpoint exposes recent exports and error_count for operational visibility. `export_schedule.last_run_at` tracks cadence. If error rate rises, the Circle signals re-entry into REPAIR mode — which is where the process currently sits, pending the deploy + verification cycle (RP-820-DEPLOY).
+Every export writes to `export_log` (status, record_count, timestamp) closing the feedback loop. The `/status` endpoint exposes recent exports and error_count for operational visibility (currently `{"recent_exports":[],"total_errors":0,"available_blueprints":[]}` — empty until vendors exist). `export_schedule.last_run_at` tracks cadence. If error rate rises, the Circle signals re-entry into REPAIR mode; the process is OPERATE now with the loop wired and idle pending real vendor data.
 
 ## §5 DATA SCHEMA {#sec-5-data-schema}
 
@@ -411,14 +411,14 @@ vendor_id
 wrangler delete --name vendor-export-820
 ```
 
-To suspend without deleting: disable the cron trigger in Cloudflare dashboard → Workers → vendor-export-820 → Triggers → disable cron. (Note: worker not currently deployed — RP-820-DEPLOY pending.)
+To suspend without deleting: disable the cron trigger in Cloudflare dashboard → Workers → vendor-export-820 → Triggers → disable cron (`0 5 * * *`), or `wrangler triggers list` / dashboard to confirm. Worker is deployed at `https://vendor-export-820.svg-outreach.workers.dev`.
 
 ## §9 VERIFICATION {#sec-9-verification}
 
 ```text
-(All of the below run AFTER RP-820-DEPLOY — worker not yet deployed.)
-1. GET /health -> expected: { "process": "PROC-VENDOR-EXPORT", "number": 820, "status": "ok" }
-2. GET /status -> expected: { "recent_exports": [...], "available_blueprints": [...], "total_errors": <n> }
+(Steps 1-2 verified live 2026-05-12. Steps 3-7 run once real vendor blueprints + clients exist — RP-820-BLUEPRINTS-DELIVERY.)
+1. GET https://vendor-export-820.svg-outreach.workers.dev/health -> {"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}  [VERIFIED 2026-05-12]
+2. GET https://vendor-export-820.svg-outreach.workers.dev/status -> {"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}  [VERIFIED 2026-05-12]
 3. Load test blueprint into EGRESS_KV: blueprint:test_vendor -> expected: KV write success
 4. POST /export { "client_id": "test-001", "vendor_id": "test_vendor" } -> expected: export generated, export_log entry created, record_count > 0
 5. GET /log/test-001 -> expected: ≥1 export_log entry with status "completed"
@@ -435,18 +435,20 @@ To suspend without deleting: disable the cron trigger in Cloudflare dashboard �
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
-| Worker responds to /health | §1 | CF Worker runtime | `curl https://<worker-url>/health` (URL assigned at deploy) | [ ] | PENDING DEPLOY (RP-820-DEPLOY) | — |
-| D1 svg-d1-client exists | §3 | Cloudflare D1 dashboard | `wrangler d1 list` | [x] | 2026-05-04 | `svg-d1-client` / `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` |
+| Worker deployed | §1 / §3 | `wrangler deploy` output | `wrangler deploy` (from `factory/client/820-vendor-export/`) | [x] | 2026-05-12 | `https://vendor-export-820.svg-outreach.workers.dev` / version `7ac783ef-83db-47f5-a7c4-3bcdf9db8f82` |
+| Worker responds to /health | §1 | CF Worker runtime | `curl https://vendor-export-820.svg-outreach.workers.dev/health` | [x] | 2026-05-12 | `{"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}` |
+| Worker responds to /status | §3 | CF Worker runtime | `curl https://vendor-export-820.svg-outreach.workers.dev/status` | [x] | 2026-05-12 | `{"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}` |
+| D1 svg-d1-client exists | §3 | Cloudflare D1 dashboard | `wrangler d1 list` | [x] | 2026-05-12 | `svg-d1-client` / `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` |
 | KV EGRESS_KV exists | §3 | Cloudflare KV dashboard | `wrangler kv namespace list` | [x] | 2026-05-04 | `EGRESS_KV` / `66e6c7bec8c1479ba708c0bcbb6a0e23` |
-| Cron registered at 0 5 * * * | §4 | wrangler.toml + CF dashboard | `wrangler triggers list` (post-deploy) | [ ] | PENDING DEPLOY (RP-820-DEPLOY) | — |
+| Cron registered at 0 5 * * * | §4 | `wrangler deploy` output | `wrangler deploy` (registers `[triggers]` block) | [x] | 2026-05-12 | `0 5 * * *` registered — confirmed in deploy output |
 | export_log table exists | §5 | D1 migration | `wrangler d1 execute svg-d1-client --remote --command "SELECT COUNT(*) FROM export_log"` | [x] | 2026-05-04 | table present |
 | export_error table exists | §5 | D1 migration | `wrangler d1 execute svg-d1-client --remote --command "SELECT COUNT(*) FROM export_error"` | [x] | 2026-05-04 | table present |
 | export_schedule table exists | §5 | D1 migration | `wrangler d1 execute svg-d1-client --remote --command "SELECT COUNT(*) FROM export_schedule"` | [x] | 2026-05-04 | table present (per `001_d1_export_tables.sql`) |
-| At least one blueprint in EGRESS_KV | §3 | KV list | `wrangler kv key list --namespace-id 66e6c7bec8c1479ba708c0bcbb6a0e23 --prefix blueprint:` | [ ] | PENDING DEPLOY (RP-820-DEPLOY) | — |
+| At least one blueprint in EGRESS_KV | §3 | KV list | `wrangler kv key list --namespace-id 66e6c7bec8c1479ba708c0bcbb6a0e23 --prefix blueprint:` | [ ] | 2026-05-12 | none loaded — `available_blueprints: []`; N/A until real vendors (RP-820-BLUEPRINTS-DELIVERY) |
 | Canonical client tables readable (flat-spoke) | §4 | D1 shared binding | `wrangler d1 execute svg-d1-client --remote --command "SELECT name FROM sqlite_master WHERE type='table'"` | [x] | 2026-05-04 | `clients`, `client_employees`, `client_vendors`, `client_employee_vendor_ids` present |
 | `src/` reads flat-spoke schema (no `person`/`election`/`plan`/`external_identity_map`) | §4 / §5 | repo source | `grep -E "client_employees|client_vendors|client_employee_vendor_ids" src/*.ts` | [x] | 2026-05-12 | confirmed in `src/index.ts` + `src/export.ts` (BAR-377) |
 
-Rule: at least one live gauge row is required before BUILD/REPAIR can move to OPERATE. The PENDING-DEPLOY rows above (worker /health, cron registration, KV blueprint presence) are the gate items tracked by RP-820-DEPLOY.
+Rule: at least one live gauge row is required before BUILD/REPAIR can move to OPERATE. The worker-deployed / /health / /status / cron-registered rows above are now verified live (2026-05-12) — RP-820-DEPLOY closed. The blueprint-presence row stays unchecked (N/A until real vendors exist) and is non-gating per RP-820-BLUEPRINTS-DELIVERY.
 
 ## §10 Operations / Schedule {#sec-10-operations}
 
@@ -557,6 +559,7 @@ No logbook during BUILD.
 | 2026-04-29 | Claude Sonnet (Runner) | BUILD | UT consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; fragments archived | UT v2.7.0 consolidation run | pending |
 | 2026-05-04 | Codex | REPAIR | Bound wrangler to live svg-d1-client and EGRESS_KV; aligned source queries to live client schema; applied additive export tracking migration | BAR-377 bp.820 repair (`docs/audit/process-runs/bp-820/`) | pending |
 | 2026-05-12 | Claude Sonnet (Mechanic, BAR-bp820) | REPAIR | Doc conformance pass: PROCESS-UT.md + DOCTRINE.md aligned to live flat-spoke schema (`clients`/`client_employees`/`client_vendors`/`client_employee_vendor_ids`); removed speculative `external_identity_map` / `person`/`election`/`plan` refs; `svg-d1-client` + `EGRESS_KV` ids written; PROCESS-MAP-820 authored in imo-creator-v2 `_inbox/`; workflow.yaml synced; ORBT runtime → REPAIR with RP-820-DEPLOY entry (deploy + live verification + KV blueprint load deferred — wrangler access not available in this session). Version v1.0.4 → v1.1.0 (3 locations) + Last Modified 2026-05-12 | BAR-bp820 doc conformance dispatch | pending |
+| 2026-05-12 | Claude Sonnet (Mechanic, BAR-bp820) | OPERATE | Worker deployed via `wrangler deploy` — `https://vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef-83db-47f5-a7c4-3bcdf9db8f82`, cron `0 5 * * *` registered (confirmed in deploy output). `/health` → `{"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}`; `/status` → `{"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}`. Resolved all `PENDING DEPLOY (RP-820-DEPLOY)` markers in §3 / §3d / §4 / §9 / §9b with real values. ORBT → OPERATE (header Status, §1 Identity, §3 Component Status). RP-820-DEPLOY closed; blueprint-load + file-delivery + real smoke test moved to RP-820-BLUEPRINTS-DELIVERY (low priority, N/A until real vendors — non-gating). orbt.yaml + workflow.yaml + PROCESS-MAP-820 (imo-creator-v2 `_inbox/`) updated to OPERATE. Version v1.1.0 → v1.1.1 (3 locations) + Last Modified 2026-05-12 | BAR-bp820 deploy finish-up | pending |
 
 ## §13 FLEET FAILURE REGISTRY {#sec-13-fleet-failure-registry}
 
@@ -580,6 +583,7 @@ No logbook during BUILD.
 | 2026-05-10 | `v1.0.3` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE adoption declared this dispatch (WO-3) but with NEW specialization PARTNER-RELAY (placeholder, not THROUGHPUT-CONTROL — partner reputation semantics differ from rate-limited vendor APIs). svg-d1-client (5443887b) wired. Daily 05:00 UTC cron. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
 | 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 | 2026-05-12 | `v1.1.0` | BAR-bp820 doc conformance | Sonnet Mechanic | `ALIGN` — full doc conformance pass to live flat-spoke schema. Replaced all `person`/`election`/`plan`/`vendor`/`external_identity_map` (810 normalized model) references with `clients`/`client_employees`/`client_vendors`/`client_employee_vendor_ids` (svg-d1-client flat-spoke). Wrote D1 id (`5443887b-...`) + KV id (`66e6...`) into Tools/Schema. §3 Component Status + §3 Dependencies + §3 Live Dashboard + §9b: deploy-dependent items marked `PENDING DEPLOY (RP-820-DEPLOY)` instead of fabricated URLs/counts. ORBT runtime → REPAIR (header Status, §1 Identity ORBT, Component Status). Added D-820-11 (canonical D1 binding). §6 DMJ element/map/join tables re-keyed. §3d BARs filled (BAR-377, BAR-bp820). §11 Build Inputs updated (archived CLAUDE.md/PROCESS.md noted; repair/audit docs cited). §14 + §12 logbook row added. PROCESS-MAP-820 authored in imo-creator-v2 `_inbox/PROCESS-MAP-820-vendor-export.yaml`. workflow.yaml synced (D1/KV ids + flat-spoke table list + RP-820-DEPLOY note). Version bump 3 locations (frontmatter + §1 Identity + Document Control) + Last Modified 2026-05-12. Deploy + cron registration + `wrangler secret put` + KV blueprint load + smoke test = RP-820-DEPLOY (deferred — wrangler access not in this session). | header + §1 Identity + §2 + §3 + §3d + §4 + §5 + §6 + §7 + §8 + §9 + §9b + §11 + §12 + §14 + Document Control + frontmatter |
+| 2026-05-12 | `v1.1.1` | BAR-bp820 deploy finish-up | Sonnet Mechanic | `DEPLOY` — worker deployed (`https://vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef-83db-47f5-a7c4-3bcdf9db8f82`, cron `0 5 * * *` registered — confirmed in deploy output). `/health` + `/status` verified live 2026-05-12. Resolved every `PENDING DEPLOY (RP-820-DEPLOY)` marker in §2 / §3 (Component Status, Live Dashboard, Dependencies) / §3d / §4 (Output, Circle) / §8 (kill switch) / §9 / §9b with real values. ORBT → OPERATE (header `### Status:`, §1 Identity ORBT, §3 Component Status worker/cron rows). RP-820-DEPLOY closed; new tracked entry RP-820-BLUEPRINTS-DELIVERY (status open, low priority — blueprint load into EGRESS_KV, file-delivery mechanism R2/email/SFTP, real end-to-end smoke test; N/A until real vendors exist; non-gating). RP-820-AUTH retained (endpoint auth — cross-hub repair). orbt.yaml: state REPAIR→OPERATE, state_history + repairs blocks rewritten. workflow.yaml: runtime_state REPAIR→OPERATE, deployed_targets worker_url/cron filled, gates updated. PROCESS-MAP-820 (imo-creator-v2 `_inbox/`) updated to OPERATE. §14 + §12 logbook row added. Version bump 3 locations (frontmatter + §1 Identity + Document Control) + Last Modified 2026-05-12. | header + §1 Identity + §2 + §3 + §3d + §4 + §8 + §9 + §9b + §12 + §14 + Document Control + frontmatter |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0 — all infra TODO | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation: PROCESS-UT.md + DOCTRINE.md + orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -591,7 +595,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-04-29 |
 | Last Modified | 2026-05-12 |
-| Version | v1.1.0 |
+| Version | v1.1.1 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

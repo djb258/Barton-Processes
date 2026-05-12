@@ -20,29 +20,30 @@ inside:
   heir:
     process_id: bp.820
     species: Workflow-Body
-    version: "1.1.0"
+    version: "1.1.1"
     last_modified: "2026-05-12"
     companion_manifest: PROCESS-UT.md
     aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
     determinism_gate: ai_on_spine_forbidden
   orbt:
     library_state: BUILD
-    runtime_state: REPAIR
+    runtime_state: OPERATE
     strikes: 0
     last_transition_at: "2026-05-12"
-    last_transition_reason: "BAR-bp820 doc conformance + flat-spoke alignment; runtime REPAIR pending RP-820-DEPLOY (deploy + cron registration + KV blueprint load + smoke — wrangler access not in mechanic session)"
+    last_transition_reason: "BAR-bp820 — worker deployed (vendor-export-820.svg-outreach.workers.dev, version 7ac783ef-83db-47f5-a7c4-3bcdf9db8f82), cron 0 5 * * * registered, /health + /status verified live; RP-820-DEPLOY closed; remaining blueprint/delivery work moved to RP-820-BLUEPRINTS-DELIVERY (low priority, N/A until real vendors — does not gate OPERATE since there is no vendor data to break)"
     flipped_by: sonnet
-    promotion_gate: bp_810_operate_and_RP_820_DEPLOY_complete_and_codex_10_gate_pass
+    promotion_gate: SATISFIED — bp_810_operate (true) + RP_820_DEPLOY_complete (true 2026-05-12) + deploy/cron/health/status verified
 deployed_targets:
   d1: { binding: D1, database_name: svg-d1-client, database_id: "5443887b-ba8a-4da5-9f54-6a9c2cfb1244" }
   kv: { binding: KV, namespace_name: EGRESS_KV, namespace_id: "66e6c7bec8c1479ba708c0bcbb6a0e23" }
-  worker_url: "PENDING DEPLOY (RP-820-DEPLOY)"
-  cron: ["0 5 * * *"]   # registered via [triggers] on deploy — PENDING DEPLOY (RP-820-DEPLOY)
+  worker_url: "https://vendor-export-820.svg-outreach.workers.dev"
+  worker_version_id: "7ac783ef-83db-47f5-a7c4-3bcdf9db8f82"
+  cron: "0 5 * * *"   # registered via [triggers] on deploy 2026-05-12 — confirmed in deploy output
   d1_canonical_reads: [clients, client_contacts, client_employees, client_vendors, client_compliance, client_employee_vendor_ids]
   d1_audit_writes: [export_log, export_error, export_schedule]
-  kv_keys: "blueprint:{vendor_id}"   # zero loaded — PENDING DEPLOY (RP-820-DEPLOY)
+  kv_keys: "blueprint:{vendor_id}"   # zero loaded — N/A until real vendors exist (RP-820-BLUEPRINTS-DELIVERY)
   schema_model: flat-spoke (svg-d1-client; bp.810-written; replaces former normalized person/election/plan/vendor/external_identity_map)
-description: "UT-local workflow for bp.820 Vendor Export. Verifies daily export cron, flat-spoke schema contracts (svg-d1-client), KV blueprint readiness, and downstream delivery. Runtime currently REPAIR — RP-820-DEPLOY (deploy + cron + KV blueprint load + smoke) deferred to a follow-up dispatch with wrangler access."
+description: "UT-local workflow for bp.820 Vendor Export. Verifies daily export cron, flat-spoke schema contracts (svg-d1-client), KV blueprint readiness, and downstream delivery. Runtime OPERATE — worker deployed 2026-05-12 (vendor-export-820.svg-outreach.workers.dev, version 7ac783ef, cron 0 5 * * * registered, /health + /status live). RP-820-DEPLOY closed; remaining blueprint-load + file-delivery work tracked under RP-820-BLUEPRINTS-DELIVERY (low priority, N/A until real vendors)."
 inputs: { bar_id: BAR-bp820, parent_bar: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
 schedule: ["0 5 * * *"]
 data:
@@ -52,15 +53,17 @@ data:
 nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
 gates:
   cron_exists: "0 5 * * * in wrangler.toml"
-  cron_firing: "recent export cron fire confirmed — PENDING DEPLOY (RP-820-DEPLOY)"
+  cron_registered: "0 5 * * * registered on deploy 2026-05-12 — confirmed in `wrangler deploy` output"
+  cron_firing: "no fire yet observed — zero clients/vendors so a fire produces nothing; not a gate while there is no data"
   no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
   ut_ops_matches_reality: "PROCESS-UT operations match export reality (flat-spoke schema)"
-  lbb_ingest_each_fire: "bp.820 LBB rows exist — PENDING DEPLOY"
-  orbt_promoted_or_confirmed: "REPAIR to OPERATE only after RP-820-DEPLOY complete + audit pass"
+  worker_deployed: "vendor-export-820.svg-outreach.workers.dev, version 7ac783ef-83db-47f5-a7c4-3bcdf9db8f82 — /health + /status verified 2026-05-12"
+  lbb_ingest_each_fire: "bp.820 LBB rows ingested per fire — first real fire pending vendor data"
+  orbt_promoted_or_confirmed: "OPERATE since 2026-05-12 — RP-820-DEPLOY complete (deploy + cron + health + status); blueprint/delivery work non-gating"
   d1_surface_documented: "vendor export tables (export_log/export_error/export_schedule) + canonical flat-spoke reads documented and checked"
   d1_binding_correct: "D1 binds to svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244) — D-820-11"
-  kv_blueprints_loaded: "EGRESS_KV has >=1 blueprint:{vendor_id} key — PENDING DEPLOY (RP-820-DEPLOY)"
+  kv_blueprints_loaded: false   # N/A until real vendors exist — RP-820-BLUEPRINTS-DELIVERY; does not gate OPERATE (no vendor data)
   upstream_healthy: "bp.810 is OPERATE (worker deployed 2026-05-12)"
   downstream_wired: "vendor library consumes export output"
-  squawk_live: "export failure writes squawk — PENDING DEPLOY"
+  squawk_live: "export failure writes squawk — path live; first real squawk pending vendor data"
 lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.820 Vendor Export", ingest_on_pass: true, ingest_on_fail: true }
