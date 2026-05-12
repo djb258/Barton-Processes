@@ -1,11 +1,41 @@
+---
+species: UT-Body
+certification_label: provisional
+outside:
+  heir:
+    sovereign_ref: imo-creator
+    hub_id: content-heygen-avatar-video
+    ctb_placement: branch
+    imo_topology: middle
+    cc_layer: CC-03
+    services: [HeyGen API, heygen-dop CLI, Chrome MCP, Doppler]
+    secrets_provider: Doppler (imo-creator → dev → HEYGEN_API_KEY)
+    acceptance_criteria: Avatar identity verified; render dispatched via API or confirmed browser path; MP4 output captured with job ID; constants packet recorded; LBB ingest complete
+  orbt:
+    library_state: BUILD
+    last_indexed_at: "2026-05-12T00:00:00Z"
+    indexed_by: sonnet-mechanic
+inside:
+  heir:
+    process_id: PROC-1710
+    species: UT-Body
+    version: "1.1.0"
+    last_modified: "2026-05-12"
+    companion_manifest: null
+  orbt:
+    library_state: BUILD
+mission_control_wiring: WIRE
+mission_control_target_slot: imo-creator.mission-control.system.processes
+---
+
 # PROC-1710 — HeyGen Avatar/Cinematic Video
 ## Generate founder/avatar direct-to-camera A-roll and cinematic B-roll using HeyGen API and HeyGen UI for features requiring browser automation.
 ### Status: BUILD
 ### Medium: process
 ### Business: barton-enterprises/content
-### Version: 1.0.0
+### Version: 1.1.0
 
-## 📋 UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
+## UT Checklist (Pre-Flight — per atlas/constants/UT_CHECKLIST.md v1.3.1)
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
@@ -20,8 +50,8 @@
 | 9 | BARs Referenced — every BAR this doc touches, with status | ☑ | §3d |
 | 10 | LBB Subjects Fed — which LBB subject(s) this doc's session logs go to | ☑ | §3e |
 | 11 | Geometry — CTB position + Hub-Spoke role + Altitude | ☑ | §1b |
-| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☐ | §9b — pending first render run |
-| 13 | ctb_node — declared path on Barton Enterprises CTB trunk | ☑ | §1 |
+| 12 | Live Verification — every numeric count, cron, URL, command, BAR status grounded against the actual system | ☐ | §9b — STOP-07 blocker active; no live render run |
+| 13 | mission_control_wiring — WIRE / EXEMPT declared in frontmatter | ☑ | frontmatter — WIRE → imo-creator.mission-control.system.processes |
 
 ---
 
@@ -39,8 +69,8 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | Gated (CC-03) |
-| Version | 1.0.0 |
-| Last Modified | 2026-05-04 |
+| Version | 1.1.0 |
+| Last Modified | 2026-05-12 |
 | BAR Reference | BAR-389 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/content/1710-heygen-avatar |
@@ -50,7 +80,7 @@
 | Field | Value |
 |-------|-------|
 | sovereign_ref | imo-creator |
-| hub_id | content-heygen-avatar |
+| hub_id | content-heygen-avatar-video |
 | ctb_placement | branch |
 | imo_topology | middle |
 | cc_layer | CC-03 |
@@ -109,7 +139,7 @@ PROC-1710 produces avatar-based direct-to-camera A-roll and cinematic B-roll vid
 
 | Consumer | What It Needs |
 |----------|--------------|
-| PROC-1800 CF Stream Upload | MP4 file path or download URL from HeyGen |
+| PROC-1800 CF Stream Upload | PROC-1800 handoff packet (JSON) — see §4 Output |
 | Content Pages | CF Stream UID (after PROC-1800) |
 | Distribution (YouTube, LinkedIn) | Published video URL |
 | LBB | Job ID, constants packet, output URL, render metadata |
@@ -196,13 +226,32 @@ output_surface: "youtube | r2 | cf_stream | content_pages | linkedin"
 | 6. Dispatch render | constants_packet + prompt/script | Call HeyGen API (`POST /v2/video/generate`) via `heygen-dop` or Chrome MCP for UI-only features | job_id | heygen-dop / Chrome MCP |
 | 7. Poll for completion | job_id | `GET /v1/video_status.get?video_id={job_id}` until status=completed | video_url | HeyGen API |
 | 8. Download / capture output | video_url | Download MP4 to local path or capture URL | mp4_path or mp4_url | curl / heygen-dop |
-| 9. Ingest to LBB | all metadata | Write render session record to LBB (subject: processes) | lbb_record_id | LBB API |
+| 9. Build PROC-1800 handoff packet | all metadata | Assemble handoff JSON and write to disk | handoff_file_path | structured write |
+| 10. Ingest to LBB | all metadata | Write render session record to LBB (subject: processes) | lbb_record_id | LBB API |
 
 ### Output
 
 - HeyGen job ID
 - MP4 file path or download URL
 - Constants packet used (avatar ID, voice ID, aspect ratio, duration, prompt)
+- **PROC-1800 handoff packet** (JSON):
+
+```json
+{
+  "video_job_id": "<parent job ID from PROC-1750>",
+  "process_id": "PROC-1710",
+  "lane": "heygen_avatar",
+  "heygen_job_id": "<HeyGen API job ID>",
+  "avatar_id": "<avatar ID used>",
+  "voice_id": "<voice ID used>",
+  "artifact_path": "workers/video-pipeline/output/<filename>.mp4",
+  "artifact_size_bytes": "<non-zero integer>",
+  "artifact_sha256": "<hex digest>",
+  "render_exit_code": 0,
+  "ready_for_upload": true
+}
+```
+
 - LBB record ID
 - Ready for PROC-1800 (CF Stream upload)
 
@@ -211,7 +260,7 @@ Completed renders log job ID + constants + output URL to LBB. If a render produc
 
 ---
 
-## 5. DATA SCHEMA {#sec-5-data-schema}
+## 5. OSAM {#sec-5-osam}
 
 ### Process Composition
 
@@ -246,7 +295,8 @@ flowchart TD
 |--------|---------------|------|
 | HeyGen API (`POST /v2/video/generate`) | Render job (script, avatar, voice, format) | Step 6 |
 | Local filesystem | MP4 download | Step 8 |
-| LBB (`processes` subject) | Render session record (job_id, constants, output_url, status) | Step 9 |
+| Handoff JSON file | PROC-1800 handoff packet | Step 9 |
+| LBB (`processes` subject) | Render session record (job_id, constants, output_url, status) | Step 10 |
 | orbt.yaml | Strike count update on failure | On HALT or Strike |
 
 ### Join Chain
@@ -257,8 +307,9 @@ Video job (path_id=heygen_avatar)
     -> PROC-1710 constants packet (avatar ID, voice ID, format)
       -> HeyGen API job
         -> MP4 output
-          -> PROC-1800 CF Stream
-            -> content-pages (streamId)
+          -> PROC-1800 handoff packet
+            -> PROC-1800 CF Stream
+              -> content-pages (streamId)
 ```
 
 ### Forbidden Paths
@@ -271,6 +322,7 @@ Video job (path_id=heygen_avatar)
 | Dispatching Avatar Shots / Video Agent / AI Video Generator / Enhance without a declared browser automation path | Violates D-1710-07 — UI-only features need explicit path |
 | Skipping LBB ingest after render | Breaks traceability and Circle closure |
 | Using incomplete prompt (missing any of 4 slots) for cinematic generation | Violates D-1710-02 — prompt is structure, not optional decoration |
+| Writing handoff file before MP4 verified (size > 0) | PROC-1800 must not receive a phantom path |
 
 ### Query Routing
 
@@ -300,6 +352,7 @@ Video job (path_id=heygen_avatar)
 | A-roll | LAYER-A | video layer | Direct-to-camera speech — carries argument | C |
 | B-roll | LAYER-B | video layer | Cinematic scenes — carries attention, emotion, visual memory | C |
 | constants packet | PKT-1710 | yaml object | Avatar ID + voice ID + format + orientation assembled before dispatch | C |
+| PROC-1800 handoff packet | HANDOFF-1710 | JSON file | All fields PROC-1800 needs to ingest + upload the MP4 | C (structure); V (fill per render) |
 | job_id | JOB-ID | string | HeyGen API render job identifier | V |
 | MP4 output | OUTPUT-MP4 | file path or URL | Rendered video artifact | V |
 
@@ -314,6 +367,7 @@ Video job (path_id=heygen_avatar)
 | Scene prompt formula | HeyGen cinematic prompt | 4-slot assembly |
 | `format.aspect_ratio` | HeyGen API format field | Direct |
 | `format.duration_target` | HeyGen API duration | Direct (domesticated: 4-15s for B-roll) |
+| API job_id + MP4 path + metadata | PROC-1800 handoff packet JSON | Structured assembly |
 | API job_id | LBB render record | Stored as traceability key |
 | MP4 output URL | PROC-1800 input | Downstream handoff |
 
@@ -324,7 +378,7 @@ Video job (path_id=heygen_avatar)
 | ctb_node: `barton-enterprises/content/1710-heygen-avatar` | direct | Spine attachment via CTB |
 | path_id: `heygen_avatar` | direct | PROC-1750 routing key |
 | job_id → LBB render record | direct | Traceability chain |
-| MP4 path → PROC-1800 | direct | Downstream lane handoff |
+| handoff_file_path → PROC-1800 | direct | Downstream lane handoff |
 
 ---
 
@@ -407,8 +461,9 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
    c. Dispatch render with script, default avatar, default voice (Fish), 16:9.
    d. Poll GET /v1/video_status.get until status=completed.
    e. Download MP4 and verify file size > 0.
-   f. Confirm LBB ingest record exists in `processes` subject.
-   EXPECTED: MP4 on disk, job_id in LBB.
+   f. Confirm PROC-1800 handoff packet written to disk.
+   g. Confirm LBB ingest record exists in `processes` subject.
+   EXPECTED: MP4 on disk, handoff packet written, job_id in LBB.
 
 2. Missing-data path — incomplete cinematic prompt:
    a. Prepare scene with only setting_mood + avatar_action (2 of 4 slots).
@@ -430,12 +485,12 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 
 | Claim / Field | Section | Source of Truth | Verification Command | Status | Last Check | Value at Check |
 |---------------|---------|-----------------|----------------------|--------|------------|----------------|
-| Default avatar ID (black shirt) | Section 7 | HeyGen API | `doppler run --project imo-creator --config dev -- powershell -NoProfile -ExecutionPolicy Bypass -File .codex\verify-heygen-access.ps1` | PASS | 2026-05-04 | `cf8be1f92db345458a24fbbdfc368faa` matched as `dbarton black shirt` |
-| Variation avatar ID (blue shirt) | Section 7 | HeyGen API | `doppler run --project imo-creator --config dev -- powershell -NoProfile -ExecutionPolicy Bypass -File .codex\verify-heygen-access.ps1` | PASS | 2026-05-04 | `f2f245dd75514a78a96feec067f0dd9b` matched as `dbarton blue shirt` |
-| Default voice (Fish) ID | Section 7 | HeyGen API | `doppler run --project imo-creator --config dev -- powershell -NoProfile -ExecutionPolicy Bypass -File .codex\verify-heygen-access.ps1` | PASS | 2026-05-04 | `6bddf71228964cd59d74d62fc1070fb3` matched as `dbarton`; additional Dave voices also present |
-| HEYGEN_API_KEY in Doppler | Section 3 | Doppler imo-creator/dev | `doppler run --project imo-creator --config dev -- powershell -NoProfile -ExecutionPolicy Bypass -File .codex\verify-heygen-access.ps1` | PASS | 2026-05-04 | `HEYGEN_API_KEY_PRESENT=true`; secret value not printed |
-| HeyGen API endpoint active | Section 4 | HeyGen API | `GET https://api.heygen.com/v2/avatars` and `GET https://api.heygen.com/v2/voices` through verification helper | PASS | 2026-05-04 | Avatar count 1285; voice count 2390 |
-| First new render dispatch | Section 9 | HeyGen API or Chrome MCP | `heygen-dop` render command or browser automation session | PENDING | - | Not run in this verification pass; no render credits spent |
+| Default avatar ID (black shirt) | §7 | HeyGen API | `doppler run --project imo-creator --config dev -- powershell -NoProfile -ExecutionPolicy Bypass -File .codex\verify-heygen-access.ps1` | ✅ PASS | 2026-05-04 | `cf8be1f92db345458a24fbbdfc368faa` matched as `dbarton black shirt` |
+| Variation avatar ID (blue shirt) | §7 | HeyGen API | same script | ✅ PASS | 2026-05-04 | `f2f245dd75514a78a96feec067f0dd9b` matched as `dbarton blue shirt` |
+| Default voice (Fish) ID | §7 | HeyGen API | same script | ✅ PASS | 2026-05-04 | `6bddf71228964cd59d74d62fc1070fb3` matched as `dbarton`; additional Dave voices also present |
+| HEYGEN_API_KEY in Doppler | §3 | Doppler imo-creator/dev | same script | ✅ PASS | 2026-05-04 | `HEYGEN_API_KEY_PRESENT=true`; secret value not printed |
+| HeyGen API endpoint active | §4 | HeyGen API | `GET https://api.heygen.com/v2/avatars` through verification helper | ✅ PASS | 2026-05-04 | Avatar count 1285; voice count 2390 |
+| First new render dispatch | §9 | HeyGen API or Chrome MCP | render command (live run) | 🔴 BLOCKED | — | STOP-07: live render dispatches HeyGen credits and uses Dave's avatar. Blocked until sovereign go. |
 
 ---
 
@@ -449,6 +504,7 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | Time to MP4 (A-roll, 60s) | minutes | unknown | ≤ 15 min | ≤ 20 min |
 | Prompt formula compliance | % with all 4 slots / total cinematic | 0 | 100% | 100% |
 | LBB ingest per render | count | 0 | 1:1 with renders | 1:1 |
+| PROC-1800 handoff delivery rate | count | 0 | 1:1 with successful renders | 1:1 |
 | Avatar identity HALT rate | count | 0 | 0 | 0 |
 
 ### 10b. Sigma Tracking
@@ -457,12 +513,13 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 |--------|-------|-------|-------|-------|--------|
 | Render success | pending | pending | pending | TIGHTENING expected | keep |
 | Prompt compliance | pending | pending | pending | TIGHTENING expected | keep |
+| Handoff delivery | pending | pending | pending | TIGHTENING expected | keep |
 
 ### 10c. ORBT Gate Rules
 
 | From | To | Gate |
 |------|-----|------|
-| BUILD | OPERATE | ≥ 3 successful render runs; prompt formula compliance 100%; LBB ingest confirmed; avatar IDs verified; auditor sign-off |
+| BUILD | OPERATE | ≥ 3 successful render runs; prompt formula compliance 100%; LBB ingest confirmed; avatar IDs verified; PROC-1800 handoff confirmed; auditor sign-off |
 | OPERATE | REPAIR | Render failure, HALT condition triggered, or metric out of tolerance |
 | REPAIR | OPERATE | Fix applied, 1 clean render, auditor confirms |
 | Any (Strike 3) | TROUBLESHOOT/TRAIN | Same failure pattern 3× → Airworthiness Directive |
@@ -476,7 +533,7 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | trace_id | PROC-1710-BUILD-001 |
 | run_id | 2026-05-04-session-01 |
 | step | build-process-ut |
-| target | `../Barton-Processes/factory/content/1710-heygen-avatar/PROCESS-UT.md` |
+| target | `factory/content/1710-heygen-avatar/PROCESS-UT.md` |
 | actual | this file |
 | delta | from zero to initial BUILD UT |
 | status | BUILD |
@@ -488,6 +545,21 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | timestamp | 2026-05-04 |
 | signed_by | Sonnet mechanic (BAR-389 dispatch) |
 
+| Field | Value |
+|-------|-------|
+| trace_id | PROC-1710-REPAIR-001 |
+| run_id | 2026-05-12-session-01 |
+| step | repair-to-ut-v2.8.0 |
+| target | `factory/content/1710-heygen-avatar/PROCESS-UT.md` |
+| actual | this file |
+| delta | Added BS Law Y-junction YAML frontmatter; renamed §5 DATA SCHEMA → OSAM; added PROC-1800 handoff packet JSON schema in §4; added STOP-07 blocker in §9b; updated checklist item 13 to MC wiring; bumped version 1.0.0 → 1.1.0 |
+| status | BUILD |
+| error_code | null |
+| error_message | null |
+| tools_used | BAR-VIDEO-PATH-CERTIFICATION dispatch, UT v2.8.0 template, WO-1710-EX |
+| timestamp | 2026-05-12 |
+| signed_by | Sonnet mechanic (BAR-VIDEO-PATH-CERTIFICATION) |
+
 ### Build Inputs Used
 
 | Source | File | What Was Used |
@@ -498,7 +570,6 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | Julia McCoy Workflow | `fleet/content/videos/JULIA-MCCOY-AVATAR-WORKFLOW.md` | Avatar IDs, voice IDs, 4-tool pipeline, operational tolerances |
 | Child UT Guide | `atlas/HOW_TO_BUILD_A_CHILD_UT.md` | 6-fill structure |
 | Process Fill Instructions | `atlas/PROCESS_FILL_INSTRUCTIONS.md` | 14-section anchors, fill rules |
-| Reference UT | `factory/content/1700-video-ctb/PROCESS-UT.md` | Structure reference |
 
 ---
 
@@ -531,6 +602,7 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | Date | What Was Done | LBB Record |
 |------|---------------|-----------|
 | 2026-05-04 | PROC-1710 initial BUILD — created PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml from BAR-389 dispatch via BAR-VIDEO-LANE-UTS plan | pending LBB ingest |
+| 2026-05-12 | WO-1710-EX mechanic repair (BAR-VIDEO-PATH-CERTIFICATION) — added BS Law Y-junction YAML frontmatter, renamed §5 DATA SCHEMA → OSAM, added PROC-1800 handoff packet JSON schema in §4 output, added STOP-07 blocker in §9b render row, updated checklist item 13 to MC wiring declaration, bumped version 1.0.0 → 1.1.0 | pending LBB ingest |
 
 ---
 
@@ -539,8 +611,8 @@ curl -s -X DELETE "https://api.heygen.com/v1/video.delete" \
 | Field | Value |
 |-------|-------|
 | Created | 2026-05-04 |
-| Last Modified | 2026-05-04 |
-| Version | 1.0.0 |
+| Last Modified | 2026-05-12 |
+| Version | 1.1.0 |
 | Template Version | UT v2.8.0 |
 | Medium | process |
 | Parent | `atlas/PROCESS_FILL_INSTRUCTIONS.md` + `atlas/HOW_TO_BUILD_A_CHILD_UT.md` |
