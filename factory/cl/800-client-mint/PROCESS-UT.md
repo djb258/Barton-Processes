@@ -13,7 +13,7 @@ outside:
       - d1-client-mint-800
       - doppler
     secrets_provider: doppler
-    acceptance_criteria: "Receives CL sovereign_id via POST /mint → mints client_id in D1 client table linked to sovereign_id; duplicate sovereign_id detection halts with DUPLICATE_SOVEREIGN error; SOVEREIGN_NOT_FOUND halts when cl.company_identity has no matching record; vault promotion via POST /vault writes certified client to Neon clnt.client; errors written to D1 client_error; GET /status returns accurate counts (total, vaulted, unvaulted, open_errors); cl.* Neon tables are READ ONLY."
+    acceptance_criteria: "Receives CL sovereign_id via POST /mint → mints client_id in D1 svg-d1-client.clients table linked to sovereign_id; duplicate sovereign_id detection halts with DUPLICATE_SOVEREIGN error; SOVEREIGN_NOT_FOUND halts when cl.company_identity has no matching record; errors written to D1 clients_error; GET /status returns accurate counts (total, onboarding, active, errors_total); cl.* Neon tables are READ ONLY — never written. Single-tier model: no Neon vault promotion."
   orbt:
     library_state: BUILD
     indexed_by: codex
@@ -21,8 +21,8 @@ inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.0.6"
-    last_modified: "2026-05-10"
+    version: "2.2.0"
+    last_modified: "2026-05-12"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
     library_state: BUILD
@@ -67,8 +67,8 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v2.0.6 |
-| Last Modified | 2026-05-10 |
+| Version | v2.2.0 |
+| Last Modified | 2026-05-12 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/cl/800-client-mint |
@@ -77,7 +77,7 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 
 **CTB Position:** barton-enterprises → svg-agency → factory/cl → 800-client-mint (leaf)
 
-**Hub-Spoke Role:** Hub — this process owns all mint logic; D1 and Neon are spokes (dumb transport); POST /mint and POST /vault are rim entry points.
+**Hub-Spoke Role:** Hub — this process owns all mint logic; D1 (clients, clients_error) and Neon CL (read-only) are spokes (dumb transport); POST /mint is the rim entry point.
 
 **Altitude:** 5k execution — single mint transaction per invocation; no strategy layer.
 
@@ -85,9 +85,9 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 flowchart LR
   TRUNK[Barton Enterprises] --> BRANCH[SVG Agency]
   BRANCH --> LEAF[800 Client Mint]
-  RIM_IN[POST /mint sovereign_id] --> HUB[Hub: mint.ts + vault.ts]
-  HUB --> RIM_OUT[client_id + D1 record + Neon vault]
-  SPOKE[D1 / Neon transport] --> HUB
+  RIM_IN[POST /mint sovereign_id] --> HUB[Hub: mint.ts]
+  HUB --> RIM_OUT[client_id + D1 clients row]
+  SPOKE[D1 svg-d1-client / Neon CL read-only] --> HUB
 ```
 
 ### HEIR (8 fields - Aviation Model, Bedrock §8)
@@ -101,12 +101,12 @@ flowchart LR
 | cc_layer | CC-04 |
 | services | CF Worker (manual trigger), Neon via Hyperdrive, D1 (working tables) |
 | secrets_provider | doppler |
-| acceptance_criteria | Receives CL sovereign ID → mints client_id in D1; populates clnt.client from CL sovereign data; links client_id back to CL sovereign ID; promotes certified client to Neon vault; errors write to D1 client_error; duplicate sovereign ID detection halts with error |
+| acceptance_criteria | Receives CL sovereign_id via POST /mint → mints client_id in D1 svg-d1-client.clients table linked to sovereign_id; duplicate sovereign_id detection halts with DUPLICATE_SOVEREIGN error; SOVEREIGN_NOT_FOUND halts when cl.company_identity has no matching record; errors written to D1 clients_error; GET /status returns accurate counts (total, onboarding, active, errors_total); cl.* Neon tables are READ ONLY — never written. Single-tier model: no Neon vault promotion. |
 
 ## §2. PURPOSE {#sec-2-purpose}
 
 ### WHAT
-Client Mint receives a CL sovereign_id (company lifecycle identifier) via HTTP POST, reads the company's identity from the Neon CL vault, generates a unique client_id, writes the client record to D1 working tables, and optionally promotes certified clients to the Neon clnt.* canonical vault. It is the single gate that converts an outreach prospect into a billable client entity.
+Client Mint receives a CL sovereign_id (company lifecycle identifier) via HTTP POST, reads the company's identity from the Neon CL vault (READ ONLY), generates a unique client_id, and writes the client record to the D1 svg-d1-client.clients table. Single-tier model (2026-05-12): svg-d1-client.clients is canonical — no Neon vault promotion tier. It is the single gate that converts an outreach prospect into a billable client entity.
 
 ### WHY
 Without Client Mint there is no client_id. Every downstream process — 810 Client Intake, the client portal (830), vendor exports (820), billing — requires a minted client_id. The process is the first domino: no mint, no client, no revenue.
@@ -115,12 +115,11 @@ Without Client Mint there is no client_id. Every downstream process — 810 Clie
 Operated by Dave Barton or a delegated SVG Agency operator. Documentation consumed by process owners, auditors, and anyone debugging client-creation failures.
 
 ### SCOPE (in)
-- Receiving a CL sovereign_id and validating it is well-formed
-- Duplicate detection against D1 client table
-- Reading company identity from Neon cl.company_identity
-- Generating and persisting client_id to D1 client table
-- Vault promotion of certified clients to Neon clnt.client via POST /vault
-- Error logging to D1 client_error and Neon clnt.client_error
+- Receiving a CL sovereign_id and validating it is well-formed (UUID regex)
+- Duplicate detection against D1 svg-d1-client.clients table
+- Reading company identity from Neon cl.company_identity (READ ONLY — never written)
+- Generating and persisting client_id to D1 svg-d1-client.clients table
+- Error logging to D1 clients_error table
 
 ### OUT-OF-SCOPE
 - Client intake workflow — owned by 810 Client Intake
@@ -130,7 +129,7 @@ Operated by Dave Barton or a delegated SVG Agency operator. Documentation consum
 - Automatic/cron-based minting — manual trigger only per D-800-07
 
 ### SUCCESS METRIC
-100% of minted client_ids are linked to a valid CL sovereign_id with zero orphaned records in D1 client table.
+100% of minted client_ids are linked to a valid CL sovereign_id with zero orphaned records in D1 svg-d1-client.clients table.
 
 ## §3. RESOURCES {#sec-3-resources}
 
@@ -147,27 +146,26 @@ Required doctrine references for every process UT:
 
 | Component | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Light | State |
 |-----------|----------------------------------|------|-------|-------|
-| CF Worker: client-mint-800 | client-mint-800 · leaf · CC-04 | BUILD | red | Not deployed; database_id empty in wrangler.toml |
-| D1: client-mint-800 | client-mint-800 · leaf · CC-04 | BUILD | red | Database not yet created; migrations not run |
-| Neon cl.company_identity (read) | vault · leaf · CC-04 | OPERATE | green | CL sovereign data confirmed available |
-| Neon clnt.client (write/vault) | vault · leaf · CC-04 | BUILD | yellow | Schema migration (002_neon_clnt_client.sql) not yet run |
-| Doppler: NEON_URL | TBV | OPERATE | green | Secret confirmed available per PROCESS.md |
+| CF Worker: client-mint-800 | client-mint-800 · leaf · CC-04 | OPERATE | green | Deployed 2026-05-12; version 3e6237ce. URL: https://client-mint-800.svg-outreach.workers.dev |
+| D1: svg-d1-client (clients + clients_error) | client-mint-800 · leaf · CC-04 | OPERATE | green | Live; managed by bp.840 (BAR-178). database_id: 5443887b-ba8a-4da5-9f54-6a9c2cfb1244 |
+| Neon cl.company_identity (read-only) | vault · leaf · CC-04 | OPERATE | green | CL sovereign data confirmed available — READ ONLY, never written |
+| Doppler: CL_DATABASE_URL | TBV | OPERATE | green | Secret set on worker 2026-05-12 (wrangler secret put) |
 
 ### Live Dashboard
 
 | Resource | URL | What it shows |
 |----------|-----|---------------|
-| Worker health | https://client-mint-800.svg-outreach.workers.dev/health | Worker alive + process identity |
-| Worker status | https://client-mint-800.svg-outreach.workers.dev/status | Client counts: total, vaulted, unvaulted, open errors |
+| Worker health | https://client-mint-800.svg-outreach.workers.dev/health | Worker alive + model: single-tier + canonical_store |
+| Worker status | https://client-mint-800.svg-outreach.workers.dev/status | Client counts: total, onboarding, active, errors_total |
 
 ### Dependencies
 
 | Dependency | Type | What It Provides | Status |
 |-----------|------|-----------------|--------|
-| CL company lifecycle (Neon vault) | database | cl.company_identity with sovereign_id records | DONE |
-| Neon vault access (NEON_URL) | secret | Connection string for Neon read/write | DONE |
-| D1 database: client-mint-800 | database | Working tables for client + client_error | PENDING — database_id not set |
-| Auth on endpoints | middleware | Authentication for POST /mint, POST /vault | PENDING — not implemented |
+| CL company lifecycle (Neon — READ ONLY) | database | cl.company_identity with sovereign_id records | DONE |
+| Neon CL access (CL_DATABASE_URL) | secret | Connection string for CL Neon read (never write) | DONE — set on worker 2026-05-12 |
+| D1 database: svg-d1-client | database | clients + clients_error canonical tables (managed by bp.840) | DONE — database_id 5443887b set in wrangler.toml |
+| Auth on endpoints | middleware | Authentication for POST /mint | PENDING — not implemented (tracked Known Issue) |
 
 ### Downstream Consumers
 
@@ -181,21 +179,21 @@ Required doctrine references for every process UT:
 
 | Item | Type | Cost Tier | Credentials | What It Does |
 |------|------|-----------|-------------|-------------|
-| Cloudflare D1 (client-mint-800) | database | Free | D1 binding | Working data — client table + client_error table |
+| Cloudflare D1 (svg-d1-client) | database | Free | D1 binding (name: D1) | Canonical data — clients table + clients_error table; managed by bp.840 |
 | Cloudflare Workers | compute | Free | wrangler deploy | REST endpoint runtime |
-| Neon PostgreSQL | database | Cheap | NEON_URL (Doppler) | Vault reads (cl.company_identity) and vault writes (clnt.*) |
+| Neon PostgreSQL (CL — read-only) | database | Cheap | CL_DATABASE_URL (Doppler) | Reads cl.company_identity — NEVER written by this process |
 
 ### Secrets
 
 | Secret | Doppler Project | Config | Used By |
 |--------|----------------|--------|---------|
-| NEON_URL | svg-outreach | production | mint.ts (read cl.company_identity), vault.ts (write clnt.*) |
+| CL_DATABASE_URL | imo-creator | dev | mint.ts (read cl.company_identity — READ ONLY, never writes CL) |
 
 ### 3c. FCEs Attached
 
 | FCE Name | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Run Directory | Latest P=1 | Rows | Status |
 |----------|----------------------------------|------|--------------|------------|------|--------|
-| TBV | TBV | TBV | TBV | TBV | TBV | TBV — no FCE attached yet |
+| N/A | N/A | N/A | N/A | N/A | N/A | N/A — predates FCE adoption; deterministic mint path, no scoring engine required |
 
 ### 3d. BARs Referenced
 
@@ -224,20 +222,19 @@ Manual HTTP POST to `/mint` with `{ "sovereign_id": "<uuid>" }`. Sovereign_id is
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| 1 | POST /mint body | Validate sovereign_id is present and well-formed | Validated sovereign_id or 400 error | CF Worker (index.ts) |
-| 2 | sovereign_id | Check D1 client table for duplicate sovereign_id | Pass or DUPLICATE_SOVEREIGN error (D-800-02) | D1 query (mint.ts) |
-| 3 | sovereign_id | Read company identity from Neon cl.company_identity | SovereignRecord or SOVEREIGN_NOT_FOUND error (D-800-10) | Neon via NEON_URL (mint.ts) |
-| 4 | SovereignRecord | Mint new client_id (crypto.randomUUID()), INSERT into D1 client table | client_id + client row in D1 (D-800-03) | D1 insert (mint.ts) |
-| 5 | D1 client rows where vaulted_at IS NULL | POST /vault: push unvaulted clients to Neon clnt.client, mark vaulted_at | Vaulted count + errors (D-800-05) | Neon write + D1 update (vault.ts) |
+| 1 | POST /mint body | Validate sovereign_id is present and passes UUID regex | Validated sovereign_id or 400 error | CF Worker (index.ts) |
+| 2 | sovereign_id | Check D1 clients table for duplicate sovereign_id | Pass or DUPLICATE_SOVEREIGN error (D-800-02) | D1 query (mint.ts) |
+| 3 | sovereign_id | Read company identity from Neon cl.company_identity (READ ONLY) — columns: company_unique_id, company_name, company_domain, employee_count_band | CLIdentityRecord or SOVEREIGN_NOT_FOUND error (D-800-10) | Neon via CL_DATABASE_URL (mint.ts) |
+| 4 | CLIdentityRecord | Mint new client_id (crypto.randomUUID()), INSERT into D1 clients table with lifecycle_stage='onboarding' | client_id + clients row in D1 (D-800-03) | D1 insert (mint.ts) |
 
 ### Output
-- Minted client record in D1 client table (client_id linked to sovereign_id) — D-800-01
-- On vault: certified client written to Neon clnt.client (canonical) — D-800-08
-- Errors written to D1 client_error (and Neon clnt.client_error on promotion) — D-800-06
+- Minted client record in D1 svg-d1-client.clients table (client_id linked to sovereign_id, lifecycle_stage='onboarding') — D-800-01
+- Single-tier canonical: svg-d1-client.clients is the source of truth — no Neon vault promotion — D-800-08
+- Errors written to D1 clients_error table — D-800-06
 - Downstream: 810 Client Intake reads client_id to begin intake workflow — D-800-09
 
 ### Circle (Bedrock §5)
-Minted client_id feeds 810 Client Intake. Errors surface via GET /status. Vault promotion closes the loop by persisting D1 working records into Neon canonical layer. GET /client/:id provides read-back verification. Errors in client_error table feed back into operations dashboard for resolution.
+Minted client_id feeds 810 Client Intake. Errors surface via GET /status (counts: total, onboarding, active, errors_total). GET /client/:id provides read-back verification. Errors in clients_error table feed back into operations dashboard for resolution. Single-tier: the circle closes at D1 — no Neon write hop.
 
 ## §5. DATA SCHEMA {#sec-5-data-schema}
 
@@ -245,17 +242,15 @@ Minted client_id feeds 810 Client Intake. Errors surface via GET /status. Vault 
 
 | Source | What It Provides | Join Key |
 |--------|-----------------|----------|
-| cl.company_identity (Neon) | canonical_name, EIN, state, domain, source — company identity from CL outreach pipeline | company_unique_id = sovereign_id |
-| D1: client | Previously minted client records for duplicate check | sovereign_id |
+| cl.company_identity (Neon — READ ONLY) | company_name, company_domain, employee_count_band — company identity from CL outreach pipeline | company_unique_id = sovereign_id |
+| D1: svg-d1-client.clients | Previously minted client records for duplicate check | sovereign_id |
 
 ### WRITE Access
 
 | Target | What It Writes | When |
 |--------|---------------|------|
-| D1: client | New minted client record (client_id, sovereign_id, legal_name, fein, domicile_state, status, version, domain, etc.) | Step 4 — mint |
-| D1: client_error | Error records (code, message, client_id, timestamp) | On any failure (D-800-06) |
-| clnt.client (Neon) | Certified client identity record | POST /vault promotion (D-800-05) |
-| clnt.client_error (Neon) | Promoted error records | POST /vault promotion |
+| D1: svg-d1-client.clients | New minted client record (client_id, sovereign_id, company_name, company_domain, notes[employee_count_band], lifecycle_stage='onboarding', sovereign_ref, hub_id, cc_layer, ctb_placement, orbt_mode, strike_count, created_at, updated_at; ein/industry/employee_count left NULL) | Step 4 — mint |
+| D1: svg-d1-client.clients_error | Error records (error_id, client_id, error_code, error_message, created_at) | On any failure (D-800-06) |
 
 ### Process Composition
 
@@ -274,10 +269,9 @@ flowchart TD
 ### Join Chain
 
 ```text
-cl.company_identity.company_unique_id (sovereign_id)
-  -> D1: client (sovereign_id, 1:1 after mint)
-    -> clnt.client (sovereign_id, 1:1 after vault promotion)
-      -> 810 Client Intake (client_id, downstream spine)
+cl.company_identity.company_unique_id (sovereign_id) [READ ONLY]
+  -> D1: svg-d1-client.clients (sovereign_id, 1:1 after mint — canonical)
+    -> 810 Client Intake (client_id, downstream spine)
 ```
 
 ### Forbidden Paths
@@ -286,19 +280,19 @@ cl.company_identity.company_unique_id (sovereign_id)
 |--------|-----|
 | Write to cl.* Neon tables | CL schema is READ ONLY — this process is downstream; writing upstream violates the pipeline boundary (D-800-04) |
 | Mint without duplicate check | Creates orphaned client_ids — violates data integrity (D-800-02) |
-| Auto-promotion without explicit POST /vault | Vault writes must be deliberate — CQRS write path (D-800-05) |
 | Skip error table on failure | No log means the fix cannot be traced — Aviation Model (D-800-06) |
 | Mint without reading cl.company_identity | Cannot mint from thin air — source record must be confirmed (D-800-10) |
+| Call /vault endpoint | Endpoint removed (410 Gone) — single-tier model, no vault promotion (D-800-05 deprecated) |
 
 ### Query Routing
 
 | Question | Table | Column |
 |----------|-------|--------|
-| Does this company already have a client_id? | D1: client | sovereign_id |
-| What company data feeds the mint? | cl.company_identity (Neon) | company_unique_id |
-| What errors occurred during minting? | D1: client_error | error_code |
-| Is this client promoted to vault? | D1: client | vaulted_at |
-| How many clients are unvaulted? | D1: client | vaulted_at IS NULL |
+| Does this company already have a client_id? | D1: svg-d1-client.clients | sovereign_id |
+| What company data feeds the mint? | cl.company_identity (Neon — READ ONLY) | company_unique_id |
+| What errors occurred during minting? | D1: svg-d1-client.clients_error | error_code |
+| What lifecycle stage is this client in? | D1: svg-d1-client.clients | lifecycle_stage |
+| How many clients are in onboarding? | D1: svg-d1-client.clients | lifecycle_stage = 'onboarding' |
 
 ## §6. DMJ - Define, Map, Join {#sec-6-dmj}
 
@@ -308,68 +302,66 @@ cl.company_identity.company_unique_id (sovereign_id)
 |---------|-----|--------|-------------|--------|
 | sovereign_id | sovereign_id | TEXT / UUID | CL company lifecycle identifier — the universal link; never changes per company | C |
 | client_id | client_id | TEXT / UUID (crypto.randomUUID()) | Minted client identity — one per sovereign_id, never reused | C |
-| legal_name | legal_name | TEXT | Canonical company name from cl.company_identity | V |
-| fein | fein | TEXT | Federal employer identification number (nullable) | V |
-| domicile_state | domicile_state | TEXT | State of domicile (nullable) | V |
-| status | status | TEXT (enum: active) | Client lifecycle status — defaults to 'active' at mint | C |
-| vaulted_at | vaulted_at | TEXT (datetime) | Timestamp of Neon vault promotion; NULL until promoted | V |
-| error_code | error_code | TEXT (enum) | DUPLICATE_SOVEREIGN, SOVEREIGN_NOT_FOUND, VAULT_FAILED | C |
+| company_name | company_name | TEXT | Company name from cl.company_identity.company_name | V |
+| company_domain | company_domain | TEXT (nullable) | Domain from cl.company_identity.company_domain | V |
+| employee_count_band | notes (stored as text band) | TEXT (nullable) | Band string from cl.company_identity.employee_count_band; stored in clients.notes as "employee_count_band:X" | V |
+| lifecycle_stage | lifecycle_stage | TEXT (enum: onboarding, active, ...) | Client lifecycle stage — 'onboarding' at mint time | C |
+| vaulted_at | vaulted_at | TEXT (datetime, reserved) | Reserved column; NULL forever in single-tier model | V |
+| error_code | error_code | TEXT (enum) | DUPLICATE_SOVEREIGN, SOVEREIGN_NOT_FOUND | C |
 
 ### 6b. MAP (Connect Key to Structure)
 
 | Source | Target | Transform |
 |--------|--------|-----------|
-| POST body: sovereign_id | cl.company_identity.company_unique_id | direct lookup |
-| cl.company_identity.canonical_name | D1 client.legal_name | direct |
-| cl.company_identity.ein | D1 client.fein | direct |
-| cl.company_identity.state | D1 client.domicile_state | direct |
-| cl.company_identity.domain | D1 client.domain | direct |
-| cl.company_identity.source | D1 client.source | direct |
-| crypto.randomUUID() | D1 client.client_id | generate |
-| D1 client (all fields) | clnt.client | promote (vault) |
+| POST body: sovereign_id | cl.company_identity.company_unique_id | direct lookup (READ ONLY) |
+| cl.company_identity.company_name | D1 clients.company_name | direct |
+| cl.company_identity.company_domain | D1 clients.company_domain | direct (nullable) |
+| cl.company_identity.employee_count_band | D1 clients.notes | format as "employee_count_band:{value}" (nullable) |
+| crypto.randomUUID() | D1 clients.client_id | generate |
+| 'onboarding' (constant) | D1 clients.lifecycle_stage | hardcoded at mint |
+| 'svg-outreach' (constant) | D1 clients.sovereign_ref | hardcoded |
+| NULL | D1 clients.ein, industry, employee_count, vaulted_at, onboarded_at | not in CL schema / reserved |
 
 ### 6c. JOIN (Path to Spine)
 
 | Join Path | Type | Description |
 |-----------|------|-------------|
-| sovereign_id -> cl.company_identity | direct | Spine entry — confirms company exists in CL vault |
-| sovereign_id -> D1 client | direct | Duplicate check — ensures 1:1 sovereign:client |
-| D1 client.client_id -> clnt.client.client_id | direct | Vault promotion — D1 working to Neon canonical |
-| D1 client.client_id -> 810 intake spine | direct | Downstream — client_id is the join key for all intake operations |
+| sovereign_id -> cl.company_identity | direct | Spine entry — confirms company exists in CL vault (READ ONLY) |
+| sovereign_id -> D1 clients | direct | Duplicate check — ensures 1:1 sovereign:client |
+| D1 clients.client_id -> 810 intake spine | direct | Downstream — client_id is the join key for all intake operations |
 
 ## §7. CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
 - sovereign_id is the universal link between CL pipeline and minted client — D-800-01
 - client_id is generated at mint time (crypto.randomUUID()), one per sovereign_id, never reused — D-800-03
-- D1 is the working layer; Neon clnt.* is the canonical vault — D-800-08
-- CQRS: D1 client (canonical working) + D1 client_error (error drain) — one canonical + one error per workspace
-- Vault promotion is explicit-only via POST /vault — D-800-05
-- Error codes are a fixed enum: DUPLICATE_SOVEREIGN, SOVEREIGN_NOT_FOUND, VAULT_FAILED
-- Endpoints are fixed: GET /health, GET /status, POST /mint, POST /vault, GET /client/:id
+- Single-tier: svg-d1-client.clients is canonical — no Neon vault promotion — D-800-08 (revised 2026-05-12)
+- CQRS: D1 clients (canonical) + D1 clients_error (error drain) — one canonical + one error table
+- Error codes are a fixed enum: DUPLICATE_SOVEREIGN, SOVEREIGN_NOT_FOUND
+- Endpoints are fixed: GET /health, GET /status, POST /mint, GET /client/:id (/vault returns 410)
 - Manual trigger only — no cron — D-800-07
 - cl.* Neon tables are READ ONLY for this process — D-800-04
+- lifecycle_stage='onboarding' at mint time — hardcoded, never a caller-supplied value
 - Downstream trigger: mint creates the client_id that enables 810 Client Intake — D-800-09
 
 ### Variables (fill - changes every run/cycle)
 - Which sovereign_id is being minted (provided by operator)
-- What company data comes back from cl.company_identity (legal_name, fein, domicile_state, domain, source)
+- What company data comes back from cl.company_identity (company_name, company_domain, employee_count_band)
 - Whether the sovereign_id already exists (duplicate check result)
 - The generated client_id value (new UUID per run)
 - Error messages and timestamps
-- Number of unvaulted clients at promotion time
 
 ## §8. STOP CONDITIONS {#sec-8-stop-conditions}
 
 | Condition | Action |
 |-----------|--------|
-| sovereign_id missing or malformed in POST body | HALT — return 400, do not query anything (D-800-07) |
-| DUPLICATE_SOVEREIGN — sovereign_id already minted | HALT — return error with existing client_id (D-800-02) |
+| sovereign_id missing or malformed (fails UUID regex) in POST body | HALT — return 400, do not query anything (D-800-07) |
+| DUPLICATE_SOVEREIGN — sovereign_id already minted | HALT — return 409 with existing client_id (D-800-02) |
 | SOVEREIGN_NOT_FOUND — cl.company_identity has no record | HALT — return error, cannot mint without source data (D-800-10) |
-| VAULT_FAILED — Neon write fails during promotion | HALT — client stays in D1, log error, do not retry automatically (D-800-06) |
-| Neon connection failure on read | HALT — cannot verify source, do not mint blind (D-800-10) |
-| D1 write failure | HALT — log to error table if possible, return 500 (D-800-06) |
+| Neon CL connection failure on read | HALT — cannot verify source, do not mint blind (D-800-10) |
+| D1 write failure | HALT — log to clients_error if possible, return 500 (D-800-06) |
 | cl.* write attempted | HALT — forbidden path violation (D-800-04) |
+| POST /vault called | 410 Gone — endpoint removed in single-tier model (D-800-05 deprecated) |
 | Same failure repeats 3x (Strike 3) | Troubleshoot/Train → Airworthiness Directive |
 
 ### Kill Switch
@@ -383,34 +375,33 @@ npx wrangler worker route delete <route_id>
 ## §9. VERIFICATION {#sec-9-verification}
 
 ```text
-1. GET /health → expected: { "status": "ok", "process": "PROC-CLIENT-MINT", "number": 800 }
-2. POST /mint { "sovereign_id": "<valid-cl-uuid>" } → expected: 201 with minted client_id
+1. GET /health → expected: { "process": "bp.800-client-mint", "model": "single-tier", "canonical_store": "svg-d1-client.clients", "status": "ok" }
+2. POST /mint { "sovereign_id": "<valid-cl-uuid>" } → expected: 201 with minted client_id, company_name, sovereign_id, status:"minted"
 3. POST /mint { "sovereign_id": "<same-uuid>" } (repeat) → expected: 409 DUPLICATE_SOVEREIGN error
-4. POST /mint { "sovereign_id": "nonexistent-id" } → expected: error SOVEREIGN_NOT_FOUND
-5. GET /client/:id (using client_id from step 2) → expected: full client record JSON
-6. GET /status → expected: { clients: { total: N, vaulted: N, unvaulted: N }, open_errors: N }
-7. POST /vault → expected: { vaulted: N, errors: 0, durationMs: N }
-8. Query D1: SELECT COUNT(*) FROM client WHERE vaulted_at IS NOT NULL → expected: matches vaulted count from step 7
+4. POST /mint { "sovereign_id": "not-a-valid-uuid" } → expected: 400 "Invalid sovereign_id format — must be a valid UUID"
+5. POST /mint { "sovereign_id": "<valid-uuid-not-in-cl>" } → expected: error SOVEREIGN_NOT_FOUND
+6. GET /client/:id (using client_id from step 2) → expected: full client record JSON
+7. GET /status → expected: { process: "bp.800-client-mint", model: "single-tier", clients: { total: N, onboarding: N, active: N }, errors_total: N }
+8. GET /vault → expected: 410 Gone (endpoint removed — single-tier model)
 ```
 
 ### Three Primitives Check (Bedrock §1)
-1. Thing — D1 database exists and migrations have run? CF Worker deployed? Neon cl.company_identity accessible?
-2. Flow — sovereign_id reaches Neon query? Company data reaches D1 insert? vault.ts reads unvaulted rows?
-3. Change — Company identity correctly transformed into client record? client_id generated and linked to sovereign_id?
+1. Thing — D1 `svg-d1-client` database exists with `clients` + `clients_error` tables? CF Worker deployed and responding? Neon `cl.company_identity` accessible via `CL_DATABASE_URL`?
+2. Flow — `sovereign_id` reaches Neon read query? Company identity data reaches D1 INSERT? Error events reach `clients_error`?
+3. Change — Company identity correctly transformed into client record? `client_id` generated and linked to `sovereign_id`? `lifecycle_stage='onboarding'` set at mint?
 
 ## 9b. Live Verification Log {#sec-9b-live-verification}
 
-> **NOT YET DEPLOYED** — gauge spec defined; all live values pending first production run.
+> **DEPLOYED 2026-05-12** — worker live, smoke test passed. Version ID: `3e6237ce-efa9-432f-8ad6-16e656a5bc5f`.
 
 | Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
-| Worker health endpoint responds | §3 | GET /health | `curl https://client-mint-800.svg-outreach.workers.dev/health` | [ ] | TBV | TBV — worker not deployed |
-| Total minted client count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status` | [ ] | TBV | TBV — D1 not created |
-| D1 client row count | §5 | D1 query | `wrangler d1 execute client-mint-800 --command "SELECT COUNT(*) FROM client"` | [ ] | TBV | TBV — D1 not created |
-| Neon vault sync count | §5 | Neon clnt.client | `psql $NEON_URL -c "SELECT COUNT(*) FROM clnt.client"` | [ ] | TBV | TBV — migration not run |
-| Migration 001 applied | §5 | D1 schema | `wrangler d1 execute client-mint-800 --command "SELECT name FROM sqlite_master WHERE type='table'"` | [ ] | TBV | TBV |
-| Migration 002 applied | §5 | Neon schema | `psql $NEON_URL -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='clnt'"` | [ ] | TBV | TBV |
-| Open error count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status \| jq .open_errors` | [ ] | TBV | TBV |
+| Worker health endpoint responds | §3 | GET /health | `curl https://client-mint-800.svg-outreach.workers.dev/health` | [x] | 2026-05-12 | `{ "process": "bp.800-client-mint", "model": "single-tier", "canonical_store": "svg-d1-client.clients", "status": "ok" }` |
+| Total minted client count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status` | [x] | 2026-05-12 | 0 total, 0 onboarding, 0 active (clean slate) |
+| D1 clients table exists | §5 | D1 query | `npx wrangler d1 execute svg-d1-client --remote --command "SELECT name FROM sqlite_master WHERE type='table'"` | [x] | 2026-05-12 | `clients`, `clients_error` tables confirmed |
+| Open error count | §3 | GET /status | `curl https://client-mint-800.svg-outreach.workers.dev/status \| jq .errors_total` | [x] | 2026-05-12 | 0 |
+| /vault returns 410 Gone | §8 | GET /vault | `curl -i https://client-mint-800.svg-outreach.workers.dev/vault` | [x] | 2026-05-12 | 410 with `{"error":"Gone","reason":"Single-tier model..."}` |
+| CL_DATABASE_URL wired as secret | §3 | Doppler / wrangler secrets | `npx wrangler secret list --name client-mint-800` | [x] | 2026-05-12 | `CL_DATABASE_URL` listed |
 
 ## §10 Operations / Schedule {#sec-10-operations}
 
@@ -432,7 +423,6 @@ npx wrangler worker route delete <route_id>
 |--------|------|----------|--------|-----------|
 | Clients minted | count | BASELINE | TBV | TBV |
 | Duplicate rejections | count | BASELINE | 0 | < 5% of mint attempts |
-| Vault promotions | count | BASELINE | = minted count | 100% within 24h |
 | Open errors | count | BASELINE | 0 | < 3 before halt |
 | Mint latency | ms | BASELINE | < 500ms | < 1000ms |
 
@@ -479,17 +469,17 @@ npx wrangler worker route delete <route_id>
 | PROCESS.md | _archived-fragments/PROCESS.md | IMO flow, OSAM, constants/variables, stop conditions, smoke tests, analytics |
 | heir.yaml | heir.yaml | HEIR 8-field identity, acceptance criteria, feeds/depends_on |
 | wrangler.toml | wrangler.toml | Worker name, D1 binding, secrets config |
-| src/mint.ts | src/mint.ts | Mint logic, error codes, Neon schema join keys |
-| src/vault.ts | src/vault.ts | Vault promotion logic, CQRS write path |
-| src/migrations/001_d1_client_tables.sql | src/migrations/001_d1_client_tables.sql | D1 schema columns, indexes |
-| src/migrations/002_neon_clnt_client.sql | src/migrations/002_neon_clnt_client.sql | Neon clnt schema, vault table columns, trigger |
+| src/mint.ts | src/mint.ts | Mint logic, UUID validation, CL schema join keys, D1 INSERT to clients/clients_error |
+| src/vault.ts | src/vault.ts | No-op stub — single-tier model; vault promotion removed |
+| src/migrations/001_d1_client_tables.sql | src/migrations/001_d1_client_tables.sql | DEPRECATED — stale schema; DO NOT RUN; superseded by bp.840 (svg-d1-client) |
+| src/migrations/002_neon_clnt_client.sql | src/migrations/002_neon_clnt_client.sql | DEPRECATED — Neon clnt schema; DO NOT RUN; single-tier model adopted |
 
 ### Back-Propagation Check
 
 | Parent Constant | Conflict Check | Result |
 |-----------------|----------------|--------|
 | sovereign_id as universal spine key | Confirmed in cl.company_identity JOIN and downstream 810 | clean |
-| D1 = working, Neon = vault | Confirmed in vault.ts write path and migration 002 | clean |
+| svg-d1-client.clients = canonical (single-tier) | D1 is canonical; Neon clnt.* never written; vaulted_at NULL forever | clean |
 | Manual trigger only | Confirmed in wrangler.toml (no crons), index.ts (no scheduled handler) | clean |
 
 ## §12. LOGBOOK (After Certification Only) {#sec-12-logbook}
@@ -519,8 +509,8 @@ No logbook during BUILD.
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
-| FP-800-01 | wrangler.toml | database_id empty | 2026-03-29 | 1 | 0 | OPEN — run wrangler d1 create client-mint-800 |
-| FP-800-02 | src/index.ts | No auth on endpoints | 2026-03-29 | 1 | 0 | OPEN — implement auth middleware before OPERATE |
+| FP-800-01 | wrangler.toml | database_id empty | 2026-03-29 | 1 | 0 | CLOSED 2026-05-12 — svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244) bound; worker deployed |
+| FP-800-02 | src/index.ts | No auth on endpoints | 2026-03-29 | 1 | 0 | OPEN — internal-only worker; auth deferred; acceptable for current scope |
 
 ## §14. SESSION LOG {#sec-14-session-log}
 
@@ -534,6 +524,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.0.4 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `REPAIR` | G06 closed: NOT YET DEPLOYED stamp added to §9b — all-TBV gauge rows now carry explicit deployment status declaration. Version bumped 2.0.3 → 2.0.4. |
 | 2026-05-10 | `v2.0.5` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Empty `database_id = ""` in wrangler — cannot deploy. UNKNOWN #4 (sovereign D1 provisioning approval needed). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 | 2026-05-10 | `v2.0.6` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
+| 2026-05-12 | `v2.2.0` | Sonnet Mechanic (bp.800 single-tier dispatch) | `AMEND` | Single-tier model adoption — rewrote mint.ts (CL read-only, D1 canonical), removed vault promotion path, /vault 410 Gone, updated §1–§11 throughout to reflect deployed single-tier reality. Worker live at client-mint-800.svg-outreach.workers.dev (version 3e6237ce). Smoke test passed. Version bumped v2.0.6 → v2.2.0 (3 locations). | All body sections + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -543,8 +534,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-10 |
-| Version | v2.0.6 |
+| Last Modified | 2026-05-12 |
+| Version | v2.2.0 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |

@@ -1,11 +1,11 @@
 process_id: "PROC-800-CLIENT-MINT"
 process_number: "800"
-state: "BUILD" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
+state: "OPERATE" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
 strikes: 0
-last_transition_at: "2026-04-29T00:00:00Z"
-last_transition_reason: "UT consolidation — wrangler.toml has empty database_id; worker not deployed"
+last_transition_at: "2026-05-12T00:00:00Z"
+last_transition_reason: "Single-tier model deployed and smoke-test passed — wrangler.toml D1 binding set to svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244); POST /mint → 201; GET /vault → 410 Gone; GET /status returns clients counts"
 auto_pause_threshold:
   metric: "open_errors"
   red_value: "3"
 ad_active: null
-notes: "D1 database_id not yet set in wrangler.toml. No auth on endpoints. Worker not deployed. Run wrangler d1 create client-mint-800 before OPERATE."
+notes: "Single-tier model (2026-05-12): svg-d1-client.clients is canonical — no Neon clnt.* vault tier. vaulted_at column reserved/NULL forever (D-800-08). Worker URL: https://client-mint-800.svg-outreach.workers.dev. D1 database_id: 5443887b-ba8a-4da5-9f54-6a9c2cfb1244."

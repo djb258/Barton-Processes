@@ -1,54 +1,60 @@
 name: bp-800-client-mint
 inherits: { atlas: ATLAS_v2.1.2, ut_schema: UT_v2.8.0, bs_law: BS_LAW_v1.3.0, book_law: BOOK_LAW_v1.4.0, aviation_model: FOUR_BRAIN_AVIATION_v1.1.0, parent_bar: BAR-377 }
+# single-tier model adopted 2026-05-12 — svg-d1-client.clients is canonical; no Neon vault tier
 outside:
   heir:
     sovereign_ref: svg-outreach
     hub_id: 800-client-mint
     ctb_placement: barton-enterprises/svg-agency/client/800-client-mint
-    imo_topology: hub
-    cc_layer: CC-04
-    services: [client-mint, cloudflare-d1, lbb, mission-control]
+    imo_topology: middle
+    cc_layer: CC-03
+    services: [client-mint-800, svg-d1-client, lbb, mission-control]
     secrets_provider: doppler
-    acceptance_criteria: "UT-local Workflow-Body; client mint cron and D1 gates green"
+    acceptance_criteria: "Deployed worker at client-mint-800.svg-outreach.workers.dev; POST /mint → 201; GET /status clients counts; GET /vault → 410"
   orbt:
-    library_state: BUILD
-    last_indexed_at: "2026-05-03"
-    indexed_by: codex
+    library_state: OPERATE
+    last_indexed_at: "2026-05-12"
+    indexed_by: sonnet
 inside:
   heir:
     process_id: bp.800
-    version: "1.0.0"
+    version: "2.2.0"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
     aviation_model: { planner: opus-4.7, mechanic: sonnet, auditor: codex }
     determinism_gate: ai_on_spine_forbidden
     species: Workflow-Body
-    services: [client-mint, cloudflare-d1, lbb, mission-control]
+    services: [client-mint-800, svg-d1-client, lbb, mission-control]
     secrets_provider: doppler
-    acceptance_criteria: "UT-local Workflow-Body; client mint cron and D1 gates green"
+    worker_url: "https://client-mint-800.svg-outreach.workers.dev"
+    d1_binding: svg-d1-client
+    d1_database_id: "5443887b-ba8a-4da5-9f54-6a9c2cfb1244"
+    canonical_store: "svg-d1-client.clients"
+    vault_endpoint: "REMOVED — 410 Gone (single-tier model 2026-05-12)"
+    acceptance_criteria: "POST /mint → 201 with client_id; POST /mint duplicate → 409; GET /vault → 410; GET /status → clients counts"
   orbt:
-    library_state: BUILD
+    library_state: OPERATE
     strikes: 0
-    last_transition_at: "2026-05-03"
-    last_transition_reason: BAR-377 UT-local YAML creation
-    flipped_by: codex
-    promotion_gate: bp_100_operate_and_codex_10_gate_pass
-description: "UT-local workflow for bp.800 Client Mint. Mints client records after bp.100 and gates Phase 5 client track."
+    last_transition_at: "2026-05-12"
+    last_transition_reason: "bp.800 single-tier model deployed and smoke-test passed"
+    flipped_by: sonnet
+    promotion_gate: deployed_and_smoke_test_passed
+description: "bp.800 Client Mint — single-tier model (2026-05-12). Reads CL company_identity (READ ONLY) and mints canonical client record in svg-d1-client.clients. No vault promotion tier. Manual HTTP POST trigger only."
 inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, heir: heir.yaml, orbt: orbt.yaml, wrangler: wrangler.toml }
 schedule: []
 data:
-  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml]
-  writes: [docs/audit/process-runs/bp-800/inventory-bp-800.md, docs/audit/process-runs/bp-800/live-state-bp-800.md, docs/audit/process-runs/bp-800/diff-bp-800.md, docs/audit/process-runs/bp-800/audit-bp-800.md]
-  forbidden: [llm_on_schedule_spine, skip_bp_100_gate, duplicate_client_mint]
+  reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, cl.company_identity]
+  writes: [svg-d1-client.clients, svg-d1-client.clients_error]
+  forbidden: [llm_on_mint_spine, write_to_cl_schema, vault_promotion, skip_duplicate_check, skip_uuid_validation]
 nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
 gates:
-  cron_exists: "cron must be added or explicit manual trigger policy declared"
-  cron_firing: "recent deterministic run evidence exists"
-  no_ai_on_schedule_spine: "zero LLM calls in scheduled path"
-  ut_ops_matches_reality: "PROCESS-UT operations match mint reality"
+  manual_trigger_only: "no cron; trigger is explicit POST /mint with sovereign_id"
+  no_ai_on_mint_spine: "zero LLM calls in mint path (deterministic only)"
+  ut_ops_matches_reality: "PROCESS-UT v2.2.0 operations match deployed single-tier reality"
   lbb_ingest_each_fire: "bp.800 LBB rows exist"
-  orbt_promoted_or_confirmed: "BUILD to OPERATE only after audit pass"
-  d1_surface_documented: "client mint tables documented and checked"
+  orbt_promoted_or_confirmed: "OPERATE state confirmed — worker deployed and smoke tested"
+  d1_surface_documented: "clients + clients_error tables documented in PROCESS-UT §5"
   upstream_healthy: "bp.100 is OPERATE"
-  downstream_wired: "bp.810 consumes client records"
-  squawk_live: "mint failure writes squawk"
+  downstream_wired: "bp.810 consumes client records from svg-d1-client.clients"
+  squawk_live: "mint failure writes to clients_error"
+  vault_endpoint_gone: "GET /vault returns 410 Gone"
 lbb: { subject_id: svg-outreach-proc, title_prefix: "bp.800 Client Mint", ingest_on_pass: true, ingest_on_fail: true }

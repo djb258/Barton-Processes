@@ -223,7 +223,7 @@ _This is the vocabulary lock. 48 unique fields across all 4 schemas. Source of T
 | updated_at | — | updated_at (TEXT) | MC clients | YES (MC) | ISO-8601 | MC tracks update; CL spine is append-only |
 | onboarded_at | — | onboarded_at (TEXT) | MC clients | NO | ISO-8601 | When client became an active client |
 | last_pass_at | last_pass_at (TEXT) | — | CL Spine (D1) | NO | ISO-8601 | Last time LCS pipeline touched this row |
-| vaulted_at | — | vaulted_at (TEXT) | MC clients | NO | ISO-8601 | NULL until /vault promotes the row to Neon clnt.client; set by bp.800 vault.ts. Two-tier marker (D1 working ↔ Neon vault). |
+| vaulted_at | — | vaulted_at (TEXT) | MC clients | NO | ISO-8601 | Reserved column on the `clients` table. Single-tier model (2026-05-12) — svg-d1-client.clients is canonical, no Neon vault tier; this column is unused/reserved (NULL forever). bp.800 never populates it (D-800-08). |
 
 ### 5e. Internal System PKs (not part of canonical join — system-internal only)
 
@@ -608,6 +608,7 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | 2026-04-30 | claude-sonnet-4-6 | REPAIR | Restored missing Document Control trailer; bumped version 1.0.1→1.0.2 | HEIR: CLIENT_RECORD_KEY_v1.0.2 | pending |
 | 2026-04-30 | claude-sonnet-4-6 | MIGRATE | v1.0.2 doctrine doc decomposed into Barton Process 840 (4-file pattern matching 810). DOCTRINE.md + heir.yaml + orbt.yaml + PROCESS-UT.md created in Barton-Processes/factory/client/840-client-record-key/. Version bumped to 2.0.0 (major — new artifact structure). ctb_node updated to barton-enterprises/insurance-informatics/svg-agency/hub:client/840-client-record-key. | HEIR: CLIENT_RECORD_KEY_v2.0.0; engine=K=C; mode=BUILD | pending |
 | 2026-05-12 | claude-sonnet-4-6 | EDIT | BAR-bp840 — verified §5 canonical field table against live svg-d1-client schema (2026-05-12 wrangler query). All 4 tables confirmed present. Added vaulted_at to §5d Timestamp Fields (two-tier D1↔Neon marker). Bumped field count 47→48 in §5 summary + §10b + §1 HEIR acceptance_criteria + heir.yaml. Updated UT Checklist from v1.2.0 to v1.3.1 format. Ticked items 3/5/8/12 against live DB results. Noted cross-ref drift (§5f: is_billing/is_decision_maker not in live client_contacts; §5g: source_thread_id in live but not cross-ref) — informational, not blocking (cross-ref sections explicitly "not owned by this KEY"). Version bumped 2.0.0→2.1.0. | svg-d1-client schema query 2026-05-12; vaulted_at ALTER TABLE done in Part B | pending |
+| 2026-05-12 | claude-sonnet-4-6 | AMEND | bp.800 single-tier adoption — corrected §5d vaulted_at Notes cell: column is reserved/unused (NULL forever), single-tier model, no Neon vault tier, bp.800 never populates it (D-800-08). No version bump — Notes-cell correction only, no schema or field-count change. | bp.800 PROCESS-UT.md v2.2.0 + DOCTRINE.md D-800-08 update (2026-05-12) | pending |
 
 **Rules:**
 - Append-only. Do NOT edit or delete prior rows. Corrections go in as a new row referencing the prior row.
