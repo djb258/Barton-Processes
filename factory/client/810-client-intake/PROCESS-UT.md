@@ -24,8 +24,8 @@ inside:
   heir:
     process_id: bp.810
     species: UT-Body
-    version: "3.0.1"
-    last_modified: "2026-05-12"
+    version: "3.0.2"
+    last_modified: "2026-05-13"
     companion_manifest: Barton-Processes/factory/client/810-client-intake/PROCESS-UT.md
   orbt:
     library_state: OPERATE
@@ -67,8 +67,8 @@ inside:
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited — Barton-Processes/factory + imo-creator-v2 sovereign |
-| Version | v3.0.1 |
-| Last Modified | 2026-05-12 |
+| Version | v3.0.2 |
+| Last Modified | 2026-05-13 |
 | BAR Reference | BAR-38, BAR-178, BAR-810-FLAT-SPOKE (2026-05-12) |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/810-client-intake |
@@ -159,6 +159,7 @@ Required doctrine references:
 |----------|-----|---------------|
 | Worker endpoint | https://client-intake-810.svg-outreach.workers.dev | Live — verified 2026-05-12T23:07:04Z |
 | Cloudflare dashboard | https://dash.cloudflare.com | Worker status, D1 row counts |
+| Mission Control Process API | https://mission-control-api.svg-outreach.workers.dev/processes/810/summary | Live summary via MC process-pages route — binding: client, view: client_staging_intake |
 
 ### Dependencies
 
@@ -587,14 +588,15 @@ If any fails → Troubleshooting Loop (Bedrock §6). Do not patch. Do not guess.
 | 2026-05-10 | v2.1.5 | BAR-FLEET-OVERNIGHT Strike-1 repair Sonnet Mechanic | `AMEND` | §1 Identity Version row added for Codex G-VERSION-3-LOCATIONS gate |
 | 2026-05-12 | v3.0.0 | Sonnet Mechanic (BAR-810-FLAT-SPOKE) | `REWRITE` | Full rewrite to flat spoke model. Discarded: normalized schema (intake_record, enrollment_intake, plan, plan_quote, person, election, vendor, external_identity_map, invoice, service_request), Neon vault, /vault write path. New: client_staging_intake + 5 canonical spoke tables + 5 error tables. wrangler.toml: svg-d1-client (5443887b). Zod discriminatedUnion on spoke field. Deployed Version af52f605. OPERATE state. |
 | 2026-05-12 | v3.0.1 | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | `CONFORM` | UT checklist block synced to atlas/constants/UT_CHECKLIST.md v1.3.1 — header path corrected, [x]/[ ] → ☑/☐, hyphens → em-dashes, item text canonical, item 8 FCEs → N/A predates FCE adoption. |
+| 2026-05-13 | v3.0.2 | Sonnet Mechanic (MC wiring dispatch) | `AMEND` | §3 Live Dashboard: added Mission Control Process API row — MC process-pages route wired (binding: client, view: client_staging_intake). URL: https://mission-control-api.svg-outreach.workers.dev/processes/810/summary. Version bumped v3.0.1 → v3.0.2 (3 locations). | §3 Live Dashboard + Document Control |
 
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-12 |
-| Version | v3.0.1 |
+| Last Modified | 2026-05-13 |
+| Version | v3.0.2 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

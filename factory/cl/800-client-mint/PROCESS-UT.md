@@ -21,8 +21,8 @@ inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.2.1"
-    last_modified: "2026-05-12"
+    version: "2.2.2"
+    last_modified: "2026-05-13"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
     library_state: OPERATE
@@ -67,8 +67,8 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v2.2.1 |
-| Last Modified | 2026-05-12 |
+| Version | v2.2.2 |
+| Last Modified | 2026-05-13 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/factory/cl/800-client-mint |
@@ -157,6 +157,7 @@ Required doctrine references for every process UT:
 |----------|-----|---------------|
 | Worker health | https://client-mint-800.svg-outreach.workers.dev/health | Worker alive + model: single-tier + canonical_store |
 | Worker status | https://client-mint-800.svg-outreach.workers.dev/status | Client counts: total, onboarding, active, errors_total |
+| Mission Control Process API | https://mission-control-api.svg-outreach.workers.dev/processes/800/summary | Live summary via MC process-pages route — binding: client, view: clients |
 
 ### Dependencies
 
@@ -526,6 +527,7 @@ No auditor certification on file — worker is OPERATE (deployed and live) but f
 | 2026-05-10 | `v2.0.6` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 | 2026-05-12 | `v2.2.0` | Sonnet Mechanic (bp.800 single-tier dispatch) | `AMEND` | Single-tier model adoption — rewrote mint.ts (CL read-only, D1 canonical), removed vault promotion path, /vault 410 Gone, updated §1–§11 throughout to reflect deployed single-tier reality. Worker live at client-mint-800.svg-outreach.workers.dev (version 3e6237ce). Smoke test passed. Version bumped v2.0.6 → v2.2.0 (3 locations). | All body sections + Document Control |
 | 2026-05-12 | `v2.2.1` | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | `CONFORM` | UT checklist block updated to atlas/constants/UT_CHECKLIST.md v1.3.1; full-doc conformance + sense pass; exemplar-ready. Stale `law/` doc refs → `atlas/` paths; Template Version 2.7.0 → 2.8.0; ORBT BUILD → OPERATE (worker live); frontmatter library_state BUILD → OPERATE (both outside and inside); §12 logbook note updated to reflect deployed reality. | All header sections + Document Control |
+| 2026-05-13 | `v2.2.2` | Sonnet Mechanic (MC wiring dispatch) | `AMEND` | §3 Live Dashboard: added Mission Control Process API row — MC process-pages route wired (binding: client, view: clients). URL: https://mission-control-api.svg-outreach.workers.dev/processes/800/summary. Version bumped v2.2.1 → v2.2.2 (3 locations). | §3 Live Dashboard + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -535,8 +537,8 @@ No auditor certification on file — worker is OPERATE (deployed and live) but f
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-12 |
-| Version | v2.2.1 |
+| Last Modified | 2026-05-13 |
+| Version | v2.2.2 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

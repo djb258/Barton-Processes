@@ -22,8 +22,8 @@ inside:
   heir:
     process_id: bp.820
     species: UT-Body
-    version: "1.1.1"
-    last_modified: "2026-05-12"
+    version: "1.1.2"
+    last_modified: "2026-05-13"
     companion_manifest: PROCESS-UT.md
     rim_gate_adoption:
       template: tpl.rim-gate
@@ -72,8 +72,8 @@ inside:
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v1.1.1 |
-| Last Modified | 2026-05-12 |
+| Version | v1.1.2 |
+| Last Modified | 2026-05-13 |
 | BAR Reference | BAR-38, BAR-178, BAR-377, BAR-bp820 |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/820-vendor-export |
@@ -167,6 +167,7 @@ Required doctrine references for every process UT:
 | Worker health | `https://vendor-export-820.svg-outreach.workers.dev/health` → `{"process":"PROC-VENDOR-EXPORT","number":820,"status":"ok"}` (verified 2026-05-12) | Liveness |
 | Worker status | `https://vendor-export-820.svg-outreach.workers.dev/status` → `{"process":"PROC-VENDOR-EXPORT","recent_exports":[],"total_errors":0,"available_blueprints":[]}` (verified 2026-05-12) | Recent exports, blueprint list, error count |
 | Export log per client | `https://vendor-export-820.svg-outreach.workers.dev/log/:client_id` | Export history for a specific client |
+| Mission Control Process API | https://mission-control-api.svg-outreach.workers.dev/processes/820/summary | Live summary via MC process-pages route — binding: client, view: export_log |
 
 ### Dependencies
 
@@ -583,6 +584,7 @@ No logbook during BUILD.
 | 2026-05-10 | `v1.0.3` | BAR-FLEET-OVERNIGHT WO-2 + WO-3 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: RIM-GATE adoption declared this dispatch (WO-3) but with NEW specialization PARTNER-RELAY (placeholder, not THROUGHPUT-CONTROL — partner reputation semantics differ from rate-limited vendor APIs). svg-d1-client (5443887b) wired. Daily 05:00 UTC cron. Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control + inside.heir.rim_gate_adoption |
 | 2026-05-10 | `v1.0.4` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 | 2026-05-12 | `v1.1.0` | BAR-bp820 doc conformance | Sonnet Mechanic | `ALIGN` — full doc conformance pass to live flat-spoke schema. Replaced all `person`/`election`/`plan`/`vendor`/`external_identity_map` (810 normalized model) references with `clients`/`client_employees`/`client_vendors`/`client_employee_vendor_ids` (svg-d1-client flat-spoke). Wrote D1 id (`5443887b-...`) + KV id (`66e6...`) into Tools/Schema. §3 Component Status + §3 Dependencies + §3 Live Dashboard + §9b: deploy-dependent items marked `PENDING DEPLOY (RP-820-DEPLOY)` instead of fabricated URLs/counts. ORBT runtime → REPAIR (header Status, §1 Identity ORBT, Component Status). Added D-820-11 (canonical D1 binding). §6 DMJ element/map/join tables re-keyed. §3d BARs filled (BAR-377, BAR-bp820). §11 Build Inputs updated (archived CLAUDE.md/PROCESS.md noted; repair/audit docs cited). §14 + §12 logbook row added. PROCESS-MAP-820 authored in imo-creator-v2 `_inbox/PROCESS-MAP-820-vendor-export.yaml`. workflow.yaml synced (D1/KV ids + flat-spoke table list + RP-820-DEPLOY note). Version bump 3 locations (frontmatter + §1 Identity + Document Control) + Last Modified 2026-05-12. Deploy + cron registration + `wrangler secret put` + KV blueprint load + smoke test = RP-820-DEPLOY (deferred — wrangler access not in this session). | header + §1 Identity + §2 + §3 + §3d + §4 + §5 + §6 + §7 + §8 + §9 + §9b + §11 + §12 + §14 + Document Control + frontmatter |
+| 2026-05-13 | `v1.1.2` | Sonnet Mechanic (MC wiring dispatch) | `AMEND` | §3 Live Dashboard: added Mission Control Process API row — MC process-pages route wired (binding: client, view: export_log). URL: https://mission-control-api.svg-outreach.workers.dev/processes/820/summary. Version bumped v1.1.1 → v1.1.2 (3 locations). | §3 Live Dashboard + Document Control |
 | 2026-05-12 | `v1.1.1` | BAR-bp820 deploy finish-up | Sonnet Mechanic | `DEPLOY` — worker deployed (`https://vendor-export-820.svg-outreach.workers.dev`, version `7ac783ef-83db-47f5-a7c4-3bcdf9db8f82`, cron `0 5 * * *` registered — confirmed in deploy output). `/health` + `/status` verified live 2026-05-12. Resolved every `PENDING DEPLOY (RP-820-DEPLOY)` marker in §2 / §3 (Component Status, Live Dashboard, Dependencies) / §3d / §4 (Output, Circle) / §8 (kill switch) / §9 / §9b with real values. ORBT → OPERATE (header `### Status:`, §1 Identity ORBT, §3 Component Status worker/cron rows). RP-820-DEPLOY closed; new tracked entry RP-820-BLUEPRINTS-DELIVERY (status open, low priority — blueprint load into EGRESS_KV, file-delivery mechanism R2/email/SFTP, real end-to-end smoke test; N/A until real vendors exist; non-gating). RP-820-AUTH retained (endpoint auth — cross-hub repair). orbt.yaml: state REPAIR→OPERATE, state_history + repairs blocks rewritten. workflow.yaml: runtime_state REPAIR→OPERATE, deployed_targets worker_url/cron filled, gates updated. PROCESS-MAP-820 (imo-creator-v2 `_inbox/`) updated to OPERATE. §14 + §12 logbook row added. Version bump 3 locations (frontmatter + §1 Identity + Document Control) + Last Modified 2026-05-12. | header + §1 Identity + §2 + §3 + §3d + §4 + §8 + §9 + §9b + §12 + §14 + Document Control + frontmatter |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0 — all infra TODO | none
@@ -594,8 +596,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-29 |
-| Last Modified | 2026-05-12 |
-| Version | v1.1.1 |
+| Last Modified | 2026-05-13 |
+| Version | v1.1.2 |
 | Template Version | 2.7.0 |
 | Medium | process |
 | US Validated | pending |
