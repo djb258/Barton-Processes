@@ -38,8 +38,8 @@
 | ORBT | BUILD |
 | Strikes | 0 |
 | Authority | Sovereign (CC-01) — extends from law/doctrine/KEY.md |
-| Version | 2.1.1 |
-| Last Modified | 2026-05-12 |
+| Version | 2.1.2 |
+| Last Modified | 2026-05-13 |
 | BAR Reference | BAR-178 (DB-CLIENT origin) |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/insurance-informatics/svg-agency/hub:client/840-client-record-key |
@@ -265,6 +265,44 @@ _These fields exist on MC client_interactions. Included here for cross-schema co
 | resolved | MC client_interactions | NO | INTEGER (0/1) | Whether the interaction requires follow-up |
 
 **Total unique fields across all 4 schemas: 48** (7 HEIR + 10 company identity + 6 lifecycle/op + 5 timestamps + 3 PKs + 8 contact-level + 9 interaction-level)
+
+### 5h. Ticket-Level Fields (bp.830 Client Portal — cross-reference)
+
+_These fields exist on `client_tickets` (canonical) and `client_tickets_error` (error table) in svg-d1-client. Both tables are owned exclusively by bp.830. Included here for cross-schema completeness. Not owned by this KEY — subject to a future TICKET_RECORD_KEY when built._
+
+**client_tickets** (canonical write target for bp.830 employee page INSERT + agent page UPDATE):
+
+| Field | System | Required | Format | Notes |
+|-------|--------|----------|--------|-------|
+| ticket_id | client_tickets | YES | TEXT (PK) | Unique ticket identifier |
+| client_id | client_tickets | YES | TEXT (FK → clients.client_id) | Links ticket to the MC client record |
+| full_name | client_tickets | YES | TEXT NOT NULL | Name of the employee submitting the ticket |
+| email | client_tickets | YES | TEXT NOT NULL | Email of the submitting employee |
+| category | client_tickets | YES | TEXT NOT NULL, CHECK (benefits / payroll / onboarding / offboarding / compliance / general) | Ticket category — values locked by D-830-06 |
+| subject | client_tickets | YES | TEXT NOT NULL | Short subject line |
+| description | client_tickets | NO | TEXT | Full ticket body |
+| priority | client_tickets | NO | TEXT DEFAULT 'medium' | Ticket priority (medium by default) |
+| status | client_tickets | YES | TEXT DEFAULT 'open', CHECK (open / in_progress / waiting / resolved / closed) | Ticket lifecycle state — values locked by D-830-06 |
+| created_at | client_tickets | YES | TEXT (ISO-8601) | Row creation timestamp |
+| updated_at | client_tickets | YES | TEXT (ISO-8601) | Last update timestamp |
+| resolved_at | client_tickets | NO | TEXT (ISO-8601) | Set when status moves to resolved or closed |
+
+**client_tickets_error** (error table — bp.830 CQRS error sink):
+
+| Field | System | Required | Format | Notes |
+|-------|--------|----------|--------|-------|
+| ticket_error_id | client_tickets_error | YES | TEXT (PK) | Unique error row identifier |
+| client_id | client_tickets_error | NO | TEXT | Client context at time of error (if resolvable) |
+| error_code | client_tickets_error | NO | TEXT | Machine-readable error classification |
+| error_message | client_tickets_error | NO | TEXT | Human-readable error detail |
+| severity | client_tickets_error | NO | TEXT | Error severity level |
+| status | client_tickets_error | NO | TEXT | Processing state of the error row |
+| created_at | client_tickets_error | YES | TEXT (ISO-8601) | Error timestamp |
+| updated_at | client_tickets_error | NO | TEXT (ISO-8601) | Last update to error row |
+
+**Write rules (per D-830-07):** bp.830 may INSERT into `client_tickets` (employee page) and UPDATE `client_tickets.status`, `client_tickets.updated_at`, `client_tickets.resolved_at` (agent page). Error rows go to `client_tickets_error`. No other table is a valid write target for bp.830.
+
+**Total unique fields across all schemas including bp.830 tickets: 68** (48 existing + 12 client_tickets + 8 client_tickets_error)
 
 ---
 
@@ -540,8 +578,8 @@ WHERE client_id = 'CLIENT_ID';
 
 | Metric | v1.0.0 | v2.1.0 | Trend | Action |
 |--------|--------|--------|-------|--------|
-| Fields cataloged | 47 | 48 | STABLE | Lock when verified live |
-| Systems inventoried | 4 | 4 | STABLE | Add outreach/sales when live |
+| Fields cataloged | 47 | 68 | TIGHTENING | 48 core (4 schemas) + 20 bp.830 ticket fields (§5h) |
+| Systems inventoried | 4 | 5 | TIGHTENING | +bp.830 client_tickets/client_tickets_error (§5h) |
 
 ### 10c. ORBT Gate Rules
 
@@ -610,6 +648,7 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | 2026-05-12 | claude-sonnet-4-6 | EDIT | BAR-bp840 — verified §5 canonical field table against live svg-d1-client schema (2026-05-12 wrangler query). All 4 tables confirmed present. Added vaulted_at to §5d Timestamp Fields (two-tier D1↔Neon marker). Bumped field count 47→48 in §5 summary + §10b + §1 HEIR acceptance_criteria + heir.yaml. Updated UT Checklist from v1.2.0 to v1.3.1 format. Ticked items 3/5/8/12 against live DB results. Noted cross-ref drift (§5f: is_billing/is_decision_maker not in live client_contacts; §5g: source_thread_id in live but not cross-ref) — informational, not blocking (cross-ref sections explicitly "not owned by this KEY"). Version bumped 2.0.0→2.1.0. | svg-d1-client schema query 2026-05-12; vaulted_at ALTER TABLE done in Part B | pending |
 | 2026-05-12 | claude-sonnet-4-6 | AMEND | bp.800 single-tier adoption — corrected §5d vaulted_at Notes cell: column is reserved/unused (NULL forever), single-tier model, no Neon vault tier, bp.800 never populates it (D-800-08). No version bump — Notes-cell correction only, no schema or field-count change. | bp.800 PROCESS-UT.md v2.2.0 + DOCTRINE.md D-800-08 update (2026-05-12) | pending |
 | 2026-05-12 | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | CONFORM | v2.1.1 — UT checklist block synced to v1.3.1 (already correct; patch bump to create explicit audit trail of conformance verification). Stale `law/` path in Document Control Governing Engine → `atlas/constants/`. Version 2.1.0 → 2.1.1 (§1 + Document Control). | BAR-CLIENT-HUB 2026-05-12 | pending |
+| 2026-05-13 | claude-sonnet-4-6 (bp.830 Mechanic) | EDIT | v2.1.2 — Added §5h Ticket-Level Fields (bp.830 Client Portal cross-reference). Documents `client_tickets` (12 fields: ticket_id, client_id, full_name, email, category, subject, description, priority, status, created_at, updated_at, resolved_at) and `client_tickets_error` (8 fields: ticket_error_id, client_id, error_code, error_message, severity, status, created_at, updated_at). Write rules per D-830-07 noted. Total field count updated 48→68 in §5h footer + §10b sigma. Version bumped 2.1.1→2.1.2 in header (§1 Identity + Document Control). | bp.830 PROCESS-UT.md v3.0.0 + DOCTRINE.md D-830-07 (smoke-verified OPERATE 2026-05-13) | pending |
 
 **Rules:**
 - Append-only. Do NOT edit or delete prior rows. Corrections go in as a new row referencing the prior row.
@@ -625,8 +664,8 @@ _Every touch on this doc is a maintenance action. Every action leaves a signed, 
 | Field | Value |
 |-------|-------|
 | Created | 2026-04-30 |
-| Last Modified | 2026-05-12 |
-| Version | 2.1.1 |
+| Last Modified | 2026-05-13 |
+| Version | 2.1.2 |
 | Template Version | 2.8.0 |
 | Medium | doctrine |
 | US Validated | pending |
