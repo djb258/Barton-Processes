@@ -23,7 +23,7 @@ inside:
   heir:
     process_id: bp.830
     species: UT-Body
-    version: "3.0.0"
+    version: "3.0.1"
     last_modified: "2026-05-13"
     companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
   orbt:
@@ -66,7 +66,7 @@ inside:
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v3.0.0 |
+| Version | v3.0.1 |
 | Last Modified | 2026-05-13 |
 | BAR Reference | BAR-38, BAR-82, BAR-178, BAR-830-BUILD |
 | Owner | Dave Barton |
@@ -128,7 +128,7 @@ Without this process there is no client-facing view of the data SVG Agency colle
 
 ### OUT-OF-SCOPE
 - Authentication per audience role — not implemented; needs CF Access or token-based auth (see Known Issues, §13)
-- Slug auto-generation — slugs are manually set; auto-generation belongs in 800 Client Mint or 810 Client Intake
+- Slug auto-generation — handled by bp.800 Client Mint v2.3.0 (slugify + D1 uniqueness check at mint time); not in scope for 830
 - Client branding asset storage (logos) — logo_url column exists but R2/CDN integration is not in scope here
 - Any SPA framework or client-side data fetching — this is server-side HTML only
 
@@ -152,7 +152,7 @@ Required doctrine references for every process UT:
 |-----------|----------------------------------|------|-------|-------|
 | D1 svg-d1-client | 5443887b · leaf · CC-03 | OPERATE | green | Deployed; 21 tables; client_* prefix; smoke test confirmed clean |
 | CF Worker client-portal-830 | client-portal-830 · leaf · CC-04 | OPERATE | green | Deployed at https://client-portal-830.svg-outreach.workers.dev; all 6 pages live |
-| 800 Client Mint | client-mint-800 · leaf · CC-04 | BUILD | yellow | Process exists; slug assignment is manual |
+| 800 Client Mint | client-mint-800 · leaf · CC-04 | OPERATE | green | v2.3.0 — slug auto-generated at mint via slugify(company_name) + D1 uniqueness check; portal pages live automatically on mint |
 | 810 Client Intake | client-intake-810 · leaf · CC-04 | BUILD | yellow | Upstream feeder; client_* tables owned by intake flow |
 
 ### Live Dashboard
@@ -163,6 +163,7 @@ Required doctrine references for every process UT:
 | Worker root | https://client-portal-830.svg-outreach.workers.dev/ | Route listing |
 | Production target | https://app.svgagency.com/:slug/:page | Custom domain — pending DNS wiring |
 | Cloudflare Dashboard | https://dash.cloudflare.com/ → Workers → client-portal-830 | Worker deployment status, request metrics |
+| Mission Control API | https://mission-control-api.svg-outreach.workers.dev/processes/830/summary | Aggregate portal stats (clients_with_portal, total_tickets, open_tickets, resolved_tickets, ticket_errors) — process_id 830 registered 2026-05-13 |
 
 ### Dependencies
 
@@ -547,7 +548,7 @@ No logbook during BUILD.
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
 | FP-830-01 | wrangler.toml | CONFIG_MISSING | 2026-03-29 | 1 | 0 | CLOSED — D1 database_id `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` set in wrangler.toml; binding verified 2026-05-13 |
 | FP-830-02 | All pages | AUTH_MISSING | 2026-03-29 | 1 | 0 | OPEN — No auth per audience; any visitor can access any page by slug |
-| FP-830-03 | 800 Client Mint | SLUG_MANUAL | 2026-03-29 | 1 | 0 | OPEN — Slugs must be manually set on client records |
+| FP-830-03 | 800 Client Mint | SLUG_MANUAL | 2026-03-29 | 1 | 0 | CLOSED — bp.800 v2.3.0 (2026-05-13) auto-generates slug via slugify(company_name) + D1 uniqueness check at mint time |
 | FP-830-04 | logo_url | ASSET_MISSING | 2026-03-29 | 1 | 0 | OPEN — No R2 bucket or CDN for client logos |
 
 ## §14 SESSION LOG {#sec-14-session-log}
@@ -564,6 +565,7 @@ No logbook during BUILD.
 | 2026-05-10 | `v2.1.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Wrangler `main = `, all D1 blocks, all routes COMMENTED OUT. Non-functional shell. UNKNOWN #5 (sovereign decision: restore or reset). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 | 2026-05-10 | `v2.1.5` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
 | 2026-05-13 | `v3.0.0` | sonnet-mechanic (bp.830 build completion) | `OPERATE` | Full build completed: 6-page portal deployed to `client-portal-830.svg-outreach.workers.dev`. Smoke test passed — all 6 pages 200, employee POST 303, agent POST `{"success":true}`. 15 smoke rows deleted from 7 tables, D1 clean. PROCESS-UT.md rewritten to v3.0.0 OPERATE: §1-§14 updated to reflect live build, actual schema, verified smoke results. FP-830-01 CLOSED. Birth Certificate filled. | Full UT + all sections |
+| 2026-05-13 | `v3.0.1` | sonnet-mechanic (BAR-CLIENT-HUB) | `AMEND` | Registered in Mission Control process registry (MC API process_id 830); §3 Live Dashboard: MC API row added. Component Status: 800 Client Mint updated to OPERATE/green (bp.800 v2.3.0 slug auto-gen). FP-830-03 CLOSED (slug now auto-generated at mint). §2 OUT-OF-SCOPE note updated. Version bumped v3.0.0 → v3.0.1 in 3 locations. | §3 Live Dashboard, Component Status, §2, §13, §14 |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Initial PROCESS.md created. Documented IMO, OSAM, C&V, dependencies, known issues. BUILD state. | none
 ^[ROW-2026-04-22]: 2026-04-22 | Skeleton wrangler.toml and src/ updated; all routes render with mock data. | none
@@ -576,7 +578,7 @@ No logbook during BUILD.
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-13 |
-| Version | v3.0.0 |
+| Version | v3.0.1 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

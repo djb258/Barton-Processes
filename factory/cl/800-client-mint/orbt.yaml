@@ -3,7 +3,7 @@ process_number: "800"
 state: "OPERATE" # BUILD | OPERATE | REPAIR | TROUBLESHOOT_TRAIN
 strikes: 0
 last_transition_at: "2026-05-12T00:00:00Z"
-last_transition_reason: "Single-tier model deployed and smoke-test passed — wrangler.toml D1 binding set to svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244); POST /mint → 201; GET /vault → 410 Gone; GET /status returns clients counts"
+last_transition_reason: "v2.3.0 — slug auto-gen added at mint (slugify+uniqueness check); POST /mint now returns slug in response; D1 clients.slug written at mint time; bp.830 portal pages go live automatically on mint. Worker c35ddf61. Smoke test passed (VOLPRO → slug=volpro-inc → 830/ceo 200). Single-tier model remains unchanged — svg-d1-client.clients canonical; GET /vault 410 Gone; GET /status returns clients counts."
 auto_pause_threshold:
   metric: "open_errors"
   red_value: "3"

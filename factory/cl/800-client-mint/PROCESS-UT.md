@@ -21,7 +21,7 @@ inside:
   heir:
     process_id: bp.800
     species: UT-Body
-    version: "2.2.2"
+    version: "2.3.0"
     last_modified: "2026-05-13"
     companion_manifest: factory/cl/800-client-mint/PROCESS-UT.md
   orbt:
@@ -67,7 +67,7 @@ companion_yaml: factory/cl/800-client-mint/workflow.yaml
 | ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v2.2.2 |
+| Version | v2.3.0 |
 | Last Modified | 2026-05-13 |
 | BAR Reference | BAR-38, BAR-87, BAR-178 |
 | Owner | Dave Barton |
@@ -106,7 +106,7 @@ flowchart LR
 ## §2. PURPOSE {#sec-2-purpose}
 
 ### WHAT
-Client Mint receives a CL sovereign_id (company lifecycle identifier) via HTTP POST, reads the company's identity from the Neon CL vault (READ ONLY), generates a unique client_id, and writes the client record to the D1 svg-d1-client.clients table. Single-tier model (2026-05-12): svg-d1-client.clients is canonical — no Neon vault promotion tier. It is the single gate that converts an outreach prospect into a billable client entity.
+Client Mint receives a CL sovereign_id (company lifecycle identifier) via HTTP POST, reads the company's identity from the Neon CL vault (READ ONLY), generates a unique client_id and deterministic URL slug, and writes the client record to the D1 svg-d1-client.clients table. Single-tier model (2026-05-12): svg-d1-client.clients is canonical — no Neon vault promotion tier. The slug enables immediate bp.830 Client Portal page activation: once minted, the client's portal pages are live at `/<slug>/ceo`, `/<slug>/hr`, etc. It is the single gate that converts an outreach prospect into a billable client entity with a live portal.
 
 ### WHY
 Without Client Mint there is no client_id. Every downstream process — 810 Client Intake, the client portal (830), vendor exports (820), billing — requires a minted client_id. The process is the first domino: no mint, no client, no revenue.
@@ -173,7 +173,7 @@ Required doctrine references for every process UT:
 | Consumer | What It Needs |
 |----------|--------------|
 | 810 Client Intake | client_id must exist in D1 client table before intake can begin |
-| 830 Client Portal | client_id for routing and display |
+| 830 Client Portal | slug from minted clients row — portal pages (`/<slug>/ceo`, `/<slug>/hr`, etc.) go live immediately on mint; slug is the URL key |
 | 820 Vendor Export | client_id as spine key for export artifacts |
 
 ### Tools & Integrations
@@ -226,7 +226,7 @@ Manual HTTP POST to `/mint` with `{ "sovereign_id": "<uuid>" }`. Sovereign_id is
 | 1 | POST /mint body | Validate sovereign_id is present and passes UUID regex | Validated sovereign_id or 400 error | CF Worker (index.ts) |
 | 2 | sovereign_id | Check D1 clients table for duplicate sovereign_id | Pass or DUPLICATE_SOVEREIGN error (D-800-02) | D1 query (mint.ts) |
 | 3 | sovereign_id | Read company identity from Neon cl.company_identity (READ ONLY) — columns: company_unique_id, company_name, company_domain, employee_count_band | CLIdentityRecord or SOVEREIGN_NOT_FOUND error (D-800-10) | Neon via CL_DATABASE_URL (mint.ts) |
-| 4 | CLIdentityRecord | Mint new client_id (crypto.randomUUID()), INSERT into D1 clients table with lifecycle_stage='onboarding' | client_id + clients row in D1 (D-800-03) | D1 insert (mint.ts) |
+| 4 | CLIdentityRecord | Generate client_id (crypto.randomUUID()), derive URL slug via `slugify(company_name)` → collision-check against D1 clients.slug (append -XXXXXX suffix or full UUID on collision), then INSERT into D1 clients table with lifecycle_stage='onboarding' and the generated slug | client_id + slug + clients row in D1 (D-800-03) | D1 query + insert (mint.ts) |
 
 ### Output
 - Minted client record in D1 svg-d1-client.clients table (client_id linked to sovereign_id, lifecycle_stage='onboarding') — D-800-01
@@ -250,7 +250,7 @@ Minted client_id feeds 810 Client Intake. Errors surface via GET /status (counts
 
 | Target | What It Writes | When |
 |--------|---------------|------|
-| D1: svg-d1-client.clients | New minted client record (client_id, sovereign_id, company_name, company_domain, notes[employee_count_band], lifecycle_stage='onboarding', sovereign_ref, hub_id, cc_layer, ctb_placement, orbt_mode, strike_count, created_at, updated_at; ein/industry/employee_count left NULL) | Step 4 — mint |
+| D1: svg-d1-client.clients | New minted client record (client_id, sovereign_id, company_name, company_domain, slug, notes[employee_count_band], lifecycle_stage='onboarding', sovereign_ref, hub_id, cc_layer, ctb_placement, orbt_mode, strike_count, created_at, updated_at; ein/industry/employee_count left NULL) | Step 4 — mint |
 | D1: svg-d1-client.clients_error | Error records (error_id, client_id, error_code, error_message, created_at) | On any failure (D-800-06) |
 
 ### Process Composition
@@ -528,6 +528,7 @@ No auditor certification on file — worker is OPERATE (deployed and live) but f
 | 2026-05-12 | `v2.2.0` | Sonnet Mechanic (bp.800 single-tier dispatch) | `AMEND` | Single-tier model adoption — rewrote mint.ts (CL read-only, D1 canonical), removed vault promotion path, /vault 410 Gone, updated §1–§11 throughout to reflect deployed single-tier reality. Worker live at client-mint-800.svg-outreach.workers.dev (version 3e6237ce). Smoke test passed. Version bumped v2.0.6 → v2.2.0 (3 locations). | All body sections + Document Control |
 | 2026-05-12 | `v2.2.1` | Sonnet Mechanic (BAR-CLIENT-HUB conformance pass) | `CONFORM` | UT checklist block updated to atlas/constants/UT_CHECKLIST.md v1.3.1; full-doc conformance + sense pass; exemplar-ready. Stale `law/` doc refs → `atlas/` paths; Template Version 2.7.0 → 2.8.0; ORBT BUILD → OPERATE (worker live); frontmatter library_state BUILD → OPERATE (both outside and inside); §12 logbook note updated to reflect deployed reality. | All header sections + Document Control |
 | 2026-05-13 | `v2.2.2` | Sonnet Mechanic (MC wiring dispatch) | `AMEND` | §3 Live Dashboard: added Mission Control Process API row — MC process-pages route wired (binding: client, view: clients). URL: https://mission-control-api.svg-outreach.workers.dev/processes/800/summary. Version bumped v2.2.1 → v2.2.2 (3 locations). | §3 Live Dashboard + Document Control |
+| 2026-05-13 | `v2.3.0` | Sonnet Mechanic (BAR-CLIENT-HUB slug dispatch) | `AMEND` | v2.3.0 — slug auto-generated at mint via `slugify(company_name)` + D1 uniqueness check; minted clients get bp.830 portal pages automatically at `/<slug>/ceo`, `/<slug>/hr`, etc. §2 WHAT updated; §3 Downstream Consumers 830 note updated; §4 IMO step 4 updated; §5 WRITE slug column added. Worker deployed version c35ddf61. Smoke test passed (VOLPRO → slug=volpro-inc → 830/ceo 200). Version bumped v2.2.2 → v2.3.0 (3 locations). | §2 §3 §4 §5 + Document Control |
 
 ^[ROW-2026-03-29]: 2026-03-29 | PROCESS.md created from PROCESS_TEMPLATE v2.0.0; initial BUILD state documented | none
 ^[ROW-2026-04-29]: 2026-04-29 | UT v2.7.0 consolidation — PROCESS-UT.md, DOCTRINE.md, orbt.yaml written; CLAUDE.md + PROCESS.md archived | pending
@@ -538,7 +539,7 @@ No auditor certification on file — worker is OPERATE (deployed and live) but f
 |-------|-------|
 | Created | 2026-03-29 |
 | Last Modified | 2026-05-13 |
-| Version | v2.2.2 |
+| Version | v2.3.0 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

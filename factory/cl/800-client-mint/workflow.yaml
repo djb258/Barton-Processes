@@ -30,7 +30,7 @@ inside:
     d1_database_id: "5443887b-ba8a-4da5-9f54-6a9c2cfb1244"
     canonical_store: "svg-d1-client.clients"
     vault_endpoint: "REMOVED — 410 Gone (single-tier model 2026-05-12)"
-    acceptance_criteria: "POST /mint → 201 with client_id; POST /mint duplicate → 409; GET /vault → 410; GET /status → clients counts"
+    acceptance_criteria: "POST /mint → 201 with client_id, company_name, slug, sovereign_id, status:minted; POST /mint duplicate → 409; GET /vault → 410; GET /status → clients counts; slug written to D1 clients.slug at mint time"
   orbt:
     library_state: OPERATE
     strikes: 0
@@ -43,7 +43,7 @@ inputs: { bar_id: BAR-377, process_ut: PROCESS-UT.md, doctrine: DOCTRINE.md, hei
 schedule: []
 data:
   reads: [PROCESS-UT.md, DOCTRINE.md, heir.yaml, orbt.yaml, wrangler.toml, cl.company_identity]
-  writes: [svg-d1-client.clients, svg-d1-client.clients_error]
+  writes: [svg-d1-client.clients, svg-d1-client.clients_error]  # clients.slug written at mint (v2.3.0)
   forbidden: [llm_on_mint_spine, write_to_cl_schema, vault_promotion, skip_duplicate_check, skip_uuid_validation]
 nodes: [{ id: inventory, brain: gemini }, { id: live-introspection, brain: sonnet }, { id: diff, brain: opus-4.7 }, { id: fix, brain: sonnet }, { id: audit, brain: codex }, { id: lbb-mc-closeout, brain: deterministic }]
 gates:
