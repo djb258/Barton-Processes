@@ -1,25 +1,11 @@
 name = "client-portal-830"
 compatibility_date = "2026-04-22"
-pages_build_output_dir = "src"
+main = "src/index.ts"
 
-# SKELETON BUILD — 2026-04-22
-# All screens render with mock data. Backend bindings stubbed below.
-# Wire each binding when backend is ready (see README.md WIRE-HERE punch list).
+# DEPLOYED 2026-05-13 — Worker mode, svg-d1-client binding
+# Pages mode removed (was: pages_build_output_dir = "src")
 
-# Future bindings (stubbed until wired):
-# [[d1_databases]]
-# binding = "COMPANY_DB"
-# database_name = "client-hub"
-# database_id = "3ba426ee-f9ed-4b76-958e-4001468bd847"
-#
-# [[d1_databases]]
-# binding = "CENSUS_DB"
-# database_name = "census"
-# database_id = "TBD"
-
-# Original Worker config preserved below (inactive in Pages mode):
-# main = "src/index.ts"
-# [[d1_databases]]
-# binding = "D1"
-# database_name = "client-intake-810"
-# database_id = ""
+[[d1_databases]]
+binding = "D1"
+database_name = "svg-d1-client"
+database_id = "5443887b-ba8a-4da5-9f54-6a9c2cfb1244"

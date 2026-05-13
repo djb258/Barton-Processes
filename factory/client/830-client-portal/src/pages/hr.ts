@@ -1,104 +1,121 @@
 /**
  * 830 — HR Portal
  *
- * Employee roster, elections, enrollment status, tickets.
+ * Employee roster + HR contacts. Benefits section is STUB.
  * Read-only. Audience: client HR.
  */
 
-import { escHtml } from '../templates/layout';
+import { escHtml, badge } from '../templates/layout';
+import type { ClientContext } from '../resolve';
 
-export async function renderHr(d1: D1Database, clientId: string): Promise<string> {
-  const people = await d1.prepare(
-    'SELECT * FROM person WHERE client_id = ? ORDER BY last_name, first_name'
-  ).bind(clientId).all<{
-    person_id: string; first_name: string; last_name: string; status: string;
-  }>();
+export async function renderHr(client: ClientContext, d1: D1Database): Promise<string> {
+  const [employees, hrContacts, openTickets] = await Promise.all([
+    d1.prepare(
+      'SELECT employee_id, first_name, last_name, employment_status, hire_date FROM client_employees WHERE client_id=? ORDER BY last_name, first_name'
+    ).bind(client.client_id).all<{
+      employee_id: string; first_name: string; last_name: string;
+      employment_status: string; hire_date: string | null;
+    }>(),
 
-  const elections = await d1.prepare(`
-    SELECT e.person_id, e.coverage_tier, e.effective_date, p.benefit_type, p.carrier_id
-    FROM election e JOIN plan p ON e.plan_id = p.plan_id AND e.client_id = p.client_id
-    WHERE e.client_id = ?
-  `).bind(clientId).all<{
-    person_id: string; coverage_tier: string; effective_date: string;
-    benefit_type: string; carrier_id: string | null;
-  }>();
+    d1.prepare(
+      "SELECT contact_id, full_name, role, email, phone FROM client_contacts WHERE client_id=? AND role LIKE '%HR%' ORDER BY full_name"
+    ).bind(client.client_id).all<{
+      contact_id: string; full_name: string; role: string; email: string | null; phone: string | null;
+    }>(),
 
-  const batches = await d1.prepare(
-    'SELECT * FROM enrollment_intake WHERE client_id = ? ORDER BY upload_date DESC LIMIT 10'
-  ).bind(clientId).all<{
-    enrollment_intake_id: string; upload_date: string; status: string;
-  }>();
+    d1.prepare(
+      "SELECT ticket_id, category, subject, status, priority, created_at FROM client_tickets WHERE client_id=? AND status IN ('open','in_progress','waiting') ORDER BY created_at DESC"
+    ).bind(client.client_id).all<{
+      ticket_id: string; category: string; subject: string; status: string; priority: string; created_at: string;
+    }>(),
+  ]);
 
-  const tickets = await d1.prepare(
-    "SELECT * FROM service_request WHERE client_id = ? AND status IN ('open','in_progress') ORDER BY opened_at DESC"
-  ).bind(clientId).all<{
-    service_request_id: string; category: string; status: string; opened_at: string;
-  }>();
-
-  // Build election lookup: person_id → elections[]
-  const electionMap = new Map<string, typeof elections.results>();
-  for (const e of elections.results ?? []) {
-    const list = electionMap.get(e.person_id) ?? [];
-    list.push(e);
-    electionMap.set(e.person_id, list);
-  }
+  const active = employees.results?.filter(e => e.employment_status === 'active').length ?? 0;
+  const terminated = employees.results?.filter(e => e.employment_status === 'terminated').length ?? 0;
 
   let html = '';
 
-  // Employee Roster
-  html += '<div class="section"><h2>Employee Roster</h2>';
-  if (!people.results || people.results.length === 0) {
-    html += '<div class="empty">No employees.</div>';
+  // ── Stat row ──────────────────────────────────────────────────────────────
+  html += '<div class="stat-row">';
+  html += stat('Active', String(active));
+  html += stat('Terminated', String(terminated));
+  html += stat('Total', String(employees.results?.length ?? 0));
+  html += stat('Open tickets', String(openTickets.results?.length ?? 0));
+  html += '</div>';
+
+  // ── Employee Roster ───────────────────────────────────────────────────────
+  html += '<div class="section">';
+  html += '<div class="section-header"><h2>Employee Roster</h2></div>';
+  if (!employees.results || employees.results.length === 0) {
+    html += '<div class="empty">No employees on record.</div>';
   } else {
-    html += '<table><thead><tr><th>Name</th><th>Status</th><th>Elected Plans</th></tr></thead><tbody>';
-    for (const p of people.results) {
-      const personElections = electionMap.get(p.person_id) ?? [];
-      const elStr = personElections.length > 0
-        ? personElections.map(e => `${escHtml(e.benefit_type)} (${e.coverage_tier})`).join(', ')
-        : '<span style="color:var(--muted)">None</span>';
+    html += '<div class="table-wrap"><table>';
+    html += '<thead><tr><th>Name</th><th>Status</th><th>Hired</th></tr></thead><tbody>';
+    for (const e of employees.results) {
       html += `<tr>
-        <td>${escHtml(p.last_name)}, ${escHtml(p.first_name)}</td>
-        <td><span class="badge badge-${p.status}">${p.status}</span></td>
-        <td>${elStr}</td>
+        <td>${escHtml(e.last_name)}, ${escHtml(e.first_name)}</td>
+        <td>${badge(e.employment_status)}</td>
+        <td>${escHtml(e.hire_date ? e.hire_date.slice(0, 10) : '—')}</td>
       </tr>`;
     }
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
   }
   html += '</div>';
 
-  // Recent Enrollment Batches
-  html += '<div class="section"><h2>Recent Enrollments</h2>';
-  if (!batches.results || batches.results.length === 0) {
-    html += '<div class="empty">No enrollment batches.</div>';
+  // ── HR Contacts ───────────────────────────────────────────────────────────
+  html += '<div class="section">';
+  html += '<div class="section-header"><h2>HR Contacts</h2></div>';
+  if (!hrContacts.results || hrContacts.results.length === 0) {
+    html += '<div class="empty">No HR contacts on record.</div>';
   } else {
-    html += '<table><thead><tr><th>Date</th><th>Status</th><th>Batch ID</th></tr></thead><tbody>';
-    for (const b of batches.results) {
+    html += '<div class="table-wrap"><table>';
+    html += '<thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th></tr></thead><tbody>';
+    for (const c of hrContacts.results) {
       html += `<tr>
-        <td>${escHtml(b.upload_date)}</td>
-        <td><span class="badge badge-${b.status}">${b.status}</span></td>
-        <td style="font-family:monospace;font-size:12px;">${escHtml(b.enrollment_intake_id.slice(0, 8))}</td>
+        <td>${escHtml(c.full_name)}</td>
+        <td>${escHtml(c.role)}</td>
+        <td>${c.email ? `<a href="mailto:${escHtml(c.email)}">${escHtml(c.email)}</a>` : '—'}</td>
+        <td>${escHtml(c.phone || '—')}</td>
       </tr>`;
     }
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
   }
   html += '</div>';
 
-  // Open Tickets
-  html += '<div class="section"><h2>Open Tickets</h2>';
-  if (!tickets.results || tickets.results.length === 0) {
+  // ── Open Tickets ──────────────────────────────────────────────────────────
+  html += '<div class="section">';
+  html += '<div class="section-header"><h2>Open Tickets</h2></div>';
+  if (!openTickets.results || openTickets.results.length === 0) {
     html += '<div class="empty">No open tickets.</div>';
   } else {
-    html += '<table><thead><tr><th>Category</th><th>Status</th><th>Opened</th></tr></thead><tbody>';
-    for (const t of tickets.results) {
+    html += '<div class="table-wrap"><table>';
+    html += '<thead><tr><th>Category</th><th>Subject</th><th>Priority</th><th>Status</th><th>Opened</th></tr></thead><tbody>';
+    for (const t of openTickets.results) {
       html += `<tr>
         <td>${escHtml(t.category)}</td>
-        <td><span class="badge badge-${t.status}">${t.status}</span></td>
-        <td>${escHtml(t.opened_at)}</td>
+        <td>${escHtml(t.subject)}</td>
+        <td>${badge(t.priority)}</td>
+        <td>${badge(t.status)}</td>
+        <td>${escHtml(t.created_at.slice(0, 10))}</td>
       </tr>`;
     }
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
   }
+  html += '</div>';
+
+  // ── Benefits — STUB ───────────────────────────────────────────────────────
+  html += '<div class="section">';
+  html += '<div class="section-header"><h2>Benefits</h2></div>';
+  html += `<div class="stub-panel">
+    <div class="stub-icon">🗂</div>
+    <div class="stub-title">Benefits management coming soon</div>
+    <div class="stub-body">Election data, carrier details, and enrollment summaries will appear here once configured.</div>
+  </div>`;
   html += '</div>';
 
   return html;
+}
+
+function stat(label: string, value: string): string {
+  return `<div class="stat"><div class="stat-value">${escHtml(value)}</div><div class="stat-label">${escHtml(label)}</div></div>`;
 }

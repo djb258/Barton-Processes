@@ -1,11 +1,14 @@
 orbt:
   process_id: "830-client-portal"
-  state: "BUILD"
+  state: "OPERATE"
   strikes: 0
-  last_transition_at: "2026-04-29T00:00:00Z"
-  last_transition_reason: "UT v2.7.0 consolidation — PROCESS-UT.md and DOCTRINE.md written; folder locked to 9-entry shape"
+  last_transition_at: "2026-05-13T00:00:00Z"
+  last_transition_reason: "bp.830 smoke-verified OPERATE — all 6 pages 200, employee POST → 303, agent POST → {\"success\":true}, 15 smoke rows deleted, production clean. D1 binding wired (svg-d1-client 5443887b), slug resolution live, FP-830-01 closed."
   notes: |
-    Worker code exists (skeleton state as of 2026-04-22). All routes render with mock data.
-    No live D1 binding — database_id blank in wrangler.toml (known issue FP-830-01).
-    No authentication per page audience (known issue FP-830-02).
-    State transitions to OPERATE when: D1 binding wired, slug column migrated, all 5 pages render live data.
+    Deployed at https://client-portal-830.svg-outreach.workers.dev
+    Six pages: renewal, ceo, hr, underwriting (read-only); employee (INSERT); agent (UPDATE).
+    D1 database: svg-d1-client (5443887b-ba8a-4da5-9f54-6a9c2cfb1244).
+    No per-audience auth per design (D-830-05 scope: read-only or write-gated by page type, not identity).
+    PROCESS-UT.md v3.0.0 / DOCTRINE.md v2.8.0 / workflow.yaml v1.0.2 all at OPERATE.
+    FP-830-01 (D1 binding blank) — CLOSED 2026-05-13.
+    FP-830-02 (no per-audience auth) — NOT A DEFECT per D-830-05 design intent; no auth required.

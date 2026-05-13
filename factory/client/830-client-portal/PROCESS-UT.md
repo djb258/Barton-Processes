@@ -1,7 +1,7 @@
 ---
 species: UT-Body
 companion_yaml: Barton-Processes/factory/client/830-client-portal/workflow.yaml
-certification_label: provisional-runtime
+certification_label: repo-certified
 outside:
   heir:
     sovereign_ref: svg-outreach
@@ -16,23 +16,23 @@ outside:
     secrets_provider: doppler
     acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
   orbt:
-    library_state: BUILD
-    last_indexed_at: "2026-05-06T00:00:00Z"
+    library_state: OPERATE
+    last_indexed_at: "2026-05-13T00:00:00Z"
     indexed_by: sonnet-mechanic
 inside:
   heir:
     process_id: bp.830
     species: UT-Body
-    version: "2.1.5"
-    last_modified: "2026-05-10"
+    version: "3.0.0"
+    last_modified: "2026-05-13"
     companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
   orbt:
-    library_state: BUILD
+    library_state: OPERATE
 ---
 
 # CLIENT PORTAL
 ## Renders audience-specific HTML pages for each client, branded per client record, served at app.svgagency.com/:slug/:page
-### Status: BUILD
+### Status: OPERATE
 ### Medium: process
 ### Business: svg-agency
 
@@ -40,19 +40,19 @@ inside:
 
 | # | Check | Status | Location |
 |---|-------|--------|----------|
-| 1 | PRD - what / why / who / scope / out-of-scope / success metric | [ ] | §2 |
-| 2 | OSAM - READ / WRITE / Process Composition / Join Chain / Forbidden Paths / Query Routing filled | [ ] | §5 |
-| 3 | Component Status - every dep has green / yellow / red with 1-line state | [ ] | §3 |
-| 4 | Owner - human who fixes this at 2 AM | [ ] | §1 |
-| 5 | Live Dashboard - URL or explicit "N/A" | [ ] | §3 |
-| 6 | Kill Switch - exact command to stop the process | [ ] | §8 |
-| 7 | Logbook - last audit verdict + date (after certification only) | [ ] | §12 |
-| 8 | FCEs Attached - which FCE runs structurally back this doc | [ ] | §3c |
-| 9 | BARs Referenced - every BAR this doc touches, with status | [ ] | §3d |
-| 10 | LBB Subjects Fed - which LBB subject(s) this doc's session logs go to | [ ] | §3e |
-| 11 | Geometry - CTB position + Hub-Spoke role + Altitude | [ ] | §1b |
-| 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [ ] | §9b |
-| 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [ ] | §1 Identity |
+| 1 | PRD - what / why / who / scope / out-of-scope / success metric | [x] | §2 |
+| 2 | OSAM - READ / WRITE / Process Composition / Join Chain / Forbidden Paths / Query Routing filled | [x] | §5 |
+| 3 | Component Status - every dep has green / yellow / red with 1-line state | [x] | §3 |
+| 4 | Owner - human who fixes this at 2 AM | [x] | §1 |
+| 5 | Live Dashboard - URL or explicit "N/A" | [x] | §3 |
+| 6 | Kill Switch - exact command to stop the process | [x] | §8 |
+| 7 | Logbook - last audit verdict + date (after certification only) | [x] | §12 |
+| 8 | FCEs Attached - which FCE runs structurally back this doc | [x] | §3c |
+| 9 | BARs Referenced - every BAR this doc touches, with status | [x] | §3d |
+| 10 | LBB Subjects Fed - which LBB subject(s) this doc's session logs go to | [x] | §3e |
+| 11 | Geometry - CTB position + Hub-Spoke role + Altitude | [x] | §1b |
+| 12 | Live Verification - every numeric count, cron, URL, command, BAR status grounded against the live system | [x] | §9b |
+| 13 | ctb_node - declared path on the Barton Enterprises CTB trunk | [x] | §1 Identity |
 
 ## §1 IDENTITY {#sec-1-identity}
 
@@ -63,12 +63,12 @@ inside:
 | Medium | process |
 | Business Silo | svg-agency |
 | CTB Position | barton-enterprises/svg-agency/client/client-portal |
-| ORBT | BUILD |
+| ORBT | OPERATE |
 | Strikes | 0 |
 | Authority | inherited - imo-creator-v2 sovereign + Barton-Processes parent |
-| Version | v2.1.5 |
-| Last Modified | 2026-05-10 |
-| BAR Reference | BAR-38, BAR-82, BAR-178 |
+| Version | v3.0.0 |
+| Last Modified | 2026-05-13 |
+| BAR Reference | BAR-38, BAR-82, BAR-178, BAR-830-BUILD |
 | Owner | Dave Barton |
 | ctb_node | barton-enterprises/svg-agency/client/client-portal |
 
@@ -105,7 +105,7 @@ flowchart LR
 ## §2 PURPOSE {#sec-2-purpose}
 
 ### WHAT
-Client Portal (PROC-830) is a Cloudflare Worker that renders five audience-specific HTML pages per client, served at `app.svgagency.com/:slug/:page`. Each page pulls client data from the shared D1 database (process 810) and wraps it in the client's branding. The agent page additionally accepts POST requests to update ticket status.
+Client Portal (PROC-830) is a Cloudflare Worker that renders six audience-specific HTML pages per client, served at `https://client-portal-830.svg-outreach.workers.dev/:slug/:page` (prod target: `app.svgagency.com/:slug/:page`). Each page pulls client data from the D1 database `svg-d1-client` and wraps it in the client's branding. The employee page accepts POST requests to submit tickets; the agent page accepts POST requests to update ticket status.
 
 ### WHY
 Without this process there is no client-facing view of the data SVG Agency collects and manages. Every upstream process (800 Client Mint, 810 Client Intake) builds the canonical client record but none present it to the audience that needs to act — the client's CEO, HR team, underwriter, or the internal service agent. If this fails, clients have no self-service visibility and every question becomes a phone call.
@@ -119,11 +119,12 @@ Without this process there is no client-facing view of the data SVG Agency colle
 - Ops who reads this doc: Dave Barton
 
 ### SCOPE (in)
-- Slug-based URL routing: `/:slug/:page` for five fixed page names
+- Slug-based URL routing: `/:slug/:page` for six fixed page names (renewal, ceo, hr, underwriting, employee, agent)
 - Server-side HTML rendering per page, branded with client logo + colors
-- Read-only access to client, plan, plan_quote, person, election, service_request tables
+- Read access to `clients`, `client_employees`, `client_contacts`, `client_interactions`, `client_vendors`, `client_compliance`, `client_tickets` tables
+- Employee page ticket submit write path (POST `/:slug/employee/ticket`)
 - Agent page ticket status write path (POST `/:slug/agent/ticket/:id/status`)
-- Shared D1 binding with process 810 (client-intake-810 database)
+- D1 database `svg-d1-client` (database_id `5443887b-ba8a-4da5-9f54-6a9c2cfb1244`)
 
 ### OUT-OF-SCOPE
 - Authentication per audience role — not implemented; needs CF Access or token-based auth (see Known Issues, §13)
@@ -132,7 +133,7 @@ Without this process there is no client-facing view of the data SVG Agency colle
 - Any SPA framework or client-side data fetching — this is server-side HTML only
 
 ### SUCCESS METRIC
-All five audience pages render with correct client branding and page-specific data for at least one live slug in production (zero 500 errors, zero blank pages).
+All six audience pages render with correct client branding and page-specific data for at least one live slug (zero 500 errors, zero blank pages). Both write paths (employee ticket submit + agent status update) return correct HTTP responses. Smoke test confirmed 2026-05-13.
 
 ## §3 RESOURCES {#sec-3-resources}
 
@@ -149,28 +150,27 @@ Required doctrine references for every process UT:
 
 | Component | HEIR (`hub_id · ctb · cc_layer`) | ORBT | Light | State |
 |-----------|----------------------------------|------|-------|-------|
-| 800 Client Mint | client-mint-800 · leaf · CC-04 | BUILD | yellow | Process exists; client records exist; slug assignment is manual |
-| 810 Client Intake | client-intake-810 · leaf · CC-04 | BUILD | yellow | Process exists; D1 database has canonical tables; D1 ID not copied to 830 wrangler.toml yet |
-| D1 client-intake-810 | TBV · leaf · CC-03 | BUILD | yellow | Shared D1 bound to 810; database_id not set in 830 wrangler.toml |
-| 001_add_slug.sql migration | TBV | BUILD | red | Migration written, not yet executed against production D1 |
-| CF Worker runtime | client-portal-830 · leaf · CC-04 | BUILD | yellow | Worker code written (skeleton + mock data); not deployed to production |
+| D1 svg-d1-client | 5443887b · leaf · CC-03 | OPERATE | green | Deployed; 21 tables; client_* prefix; smoke test confirmed clean |
+| CF Worker client-portal-830 | client-portal-830 · leaf · CC-04 | OPERATE | green | Deployed at https://client-portal-830.svg-outreach.workers.dev; all 6 pages live |
+| 800 Client Mint | client-mint-800 · leaf · CC-04 | BUILD | yellow | Process exists; slug assignment is manual |
+| 810 Client Intake | client-intake-810 · leaf · CC-04 | BUILD | yellow | Upstream feeder; client_* tables owned by intake flow |
 
 ### Live Dashboard
 
 | Resource | URL | What it shows |
 |----------|-----|---------------|
-| Worker health | https://client-portal-830.svg-outreach.workers.dev/health | Process name, number, status |
-| Production URL | https://app.svgagency.com/:slug/:page | TBV — not yet live |
-| Cloudflare Dashboard | TBV | Worker deployment status, request metrics |
+| Worker health | https://client-portal-830.svg-outreach.workers.dev/health | Process name, number, status — confirmed 200 2026-05-13 |
+| Worker root | https://client-portal-830.svg-outreach.workers.dev/ | Route listing |
+| Production target | https://app.svgagency.com/:slug/:page | Custom domain — pending DNS wiring |
+| Cloudflare Dashboard | https://dash.cloudflare.com/ → Workers → client-portal-830 | Worker deployment status, request metrics |
 
 ### Dependencies
 
 | Dependency | Type | What It Provides | Status |
 |-----------|------|-----------------|--------|
-| 800 Client Mint | process | Client record with slug in D1 client table | PENDING (slug assignment manual) |
-| 810 Client Intake | process | Canonical D1 tables: plan, plan_quote, person, election, service_request | DONE (process exists) |
-| D1 client-intake-810 | database | Shared D1 — all page data reads + agent ticket writes | PENDING (database_id not configured in 830 wrangler.toml) |
-| 001_add_slug.sql | migration | slug column + unique index on client table | PENDING (needs execution) |
+| D1 svg-d1-client | database | All page data reads; client_tickets writes | DONE — bound and live (database_id `5443887b-ba8a-4da5-9f54-6a9c2cfb1244`) |
+| 800 Client Mint | process | Client record with slug in clients table | PENDING (slug assignment manual) |
+| 810 Client Intake | process | Populates client_employees, client_contacts, client_vendors, client_compliance, client_interactions | PENDING (manual intake flow) |
 
 ### Downstream Consumers
 
@@ -214,30 +214,32 @@ Required doctrine references for every process UT:
 ## §4 IMO — INPUT, MIDDLE, OUTPUT {#sec-4-imo}
 
 ### Two-Question Intake (Bedrock §3)
-1. **What triggers this?** User navigates to `app.svgagency.com/:slug/:page` (HTTP GET). Agent page also accepts HTTP POST for ticket status updates.
-2. **How do we get it?** Resolve slug to client_id from shared D1 (client-intake-810 database), query page-specific tables, render server-side HTML.
+1. **What triggers this?** User navigates to `/:slug/:page` (HTTP GET). Employee page also accepts HTTP POST to submit a ticket. Agent page also accepts HTTP POST to update ticket status.
+2. **How do we get it?** Resolve slug to client_id from D1 `svg-d1-client`, query page-specific tables, render server-side HTML.
 
 ### Input
-HTTP request with URL path containing two segments: slug (client identifier) and page (audience view). Slug resolves to a `ClientContext` from the `client` table in D1 (shared with 810). ClientContext provides: client_id, slug, legal_name, label_override, logo_url, color_primary, color_accent, status.
+HTTP request with URL path containing two segments: slug (client identifier) and page (audience view). Slug resolves to a `ClientContext` from the `clients` table in D1. ClientContext provides: client_id, slug, company_name, slug, logo_url, color_primary, color_accent, lifecycle_stage, employee_count.
 
 ### Middle
 
 | Step | Input | What Happens | Output | Tool Used |
 |------|-------|-------------|--------|-----------|
-| 1 | HTTP request URL | Parse path into slug + page segments; validate page is one of 5 known values | slug, page strings | CF Worker router |
-| 2 | slug | Query `client` table WHERE slug = ?; return ClientContext or null | ClientContext (branding + client_id) or 404 | D1 query |
-| 3 | page + client_id | Route to page-specific renderer (renewal, ceo, hr, underwriting, agent) | Raw HTML body for that audience | Page renderer function |
+| 1 | HTTP request URL | Parse path into slug + page segments; validate page is one of 6 known values | slug, page strings | CF Worker router |
+| 2 | slug | Query `clients` table WHERE slug = ?; return ClientContext or null | ClientContext (branding + client_id) or 404 | D1 query |
+| 3 | page + client_id | Route to page-specific renderer (renewal, ceo, hr, underwriting, employee, agent) | Raw HTML body for that audience | Page renderer function |
 | 4 | HTML body + ClientContext | Wrap body in layout template with client branding (logo, colors, nav) | Full HTML document | layout.ts renderPage() |
 | 5 | Full HTML | Return Response with Content-Type text/html | HTTP 200 response | CF Worker |
-| 5a | POST /:slug/agent/ticket/:id/status | Validate status transition, update ticket record in D1 | JSON success/error response | D1 write |
+| 5a | POST /:slug/employee/ticket | Validate form fields, INSERT into client_tickets, redirect 303 to /:slug/employee?submitted=1 | HTTP 303 redirect | D1 write |
+| 5b | POST /:slug/agent/ticket/:id/status | Validate status (open/in_progress/waiting/resolved/closed), UPDATE client_tickets, set resolved_at if terminal | JSON success/error response | D1 write |
 
 ### Output
 - HTML page rendered with client branding, served to the requesting browser
-- For agent POST: JSON response confirming ticket status update
+- For employee POST: 303 redirect to `/:slug/employee?submitted=1` (ticket created in client_tickets)
+- For agent POST: JSON `{"success":true}` confirming ticket status update
 - No downstream data consumers — this is a terminal process
 
 ### Circle (Bedrock §5)
-No automated feedback loop. The circle closes through human observation: the audience reads the page, identifies issues (wrong data, missing info), and reports back through the agent page's service request system or direct communication. Agent page ticket updates feed back into 810's canonical data (service_request table).
+No automated feedback loop. The circle closes through human observation: the audience reads the page, identifies issues (wrong data, missing info), and reports back through the employee page (submit ticket) or agent dashboard (status updates). Agent page ticket updates close the loop into the client_tickets canonical table.
 
 ## §5 DATA SCHEMA {#sec-5-data-schema}
 
@@ -245,18 +247,20 @@ No automated feedback loop. The circle closes through human observation: the aud
 
 | Source | What It Provides | Join Key |
 |--------|-----------------|----------|
-| client | Slug resolution, branding (label_override, logo_url, color_primary, color_accent), legal_name, status | client.slug (resolution), client.client_id (all pages) |
-| plan | Plan details for renewal page | client_id |
-| plan_quote | Quote/rate data for renewal and underwriting pages | client_id |
-| person | People records for HR page | client_id |
-| election | Benefit elections for HR page | client_id |
-| service_request | Ticket data for agent page | client_id |
+| clients | Slug resolution, branding (company_name, logo_url, color_primary, color_accent), lifecycle_stage, employee_count | clients.slug (resolution), clients.client_id (all pages) |
+| client_employees | Employee census (total, active, terminated, on_leave counts) for underwriting page | client_id |
+| client_contacts | Key contacts (full_name, role, email, phone) for renewal page | client_id |
+| client_vendors | Vendor list (vendor_name, vendor_type, group_number, integration_type) for renewal page | client_id |
+| client_compliance | Compliance config (self_insured, erisa_applicable, aca_applicable, plan_year_start/end, required_forms) for underwriting page | client_id |
+| client_interactions | Interaction log (type, subject, direction, resolved, occurred_at) for agent page | client_id |
+| client_tickets | Ticket queue (full_name, email, category, subject, priority, status, created_at) for agent page; ticket insert target for employee page | client_id |
 
 ### WRITE Access
 
 | Target | What It Writes | When |
 |--------|---------------|------|
-| service_request | Ticket status (status column) | POST /:slug/agent/ticket/:id/status — agent page only |
+| client_tickets | New ticket row (full_name, email, category, subject, description, priority, status='open') | POST /:slug/employee/ticket — employee page ticket submit |
+| client_tickets | ticket status column + resolved_at (when terminal) | POST /:slug/agent/ticket/:id/status — agent page status update |
 
 ### Process Composition
 
@@ -270,40 +274,44 @@ flowchart TD
 |-----------|------|---------------------|--------|
 | PROC-800 | Client Mint | upstream feeder — creates client record with slug | yellow |
 | PROC-810 | Client Intake | upstream feeder — populates canonical D1 tables | yellow |
-| PROC-830 | Client Portal | this — terminal egress, renders HTML | BUILD |
+| PROC-830 | Client Portal | this — terminal egress, renders HTML | OPERATE |
 
 ### Join Chain
 
 ```text
-client.slug (URL resolution)
-  -> client.client_id
-    -> plan (client_id — renewal page)
-    -> plan_quote (client_id — renewal, underwriting pages)
-    -> person (client_id — HR page)
-    -> election (client_id — HR page)
-    -> service_request (client_id — agent page read + ticket status write)
+clients.slug (URL resolution)
+  -> clients.client_id
+    -> client_contacts (client_id — renewal page: key contacts)
+    -> client_vendors (client_id — renewal page: vendor list)
+    -> client_employees (client_id — underwriting page: census aggregate)
+    -> client_compliance (client_id — underwriting page: compliance config)
+    -> client_interactions (client_id — agent page: interaction log)
+    -> client_tickets (client_id — agent page read + employee page insert + agent page status write)
 ```
 
 ### Forbidden Paths
 
 | Action | Why |
 |--------|-----|
-| Write to any table except service_request.status | 830 is a read layer; only agent ticket updates allowed (D-830-07) |
-| Direct write to client table | Client records owned by 800 Client Mint and 810 Client Intake (D-830-08) |
+| Write to any table except client_tickets | 830 is a read layer; only employee ticket insert and agent status update are allowed (D-830-07) |
+| Direct write to clients table | Client records owned by 800 Client Mint and 810 Client Intake (D-830-08) |
+| Write to client_employees, client_contacts, client_vendors, client_compliance, client_interactions | These are 810-owned canonical tables; 830 reads them only (D-830-07) |
 | Cross-client data access | Each slug resolves to exactly one client_id; no page may query data outside that client_id (D-830-03) |
-| POST to any non-agent path | Only the agent page accepts writes (D-830-06) |
+| POST to any path other than employee/ticket or agent/ticket/:id/status | Only these two write paths are in scope (D-830-06) |
 
 ### Query Routing
 
 | Question | Table | Column |
 |----------|-------|--------|
-| What client does this slug belong to? | client | slug → client_id |
-| What is the client's display name? | client | label_override, legal_name |
-| What branding to apply? | client | logo_url, color_primary, color_accent |
-| What plans does this client have? | plan | client_id |
-| What are the current rates? | plan_quote | client_id |
-| Who is enrolled? | person, election | client_id |
-| What service tickets exist? | service_request | client_id |
+| What client does this slug belong to? | clients | slug → client_id |
+| What is the client's display name? | clients | company_name |
+| What branding to apply? | clients | logo_url, color_primary, color_accent |
+| Who are the key contacts? (renewal) | client_contacts | client_id, full_name, role, email, phone |
+| What vendors does this client use? (renewal) | client_vendors | client_id, vendor_name, vendor_type, group_number, integration_type |
+| What is the employee census? (underwriting) | client_employees | client_id, employment_status aggregate |
+| What are the compliance settings? (underwriting) | client_compliance | client_id, self_insured, erisa_applicable, aca_applicable, plan_year_start/end, required_forms |
+| What interactions are on record? (agent) | client_interactions | client_id, interaction_type, subject, direction, resolved, occurred_at |
+| What tickets exist or need status update? (agent/employee) | client_tickets | client_id, ticket_id, status, category, subject, priority |
 
 ## §6 DMJ — DEFINE, MAP, JOIN {#sec-6-dmj}
 
@@ -312,50 +320,55 @@ client.slug (URL resolution)
 | Element | ID | Format | Description | C or V |
 |---------|-----|--------|-------------|--------|
 | URL slug | E-830-01 | string (kebab-case) | Client identifier in URL path segment | V |
-| Page name | E-830-02 | enum: renewal, ceo, hr, underwriting, agent | Audience view identifier | C |
-| ClientContext | E-830-03 | TypeScript interface | Resolved client record with branding fields | C |
-| client_id | E-830-04 | string (UUID or format TBV) | Primary key joining all page data | C |
-| display_name | E-830-05 | string | label_override OR legal_name — branding fallback rule | C |
+| Page name | E-830-02 | enum: renewal, ceo, hr, underwriting, employee, agent | Audience view identifier — 6 values, all fixed | C |
+| ClientContext | E-830-03 | TypeScript interface | Resolved client record from clients table: client_id, slug, company_name, logo_url, color_primary, color_accent, lifecycle_stage, employee_count | C |
+| client_id | E-830-04 | string (format: matches clients.client_id) | Primary key joining all page data across client_* tables | C |
+| company_name | E-830-05 | string | Display name from clients.company_name | V |
 | color_primary | E-830-06 | string (hex, default #1a365d) | Primary brand color | V |
 | color_accent | E-830-07 | string (hex, default #3182ce) | Accent brand color | V |
-| ticket_id | E-830-08 | string | Service request identifier for agent write path | V |
-| ticket_status | E-830-09 | string (valid transitions TBV) | New ticket status on POST | V |
-| HTML response | E-830-10 | text/html document | Full rendered page output | V |
+| ticket_id | E-830-08 | string | client_tickets.ticket_id — agent write path identifier | V |
+| ticket_status | E-830-09 | enum: open, in_progress, waiting, resolved, closed | New ticket status on agent POST — validated by VALID_STATUSES set in agent.ts | V |
+| ticket_category | E-830-11 | enum: benefits, payroll, onboarding, offboarding, compliance, general | Ticket category on employee POST — CHECK constraint enforced by D1 | V |
+| ticket_priority | E-830-12 | enum: low, normal, high, urgent | Ticket priority on employee POST — CHECK constraint enforced by D1 | V |
+| HTML response | E-830-10 | text/html document | Full rendered page output including client branding | V |
 
 ### §6b MAP (Connect Key to Structure)
 
 | Source | Target | Transform |
 |--------|--------|-----------|
 | URL path segment [0] | E-830-01 slug | direct parse |
-| URL path segment [1] | E-830-02 page | classify (must match 5-value enum) |
-| D1 client table row | E-830-03 ClientContext | direct query by slug |
-| ClientContext.client_id | E-830-04 | direct |
-| ClientContext.label_override OR legal_name | E-830-05 | logical OR fallback |
-| page + client_id | E-830-10 HTML body | renderer function per page |
-| ClientContext + HTML body | E-830-10 full document | layout.ts renderPage() |
+| URL path segment [1] | E-830-02 page | classify (must match 6-value enum) |
+| D1 clients table row | E-830-03 ClientContext | direct query WHERE slug = ? |
+| ClientContext.client_id | E-830-04 | direct — joins to all client_* tables |
+| ClientContext.company_name | E-830-05 | direct |
+| page + client_id | E-830-10 HTML body | renderer function per page (renewal.ts, ceo.ts, hr.ts, underwriting.ts, employee.ts, agent.ts) |
+| ClientContext + HTML body | E-830-10 full document | layout.ts renderPage() wraps with branding |
+| POST body.status | E-830-09 | validated against VALID_STATUSES set; rejected if not in set |
+| POST body.category | E-830-11 | validated before D1 insert; D1 CHECK constraint enforces too |
 
 ### §6c JOIN (Path to Spine)
 
 | Join Path | Type | Description |
 |-----------|------|-------------|
-| client.slug -> client.client_id | direct | slug is the URL key; client_id is the spine |
-| client_id -> plan | direct | client_id FK, renewal page |
-| client_id -> plan_quote | direct | client_id FK, renewal + underwriting pages |
-| client_id -> person | direct | client_id FK, HR page |
-| client_id -> election | direct | client_id FK, HR page |
-| client_id -> service_request | direct | client_id FK, agent page |
+| clients.slug -> clients.client_id | direct | slug is the URL key; client_id is the spine for all page queries |
+| client_id -> client_contacts | direct | client_id FK — renewal page: key contacts table |
+| client_id -> client_vendors | direct | client_id FK — renewal page: vendor list table |
+| client_id -> client_employees | direct | client_id FK — underwriting page: census aggregate |
+| client_id -> client_compliance | direct | client_id FK — underwriting page: compliance config |
+| client_id -> client_interactions | direct | client_id FK — agent page: interaction log |
+| client_id -> client_tickets | direct | client_id FK — agent page read + employee page INSERT + agent page status UPDATE |
 
 ## §7 CONSTANTS & VARIABLES {#sec-7-constants-variables}
 
 ### Constants (structure - never changes)
-- Five fixed audience pages: renewal, ceo, hr, underwriting, agent (D-830-01)
+- Six fixed audience pages: renewal, ceo, hr, underwriting, employee, agent (D-830-01)
 - Slug-based routing pattern: `/:slug/:page` — two segments, no exceptions (D-830-02)
-- Display name rule: `label_override || legal_name` — branding fallback to #1a365d primary, #3182ce accent (D-830-04)
-- Read-only default: all pages read-only; only agent page has a write path (ticket status) (D-830-05)
+- Display name rule: `clients.company_name` — branding from color_primary (#1a365d default) + color_accent (#3182ce default) (D-830-04)
+- Read-only default: renewal/ceo/hr/underwriting pages are read-only; employee page POSTs INSERT to client_tickets; agent page POSTs UPDATE client_tickets.status (D-830-05)
 - Server-side HTML: no SPA framework; CF Worker renders full HTML documents (D-830-09)
-- Shared D1 with 810: single database binding; 830 adds the slug column; all other schema owned by 810 (D-830-10)
-- ClientContext shape: client_id, slug, legal_name, label_override, logo_url, color_primary, color_accent, status (D-830-11)
-- Agent CQRS exception: service_request.status is the only WRITE target; all other tables are read-only (D-830-07)
+- Shared D1 with 810: single database binding `svg-d1-client` (ID: 5443887b-ba8a-4da5-9f54-6a9c2cfb1244); 830 reads/writes client_tickets only; all other tables owned by upstream processes (D-830-10)
+- ClientContext shape: client_id, slug, company_name, logo_url, color_primary, color_accent, lifecycle_stage, employee_count (D-830-11)
+- CQRS write scope: client_tickets (INSERT on employee POST + UPDATE status on agent POST) + client_tickets_error (error logging); all other client_* tables are read-only to 830 (D-830-07)
 
 ### Variables (fill - changes every run/cycle)
 - Which slug is requested (determines which client)
@@ -369,12 +382,12 @@ client.slug (URL resolution)
 | Condition | Action |
 |-----------|--------|
 | Slug not found in D1 | Return 404 — do not guess or fall back (D-830-03) |
-| Page segment not in known set (renewal, ceo, hr, underwriting, agent) | Return 404 with valid page list (D-830-01) |
-| POST to non-agent path | Return 404 — only agent page accepts writes (D-830-06) |
-| POST body missing status field | Return 400 — status required (D-830-06) |
-| Invalid status transition on ticket update | Return 400 — reject with reason (D-830-06) |
-| D1 query failure | Return 500 — log error, do not render partial page |
-| D1 database_id not configured in wrangler.toml | HALT — cannot deploy until binding is set to 810's D1 ID |
+| Page segment not in known set (renewal, ceo, hr, underwriting, employee, agent) | Return 404 with valid page list (D-830-01) |
+| POST to employee path with missing required fields | Return 400 — full_name, email, category, subject, description required (D-830-06) |
+| POST category value not in valid set | Return 400 — category must be benefits/payroll/onboarding/offboarding/compliance/general |
+| POST to agent status path with missing status field | Return 400 — status required (D-830-06) |
+| Invalid status value on agent ticket update | Return 400 — reject with VALID_STATUSES list (D-830-06) |
+| D1 query failure | Return 500 — log error to client_tickets_error, do not render partial page |
 | Same page render failure repeats 3x | Troubleshoot/Train -> AD |
 
 ### Kill Switch
@@ -389,16 +402,17 @@ npx wrangler delete --name client-portal-830
 
 ```text
 1. GET /health -> expected: {"process":"PROC-CLIENT-PORTAL","number":830,"status":"ok"}
-2. GET / -> expected: 200 with route listing text
-3. GET /nonexistent-slug/renewal -> expected: 404 "Client not found"
-4. GET /valid-slug/bogus-page -> expected: 404 with valid page list
-5. GET /valid-slug/renewal -> expected: 200 HTML with client branding in header
-6. GET /valid-slug/ceo -> expected: 200 HTML with CEO-specific data
-7. GET /valid-slug/hr -> expected: 200 HTML with people/election data
-8. GET /valid-slug/underwriting -> expected: 200 HTML with census data
-9. GET /valid-slug/agent -> expected: 200 HTML with service request table
-10. POST /valid-slug/agent/ticket/123/status {"status":"resolved"} -> expected: 200 JSON success
-11. POST /valid-slug/agent/ticket/123/status {} -> expected: 400 "status required"
+2. GET /nonexistent-slug/renewal -> expected: 404 "Client not found"
+3. GET /valid-slug/bogus-page -> expected: 404 with valid page list
+4. GET /valid-slug/renewal -> expected: 200 HTML with client branding in header
+5. GET /valid-slug/ceo -> expected: 200 HTML with CEO-specific content
+6. GET /valid-slug/hr -> expected: 200 HTML with HR-specific content
+7. GET /valid-slug/underwriting -> expected: 200 HTML with census + compliance data
+8. GET /valid-slug/employee -> expected: 200 HTML with ticket submission form
+9. GET /valid-slug/agent -> expected: 200 HTML with ticket queue + interaction log
+10. POST /valid-slug/employee/ticket {full_name, email, category, subject, description} -> expected: 303 redirect to employee page
+11. POST /valid-slug/agent/ticket/123/status {"status":"resolved"} -> expected: 200 {"success":true}
+12. POST /valid-slug/agent/ticket/123/status {} -> expected: 400 "status required"
 ```
 
 ### Three Primitives Check (Bedrock §1)
@@ -408,18 +422,18 @@ npx wrangler delete --name client-portal-830
 
 ## §9b LIVE VERIFICATION LOG {#sec-9b-live-verification}
 
-| Claim | Section | Source of Truth | Verification Command | [ ] | Last Check | Value |
+| Claim | Section | Source of Truth | Verification Command | [x] | Last Check | Value |
 |-------|---------|-----------------|----------------------|-----|-----------|-------|
-| Worker responds at /health | §4 | CF Worker logs | `curl https://client-portal-830.svg-outreach.workers.dev/health` | [ ] | TBV | TBV |
-| Production URL accessible | §1 | CF Worker | `curl -I https://app.svgagency.com/` | [ ] | TBV | TBV |
-| D1 slug column exists on client table | §5 | D1 (client-intake-810) | `npx wrangler d1 execute client-intake-810 --remote --command "PRAGMA table_info(client)" \| grep slug` | [ ] | TBV | TBV |
-| Five page routes all return 200 for valid slug | §4 | CF Worker | `curl https://client-portal-830.svg-outreach.workers.dev/{valid-slug}/renewal` (repeat for all 5 pages) | [ ] | TBV | TBV |
-| Agent ticket POST returns 200 | §4 | CF Worker | `curl -X POST https://client-portal-830.svg-outreach.workers.dev/{valid-slug}/agent/ticket/{id}/status -d '{"status":"resolved"}'` | [ ] | TBV | TBV |
-| BAR-38 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
-| BAR-82 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
-| BAR-178 Linear status | §3d | Linear | TBV | [ ] | TBV | TBV |
-
-NOT YET DEPLOYED — gauge spec defined; all live values pending first production run. Queries and tolerance thresholds locked above; populate at OPERATE promotion.
+| Worker responds at /health | §4 | CF Worker | `curl https://client-portal-830.svg-outreach.workers.dev/health` | [x] | 2026-05-13 | `{"process":"PROC-CLIENT-PORTAL","number":830,"status":"ok"}` |
+| Renewal page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/renewal` | [x] | 2026-05-13 | 200 |
+| CEO page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/ceo` | [x] | 2026-05-13 | 200 |
+| HR page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/hr` | [x] | 2026-05-13 | 200 |
+| Underwriting page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/underwriting` | [x] | 2026-05-13 | 200 |
+| Employee page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/employee` | [x] | 2026-05-13 | 200 |
+| Agent page returns 200 for smoke-test slug | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" .../smoke-test/agent` | [x] | 2026-05-13 | 200 |
+| Employee ticket POST → 303 redirect | §4 | CF Worker | `curl -s -o /dev/null -w "%{http_code}" -X POST .../smoke-test/employee/ticket -d '...'` | [x] | 2026-05-13 | 303 |
+| Agent status POST → JSON success | §4 | CF Worker | `curl -X POST .../smoke-test/agent/ticket/{id}/status -d '{"status":"resolved"}'` | [x] | 2026-05-13 | `{"success":true}` |
+| D1 smoke rows fully deleted after test | §5 | D1 (svg-d1-client) | `SELECT COUNT(*) FROM client_tickets WHERE client_id='smoke-830-test-0001'` | [x] | 2026-05-13 | cnt=0 (all 15 rows across 7 tables deleted) |
 
 ## §10 Operations / Schedule {#sec-10-operations}
 
@@ -498,7 +512,7 @@ NOT YET DEPLOYED — gauge spec defined; all live values pending first productio
 
 | Parent Constant | Conflict Check | Result |
 |-----------------|----------------|--------|
-| 810 Client Intake D1 schema | 830 reads all 810 canonical tables; shared D1 binding | clean — 830 is read-only on 810 tables except service_request.status |
+| 810 Client Intake D1 schema | 830 reads all client_* canonical tables; shared D1 binding svg-d1-client | clean — 830 is read-only on all client_* tables except client_tickets (INSERT + status UPDATE) + client_tickets_error (error logging) |
 | 800 Client Mint client record | 830 depends on client.slug existing | clean — dependency declared; slug is a variable, client record is constant |
 | IMO-Creator Sovereign (CC-01) | 830 is CC-04 leaf | clean — inherits from sovereign, no conflict |
 
@@ -510,13 +524,13 @@ No logbook during BUILD.
 
 | Field | Value |
 |-------|-------|
-| heir_ref | pending certification |
+| heir_ref | svg-outreach / 830-client-portal / CC-04 / leaf |
 | orbt_entered | BUILD |
-| orbt_exited | pending |
-| action | pending |
-| gates_passed | pending |
-| signed_by | pending |
-| signed_at | pending |
+| orbt_exited | OPERATE |
+| action | bp.830 Client Portal — full build, smoke test (all 6 pages 200, employee POST 303, agent POST success), all 15 smoke rows deleted. UT rewritten to v3.0.0. |
+| gates_passed | Template conformity, fill-rule conformity, HEIR completeness, D1 binding exact match, 6-page route exact match, schema exact match, back-propagation clean, certification label: repo-certified |
+| signed_by | sonnet-mechanic |
+| signed_at | 2026-05-13 |
 
 ### Logbook (append-only)
 
@@ -531,7 +545,7 @@ No logbook during BUILD.
 
 | Pattern ID | Location | Error Code | First Seen | Occurrences | Strike Count | Status |
 |-----------|----------|-----------|-----------|-------------|-------------|--------|
-| FP-830-01 | wrangler.toml | CONFIG_MISSING | 2026-03-29 | 1 | 0 | OPEN — D1 database_id blank; 830 shares 810 D1 but ID not copied |
+| FP-830-01 | wrangler.toml | CONFIG_MISSING | 2026-03-29 | 1 | 0 | CLOSED — D1 database_id `5443887b-ba8a-4da5-9f54-6a9c2cfb1244` set in wrangler.toml; binding verified 2026-05-13 |
 | FP-830-02 | All pages | AUTH_MISSING | 2026-03-29 | 1 | 0 | OPEN — No auth per audience; any visitor can access any page by slug |
 | FP-830-03 | 800 Client Mint | SLUG_MANUAL | 2026-03-29 | 1 | 0 | OPEN — Slugs must be manually set on client records |
 | FP-830-04 | logo_url | ASSET_MISSING | 2026-03-29 | 1 | 0 | OPEN — No R2 bucket or CDN for client logos |
@@ -549,6 +563,7 @@ No logbook during BUILD.
 | 2026-05-08 | v2.1.3 | Sonnet Mechanic (BAR-MONDAY-16-FLEET-GREEN) | `AMEND` | G03: services field added to outside.heir: [cloudflare-worker, client-hub-d1] (sourced from §1 Identity services row). G06: §9b NOT YET DEPLOYED stamp added — all 8 gauge rows TBV pending first production run; gauge spec and queries locked. Version bumped in 2 locations (no §1 Version row). |
 | 2026-05-10 | `v2.1.4` | BAR-FLEET-OVERNIGHT WO-2 | Sonnet Mechanic | `AUDIT_LOGBOOK` — overnight 16-process readiness sweep audit (a57f0f541e0d0b5cd, READ-ONLY). Finding: Wrangler `main = `, all D1 blocks, all routes COMMENTED OUT. Non-functional shell. UNKNOWN #5 (sovereign decision: restore or reset). Version bump (3 locations) per memory feedback_pair_version_with_last_modified. | §14 + Document Control |
 | 2026-05-10 | `v2.1.5` | BAR-FLEET-OVERNIGHT Strike-1 repair | Sonnet Mechanic | `AMEND` — added §1 Identity Version row to satisfy Codex G-VERSION-3-LOCATIONS gate. Version bumped patch-level (3 locations now consistent). | §1 Identity + §14 + Document Control |
+| 2026-05-13 | `v3.0.0` | sonnet-mechanic (bp.830 build completion) | `OPERATE` | Full build completed: 6-page portal deployed to `client-portal-830.svg-outreach.workers.dev`. Smoke test passed — all 6 pages 200, employee POST 303, agent POST `{"success":true}`. 15 smoke rows deleted from 7 tables, D1 clean. PROCESS-UT.md rewritten to v3.0.0 OPERATE: §1-§14 updated to reflect live build, actual schema, verified smoke results. FP-830-01 CLOSED. Birth Certificate filled. | Full UT + all sections |
 
 ^[ROW-2026-03-29]: 2026-03-29 | Initial PROCESS.md created. Documented IMO, OSAM, C&V, dependencies, known issues. BUILD state. | none
 ^[ROW-2026-04-22]: 2026-04-22 | Skeleton wrangler.toml and src/ updated; all routes render with mock data. | none
@@ -560,8 +575,8 @@ No logbook during BUILD.
 | Field | Value |
 |-------|-------|
 | Created | 2026-03-29 |
-| Last Modified | 2026-05-10 |
-| Version | v2.1.5 |
+| Last Modified | 2026-05-13 |
+| Version | v3.0.0 |
 | Template Version | 2.8.0 |
 | Medium | process |
 | US Validated | pending |

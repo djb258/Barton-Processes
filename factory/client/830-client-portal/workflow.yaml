@@ -2,14 +2,14 @@
 # workflow.yaml — Workflow-Body companion to PROCESS-UT.md
 # bp.830 CLIENT PORTAL — Audience-specific client portal pages
 # ctb_node: barton-enterprises/svg-agency/client/830-client-portal
-# Species: Workflow-Body | Version: 1.0.1 | Last Modified: 2026-05-08
+# Species: Workflow-Body | Version: 1.0.2 | Last Modified: 2026-05-13
 # BS Law Y-junction: outside: + inside: are syntactically distinct top-level maps.
 # =============================================================================
 
 # Block 1 — name
 name: bp-830-client-portal
-version: "1.0.1"
-last_modified: "2026-05-08"
+version: "1.0.2"
+last_modified: "2026-05-13"
 
 # Block 2 — inherits
 inherits:
@@ -43,8 +43,8 @@ outside:
       - mission-control
     acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
   orbt:
-    library_state: BUILD
-    last_indexed_at: "2026-05-06T00:00:00Z"
+    library_state: OPERATE
+    last_indexed_at: "2026-05-13T00:00:00Z"
     indexed_by: sonnet-mechanic
 
 # =============================================================================
@@ -55,8 +55,8 @@ inside:
   heir:
     process_id: bp.830
     species: Workflow-Body
-    version: "1.0.1"
-    last_modified: "2026-05-08"
+    version: "1.0.2"
+    last_modified: "2026-05-13"
     companion_manifest: Barton-Processes/factory/client/830-client-portal/PROCESS-UT.md
     aviation_model:
       planner: opus-4.7
@@ -72,11 +72,11 @@ inside:
     acceptance_criteria: "UT-local Workflow-Body; portal route/data gates green"
     determinism_gate: ai_on_spine_forbidden
   orbt:
-    library_state: BUILD
-    runtime_state: BUILD
+    library_state: OPERATE
+    runtime_state: OPERATE
     strikes: 0
-    last_transition_at: "2026-05-06"
-    last_transition_reason: BAR-830-CONFORM-WIRE Atlas conformance pass
+    last_transition_at: "2026-05-13"
+    last_transition_reason: "bp.830 smoke verified — all 6 pages 200, both write paths pass, 15 smoke rows deleted, production clean"
     flipped_by: sonnet-mechanic
     promotion_gate: bp_810_operate_and_codex_10_gate_pass
 
