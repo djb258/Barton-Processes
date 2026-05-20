@@ -38,3 +38,4 @@ factory/outreach/200-people-worker/src/output/*.jsonl
 factory/outreach/201-email-discovery/src/output/*.jsonl
 factory/outreach/202-linkedin-discovery/src/output/*.jsonl
 factory/outreach/301-page-parser/src/output/*.jsonl
+.agents/
