@@ -1,0 +1,68 @@
+# HEIR — Process 2310 Kiddos Sports-Performance
+# 8 fields per Aviation Model / Bedrock §8
+# Process number is TENTATIVE pending sovereign assignment via pending-atlas-updates/BAR-KIDDOS-SPORTS-PERFORMANCE.yaml
+
+process_id: "KIDDOS-SPORTS-PERFORMANCE"
+process_number: "2310"  # TENTATIVE — sovereign-confirm
+name: "Kiddos Sports-Performance — measurement, scoring, gate, leverage, prescription"
+blueprint_owner: "personal"
+runtime: "Cloudflare D1 (database `kiddos`) — schema engine + per-sport seed; views derive everything. Airtable canonical-measurement front pending."
+status: "build"
+hub_id: "KIDDOS-SPORTS-PERFORMANCE-2310"
+sovereign_ref: "imo-creator"
+governing_engine: "atlas/constants/FOUNDATIONAL_BEDROCK.md + atlas/constants/KEY.md + atlas/DATABASE_FILL_INSTRUCTIONS.md"
+ctb_placement: "barton-enterprises/personal/kiddos/sports/performance"
+cc_layer: "CC-03"
+imo_topology: "middle"  # input=measurement; middle=normalize+weight+leverage+prescribe; output=recruiting projection + targeted training
+
+services:
+  - "Cloudflare D1 — kiddos (uuid 5a57021b-1a6f-48ea-83a0-2e730d0fe674) — engine + spine + CQRS error pairs + derived views"
+  - "Airtable (PENDING) — canonical measurement front (operator-facing data entry; one canonical table per sovereign direction 2026-05-19; D1 mirrors)"
+  - "Future feeds: MatBoss (wrestling competition_stat), Rapsodo/Blast/HitTrax (softball sensor), Vertec (jump metrics)"
+
+secrets_provider: "Doppler → imo-creator → dev (CF_FULL_API_TOKEN, GLOBAL_CLOUDFLARE_ACCOUNT_ID); Airtable PAT TBD when canonical-front lands"
+
+two_question_intake:
+  what_triggers: "An athletic measurement, competition event, or production stat is logged for a child in a sport (combine test, MatBoss match result, sensor capture, manual entry via Airtable)"
+  how_we_get_it: "Per-sport reference model is seeded once (recruiting_metric + recruiting_threshold + composite_model + training_correlation). Per-child data lands via Airtable canonical (pending) or direct INSERT, validated → canonical OR CQRS error pair. Views continuously recompute gate / score / leverage / prescription."
+
+acceptance_criteria: |
+  v_recruiting_gate + v_composite_score + v_prescription return sane values
+  for one seeded child (Tyler/Mallory) on one sport. CQRS error pairs reject
+  malformed input without losing the payload. Every column registered in
+  PROCESS-UT.md §7 with description / unique-id / format. The 13-item
+  UT pre-flight checklist passes.
+
+cross_references:
+  doctrine:
+    - "atlas/DATABASE_FILL_INSTRUCTIONS.md (parent fill spec — database medium)"
+    - "atlas/constants/HOW_TO_BUILD_ANYTHING.md (generic build rules)"
+    - "atlas/constants/BARTON_ENTERPRISES_CTB.md §Architecture (Personal → Kiddos App → Sports silo node)"
+    - "atlas/constants/FOUNDATIONAL_BEDROCK.md §4 (CQRS — every canonical needs error pair)"
+    - "atlas/constants/UT_CHECKLIST.md v1.3.1 (13-item pre-flight)"
+  prerequisite_process:
+    - "001 kiddos foundation (children/parents/family_links) — port from kiddo-app-skeleton/archive/v1/migrations/001_d1_foundation.sql; MUST run before 002"
+  upstream:
+    - "Airtable canonical measurement front (PENDING — separate BAR)"
+  downstream:
+    - "Mission Control / Kiddos portal — display gate + score + prescription per kid (PENDING)"
+    - "College recruiting packets — graduation outputs sourced from this engine"
+  related_processes:
+    - "factory/personal/100-kiddos-working-surface (the existing Kiddos app working surface — this sub-engine attaches inside its Sports silo)"
+    - "factory/personal/2300-kiddos-intake, 2301-matboss-intake (intake processes — matboss feeds competition_stat for wrestling)"
+    - "factory/personal/2800-kiddos-portal (portal — surfaces this engine's outputs)"
+    - "factory/personal/2900-kiddos-export (export — graduation outputs)"
+
+bars_referenced:
+  - id: "BAR-436"
+    status: "backlog"
+    why: "This UT is a concrete fill of the two-layer cockpit + sealed engines architecture — the Kiddos cockpit calling a sealed sub-engine"
+  - id: "BAR-KIDDOS-SPORTS-PERFORMANCE"
+    status: "pending-sovereign"
+    why: "Proposes process number 2310 + CTB layer-registry additions (Personal/Kiddos: gate, composite score, leverage, prescription layers)"
+
+lbb_subjects_fed:
+  - subject_id: "system"
+    what: "Session logs on this UT — build/repair/audit transitions"
+  - subject_id: "processes"
+    what: "Per-run transitions when the system processes a kid's measurement batch / generates a prescription"

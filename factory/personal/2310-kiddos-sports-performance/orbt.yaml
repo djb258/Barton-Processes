@@ -1,0 +1,37 @@
+# ORBT — Process 2310 Kiddos Sports-Performance
+# OBD diagnostic state: Operate | Repair | Build | Troubleshoot/Train (4-state per Sovereign Decision A)
+
+process_id: "KIDDOS-SPORTS-PERFORMANCE"
+process_name: "Kiddos Sports-Performance"
+silo: "personal"
+
+state: "BUILD"
+strikes: 0
+last_transition_at: "2026-05-19T00:00:00Z"
+last_transition_reason: "UT initial draft (v0.1.0) — schema + softball seed + wrestling seed on disk; volleyball seed and 001 foundation port still owed; not yet applied to D1"
+
+# Gates that must clear before BUILD → OPERATE:
+build_gates:
+  - "001_kiddos_foundation.sql written and applied (children/parents/family_links)"
+  - "002_sports_performance_schema.sql applied (engine + spine + CQRS error pairs + views)"
+  - "seed_softball.sql + seed_wrestling.sql + seed_volleyball.sql applied"
+  - "Tyler `sport_participation(child_id=person-tyler, sport_id=wrestling, ...)` row inserted; one valid metric_test row inserted"
+  - "v_recruiting_gate returns ≥1 row for Tyler; v_composite_score returns 0..100; v_prescription returns ≥1 row"
+  - "CQRS smoke test: 1 deliberately-malformed metric_test payload lands in metric_test_error, NOT in metric_test"
+  - "Process number 2310 confirmed by sovereign (or reassigned) via pending-atlas-updates/BAR-KIDDOS-SPORTS-PERFORMANCE.yaml"
+  - "Airtable canonical-front design decided (separate BAR — gates the input layer, not this engine)"
+
+repair_triggers:
+  - "View returns NULL / wrong values → check threshold band_low/band_high direction convention (band_low=baseline, band_high=elite — semantically, not numerically min/max)"
+  - "Composite returns NULL → check normalize enum matches view logic (only 'minmax_baseline_elite' resolves in v_metric_normalized; 'percentile' + nested are app-resolved by design)"
+  - "metric_test value out of plausible range → should land in metric_test_error with OUT_OF_RANGE, not in canonical"
+
+troubleshoot_train_triggers:
+  - "Strike 3 on same repair (e.g., same metric repeatedly mis-normalizing across kids/sports) → re-examine the normalization model (baseline/elite anchors may be wrong; or direction flag wrong on the metric)"
+  - "If hypothesis correlation_strength values keep being contradicted by measured retest deltas → discovered correlations diverge from hypothesis; update training_correlation source='discovered' with measured strength"
+
+# ORBT state enum (4-state canonical per Sovereign Decision A 2026-05-08, commit 1968e71b):
+#   BUILD              — scaffolded, not yet applied/proven
+#   OPERATE            — applied, views returning sane values, CQRS verified
+#   REPAIR             — a known issue is being fixed (specific gate failing)
+#   TROUBLESHOOT_TRAIN — Strike 3 reached; structural re-examination (not another repair)
